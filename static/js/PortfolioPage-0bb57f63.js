@@ -1,0 +1,1 @@
+import{_ as a,c as s,e,F as t,g as d,o as n,p as o,k as r,f as c}from"./app-663414ed.js";const p={},l=(a=>(o("data-v-1b7a9ed3"),a=a(),r(),a))((()=>c("div",{class:"content"},"目前正在建置中...",-1)));var f=a(p,[["render",function(a,o){const r=d("GeneralHead");return n(),s(t,null,[e(r),l],64)}],["__scopeId","data-v-1b7a9ed3"]]);export{f as default};
