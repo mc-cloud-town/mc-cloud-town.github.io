@@ -51,20 +51,25 @@ const BackgroundVideo = styled.iframe`
     border: 0;
 `;
 
-const PageHeader = () => (
-  <VideoBackgroundHeader>
-    <Mask>
-    </Mask>
-    <HeaderText>歡迎來到我的網站</HeaderText>
-    <VideoBackgroundContainer>
-      <BackgroundVideo
-        src="https://www.youtube.com/embed/7lq_6S8jjJs?controls=0&autoplay=1&mute=1&playsinline=1&loop=1&playlist=7lq_6S8jjJs&frameborder=0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        title="YouTube Video Background"
-      />
-    </VideoBackgroundContainer>
-  </VideoBackgroundHeader>
-);
+const PageHeader = ({ youtubeId }: {
+  youtubeId: string,
+}) => {
+  const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
+  return (
+    <VideoBackgroundHeader>
+      <Mask>
+      </Mask>
+      <HeaderText>歡迎來到我的網站</HeaderText>
+      <VideoBackgroundContainer>
+        <BackgroundVideo
+          src={videoSrc}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title="YouTube Video Background"
+        />
+      </VideoBackgroundContainer>
+    </VideoBackgroundHeader>
+  );
+};
 
 export default PageHeader;
