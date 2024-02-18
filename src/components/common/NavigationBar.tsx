@@ -20,7 +20,9 @@ const NavigationBarContainer = styled.div`
     }
 
     &.scrolled {
-        background-color: #6f9b9c; /* 主色调 */
+        background-color: #6f9b9c;
+        
+        border-color: white!important;
     }
 `;
 
@@ -34,14 +36,12 @@ const StyledMenu = styled(Menu)`
     line-height: 64px;
     background-color: transparent;
 
-    &.scrolled {
-        .ant-menu-dark.ant-menu-horizontal > .ant-menu-item > a {
-            color: black;
-        }
-    }
-
-    .ant-menu-dark.ant-menu-horizontal > .ant-menu-item > a {
+    span.ant-menu-title-content > a {
         color: white;
+
+        &:hover {
+            color: #b1dde6;
+        }
     }
 `;
 
@@ -63,21 +63,26 @@ const NavigationBar = () => {
           <Brand src={CTEC_banner_white} alt="Brand Logo" />
         </Link>
       ),
-      disabled: true,
+      disabled: true
     },
     {
       key: 'home',
-      label: (<Link to="/">首頁</Link>),
+      label: (<Link to="/">首頁</Link>)
     },
     {
       key: 'servers',
-      label: (<Link to="/servers">生存服進度</Link>),
-    },
+      label: (<Link to="/servers">生存服進度</Link>)
+    }
   ];
 
   return (
     <NavigationBarContainer className={`${isHidden ? 'hidden' : ''} ${scrolled ? 'scrolled' : ''}`}>
-      <StyledMenu theme="dark" mode="horizontal" items={menuItems} className={`${scrolled ? 'scrolled' : ''}`} />
+      <StyledMenu
+        theme="dark"
+        mode="horizontal"
+        items={menuItems}
+        defaultSelectedKeys={['home']}
+        className={`${scrolled ? 'scrolled' : ''}`} />
     </NavigationBarContainer>
   );
 };
