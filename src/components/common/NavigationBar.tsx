@@ -22,7 +22,9 @@ const NavigationBarContainer = styled.div`
     &.scrolled {
         background-color: #6f9b9c;
         
-        border-color: white!important;
+        li.ant-menu-item-selected::after {
+            border-bottom-color: white;
+        }
     }
 `;
 
