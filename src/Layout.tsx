@@ -1,3 +1,4 @@
+import NavigationBar from '#/common/NavigationBar';
 import { ConfigProvider } from 'antd';
 import { Outlet } from 'react-router-dom';
 
@@ -22,6 +23,7 @@ export const Layout = () => {
         },
       }}
     >
+      <NavigationBar />
       <Outlet />
     </ConfigProvider>
   );
