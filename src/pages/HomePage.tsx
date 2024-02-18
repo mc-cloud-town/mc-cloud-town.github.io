@@ -1,10 +1,11 @@
 import NavigationBar from '#/common/NavigationBar.tsx';
 import PageHeader from '#/homePage/PageHeader.tsx';
+import { ClientOnly } from 'vite-react-ssg';
 
 const HomePage = () => (
   <>
-    <NavigationBar/>
-    <PageHeader/>
+    <ClientOnly>{() => <NavigationBar />}</ClientOnly>
+    <PageHeader />
   </>
 );
 

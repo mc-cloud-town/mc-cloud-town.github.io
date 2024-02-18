@@ -11,4 +11,7 @@ export default defineConfig({
       { find: '#', replacement: resolve(__dirname, 'src/components') },
     ],
   },
+  ssr: {
+    noExternal: ['styled-components'],
+  },
 });

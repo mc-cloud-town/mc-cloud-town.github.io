@@ -1,10 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from '@/pages/HomePage';
-import NotFoundPage from '@/pages/NotFoundPage';
 import { ConfigProvider } from 'antd';
+import { Outlet } from 'react-router-dom';
 
-const App = () => (
-  <>
+export const Layout = () => {
+  return (
     <ConfigProvider
       theme={{
         token: {
@@ -21,17 +19,10 @@ const App = () => (
 
           colorLink: '#6f9b9c',
           colorBorder: '#96dbe6',
-        }
+        },
       }}
     >
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Router>
+      <Outlet />
     </ConfigProvider>
-  </>
-);
-
-export default App;
+  );
+};
