@@ -1,10 +1,9 @@
 import 'antd/dist/reset.css';
 import { RouteRecord, ViteReactSSG } from 'vite-react-ssg';
 import getStyledComponentsCollector from 'vite-react-ssg/style-collectors/styled-components';
+import { lazy } from 'react';
 
 import { Layout } from './Layout';
-import { lazy } from 'react';
-// import NotFoundPage from './pages/NotFoundPage.tsx';
 
 const routes: RouteRecord[] = [
   {
