@@ -13,6 +13,7 @@ export default defineConfig({
       { find: '#', replacement: resolve(__dirname, 'src/components') },
     ],
   },
+  base: process.env.NODE_ENV === 'production' ? process.env.BASE_URL : void 0,
   // ssgOptions: {
   //   formatting: 'minify',
   //   dirStyle: 'nested',
