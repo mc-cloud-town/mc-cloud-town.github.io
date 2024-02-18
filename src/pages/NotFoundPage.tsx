@@ -1,7 +1,11 @@
+import NavigationBar from '#/common/NavigationBar.tsx';
+import { ClientOnly } from 'vite-react-ssg';
+
 const NotFoundPage = () => (
-  <div>
+  <>
+    <ClientOnly>{() => <NavigationBar />}</ClientOnly>
     <h1>404 Not Found</h1>
-  </div>
+  </>
 );
 
 export default NotFoundPage;

@@ -3,22 +3,43 @@ import { Link } from 'react-router-dom';
 import { Menu } from 'antd';
 import styled from 'styled-components';
 
-import CTEC_banner from '@/assets/brand/CTEC_banner.png';
+import CTEC_banner_white from '@/assets/brand/CTEC_banner_white.png';
 
 const VisibleNavigationBar = styled.div`
-  position: fixed;
-  width: 100%;
-  z-index: 1000;
-  top: 0;
-  background-color: transparent;
-  color: white;
-  transition: top 0.3s;
-  display: flex;
-  justify-content: center;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    top: 0;
+    background-color: transparent;
+    color: white;
+    transition: top 0.3s;
+    display: flex;
+    justify-content: center;
 `;
 
 const HiddenNavigationBar = styled(VisibleNavigationBar)`
-  top: -100px;
+    top: -100px;
+`
+
+const Brand = styled.img`
+    height: 40px;
+`;
+
+const StyledMenu = styled(Menu)`
+    flex-grow: 1;
+    line-height: 64px;
+`;
+
+const TopStyledMenu = styled(StyledMenu)`
+    background-color: transparent;
+    
+    .ant-menu-title-content > a {
+        color: white;
+        
+        &:hover {
+            color: #6f9b9c;
+        }
+    }
 `;
 
 const NavigationBar = () => {
@@ -28,11 +49,7 @@ const NavigationBar = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
-      setVisible(
-        (prevScrollPos > currentScrollPos &&
-          prevScrollPos - currentScrollPos > 100) ||
-          currentScrollPos < 100,
-      );
+      setVisible(currentScrollPos < prevScrollPos);
       setPrevScrollPos(currentScrollPos);
     };
 
@@ -45,36 +62,27 @@ const NavigationBar = () => {
       key: '1',
       label: (
         <Link to="/">
-          <img src={CTEC_banner} alt="Brand Logo" />
+          <Brand src={CTEC_banner_white} alt="Brand Logo" />
         </Link>
       ),
+      disabled: true,
     },
     {
       key: '2',
-      label: <Link to="/">首頁</Link>,
+      label: (<Link to="/">首頁</Link>),
     },
     {
       key: '3',
-      label: <Link to="/servers">生存服進度</Link>,
-    },
+      label: (<Link to="/servers">生存服進度</Link>),
+    }
   ];
 
-  const NavigationBarStyledComponent = visible
-    ? VisibleNavigationBar
-    : HiddenNavigationBar;
+  const NavigationBarStyledComponent = visible ? VisibleNavigationBar : HiddenNavigationBar;
+  const DisplayedMenu = window.scrollY < 100 ? TopStyledMenu : StyledMenu;
 
   return (
     <NavigationBarStyledComponent>
-      <Menu
-        theme="dark"
-        mode="horizontal"
-        items={menuItems}
-        style={{
-          lineHeight: '64px',
-          backgroundColor: 'transparent',
-          width: '100%',
-        }}
-      />
+      <DisplayedMenu theme="light" mode="horizontal" items={menuItems} />
     </NavigationBarStyledComponent>
   );
 };
