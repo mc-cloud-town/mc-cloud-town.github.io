@@ -11,5 +11,4 @@ export default defineConfig({
       { find: '#', replacement: resolve(__dirname, 'src/components') },
     ],
   },
-  base: '/cloudtown-website/',
 });
