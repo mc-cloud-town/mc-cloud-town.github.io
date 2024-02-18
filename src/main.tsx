@@ -11,17 +11,10 @@ const routes: RouteRecord[] = [
     path: '/',
     element: <Layout />,
     children: [
-      {
-        index: true,
-        Component: lazy(() => import('./pages/HomePage')),
-      },
+      { index: true, Component: lazy(() => import('./pages/HomePage')) },
     ],
   },
-  // {
-  //   path: '*',
-  //   element: <NotFoundPage />,
-  //   Component: Layout,
-  // },
+  { path: '*', Component: lazy(() => import('./pages/NotFoundPage')) },
 ];
 
 export const createRoot = ViteReactSSG(
