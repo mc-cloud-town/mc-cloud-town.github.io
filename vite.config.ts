@@ -17,9 +17,9 @@ export default defineConfig({
     formatting: 'minify',
     dirStyle: 'nested',
     script: 'async',
-    crittersOptions: {
-      preload: 'media',
-    },
+    // crittersOptions: {
+    //   preload: 'media',
+    // },
     onFinished() {
       generateSitemap({
         hostname: process.env.HOSTNAME || 'http://localhost/',

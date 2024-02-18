@@ -2,64 +2,62 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu } from 'antd';
 import styled from 'styled-components';
+import useScroll from '@/hooks/useScroll';
 
 import CTEC_banner_white from '@/assets/brand/CTEC_banner_white.png';
 
-const VisibleNavigationBar = styled.div`
+const NavigationBarContainer = styled.div`
     position: fixed;
     width: 100%;
     z-index: 1000;
     top: 0;
-    background-color: transparent;
-    color: white;
-    transition: top 0.3s;
+    transition: top 0.3s, background-color 0.3s;
     display: flex;
     justify-content: center;
-`;
 
-const HiddenNavigationBar = styled(VisibleNavigationBar)`
-    top: -100px;
-`
+    &.hidden {
+        top: -100px;
+    }
+
+    &.scrolled {
+        background-color: #6f9b9c; /* 主色调 */
+    }
+`;
 
 const Brand = styled.img`
     height: 40px;
+    margin-right: 20px;
 `;
 
 const StyledMenu = styled(Menu)`
     flex-grow: 1;
     line-height: 64px;
-`;
-
-const TopStyledMenu = styled(StyledMenu)`
     background-color: transparent;
-    
-    .ant-menu-title-content > a {
-        color: white;
-        
-        &:hover {
-            color: #6f9b9c;
+
+    &.scrolled {
+        .ant-menu-dark.ant-menu-horizontal > .ant-menu-item > a {
+            color: black;
         }
+    }
+
+    .ant-menu-dark.ant-menu-horizontal > .ant-menu-item > a {
+        color: white;
     }
 `;
 
 const NavigationBar = () => {
-  const [visible, setVisible] = useState(true);
-  const [prevScrollPos, setPrevScrollPos] = useState(window.scrollY);
+  const { y, lastY } = useScroll();
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollPos = window.scrollY;
-      setVisible(currentScrollPos < prevScrollPos);
-      setPrevScrollPos(currentScrollPos);
-    };
+    setIsHidden(y > lastY && y > 150);
+  }, [y, lastY]);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [prevScrollPos]);
+  const scrolled = y > window.innerHeight;
 
   const menuItems = [
     {
-      key: '1',
+      key: 'brand',
       label: (
         <Link to="/">
           <Brand src={CTEC_banner_white} alt="Brand Logo" />
@@ -68,22 +66,19 @@ const NavigationBar = () => {
       disabled: true,
     },
     {
-      key: '2',
+      key: 'home',
       label: (<Link to="/">首頁</Link>),
     },
     {
-      key: '3',
+      key: 'servers',
       label: (<Link to="/servers">生存服進度</Link>),
-    }
+    },
   ];
 
-  const NavigationBarStyledComponent = visible ? VisibleNavigationBar : HiddenNavigationBar;
-  const DisplayedMenu = window.scrollY < 100 ? TopStyledMenu : StyledMenu;
-
   return (
-    <NavigationBarStyledComponent>
-      <DisplayedMenu theme="light" mode="horizontal" items={menuItems} />
-    </NavigationBarStyledComponent>
+    <NavigationBarContainer className={`${isHidden ? 'hidden' : ''} ${scrolled ? 'scrolled' : ''}`}>
+      <StyledMenu theme="dark" mode="horizontal" items={menuItems} className={`${scrolled ? 'scrolled' : ''}`} />
+    </NavigationBarContainer>
   );
 };
 
