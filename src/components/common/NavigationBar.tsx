@@ -55,7 +55,7 @@ const NavigationBar = () => {
     setIsHidden(y > lastY && y > 150);
   }, [y, lastY]);
 
-  const scrolled = y > window.innerHeight;
+  const scrolled = y > window.innerHeight / 2;
 
   const menuItems = [
     {

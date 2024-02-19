@@ -3,7 +3,7 @@ import { ReactTyped } from 'react-typed';
 import useScroll from '@/hooks/useScroll.ts';
 
 const VideoBackgroundContainer = styled.div`
-  position: fixed;
+  position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
@@ -20,8 +20,8 @@ const VideoBackgroundHeader = styled.header`
   align-items: center;
 `;
 
-const Mask = styled.div`
-  position: fixed;
+const MaskA = styled.div`
+  position: absolute;
   top: 50%;
   left: 50%;
   width: 100%;
@@ -29,6 +29,13 @@ const Mask = styled.div`
   transform: translate(-50%, -50%);
   z-index: -998;
   background-color: black;
+  opacity: 0.6;
+`;
+
+const MaskB = styled(MaskA)`
+  z-index: -997;
+  background: white;
+  opacity: 0;
 `;
 
 const HeaderTextContainer = styled.div`
@@ -62,11 +69,13 @@ const PageHeader = ({ youtubeId, start = 0 }: {
   start?: number,
 }) => {
   const { y } = useScroll();
-  const maskOpacity = 0.6 - (y / window.innerHeight) * 1.2;
+  const maskAOpacity = 0.6 - (y / window.innerHeight) * 1.2;
+  const maskBOpacity = (y / window.innerHeight) * 1.2;
   const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&disablekb=1&fs=0&iv_load_policy=3&start=${start}&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
   return (
     <VideoBackgroundHeader>
-      <Mask style={{opacity: maskOpacity}} />
+      <MaskA style={{opacity: maskAOpacity}} />
+      <MaskB style={{opacity: maskBOpacity}} />
       <HeaderTextContainer>
         <HeaderText>
           <ReactTyped
