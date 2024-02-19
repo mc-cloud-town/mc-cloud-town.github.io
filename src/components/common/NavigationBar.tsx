@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu } from 'antd';
 import styled from 'styled-components';
 import useScroll from '@/hooks/useScroll';
@@ -50,6 +50,7 @@ const StyledMenu = styled(Menu)`
 const NavigationBar = () => {
   const { y, lastY } = useScroll();
   const [isHidden, setIsHidden] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     setIsHidden(y > lastY && y > 150);
@@ -77,13 +78,22 @@ const NavigationBar = () => {
     }
   ];
 
+  const getDefaultSelectedKeys = () => {
+    const path = location.pathname;
+
+    if (path === "/servers") {
+      return ['servers'];
+    }
+    return ['home'];
+  };
+
   return (
     <NavigationBarContainer className={`${isHidden ? 'hidden' : ''} ${scrolled ? 'scrolled' : ''}`}>
       <StyledMenu
         theme="dark"
         mode="horizontal"
         items={menuItems}
-        defaultSelectedKeys={['home']}
+        defaultSelectedKeys={getDefaultSelectedKeys()}
         className={`${scrolled ? 'scrolled' : ''}`} />
     </NavigationBarContainer>
   );
