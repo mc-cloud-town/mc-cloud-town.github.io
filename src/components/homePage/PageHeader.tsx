@@ -54,10 +54,10 @@ const BackgroundVideo = styled.iframe`
   position: absolute;
   top: 50%;
   left: 50%;
-  width: calc(110vh * 16 / 9);
+  width: calc(150vh * 16 / 9);
   height: 100vh;
   min-width: 100vw;
-  min-height: calc(110vw * 9 / 16);
+  min-height: calc(120vw * 9 / 16);
   transform: translate(-50%, -50%);
   z-index: 1;
   overflow: hidden;
@@ -69,8 +69,9 @@ const PageHeader = ({ youtubeId, start = 0 }: {
   start?: number,
 }) => {
   const { y } = useScroll();
-  const maskAOpacity = 0.6 - (y / window.innerHeight) * 1.2;
-  const maskBOpacity = (y / window.innerHeight) * 1.2;
+  const innerHeight = window.innerHeight;
+  const maskAOpacity = 0.6 - (y /innerHeight) * 1.2;
+  const maskBOpacity = y < innerHeight / 2 ? 0 : (y - innerHeight / 2) / (innerHeight / 3);
   const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&disablekb=1&fs=0&iv_load_policy=3&start=${start}&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
   return (
     <VideoBackgroundHeader>
