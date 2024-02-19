@@ -1,0 +1,10 @@
+{
+  "menu": {
+    "home": "Home",
+    "survivalProgress": "Survival Progress"
+  },
+  "notFound": {
+    "title": "404 Not Found",
+    "description": "Seems like it has already been burnt into ashes..."
+  }
+}

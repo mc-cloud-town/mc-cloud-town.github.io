@@ -8,6 +8,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import HomePage from './pages/HomePage';
 import MemberPage from './pages/Members';
 import SurvivalProgress from './pages/SurvivalProgress.tsx';
+import './i18n/i18nConfig';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

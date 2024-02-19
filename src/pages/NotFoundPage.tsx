@@ -1,14 +1,24 @@
 import PageHeader from '#/common/PageHeader.tsx';
+import { useTranslation } from 'react-i18next';
 
-import background from "@/assets/notFound/background.jpg";
+import background from '@/assets/notFound/background.jpg';
 
-const NotFoundPage = () => (
-  <>
-    <PageHeader
-      backgroundComponent={<img src={background} alt="background" />}
-      headerTextArray={['404 Not Found', 'Seems like it has already been burnt into ashes...']}
-    />
-  </>
-);
+const NotFoundPage = () => {
+  const { t } = useTranslation();
+
+  const headerTextArray = [
+    t('notFound.title'),
+    t('notFound.description')
+  ];
+
+  return (
+    <>
+      <PageHeader
+        backgroundComponent={<img src={background} alt="background" />}
+        headerTextArray={headerTextArray}
+      />
+    </>
+  );
+};
 
 export default NotFoundPage;

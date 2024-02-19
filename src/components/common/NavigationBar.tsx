@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Menu } from 'antd';
 import styled from 'styled-components';
 import useScroll from '@/hooks/useScroll';
@@ -50,6 +51,7 @@ const StyledMenu = styled(Menu)`
 `;
 
 const NavigationBar = () => {
+  const { t } = useTranslation();
   const { y, lastY } = useScroll();
   const [isHidden, setIsHidden] = useState(false);
   const location = useLocation();
@@ -72,21 +74,17 @@ const NavigationBar = () => {
     },
     {
       key: 'home',
-      label: (<Link to="/">首頁</Link>)
+      label: (<Link to="/">{t('menu.home')}</Link>)
     },
     {
       key: 'survival',
-      label: (<Link to="/survival">生存服進度</Link>)
+      label: (<Link to="/survival">{t('menu.survivalProgress')}</Link>)
     }
   ];
 
   const getDefaultSelectedKeys = () => {
     const path = location.pathname;
-
-    if (path === '/survival') {
-      return ['survival'];
-    }
-    return ['home'];
+    return path === '/survival' ? ['survival'] : ['home'];
   };
 
   return (
