@@ -1,70 +1,75 @@
 import styled from 'styled-components';
-import { ReactTyped } from "react-typed";
+import { ReactTyped } from 'react-typed';
+import useScroll from '@/hooks/useScroll.ts';
 
 const VideoBackgroundContainer = styled.div`
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -999;
 `;
 
 const VideoBackgroundHeader = styled.header`
-    position: relative;
-    height: 100vh;
-    overflow-x: hidden;
-    overflow-y: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  position: relative;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const Mask = styled.div`
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    background-color: black;
-    opacity: 0.6;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  z-index: -998;
+  background-color: black;
+  opacity: 0.6;
 `;
 
 const HeaderTextContainer = styled.div`
-    position: absolute;
-    text-align: center;
-    z-index: 3;
+  position: absolute;
+  text-align: center;
+  z-index: 3;
 `;
 
 const HeaderText = styled.h1`
-    font-weight: bolder;
-    color: white;
-    font-size: 2rem;
+  font-weight: bolder;
+  color: white;
+  font-size: 2rem;
 `;
 
 const BackgroundVideo = styled.iframe`
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: calc(110vh * 16 / 9);
-    height: 100vh;
-    min-width: 100vw;
-    min-height: calc(110vw * 9 / 16);
-    transform: translate(-50%, -50%);
-    z-index: 1;
-    overflow: hidden;
-    border: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(110vh * 16 / 9);
+  height: 100vh;
+  min-width: 100vw;
+  min-height: calc(110vw * 9 / 16);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  overflow: hidden;
+  border: 0;
 `;
 
 const PageHeader = ({ youtubeId, start = 0 }: {
   youtubeId: string,
   start?: number,
 }) => {
+  const { y } = useScroll();
+  const maskOpacity = 0.6 - (y / window.innerHeight) * 1.2;
+
+  console.log(maskOpacity);
   const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&disablekb=1&fs=0&iv_load_policy=3&start=${start}&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
   return (
     <VideoBackgroundHeader>
-      <Mask>
-      </Mask>
+      <Mask style={{opacity: maskOpacity}} />
       <HeaderTextContainer>
         <HeaderText>
           <ReactTyped
