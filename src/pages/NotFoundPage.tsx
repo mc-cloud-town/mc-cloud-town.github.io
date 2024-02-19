@@ -1,6 +1,6 @@
 import PageHeader from '#/common/PageHeader.tsx';
 
-import background from "@/assets/notFound/background.png";
+import background from "@/assets/notFound/background.jpg";
 
 const NotFoundPage = () => (
   <>
