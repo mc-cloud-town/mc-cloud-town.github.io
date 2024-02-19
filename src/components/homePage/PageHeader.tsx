@@ -64,7 +64,7 @@ const PageHeader = ({ youtubeId, start = 0 }: {
       </Mask>
       <HeaderText>
         <ReactTyped
-          strings={['Welcome to Cloud Town Exquisite Craft', '歡迎來到雲鎮工藝 | CTEC']}
+          strings={['Welcome to Cloud Town Exquisite Craft', '歡迎來到雲鎮工藝 | CTEC', '欢迎来到云镇工艺 | CTEC']}
           typeSpeed={40}
           backSpeed={50}
           loop={true}
