@@ -40,15 +40,12 @@ const MaskB = styled(MaskA)`
 `;
 
 const HeaderTextContainer = styled.div`
-  position: absolute;
-  text-align: center;
-  z-index: 3;
-`;
-
-const HeaderText = styled.h1`
   font-weight: bolder;
   color: white;
   font-size: 2rem;
+  position: absolute;
+  text-align: center;
+  z-index: 3;
 `;
 
 const SubHeaderText = styled.h2`
@@ -90,24 +87,22 @@ const PageHeader = (
       <MaskA style={{ opacity: maskAOpacity }} />
       <MaskB style={{ opacity: maskBOpacity }} />
       <HeaderTextContainer>
-        <HeaderText>
-          {useTyped ? (
-            <ReactTyped
-              strings={headerTextArray}
-              typeSpeed={40}
-              backSpeed={50}
-              loop={true}
-              showCursor={true}
-              cursorChar="|"
-              backDelay={1000}
-            />
-          ) : (
-            headerTextArray.map((text, index) =>
-              index === 0 ? <HeaderText key={index}>{text}</HeaderText> :
-                <SubHeaderText key={index}>{text}</SubHeaderText>
-            )
-          )}
-        </HeaderText>
+        {useTyped ? (
+          <ReactTyped
+            strings={headerTextArray}
+            typeSpeed={40}
+            backSpeed={50}
+            loop={true}
+            showCursor={true}
+            cursorChar="|"
+            backDelay={1000}
+          />
+        ) : (
+          headerTextArray.map((text, index) =>
+            index === 0 ? <span key={index}>{text}</span> :
+              <SubHeaderText key={index}>{text}</SubHeaderText>
+          )
+        )}
       </HeaderTextContainer>
       <BackgroundContainer>
         {backgroundComponent}
