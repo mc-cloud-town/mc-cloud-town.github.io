@@ -7,44 +7,46 @@ import useScroll from '@/hooks/useScroll';
 import CTEC_banner_white from '@/assets/brand/CTEC_banner_white.png';
 
 const NavigationBarContainer = styled.div`
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-    top: 0;
-    transition: top 0.3s, background-color 0.3s;
-    display: flex;
-    justify-content: center;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  top: 0;
+  transition: top 0.3s, background-color 0.3s;
 
-    &.hidden {
-        top: -100px;
-    }
+  &.hidden {
+    top: -100px;
+  }
 
-    &.scrolled {
-        background-color: #6f9b9c;
-        
-        li.ant-menu-item-selected::after {
-            border-bottom-color: white;
-        }
+  &.scrolled {
+    background-color: #6f9b9c;
+
+    li.ant-menu-item-selected::after {
+      border-bottom-color: white;
     }
+  }
+
+  .anticon  {
+    color: white; 
+  }
 `;
 
 const Brand = styled.img`
-    height: 40px;
-    margin-right: 20px;
+  height: 40px;
+  margin-right: 20px;
 `;
 
 const StyledMenu = styled(Menu)`
-    flex-grow: 1;
-    line-height: 64px;
-    background-color: transparent;
+  flex-grow: 1;
+  line-height: 64px;
+  background-color: transparent;
 
-    span.ant-menu-title-content > a {
-        color: white;
+  span.ant-menu-title-content > a {
+    color: white;
 
-        &:hover {
-            color: #b1dde6;
-        }
+    &:hover {
+      color: #b1dde6;
     }
+  }
 `;
 
 const NavigationBar = () => {
@@ -81,7 +83,7 @@ const NavigationBar = () => {
   const getDefaultSelectedKeys = () => {
     const path = location.pathname;
 
-    if (path === "/survival") {
+    if (path === '/survival') {
       return ['survival'];
     }
     return ['home'];
