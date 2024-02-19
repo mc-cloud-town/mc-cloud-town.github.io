@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { ReactTyped } from "react-typed";
 
 const VideoBackgroundContainer = styled.div`
     position: relative;
@@ -30,6 +31,7 @@ const Mask = styled.div`
 `;
 
 const HeaderText = styled.div`
+    font-weight: bolder;
     position: absolute;
     color: white;
     text-align: center;
@@ -51,15 +53,26 @@ const BackgroundVideo = styled.iframe`
     border: 0;
 `;
 
-const PageHeader = ({ youtubeId }: {
+const PageHeader = ({ youtubeId, start = 0 }: {
   youtubeId: string,
+  start?: number,
 }) => {
-  const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
+  const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&disablekb=1&fs=0&iv_load_policy=3&start=${start}&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
   return (
     <VideoBackgroundHeader>
       <Mask>
       </Mask>
-      <HeaderText>歡迎來到我的網站</HeaderText>
+      <HeaderText>
+        <ReactTyped
+          strings={['Welcome to Cloud Town Exquisite Craft', '歡迎來到雲鎮工藝 | CTEC']}
+          typeSpeed={40}
+          backSpeed={50}
+          loop={true}
+          showCursor={true}
+          cursorChar="|"
+          backDelay={1000}
+        />
+      </HeaderText>
       <VideoBackgroundContainer>
         <BackgroundVideo
           src={videoSrc}

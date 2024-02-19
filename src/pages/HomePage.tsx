@@ -3,8 +3,7 @@ import CTEC_banner_white from '@/assets/brand/CTEC_banner_white.png';
 
 const HomePage = () => (
   <>
-    <PageHeader youtubeId="USJWCs-rlc0"/>
-    <img src={CTEC_banner_white} alt="Brand Logo" />
+    <PageHeader youtubeId="USJWCs-rlc0" start={9} />
   </>
 );
 
