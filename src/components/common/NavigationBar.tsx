@@ -66,18 +66,18 @@ const NavigationBar = () => {
     i18n.changeLanguage(lng).then();
   };
 
+  const getDefaultSelectedKeys = () => {
+    const path = location.pathname;
+    return path === '/survival' ? ['survival'] : ['home'];
+  };
+
   const languageItems: MenuProps['items'] = [
     { key: 'en', label: 'English', onClick: () => changeLanguage('en') },
     { key: 'zh_CN', label: '简体中文', onClick: () => changeLanguage('zh_CN') },
     { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') },
   ];
 
-  const getDefaultSelectedKeys = () => {
-    const path = location.pathname;
-    return path === '/survival' ? ['survival'] : ['home'];
-  };
-
-  const menuItems = [
+  const menuItems: MenuProps['items'] = [
     {
       key: 'brand',
       label: (
@@ -85,7 +85,7 @@ const NavigationBar = () => {
           <Brand src={CTEC_banner_white} alt="Brand Logo" />
         </Link>
       ),
-      disabled: true
+      disabled: true,
     },
     {
       key: 'home',
