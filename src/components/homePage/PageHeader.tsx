@@ -29,7 +29,6 @@ const Mask = styled.div`
   transform: translate(-50%, -50%);
   z-index: -998;
   background-color: black;
-  opacity: 0.6;
 `;
 
 const HeaderTextContainer = styled.div`
@@ -64,8 +63,6 @@ const PageHeader = ({ youtubeId, start = 0 }: {
 }) => {
   const { y } = useScroll();
   const maskOpacity = 0.6 - (y / window.innerHeight) * 1.2;
-
-  console.log(maskOpacity);
   const videoSrc = `https://www.youtube.com/embed/${youtubeId}?controls=0&disablekb=1&fs=0&iv_load_policy=3&start=${start}&autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&frameborder=0`;
   return (
     <VideoBackgroundHeader>
