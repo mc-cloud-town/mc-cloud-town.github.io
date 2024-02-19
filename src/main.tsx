@@ -6,7 +6,7 @@ import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import NotFoundPage from './pages/NotFoundPage';
 import HomePage from './pages/HomePage';
-import MenberPage from './pages/Members';
+import MemberPage from './pages/Members';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -14,7 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
-          <Route path="member" element={<MenberPage />} />
+          <Route path="member" element={<MemberPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

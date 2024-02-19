@@ -1,15 +1,15 @@
 import NavigationBar  from "#/common/NavigationBar";
 
-import Membercase from "#/members/Membercase";
+import MemberCase from "#/members/MemberCase.tsx";
 import styled from "styled-components";
 import {member} from "@/types/member";
 
-const MemberPagediv = styled.div`
+const MemberPageDiv = styled.div`
   background-color:#ecf0f1
 `;
 
 const MembersPage = () => {
-  const ttmember:member = {
+  const testMember:member = {
     id: "test",
     name: "test",
     introduction: "test"
@@ -17,12 +17,12 @@ const MembersPage = () => {
 
 
   return (
-    <MemberPagediv>
+    <MemberPageDiv>
       <NavigationBar />
-      <Membercase
-        member={ttmember}
+      <MemberCase
+        member={testMember}
       />
-    </MemberPagediv>
+    </MemberPageDiv>
     );
   };
 
