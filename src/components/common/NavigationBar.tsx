@@ -63,7 +63,7 @@ const NavigationBar = () => {
   const scrolled = y > window.innerHeight / 2;
 
   const changeLanguage = (lng: string | undefined) => {
-    i18n.changeLanguage(lng).then(r => console.log(r));
+    i18n.changeLanguage(lng).then();
   };
 
   const languageItems: MenuProps['items'] = [
