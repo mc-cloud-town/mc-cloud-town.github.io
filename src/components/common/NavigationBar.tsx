@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu } from 'antd';
+import { Dropdown, Menu, MenuProps, Space } from 'antd';
+import { GlobalOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import useScroll from '@/hooks/useScroll';
 
@@ -26,8 +27,8 @@ const NavigationBarContainer = styled.div`
     }
   }
 
-  .anticon  {
-    color: white; 
+  .anticon {
+    color: white;
   }
 `;
 
@@ -37,7 +38,6 @@ const Brand = styled.img`
 `;
 
 const StyledMenu = styled(Menu)`
-  flex-grow: 1;
   line-height: 64px;
   background-color: transparent;
 
@@ -51,7 +51,7 @@ const StyledMenu = styled(Menu)`
 `;
 
 const NavigationBar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { y, lastY } = useScroll();
   const [isHidden, setIsHidden] = useState(false);
   const location = useLocation();
@@ -61,6 +61,21 @@ const NavigationBar = () => {
   }, [y, lastY]);
 
   const scrolled = y > window.innerHeight / 2;
+
+  const changeLanguage = (lng: string | undefined) => {
+    i18n.changeLanguage(lng).then(r => console.log(r));
+  };
+
+  const languageItems: MenuProps['items'] = [
+    { key: 'en', label: 'English', onClick: () => changeLanguage('en') },
+    { key: 'zh_CN', label: '简体中文', onClick: () => changeLanguage('zh_CN') },
+    { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') },
+  ];
+
+  const getDefaultSelectedKeys = () => {
+    const path = location.pathname;
+    return path === '/survival' ? ['survival'] : ['home'];
+  };
 
   const menuItems = [
     {
@@ -79,20 +94,34 @@ const NavigationBar = () => {
     {
       key: 'survival',
       label: (<Link to="/survival">{t('menu.survivalProgress')}</Link>)
-    }
+    },
+    {
+      key: '404',
+      label: (<Link to="/404">{404}</Link>)
+    },
+    {
+      key: 'language',
+      label: (
+        <Dropdown
+          menu={{ items: languageItems, onClick: ({ key }) => changeLanguage(key) }}
+          placement="bottom"
+        >
+          <a onClick={(e) => e.preventDefault()}>
+            <Space>
+              <GlobalOutlined /> Language
+            </Space>
+          </a>
+        </Dropdown>
+      ),
+    },
   ];
-
-  const getDefaultSelectedKeys = () => {
-    const path = location.pathname;
-    return path === '/survival' ? ['survival'] : ['home'];
-  };
 
   return (
     <NavigationBarContainer className={`${isHidden ? 'hidden' : ''} ${scrolled ? 'scrolled' : ''}`}>
       <StyledMenu
         theme="dark"
         mode="horizontal"
-        items={menuItems}
+        items={[...menuItems]}
         defaultSelectedKeys={getDefaultSelectedKeys()}
         className={`${scrolled ? 'scrolled' : ''}`} />
     </NavigationBarContainer>
