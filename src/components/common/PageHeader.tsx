@@ -60,24 +60,27 @@ const SubHeaderText = styled.h2`
 
 
 /**
- * PageHeader component to display a header with a background component.
- * @param backgroundComponent {JSX.Element} The background component to display.
- * (Video, Image, etc.)
- * @param headerTextArray {string[]} The array of header text to display.
- * If useTyped is true, the array will be used as the strings for the ReactTyped component.
- * If useTyped is false, the array will be used as the header text and subheader text.
- * @param useTyped {boolean} Whether to use the ReactTyped component to display the header text.
- * @constructor PageHeader Component.
+ * Renders a PageHeader component with customizable background and header text.
+ * This component can display the header text with dynamic typing animation
+ * when `useTyped` is enabled.
+ *
+ * @param backgroundComponent {JSX.Element} - The JSX component used as a background (e.g., Video, Image).
+ * @param headerTextArray {string[]} - An array of strings for header text.
+ *   If `useTyped` is true, texts are displayed with typing animation via ReactTyped.
+ *   If `useTyped` is false, the first string is the main header and others are subheaders, displayed without typing animation.
+ * @param useTyped {boolean} - Flag to enable/disable typing animation for displaying header text.
+ * @constructor - React Component
  */
-const PageHeader = ({
-                      backgroundComponent,
-                      headerTextArray,
-                      useTyped = false
-                    }: {
-  backgroundComponent: JSX.Element,
-  headerTextArray: string[],
-  useTyped?: boolean,
-}) => {
+const PageHeader = (
+  {
+    backgroundComponent,
+    headerTextArray,
+    useTyped = false
+  }: {
+    backgroundComponent: JSX.Element,
+    headerTextArray: string[],
+    useTyped?: boolean,
+  }) => {
   const { y } = useScroll();
   const innerHeight = window.innerHeight;
   const maskAOpacity = 0.6 - (y / innerHeight) * 1.2;
