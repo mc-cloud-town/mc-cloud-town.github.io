@@ -30,13 +30,16 @@ const Mask = styled.div`
     opacity: 0.6;
 `;
 
-const HeaderText = styled.div`
-    font-weight: bolder;
+const HeaderTextContainer = styled.div`
     position: absolute;
-    color: white;
     text-align: center;
-    font-size: 2rem;
     z-index: 3;
+`;
+
+const HeaderText = styled.h1`
+    font-weight: bolder;
+    color: white;
+    font-size: 2rem;
 `;
 
 const BackgroundVideo = styled.iframe`
@@ -62,17 +65,19 @@ const PageHeader = ({ youtubeId, start = 0 }: {
     <VideoBackgroundHeader>
       <Mask>
       </Mask>
-      <HeaderText>
-        <ReactTyped
-          strings={['Welcome to Cloud Town Exquisite Craft', '歡迎來到雲鎮工藝 | CTEC', '欢迎来到云镇工艺 | CTEC']}
-          typeSpeed={40}
-          backSpeed={50}
-          loop={true}
-          showCursor={true}
-          cursorChar="|"
-          backDelay={1000}
-        />
-      </HeaderText>
+      <HeaderTextContainer>
+        <HeaderText>
+          <ReactTyped
+            strings={['Welcome to Cloud Town Exquisite Craft', '歡迎來到雲鎮工藝 | CTEC', '欢迎来到云镇工艺 | CTEC']}
+            typeSpeed={40}
+            backSpeed={50}
+            loop={true}
+            showCursor={true}
+            cursorChar="|"
+            backDelay={1000}
+          />
+        </HeaderText>
+      </HeaderTextContainer>
       <VideoBackgroundContainer>
         <BackgroundVideo
           src={videoSrc}
