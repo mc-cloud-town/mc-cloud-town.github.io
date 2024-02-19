@@ -73,16 +73,16 @@ const NavigationBar = () => {
       label: (<Link to="/">首頁</Link>)
     },
     {
-      key: 'servers',
-      label: (<Link to="/servers">生存服進度</Link>)
+      key: 'survival',
+      label: (<Link to="/survival">生存服進度</Link>)
     }
   ];
 
   const getDefaultSelectedKeys = () => {
     const path = location.pathname;
 
-    if (path === "/servers") {
-      return ['servers'];
+    if (path === "/survival") {
+      return ['survival'];
     }
     return ['home'];
   };
