@@ -46,10 +46,10 @@ const BackgroundVideo = styled.iframe`
     position: absolute;
     top: 50%;
     left: 50%;
-    width: calc(100vh * 16 / 9);
+    width: calc(110vh * 16 / 9);
     height: 100vh;
     min-width: 100vw;
-    min-height: calc(100vw * 9 / 16);
+    min-height: calc(110vw * 9 / 16);
     transform: translate(-50%, -50%);
     z-index: 1;
     overflow: hidden;
