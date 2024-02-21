@@ -1,7 +1,9 @@
 import PageHeader from '#/common/PageHeader.tsx';
 import { useTranslation } from 'react-i18next';
 
-import background from '@/assets/notFound/background.jpg';
+import HeaderImage from '#/common/HeaderImage.tsx';
+
+import background from '@/assets/notFoundPage/background.jpg';
 
 const NotFoundPage = () => {
   const { t } = useTranslation();
@@ -14,7 +16,7 @@ const NotFoundPage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<img src={background} alt="background" />}
+        backgroundComponent={<HeaderImage imageUrl={background} />}
         headerTextArray={headerTextArray}
       />
     </>
