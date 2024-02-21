@@ -7,21 +7,47 @@ const Member = styled.div`
 `;
 
 const MemberImage = styled.div`
-  padding-right: 30px;
+  padding-right: 50px;
 `;
 
-const MemberCase = ({ member }: { member: member }) => {
-  const url = `https://mineskin.eu/armor/body/${member.id}/100.png`;
+const Block64 = styled.div`
+  height: 64px;
+`;
+
+const MemberOut = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 100px;
+  padding: 25px;
+  justify-items: center;
+  text-align: center;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+`;
+
+const MemberCase = ({ members }: { members: Array<member> }) => {
+  const url = `https://mineskin.eu/armor/body/{}/100.png`;
   return (
-    <Member>
-      <MemberImage>
-        <img src={url} alt={member.id}></img>
-      </MemberImage>
-      <div className="memberinfo">
-        <h2>{member.name}</h2>
-        <span>{member.introduction}</span>
-      </div>
-    </Member>
+    <>
+    <Block64></Block64>
+    <MemberOut>
+      {members.map((mm) => {
+        return (
+          <Member>
+            <MemberImage>
+              <img src={url.replace('{}', mm.id)} alt={mm.name} />
+            </MemberImage>
+            <div>
+              <h2>{mm.name}</h2>
+              <span>{mm.introduction}</span>
+            </div>
+          </Member>
+        );
+      })}
+    </MemberOut>
+    </>
   );
 };
 
