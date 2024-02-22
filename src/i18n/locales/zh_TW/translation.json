@@ -15,7 +15,8 @@
   },
   "notFound": {
     "title": "404 找不到頁面",
-    "description": "看起來這裡已經化為灰燼了..."
+    "description": "看起來這裡已經化為灰燼了...",
+    "backButton": "返回首頁"
   },
   "members": {
     "title": "成員列表",

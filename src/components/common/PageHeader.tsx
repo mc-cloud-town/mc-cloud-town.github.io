@@ -77,7 +77,7 @@ const PageHeader = (
   }: {
     backgroundComponent: JSX.Element,
     headerTextArray: string[],
-    subHeaderContentArray?: string[] | JSX.Element[],
+    subHeaderContentArray?: (string | JSX.Element)[],
     useTyped?: boolean,
   }) => {
   const { y } = useScroll();

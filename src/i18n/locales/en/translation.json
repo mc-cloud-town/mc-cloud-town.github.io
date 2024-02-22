@@ -15,7 +15,8 @@
   },
   "notFound": {
     "title": "404 Not Found",
-    "description": "Seems like it has already been burnt into ashes..."
+    "description": "Seems like it has already been burnt into ashes...",
+    "backButton": "Back to Home"
   },
   "members": {
     "title": "Member List",

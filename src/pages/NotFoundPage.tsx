@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import HeaderImage from '#/common/HeaderImage.tsx';
 
 import background from '@/assets/notFoundPage/background.jpg';
+import { Button } from 'antd';
 
 const NotFoundPage = () => {
   const { t } = useTranslation();
@@ -16,7 +17,15 @@ const NotFoundPage = () => {
           t('notFound.title')
         ]}
         subHeaderContentArray={[
-          t('notFound.description')
+          t('notFound.description'),
+          <Button
+            color="primary"
+            size="large"
+            ghost={true}
+            href="/home"
+          >
+            {t('notFound.backButton')}
+          </Button>,
         ]}
       />
     </>

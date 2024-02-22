@@ -15,7 +15,8 @@
   },
   "notFound": {
     "title": "404 未找到",
-    "description": "看起来这里已经化为灰烬了..."
+    "description": "看起来这里已经化为灰烬了...",
+    "backButton": "返回首页"
   },
   "members": {
     "title": "成员列表",
