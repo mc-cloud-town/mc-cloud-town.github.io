@@ -4,6 +4,12 @@
     "survivalProgress": "生存服進度",
     "member": "成員"
   },
+  "time": {
+    "days": "天",
+    "hours": "小時",
+    "minutes": "分鐘",
+    "seconds": "秒"
+  },
   "notFound": {
     "title": "404 找不到頁面",
     "description": "看起來這裡已經化為灰燼了..."

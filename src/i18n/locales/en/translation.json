@@ -4,6 +4,12 @@
     "survivalProgress": "Survival Progress",
     "member": "Member"
   },
+  "time": {
+    "days": "days",
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds"
+  },
   "notFound": {
     "title": "404 Not Found",
     "description": "Seems like it has already been burnt into ashes..."

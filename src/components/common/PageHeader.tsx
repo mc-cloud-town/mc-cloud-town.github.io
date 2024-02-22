@@ -64,7 +64,7 @@ const SubHeaderTextContainer = styled.div`
  * @param backgroundComponent {JSX.Element} - The JSX component used as a background (e.g., Video, Image).
  * @param titleTextArray {string[]} - An array of strings for header title.
  *   If `useTyped` is true, texts are displayed with typing animation via ReactTyped.
- * @param subHeaderTextArray {string[] | JSX.Element[]} - An array of strings or JSX elements for sub-header title.
+ * @param subHeaderContentArray {string[] | JSX.Element[]} - An array of strings or JSX elements for sub-header title.
  * @param useTyped {boolean} - Flag to enable/disable typing animation for displaying header text.
  * @constructor - React Component
  */
@@ -72,12 +72,12 @@ const PageHeader = (
   {
     backgroundComponent,
     headerTextArray,
-    subHeaderTextArray,
+    subHeaderContentArray,
     useTyped = false
   }: {
     backgroundComponent: JSX.Element,
     headerTextArray: string[],
-    subHeaderTextArray?: string[] | JSX.Element[],
+    subHeaderContentArray?: string[] | JSX.Element[],
     useTyped?: boolean,
   }) => {
   const { y } = useScroll();
@@ -106,7 +106,7 @@ const PageHeader = (
             )}
           </>
         )}
-        {subHeaderTextArray && subHeaderTextArray.map((text, index) =>
+        {subHeaderContentArray && subHeaderContentArray.map((text, index) =>
           <SubHeaderTextContainer key={index}>{text}</SubHeaderTextContainer>
         )}
       </HeaderTextContainer>

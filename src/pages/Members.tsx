@@ -31,7 +31,7 @@ const MembersPage = () => {
         headerTextArray={[
           t('members.title'),
         ]}
-        subHeaderTextArray={[
+        subHeaderContentArray={[
           t('members.description'),
         ]}
       />

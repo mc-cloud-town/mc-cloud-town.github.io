@@ -15,7 +15,7 @@ const NotFoundPage = () => {
         headerTextArray={[
           t('notFound.title')
         ]}
-        subHeaderTextArray={[
+        subHeaderContentArray={[
           t('notFound.description')
         ]}
       />
