@@ -8,16 +8,16 @@ import background from '@/assets/notFoundPage/background.jpg';
 const NotFoundPage = () => {
   const { t } = useTranslation();
 
-  const headerTextArray = [
-    t('notFound.title'),
-    t('notFound.description')
-  ];
-
   return (
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={background} />}
-        headerTextArray={headerTextArray}
+        headerTextArray={[
+          t('notFound.title')
+        ]}
+        subHeaderTextArray={[
+          t('notFound.description')
+        ]}
       />
     </>
   );

@@ -13,28 +13,27 @@ const MemberPageDiv = styled.div`
 
 const MembersPage = () => {
   const ttmember =
-  {
+    {
       id: 'test',
       name: 'test',
       introduction: '這是一個比較長的介紹,這是一個比較長的介紹,這是一個比較長的介紹'
-  }
-  const testMember = []
-  for (let i = 0; i < 20; i++) {
-    testMember.push(ttmember)
-  }
+    };
+
+  // Generate a test member array (20 members)
+  const testMember = Array(20).fill(ttmember);
 
   const { t } = useTranslation();
-
-  const headerTextArray = [
-    t('members.title'),
-    t('members.description'),
-  ];
 
   return (
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={background} />}
-        headerTextArray={headerTextArray}
+        headerTextArray={[
+          t('members.title'),
+        ]}
+        subHeaderTextArray={[
+          t('members.description'),
+        ]}
       />
       <MemberPageDiv>
         <MemberCase
