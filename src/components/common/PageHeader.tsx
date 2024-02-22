@@ -35,7 +35,7 @@ const MaskA = styled.div`
 
 const MaskB = styled(MaskA)`
   z-index: -997;
-  background: white;
+  background: #ecf0f1;
   opacity: 0;
 `;
 
@@ -64,7 +64,7 @@ const SubHeaderText = styled.h2`
  * @param backgroundComponent {JSX.Element} - The JSX component used as a background (e.g., Video, Image).
  * @param headerTextArray {string[]} - An array of strings for header text.
  *   If `useTyped` is true, texts are displayed with typing animation via ReactTyped.
- *   If `useTyped` is false, the first string is the main header and others are subheaders, displayed without typing animation.
+ *   If `useTyped` is false, the first string is the main header, and others are subheaders, displayed without typing animation.
  * @param useTyped {boolean} - Flag to enable/disable typing animation for displaying header text.
  * @constructor - React Component
  */

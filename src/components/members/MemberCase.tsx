@@ -10,15 +10,12 @@ const MemberImage = styled.div`
   padding-right: 50px;
 `;
 
-const Block64 = styled.div`
-  height: 64px;
-`;
-
 const MemberOut = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 100px;
   padding: 25px;
+  
   justify-items: center;
   text-align: center;
 
@@ -29,26 +26,27 @@ const MemberOut = styled.div`
 
 const MemberCase = ({ members }: { members: Array<member> }) => {
   const url = `https://mineskin.eu/armor/body/{}/100.png`;
+
   return (
     <>
-    <Block64></Block64>
-    <MemberOut>
-      {members.map((mm) => {
-        return (
-          <Member>
-            <MemberImage>
-              <img src={url.replace('{}', mm.id)} alt={mm.name} />
-            </MemberImage>
-            <div>
-              <h2>{mm.name}</h2>
-              <span>{mm.introduction}</span>
-            </div>
-          </Member>
-        );
-      })}
-    </MemberOut>
+      <MemberOut>
+        {members.map((mm, index) => {
+          return (
+            <Member key={`member-${index}`}>
+              <MemberImage>
+                <img src={url.replace('{}', mm.id)} alt={mm.name} />
+              </MemberImage>
+              <div>
+                <h2>{mm.name}</h2>
+                <span>{mm.introduction}</span>
+              </div>
+            </Member>
+          );
+        })}
+      </MemberOut>;
     </>
-  );
+  )
+    ;
 };
 
 export default MemberCase;

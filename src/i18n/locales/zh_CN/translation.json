@@ -1,10 +1,15 @@
 {
   "menu": {
     "home": "首页",
-    "survivalProgress": "生存服进度"
+    "survivalProgress": "生存服进度",
+    "member": "成员"
   },
   "notFound": {
     "title": "404 未找到",
     "description": "看起来这里已经化为灰烬了..."
+  },
+  "members": {
+    "title": "成员列表",
+    "description": "各领域优秀成员，共创服务器精彩纪录"
   }
 }

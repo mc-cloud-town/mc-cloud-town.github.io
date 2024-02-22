@@ -1,10 +1,15 @@
 {
   "menu": {
     "home": "Home",
-    "survivalProgress": "Survival Progress"
+    "survivalProgress": "Survival Progress",
+    "member": "Member"
   },
   "notFound": {
     "title": "404 Not Found",
     "description": "Seems like it has already been burnt into ashes..."
+  },
+  "members": {
+    "title": "Member List",
+    "description": "Excellent members in various fields create wonderful server records"
   }
 }
