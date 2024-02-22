@@ -1,10 +1,11 @@
 import PageHeader from '#/common/PageHeader.tsx';
 import { useTranslation } from 'react-i18next';
+import { Button } from 'antd';
+import { Link } from 'react-router-dom';
 
 import HeaderImage from '#/common/HeaderImage.tsx';
 
 import background from '@/assets/notFoundPage/background.jpg';
-import { Button } from 'antd';
 
 const NotFoundPage = () => {
   const { t } = useTranslation();
@@ -18,14 +19,15 @@ const NotFoundPage = () => {
         ]}
         subHeaderContentArray={[
           t('notFound.description'),
-          <Button
-            color="primary"
-            size="large"
-            ghost={true}
-            href="/home"
-          >
-            {t('notFound.backButton')}
-          </Button>,
+          <Link to="/home">
+            <Button
+              color="primary"
+              size="large"
+              ghost={true}
+            >
+              {t('notFound.backButton')}
+            </Button>
+          </Link>
         ]}
       />
     </>

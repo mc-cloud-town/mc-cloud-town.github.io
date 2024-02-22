@@ -2,6 +2,7 @@ import { Content } from 'antd/lib/layout/layout';
 import styled from 'styled-components';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderBackground from '#/homePage/header/HeaderBackground.tsx';
@@ -30,14 +31,15 @@ const HomePage = () => {
         ]}
         subHeaderContentArray={[
           <HeaderTimer />,
-          <Button
-            color="primary"
-            size="large"
-            ghost={true}
-            href="/join"
-          >
-            {t('home.joinButton')}
-          </Button>
+          <Link to="/join">
+            <Button
+              color="primary"
+              size="large"
+              ghost={true}
+            >
+              {t('home.joinButton')}
+            </Button>
+          </Link>
         ]}
         useTyped={true}
       />
