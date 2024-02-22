@@ -10,6 +10,9 @@
     "minutes": "minutes",
     "seconds": "seconds"
   },
+  "home": {
+    "joinButton": "Join us"
+  },
   "notFound": {
     "title": "404 Not Found",
     "description": "Seems like it has already been burnt into ashes..."

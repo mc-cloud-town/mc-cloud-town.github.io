@@ -10,6 +10,9 @@
     "minutes": "分鐘",
     "seconds": "秒"
   },
+  "home": {
+    "joinButton": "加入我們"
+  },
   "notFound": {
     "title": "404 找不到頁面",
     "description": "看起來這裡已經化為灰燼了..."

@@ -1,8 +1,9 @@
 import { Content } from 'antd/lib/layout/layout';
 import styled from 'styled-components';
 import PageHeader from '#/common/PageHeader.tsx';
-import HeaderBackground from '#/homePage/HeaderBackground.tsx';
-import HeaderTimer from '#/homePage/HeaderTimer.tsx';
+import HeaderBackground from '#/homePage/header/HeaderBackground.tsx';
+import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
+import HeaderJoinButton from '#/homePage/header/HeaderJoinButton.tsx';
 
 const StyledContent = styled(Content)`
   display: flex;
@@ -20,7 +21,8 @@ const HomePage = () => {
     '欢迎来到云镇工艺 | CTEC'
   ];
   const subHeaderContentArray = [
-    <HeaderTimer />
+    <HeaderTimer />,
+    <HeaderJoinButton />
   ];
   return (
     <>
