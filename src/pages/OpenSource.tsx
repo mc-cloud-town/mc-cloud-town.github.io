@@ -1,11 +1,12 @@
 import styled from 'styled-components';
 import { Dict } from 'styled-components/dist/types';
-import useApi from '@/hooks/useApi';
 import { Card } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 
+import useApi from '@/hooks/useApi';
+
 const { Meta } = Card;
-const Repoblocklist = styled.div`
+const RepoBlockList = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -15,13 +16,13 @@ const Repoblocklist = styled.div`
 const CardOut = styled.div``
 
 
-const OpsnSourcePage = () => {
+const OpenSourcePage = () => {
   const { data, loading, error } = useApi(
     'https://api.github.com/orgs/mc-cloud-town/repos',
   );
   return (
     <>
-      <Repoblocklist>
+      <RepoBlockList>
         {error && <p>Error</p>}
         {loading && <p>Loading</p>}
         {Array.isArray(data) &&
@@ -37,9 +38,9 @@ const OpsnSourcePage = () => {
               </CardOut>
             );
           })}
-      </Repoblocklist>
+      </RepoBlockList>
     </>
   );
 };
 
-export default OpsnSourcePage;
+export default OpenSourcePage;
