@@ -57,6 +57,7 @@ const NavigationBar = () => {
   const location = useLocation();
 
   useEffect(() => {
+    if (y === lastY) return;
     setIsHidden(y > lastY && y > 150);
   }, [y, lastY]);
 

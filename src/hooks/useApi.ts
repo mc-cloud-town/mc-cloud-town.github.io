@@ -34,4 +34,3 @@ const useApi = <T,>(url: string): {
 };
 
 export default useApi;
-
