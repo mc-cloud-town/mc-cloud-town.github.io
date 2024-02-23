@@ -13,12 +13,12 @@ const RepoBlockList = styled.div`
   gap: 20px;
 `;
 
-const CardOut = styled.div``
+const CardOut = styled.div``;
 
 
 const OpenSourcePage = () => {
   const { data, loading, error } = useApi(
-    'https://api.github.com/orgs/mc-cloud-town/repos',
+    'https://api.github.com/orgs/mc-cloud-town/repos'
   );
   return (
     <>
@@ -29,12 +29,12 @@ const OpenSourcePage = () => {
           data.map((repo: Dict) => {
             return (
               <CardOut onClick={() => window.open(repo.html_url)}>
-              <Card hoverable>
-                <Meta title={repo.name} description={repo.description} />
-                <LeftOutlined />
-                <RightOutlined />
-                <span>{repo.language}</span>
-              </Card>
+                <Card hoverable>
+                  <Meta title={repo.name} description={repo.description} />
+                  <LeftOutlined />
+                  <RightOutlined />
+                  <span>{repo.language}</span>
+                </Card>
               </CardOut>
             );
           })}
