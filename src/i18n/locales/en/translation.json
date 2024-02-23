@@ -11,7 +11,9 @@
     "seconds": "seconds"
   },
   "home": {
-    "joinButton": "Join us"
+    "description": "The true work of art is but a shadow of the divine perfection",
+    "serverRunning": "Created for",
+    "joinButton": "Embark on Creativity"
   },
   "notFound": {
     "title": "404 Not Found",

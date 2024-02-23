@@ -40,9 +40,10 @@ const MaskB = styled(MaskA)`
 `;
 
 const HeaderTextContainer = styled.div`
+  padding: 0 20px;
   font-weight: bolder;
   color: white;
-  font-size: 2rem;
+  font-size: 2.5rem;
   position: absolute;
   text-align: center;
   z-index: 3;

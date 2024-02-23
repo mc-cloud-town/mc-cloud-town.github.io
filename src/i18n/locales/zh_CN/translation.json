@@ -11,7 +11,9 @@
     "seconds": "秒"
   },
   "home": {
-    "joinButton": "加入我们"
+    "description": "真正的艺术作品不过是神圣完美的一道影子",
+    "serverRunning": "共创了",
+    "joinButton": "创意启航"
   },
   "notFound": {
     "title": "404 未找到",

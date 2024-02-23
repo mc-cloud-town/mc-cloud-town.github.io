@@ -25,11 +25,12 @@ const HomePage = () => {
       <PageHeader
         backgroundComponent={<HeaderBackground />}
         headerTextArray={[
-          'Welcome to Cloud Town Exquisite Craft',
-          '歡迎來到雲鎮工藝 | CTEC',
-          '欢迎来到云镇工艺 | CTEC'
+          'Cloud Town Exquisite Craft',
+          '雲鎮工藝 | CTEC',
+          '云镇工艺 | CTEC'
         ]}
         subHeaderContentArray={[
+          <span>{t('home.description')}</span>,
           <HeaderTimer />,
           <Link to="/join">
             <Button

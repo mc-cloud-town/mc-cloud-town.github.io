@@ -11,7 +11,9 @@
     "seconds": "秒"
   },
   "home": {
-    "joinButton": "加入我們"
+    "description": " 真正的藝術作品不過是神聖完美的一道影子",
+    "serverRunning": "共創了",
+    "joinButton": "創意啟航"
   },
   "notFound": {
     "title": "404 找不到頁面",

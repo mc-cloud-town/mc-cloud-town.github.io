@@ -17,7 +17,7 @@ const HeaderTimer = () => {
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      setTimeDiff(`${days} ${t('time.days')} ${hours} ${t('time.hours')} ${minutes} ${t('time.minutes')} ${seconds} ${t('time.seconds')}`);
+      setTimeDiff(`${t('home.serverRunning')} ${days} ${t('time.days')} ${hours} ${t('time.hours')} ${minutes} ${t('time.minutes')} ${seconds} ${t('time.seconds')}`);
     }, 1000);
 
     return () => clearInterval(timer);
