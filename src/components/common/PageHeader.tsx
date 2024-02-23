@@ -1,5 +1,5 @@
 import { JSX } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { ReactTyped } from 'react-typed';
 import useScroll from '@/hooks/useScroll.ts';
 
@@ -56,6 +56,22 @@ const SubHeaderTextContainer = styled.div`
   margin-top: 20px;
 `;
 
+const fadeInAnimation = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const AnimatedHeaderTextContainer = styled(HeaderTextContainer)`
+  animation: ${fadeInAnimation} 1s ease-out forwards;
+`;
+
+const AnimatedSubHeaderTextContainer = styled(SubHeaderTextContainer)`
+  animation: ${fadeInAnimation} 1.25s ease-out forwards;
+`;
 
 /**
  * Renders a PageHeader component with customizable background and header text.
@@ -89,7 +105,7 @@ const PageHeader = (
     <BackgroundHeader>
       <MaskA style={{ opacity: maskAOpacity }} />
       <MaskB style={{ opacity: maskBOpacity }} />
-      <HeaderTextContainer>
+      <AnimatedHeaderTextContainer>
         {useTyped ? (
           <ReactTyped
             strings={headerTextArray}
@@ -108,9 +124,11 @@ const PageHeader = (
           </>
         )}
         {subHeaderContentArray && subHeaderContentArray.map((text, index) =>
-          <SubHeaderTextContainer key={index}>{text}</SubHeaderTextContainer>
+          <AnimatedSubHeaderTextContainer key={index}>
+            {text}
+          </AnimatedSubHeaderTextContainer>
         )}
-      </HeaderTextContainer>
+      </AnimatedHeaderTextContainer>
       <BackgroundContainer>
         {backgroundComponent}
       </BackgroundContainer>
