@@ -1,6 +1,7 @@
-import NavigationBar from '#/common/NavigationBar';
 import { ConfigProvider } from 'antd';
 import { Outlet } from 'react-router-dom';
+import NavigationBar from '#/common/NavigationBar';
+import Footer from '#/common/Footer.tsx';
 
 export const Layout = () => {
   return (
@@ -25,6 +26,7 @@ export const Layout = () => {
     >
       <NavigationBar />
       <Outlet />
+      <Footer />
     </ConfigProvider>
   );
 };
