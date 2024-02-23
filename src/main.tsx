@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="home" element={<HomePage />} />
           <Route path="survival" element={<SurvivalProgress />} />
           <Route path="member" element={<MemberPage />} />
-          <Route path="opensource" element={<OpsnSourcePage />} />
+          <Route path="openSource" element={<OpsnSourcePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Dict } from 'styled-components/dist/types';
-import { UseApi } from '@/hooks/useApi';
+import useApi from '@/hooks/useApi';
 import { Card } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 
@@ -16,7 +16,7 @@ const CardOut = styled.div``
 
 
 const OpsnSourcePage = () => {
-  const { data, loading, error } = UseApi(
+  const { data, loading, error } = useApi(
     'https://api.github.com/orgs/mc-cloud-town/repos',
   );
   return (
