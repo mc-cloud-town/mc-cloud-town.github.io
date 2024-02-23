@@ -1,6 +1,8 @@
 import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { serverLink } from '@/constants';
 import CTEC_banner from '@/assets/brand/CTEC_banner.png';
@@ -20,17 +22,24 @@ const Copyright = styled.div`
   color: #999;
 `;
 
-const BrandImage = styled.img`
+const BrandImageWrapper = styled.div`
   width: 300px;
-  
-  @media (max-width: 480px) {
-    width: 250px;
+  & > span > img {
+    width: 300px;
+
+    @media (max-width: 480px) {
+      width: 250px;
+    }
   }
 `;
 
-const LogoImage = styled.img`
+const LogoImageWrapper = styled.div`
   width: 100px;
   padding-bottom: 10px;
+  
+  & > span > img {
+    width: 100px;
+  }
   
   @media (max-width: 768px) {
     display: none;
@@ -56,8 +65,28 @@ const Footer = () => {
       <TopFooterContainer>
         <TopRow align="middle">
           <Col>
-            <LogoImage src={logo} alt="CTEC" />
-            <BrandImage src={CTEC_banner} alt="CTEC" />
+            <Row align="middle">
+              <Col>
+                <LogoImageWrapper>
+                  <LazyLoadImage
+                    src={logo}
+                    alt="CTEC"
+                    effect="blur"
+                    wrapperClassName="lazy-load-image-wrapper"
+                  />
+                </LogoImageWrapper>
+              </Col>
+              <Col>
+                <BrandImageWrapper>
+                  <LazyLoadImage
+                    src={CTEC_banner}
+                    alt="CTEC"
+                    effect="blur"
+                    wrapperClassName="lazy-load-image-wrapper"
+                  />
+                </BrandImageWrapper>
+              </Col>
+            </Row>
           </Col>
           <Col>
             <Space size="large">
