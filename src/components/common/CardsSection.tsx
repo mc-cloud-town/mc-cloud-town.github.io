@@ -1,6 +1,8 @@
 import { Card, Button } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { imageContent } from '@/types/imageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
@@ -48,7 +50,7 @@ const StyledCard = styled(Card)`
   @media (max-width: 1024px) {
     width: 45%;
   }
-  
+
   @media (max-width: 768px) {
     width: 85%;
   }
@@ -68,9 +70,6 @@ const SectionTitle = styled.h2`
   &.fadeIn {
     animation: ${fadeIn} 0.8s ease-out forwards;
   }
-`;
-
-const Image = styled.img`
 `;
 
 const Title = styled.h3`
@@ -103,6 +102,14 @@ const FeatureItem = styled.li`
   }
 `;
 
+const ImageWrapper = styled.div`
+  width: 100%;
+
+  & > span > img {
+    width: 100%;
+  }
+`;
+
 // CardsSection Component
 const CardsSection = (
   {
@@ -125,7 +132,11 @@ const CardsSection = (
             key={index}
             className={animate ? 'fadeIn' : '' + (darkMode ? ' dark' : '')}
             hoverable
-            cover={<Image src={section.imageUrl} alt={section.title} />}
+            cover={
+              <ImageWrapper>
+                <LazyLoadImage src={section.imageUrl} alt={section.title} effect="blur" />
+              </ImageWrapper>
+            }
           >
             <Title>{section.title}</Title>
             {section.subTitle && <SubTitle>{section.subTitle}</SubTitle>}

@@ -1,6 +1,8 @@
 import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { imageContent } from '@/types/imageContent.ts';
@@ -39,11 +41,14 @@ const Container = styled.div`
   }
 `;
 
-const Image = styled.img`
+const ImageWrapper = styled.div`
   width: 100%;
-  height: auto;
-  border-radius: 10px;
-  box-shadow: 0 0 10px 0 #000000;
+  & > span > img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 0 10px 0 #000000;
+  }
 `;
 
 const TextButtonContainer = styled.div`
@@ -110,7 +115,9 @@ const ImageContentSection = (
   return (
     <SectionContainer ref={ref}>
       <Container className={animate ? 'fadeIn' : ''}>
-        <Image src={imageUrl} alt={title} />
+        <ImageWrapper>
+          <LazyLoadImage src={imageUrl} alt={title} effect="blur" />
+        </ImageWrapper>
       </Container>
       <Container className={animate ? 'fadeIn' : ''}>
         <TextButtonContainer>
