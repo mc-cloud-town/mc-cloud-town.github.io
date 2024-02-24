@@ -10,6 +10,7 @@ import ImageContentSection from '#/common/ImageContentSection.tsx';
 import { imageContent } from '@/types/imageContent.ts';
 import CTEC_Sort_7 from '@/assets/homePage/CTEC_Sort_7.png';
 import CardsSection from '#/common/CardsSection.tsx';
+import CarouselSection from '#/common/CarouselSection.tsx';
 
 const HomePage = () => {
     const { t } = useTranslation();
@@ -43,14 +44,14 @@ const HomePage = () => {
         buttonLink: '/redstone',
         buttonText: t('home.feature.card.1.button')
       },
-{
+      {
         imageUrl: CTEC_Sort_7,
         title: t('home.feature.card.2.title'),
         paragraph: t('home.feature.card.2.description'),
         buttonLink: '/hardware',
         buttonText: t('home.feature.card.2.button')
       }
-    ]
+    ];
 
     return (
       <>
@@ -76,11 +77,19 @@ const HomePage = () => {
           ]}
           useTyped={true}
         />
-        <ImageContentSection imageContent={aboutSectionImageContent}/>
+        <ImageContentSection imageContent={aboutSectionImageContent} />
         <CardsSection
           title={t('home.feature.title')}
           darkMode={true}
           imageContentSections={featureSectionImageContents}
+        />
+        <CarouselSection
+          title={t('home.carousel.title')}
+          imageContentsSections={[
+            featureSectionImageContents,
+            featureSectionImageContents,
+            featureSectionImageContents
+          ]}
         />
       </>
     );

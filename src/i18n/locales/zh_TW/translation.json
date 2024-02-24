@@ -45,6 +45,9 @@
           "button": "查看伺服器設備"
         }
       ]
+    },
+    "carousel": {
+      "title": "伺服器內容"
     }
   },
   "notFound": {

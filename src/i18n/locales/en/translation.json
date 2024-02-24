@@ -28,6 +28,9 @@
     },
     "feature": {
       "title": "We have"
+    },
+    "carousel": {
+      "title": "Server Content"
     }
   },
   "notFound": {

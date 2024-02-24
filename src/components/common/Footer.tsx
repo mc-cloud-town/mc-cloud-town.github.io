@@ -10,7 +10,7 @@ import logo from '@/assets/logo/base.png';
 
 const TopFooterContainer = styled.div`
   background-color: #b1dde6;
-  padding: 20px 50px;
+  padding: 20px 60px;
   text-align: center;
 `;
 
