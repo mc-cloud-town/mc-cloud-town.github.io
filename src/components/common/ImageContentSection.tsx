@@ -92,7 +92,7 @@ const FeatureItem = styled.li`
 /**
  * ImageContentSection component. Left side is an image, right side is text and button.
  * @param imageContent {imageContent} - The image content object.
- * @constructor ImageContentSection
+ * @constructor ImageContentSection - React Function Component
  */
 const ImageContentSection = (
   {

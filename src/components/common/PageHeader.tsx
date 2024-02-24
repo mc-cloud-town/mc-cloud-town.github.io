@@ -83,7 +83,7 @@ const AnimatedSubHeaderTextContainer = styled(SubHeaderTextContainer)`
  *   If `useTyped` is true, texts are displayed with typing animation via ReactTyped.
  * @param subHeaderContentArray {string[] | JSX.Element[]} - An array of strings or JSX elements for sub-header title.
  * @param useTyped {boolean} - Flag to enable/disable typing animation for displaying header text.
- * @constructor - React Component
+ * @constructor PageHeader - React Function Component
  */
 const PageHeader = (
   {

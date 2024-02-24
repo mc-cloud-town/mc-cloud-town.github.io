@@ -110,7 +110,13 @@ const ImageWrapper = styled.div`
   }
 `;
 
-// CardsSection Component
+/**
+ * Cards Section Component
+ * @param title {string} - Title of the section
+ * @param darkMode {boolean} - Enable dark mode (default: false)
+ * @param imageContentSections {imageContent[]} - Array of imageContent
+ * @constructor CardsSection - React Function Component
+ */
 const CardsSection = (
   {
     title,
