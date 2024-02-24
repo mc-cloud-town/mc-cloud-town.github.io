@@ -13,7 +13,19 @@
   "home": {
     "description": " 真正的藝術作品不過是神聖完美的一道影子",
     "serverRunning": "共創了",
-    "joinButton": "創意啟航"
+    "joinButton": "創意啟航",
+    "about": {
+      "title": "Cloud Town Exquisite Craft",
+      "subTitle": "雲鎮工藝",
+      "features": [
+        "為目前亞洲頂尖生電技術伺服器之一",
+        "活躍於Minecraft原版環境下的生電技術研究",
+        "生存實踐、紅石科技、建築創作",
+        "良好的創作環境與伺服器設備",
+        "與各國優秀玩家共同研究交流"
+      ],
+      "button": "最新進度"
+    }
   },
   "notFound": {
     "title": "404 找不到頁面",

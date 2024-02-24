@@ -13,7 +13,19 @@
   "home": {
     "description": "The true work of art is but a shadow of the divine perfection",
     "serverRunning": "Created for",
-    "joinButton": "Embark on Creativity"
+    "joinButton": "Embark on Creativity",
+    "about": {
+      "title": "Cloud Town Exquisite Craft",
+      "subTitle": "CTEC",
+      "features": [
+        "One of the top green energy technology servers in Asia currently",
+        "Active in research on green energy technology within the vanilla Minecraft environment",
+        "Survival practice, redstone technology, architectural creation",
+        "A good creative environment and server equipment",
+        "Collaborative research and exchange with excellent players from various countries"
+      ],
+      "button": "Latest Progress"
+    }
   },
   "notFound": {
     "title": "404 Not Found",
