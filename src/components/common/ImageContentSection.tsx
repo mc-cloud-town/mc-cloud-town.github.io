@@ -1,9 +1,9 @@
 import { Button } from 'antd';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 
-import useScroll from '@/hooks/useScroll.ts';
+import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
+import { imageContent } from '@/types/imageContent.ts';
 
 const fadeIn = keyframes`
   from {
@@ -86,45 +86,29 @@ const FeatureItem = styled.li`
 
 /**
  * ImageContentSection component. Left side is an image, right side is text and button.
- * @param imageUrl {string} - The image url.
- * @param title {string} - The title of the section.
- * @param subTitle {string} - The subtitle of the section. (Optional)
- * @param paragraph {string} - The paragraph of the section. (Optional)
- * @param features {string[]} - The list of features. (Optional)
- * @param buttonLink {string} - The link of the button. (Optional)
- * @param buttonText {string} - The text of the button. (Optional)
+ * @param imageContent {imageContent} - The image content object.
  * @constructor ImageContentSection
  */
 const ImageContentSection = (
   {
+    imageContent
+  }: {
+    imageContent: imageContent
+  }) => {
+  const {
     imageUrl,
     title,
     subTitle,
     paragraph,
     features,
     buttonLink,
-    buttonText
-  }: {
-    imageUrl: string;
-    title: string;
-    subTitle?: string;
-    paragraph?: string;
-    features?: string[];
-    buttonLink?: string;
-    buttonText?: string;
-  }) => {
-  const { y, lastY } = useScroll();
-  const [animate, setAnimate] = useState(false);
+    buttonText,
+  } = imageContent;
 
-  useEffect(() => {
-    if (y === lastY) return;
-    if (y > lastY && y > 100) {
-      setAnimate(true);
-    }
-  }, [y, lastY]);
+  const { animate, ref } = useAnimateOnScroll();
 
   return (
-    <SectionContainer>
+    <SectionContainer ref={ref}>
       <Container className={animate ? 'fadeIn' : ''}>
         <Image src={imageUrl} alt={title} />
       </Container>

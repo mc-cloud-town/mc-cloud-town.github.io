@@ -17,7 +17,7 @@ export const Layout = () => {
           // Alias Token
           colorBgContainer: '#ffffff',
           colorTextBase: '#333333',
-          borderRadius: 4,
+          borderRadius: 8,
 
           colorLink: '#6f9b9c',
           colorBorder: '#96dbe6',
