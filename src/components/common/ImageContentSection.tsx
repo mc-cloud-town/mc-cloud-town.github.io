@@ -6,6 +6,7 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { imageContent } from '@/types/imageContent.ts';
+import getImageUrl from '@/utils/getImageUrl.ts';
 
 const fadeIn = keyframes`
   from {
@@ -116,7 +117,7 @@ const ImageContentSection = (
     <SectionContainer ref={ref}>
       <Container className={animate ? 'fadeIn' : ''}>
         <ImageWrapper>
-          <LazyLoadImage src={imageUrl} alt={title} effect="blur" />
+          <LazyLoadImage src={getImageUrl(imageUrl)} alt={title} effect="blur" />
         </ImageWrapper>
       </Container>
       <Container className={animate ? 'fadeIn' : ''}>

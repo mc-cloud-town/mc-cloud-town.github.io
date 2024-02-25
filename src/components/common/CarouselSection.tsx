@@ -4,6 +4,7 @@ import styled, { keyframes } from 'styled-components';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { imageContent } from '@/types/imageContent.ts';
+import getImageUrl from '@/utils/getImageUrl.ts';
 
 const fadeIn = keyframes`
   from {
@@ -96,7 +97,7 @@ const CarouselSection = (
                   <LazyLoadImage
                     alt={imageContent.title}
                     effect="blur"
-                    src={imageContent.imageUrl}
+                    src={getImageUrl(imageContent.imageUrl)}
                   />
                 </ImageWrapper>
               ))}

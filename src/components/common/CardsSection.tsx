@@ -6,6 +6,7 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { imageContent } from '@/types/imageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
+import getImageUrl from '@/utils/getImageUrl.ts';
 
 const fadeIn = keyframes`
   from {
@@ -140,7 +141,7 @@ const CardsSection = (
             hoverable
             cover={
               <ImageWrapper>
-                <LazyLoadImage src={section.imageUrl} alt={section.title} effect="blur" />
+                <LazyLoadImage src={getImageUrl(section.imageUrl)} alt={section.title} effect="blur" />
               </ImageWrapper>
             }
           >
