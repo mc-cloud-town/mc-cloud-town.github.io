@@ -17,15 +17,20 @@ const resources = {
   }
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: "zh_TW",
-    fallbackLng: "en",
-    interpolation: {
-      escapeValue: false
-    }
-  });
+const initI18n = () => {
+  i18n
+    .use(initReactI18next)
+    .init({
+      resources,
+      lng: 'zh_TW',
+      fallbackLng: 'en',
+      interpolation: {
+        escapeValue: false
+      }
+    }).then()
+    .catch((err) => {
+      console.error(err);
+    });
+};
 
-export default i18n;
+export default initI18n;

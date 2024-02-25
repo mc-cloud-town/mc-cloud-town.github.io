@@ -1,15 +1,18 @@
-import 'antd/dist/reset.css';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { Layout } from './Layout';
-import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import NotFoundPage from './pages/NotFoundPage';
 import HomePage from './pages/HomePage';
 import MemberPage from './pages/Members';
 import SurvivalProgress from './pages/SurvivalProgress.tsx';
 import OpenSourcePage from './pages/OpenSource.tsx';
-import './i18n/i18nConfig';
+import initI18n from './i18n/i18nConfig';
+
+import 'antd/dist/reset.css';
+
+initI18n();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

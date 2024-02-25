@@ -1,8 +1,8 @@
-import PageHeader from '#/common/PageHeader.tsx';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 
+import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
 
 import background from '@/assets/notFoundPage/background.jpg';
