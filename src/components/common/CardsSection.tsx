@@ -30,29 +30,29 @@ const Section = styled.section`
 
 const CardContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 20px;
 
   @media (min-width: 768px) {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    align-items: stretch;
   }
 `;
 
 const StyledCard = styled(Card)`
   opacity: 0;
-  width: 30%;
-  height: 100%;
+  flex: 1;
+  min-width: 300px;
   text-align: left;
 
+  max-width: 30%;
+
   @media (max-width: 1024px) {
-    width: 45%;
+    max-width: 45%;
   }
 
   @media (max-width: 768px) {
-    width: 85%;
+    max-width: 85%;
   }
 
   &.fadeIn {
