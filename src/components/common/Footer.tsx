@@ -23,26 +23,24 @@ const Copyright = styled.div`
 `;
 
 const BrandImageWrapper = styled.div`
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
+  
   & > span > img {
-    width: 300px;
-
-    @media (max-width: 480px) {
-      width: 250px;
-    }
+    width: 100%;
   }
 `;
 
 const LogoImageWrapper = styled.div`
   width: 100px;
   padding-bottom: 10px;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
   
   & > span > img {
     width: 100px;
-  }
-  
-  @media (max-width: 768px) {
-    display: none;
   }
 `;
 
