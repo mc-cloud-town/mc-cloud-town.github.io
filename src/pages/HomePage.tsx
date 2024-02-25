@@ -1,21 +1,19 @@
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderBackground from '#/homePage/header/HeaderBackground.tsx';
 import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 
 import { imageContent } from '@/types/imageContent.ts';
-import CTEC_Sort_7 from '@/assets/homePage/CTEC_Sort_7.png';
 import CardsSection from '#/common/CardsSection.tsx';
 import CarouselSection from '#/common/CarouselSection.tsx';
 
 const HomePage = () => {
     const { t } = useTranslation();
     const aboutSectionImageContent: imageContent = {
-      imageUrl: CTEC_Sort_7,
+      imageUrl: t('home.about.imageUrl'),
       title: t('home.about.title'),
       subTitle: t('home.about.subTitle'),
       features: [
@@ -31,21 +29,21 @@ const HomePage = () => {
 
     const featureSectionImageContents: imageContent[] = [
       {
-        imageUrl: CTEC_Sort_7,
+        imageUrl: t('home.feature.card.0.imageUrl'),
         title: t('home.feature.card.0.title'),
         paragraph: t('home.feature.card.0.description'),
         buttonLink: '/building',
         buttonText: t('home.feature.card.0.button')
       },
       {
-        imageUrl: CTEC_Sort_7,
+        imageUrl: t('home.feature.card.1.imageUrl'),
         title: t('home.feature.card.1.title'),
         paragraph: t('home.feature.card.1.description'),
         buttonLink: '/redstone',
         buttonText: t('home.feature.card.1.button')
       },
       {
-        imageUrl: CTEC_Sort_7,
+        imageUrl: t('home.feature.card.2.imageUrl'),
         title: t('home.feature.card.2.title'),
         paragraph: t('home.feature.card.2.description'),
         buttonLink: '/hardware',
