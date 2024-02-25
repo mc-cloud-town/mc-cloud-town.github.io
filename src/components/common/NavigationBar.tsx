@@ -35,6 +35,10 @@ const NavigationBarContainer = styled.div`
 const Brand = styled.img`
   height: 40px;
   margin-right: 20px;
+  
+  @media (max-width: 290px) {
+    display: none;
+  }
 `;
 
 const StyledMenu = styled(Menu)`

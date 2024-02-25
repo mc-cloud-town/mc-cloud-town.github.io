@@ -12,6 +12,10 @@ const TopFooterContainer = styled.div`
   background-color: #b1dde6;
   padding: 20px 80px;
   text-align: center;
+  
+  @media (max-width: 375px) {
+    padding: 20px 20px;
+  }
 `;
 
 const BottomFooterContainer = styled(TopFooterContainer)`
