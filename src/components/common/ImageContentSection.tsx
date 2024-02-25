@@ -28,6 +28,11 @@ const SectionContainer = styled.div`
   background-color: #ecf0f1;
   padding: 50px 40px;
 
+  &.dark {
+    background-color: #6f9b9c;
+    color: #fff;
+  }
+
   @media (max-width: 768px) {
     flex-direction: column;
     padding: 50px 0;
@@ -115,25 +120,36 @@ const FeatureItem = styled.li`
     left: 0;
     color: #6f9b9c;
   }
+
+  &.dark {
+    &:before {
+      color: #fff;
+    }
+  }
 `;
 
 /**
  * ImageContentSection component with an optional image position.
  * @param imageContent {imageContent} - The image content object.
  * @param imageOnRight {boolean} - If true, the image will be displayed on the right.
+ * @param darkMode {boolean} - If true, the section will be displayed in dark mode.
  */
 const ImageContentSection = (
   {
     imageContent,
-    imageOnRight = false
+    imageOnRight = false,
+    darkMode = false,
   }: {
     imageContent: imageContent,
     imageOnRight?: boolean,
+    darkMode?: boolean
   }) => {
   const { animate, ref } = useAnimateOnScroll();
 
+  const optionalStyle = (imageOnRight ? 'right' : '') + (darkMode ? ' dark' : '');
+
   return (
-    <SectionContainer ref={ref} className={imageOnRight ? 'right' : ''}>
+    <SectionContainer ref={ref} className={optionalStyle}>
       <Container className={animate ? 'fadeIn' : ''}>
         <ImageWrapper>
           <LazyLoadImage src={getImageUrl(imageContent.imageUrl)} alt={imageContent.title} effect="blur" />
@@ -146,12 +162,17 @@ const ImageContentSection = (
           {imageContent.paragraph && <Paragraph>{imageContent.paragraph}</Paragraph>}
           <FeatureList>
             {imageContent.features && imageContent.features.map((feature, index) => (
-              <FeatureItem key={index}>{feature}</FeatureItem>
+              <FeatureItem key={index} className={darkMode ? 'dark' : ''}>{feature}</FeatureItem>
             ))}
           </FeatureList>
           {imageContent.buttonLink && imageContent.buttonText && (
             <Link to={imageContent.buttonLink}>
-              <Button type="primary">{imageContent.buttonText}</Button>
+              <Button
+                type={darkMode ? 'default' : 'primary'}
+                ghost={darkMode}
+              >
+                {imageContent.buttonText}
+              </Button>
             </Link>
           )}
         </TextButtonContainer>
