@@ -25,9 +25,22 @@ const SectionContainer = styled.div`
   align-items: center;
   justify-content: center;
   background-color: #ecf0f1;
-  padding: 50px 20px;
+  padding: 50px 40px;
+  
   @media (min-width: 768px) {
     flex-direction: row;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 50px 0;
+  }
+  
+  @media (max-width: 678px) {
+    padding: 50px 50px;
+  }
+  
+  @media (max-width: 400px) {
+    padding: 50px 20px;
   }
 `;
 
@@ -36,6 +49,16 @@ const Container = styled.div`
   padding: 20px;
   transition: opacity 0.8s ease-out;
   opacity: 0;
+  
+  @media (max-width: 678px) {
+    padding: 0;
+    
+    margin-bottom: 20px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 
   &.fadeIn {
     animation: ${fadeIn} 0.8s ease-out forwards;
