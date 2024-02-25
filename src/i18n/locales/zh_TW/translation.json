@@ -2,7 +2,8 @@
   "menu": {
     "home": "首頁",
     "survivalProgress": "生存服進度",
-    "member": "成員"
+    "member": "成員",
+    "join": "加入我們"
   },
   "time": {
     "days": "天",
@@ -62,5 +63,10 @@
   "members": {
     "title": "成員列表",
     "description": "各領域優秀成員，共創伺服器精彩紀錄"
+  },
+  "join" : {
+    "description": "加入Discord伺服器並填寫申請表",
+    "forms": "申請說明",
+    "joinDiscord": "加入discord"
   }
 }
