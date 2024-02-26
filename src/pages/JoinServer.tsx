@@ -43,7 +43,8 @@ const JoinServer = () => {
     buttons: [
       {
         text: '申請表單',
-        link: 'https://forms.gle/sGUxUtUaskchiTfG7',
+        href: 'https://forms.gle/sGUxUtUaskchiTfG7',
+        type: 'link',
       },
     ],
   };
@@ -55,7 +56,8 @@ const JoinServer = () => {
     buttons: [
       {
         text: '申請表單',
-        link: 'https://forms.gle/sGUxUtUaskchiTfG7',
+        href: 'https://forms.gle/sGUxUtUaskchiTfG7',
+        type: 'link',
       },
     ],
   };
