@@ -3,7 +3,7 @@ export interface imageContent {
   title: string;
   subTitle?: string;
   paragraph?: string;
-  features?: (string | Element)[];
+  features?: (string | JSX.Element)[];
   buttonLink?: string;
   buttonText?: string;
 }
