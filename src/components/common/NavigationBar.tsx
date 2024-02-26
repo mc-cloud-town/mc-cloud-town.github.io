@@ -13,7 +13,9 @@ const NavigationBarContainer = styled.div`
   width: 100%;
   z-index: 1000;
   top: 0;
-  transition: top 0.3s, background-color 0.3s;
+  transition:
+    top 0.3s,
+    background-color 0.3s;
 
   &.hidden {
     top: -100px;
@@ -35,7 +37,7 @@ const NavigationBarContainer = styled.div`
 const Brand = styled.img`
   height: 40px;
   margin-right: 20px;
-  
+
   @media (max-width: 290px) {
     display: none;
   }
@@ -94,25 +96,32 @@ const NavigationBar = () => {
     },
     {
       key: 'home',
-      label: (<Link to="/">{t('menu.home')}</Link>)
+      label: <Link to="/">{t('menu.home')}</Link>,
+    },
+    {
+      key: 'join',
+      label: <Link to="/join">{t('menu.join')}</Link>,
     },
     {
       key: 'survival',
-      label: (<Link to="/survival">{t('menu.survivalProgress')}</Link>)
+      label: <Link to="/survival">{t('menu.survivalProgress')}</Link>,
     },
     {
       key: 'member',
-      label: (<Link to="/member">{t('menu.member')}</Link>)
+      label: <Link to="/member">{t('menu.member')}</Link>,
     },
     {
       key: '404',
-      label: (<Link to="/404">{404}</Link>)
+      label: <Link to="/404">{404}</Link>,
     },
     {
       key: 'language',
       label: (
         <Dropdown
-          menu={{ items: languageItems, onClick: ({ key }) => changeLanguage(key) }}
+          menu={{
+            items: languageItems,
+            onClick: ({ key }) => changeLanguage(key),
+          }}
           placement="bottom"
         >
           <a onClick={(e) => e.preventDefault()}>
@@ -126,13 +135,16 @@ const NavigationBar = () => {
   ];
 
   return (
-    <NavigationBarContainer className={`${isHidden ? 'hidden' : ''} ${scrolled ? 'scrolled' : ''}`}>
+    <NavigationBarContainer
+      className={`${isHidden ? 'hidden' : ''} ${scrolled ? 'scrolled' : ''}`}
+    >
       <StyledMenu
         theme="dark"
         mode="horizontal"
         items={[...menuItems]}
         defaultSelectedKeys={getDefaultSelectedKeys()}
-        className={`${scrolled ? 'scrolled' : ''}`} />
+        className={`${scrolled ? 'scrolled' : ''}`}
+      />
     </NavigationBarContainer>
   );
 };

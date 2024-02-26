@@ -11,10 +11,10 @@ import contentButton from '@/types/contentButton.ts';
  * @interface imageContent - Interface for the imageContent object
  */
 export interface imageContent {
-  imageUrl: string,
-  title: string,
-  subTitle?: string,
-  paragraph?: string,
-  features?: string[],
-  buttons?: contentButton[],
+  imageUrl: string;
+  title: string;
+  subTitle?: string;
+  paragraph?: string;
+  features?: string[];
+  buttons?: contentButton[];
 }

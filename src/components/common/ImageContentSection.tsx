@@ -190,7 +190,7 @@ const ImageContentSection = (
                 <StyledButton
                   key={index}
                   type={button.type || (darkMode ? 'default' : 'primary')}
-                  ghost={darkMode}
+                  ghost={(button.type !== 'link' && button.type !== 'text') && darkMode}
                   href={button.href}
                   target={button.href ? '_blank' : ''}
                   onClick={button.action}
