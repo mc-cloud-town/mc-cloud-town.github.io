@@ -141,8 +141,8 @@ const StyledButton = styled(Button)`
 /**
  * ImageContentSection component with an optional image position.
  * @param imageContent {imageContent} - The image content object.
- * @param imageOnRight {boolean} - If true, the image will be displayed on the right.
- * @param darkMode {boolean} - If true, the section will be displayed in dark mode.
+ * @param imageOnRight {boolean} - If true, the image will be displayed on the right. Default is false.
+ * @param darkMode {boolean} - If true, the section will be displayed in dark mode. Default is false.
  */
 const ImageContentSection = (
   {
