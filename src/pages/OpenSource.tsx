@@ -48,7 +48,7 @@ const OpenSourcePage = () => {
             })
             .map((repo: Dict) => {
               return (
-                <CardOut onClick={() => window.open(repo.html_url)}>
+                <CardOut key={repo.name} onClick={() => window.open(repo.html_url)}>
                   <Card hoverable style={{ width: 300 }}>
                     <Meta title={repo.name} description={repo.description} />
                     <LangShow>
