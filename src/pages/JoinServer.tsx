@@ -19,13 +19,18 @@ const JoinServer = () => {
     ],
     buttons: [
       {
-        text: t('join.redstone.description.3'),
-        href: 'https://discordapp.com/users/676261754782613514',
+        text: t('join.redstone.admin1.text'),
+        href: t('join.redstone.admin1.href'),
         type: 'link',
       },
       {
-        text: t('join.redstone.description.4'),
-        href: 'https://discordapp.com/users/378510281250439168',
+        text: t('join.redstone.admin2.text'),
+        href: t('join.redstone.admin2.href'),
+        type: 'link',
+      },
+      {
+        text: t('join.redstone.channel.text'),
+        href: t('join.redstone.channel.href'),
         type: 'link',
       },
     ],
@@ -42,8 +47,8 @@ const JoinServer = () => {
     ],
     buttons: [
       {
-        text: '申請表單',
-        href: 'https://forms.gle/sGUxUtUaskchiTfG7',
+        text: t('join.build.forms.text'),
+        href: t('join.build.forms.href'),
         type: 'link',
       },
     ],
@@ -55,8 +60,8 @@ const JoinServer = () => {
     features: [t('join.player.description')],
     buttons: [
       {
-        text: '申請表單',
-        href: 'https://forms.gle/sGUxUtUaskchiTfG7',
+        text: t('join.player.forms.text'),
+        href: t('join.player.forms.href'),
         type: 'link',
       },
     ],
@@ -77,6 +82,7 @@ const JoinServer = () => {
       {/*建築*/}
       <ImageContentSection
         imageContent={BuildPlayerImage}
+        imageOnRight={true}
       ></ImageContentSection>
       {/*後勤*/}
       <ImageContentSection

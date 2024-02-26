@@ -63,6 +63,53 @@
     "title": "Member List",
     "description": "Excellent members in various fields create wonderful server records"
   },
+  "join": {
+    "description": "How to Join Us",
+    "redstone": {
+      "image": "join/redstone.png",
+      "title": "Redstone Team",
+      "description": [
+        "Submit your redstone creations to the submission channel or directly message a reviewer to apply for review.",
+        "We will invite authors of outstanding works to join.",
+        "Reviewer Discord:"
+      ],
+      "admin1": {
+        "text": "fantasy_sakura",
+        "href": "https://discordapp.com/users/676261754782613514"
+      },
+      "admin2": {
+        "text": "jezlarm",
+        "href": "https://discordapp.com/users/378510281250439168"
+      },
+      "channel": {
+        "text": "Submission Channel",
+        "href": "https://discord.com/channels/933290709589577728/1103568261683101696"
+      }
+    },
+    "build": {
+      "image": "join/build.png",
+      "title": "Building Team",
+      "subTitle": "The review will be based on the following criteria:",
+      "description": [
+        "Structural Rationality: Defies Newtonian physics (exceptions for magic/fantasy themes, but exaggeration must be reasonably grounded), the work should display rational building structures and accurately replicate stylistic details and structure, not just surface appearance.",
+        "Color Application: The work employs stunning visual effects through the application of color concepts and coloring skills.",
+        "Creativity: Plagiarism, poor secondary creation, and exploiting review loopholes are strictly prohibited in the Cloud Town building department. Please respect each original work. Authors with rich creativity can reflect a strong personal style and unique innovative ability in their work."
+      ],
+      "forms": {
+        "text": "Application Form",
+        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
+      }
+    },
+    "player": {
+      "image": "join/player.png",
+      "title": "Logistics Team",
+      "description": "We hope to recruit Minecraft players who have basic redstone knowledge and are enthusiastic about the game. If you are dedicated, have a bit of redstone knowledge, and are full of passion for the game, please fill out the Cloud Town Craft Logistics Team form. If your score meets the standard, there will be a second review based on activity.",
+      "forms": {
+        "text": "Application Form",
+        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
+      }
+    }
+  },
   "opensource": {
     "title": "Open Source",
     "description": "some good projects"
