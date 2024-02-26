@@ -16,8 +16,18 @@ const JoinServer = () => {
       t('join.redstone.description.0'),
       t('join.redstone.description.1'),
       t('join.redstone.description.2'),
-      t('join.redstone.description.3'),
-      t('join.redstone.description.4'),
+    ],
+    buttons: [
+      {
+        text: t('join.redstone.description.3'),
+        href: 'https://discordapp.com/users/676261754782613514',
+        type: 'link',
+      },
+      {
+        text: t('join.redstone.description.4'),
+        href: 'https://discordapp.com/users/378510281250439168',
+        type: 'link',
+      },
     ],
   };
   // 建築
@@ -30,19 +40,28 @@ const JoinServer = () => {
       t('join.build.description.1'),
       t('join.build.description.2'),
     ],
-    buttonLink: 'https://forms.gle/sGUxUtUaskchiTfG7',
-    buttonText: '申請表單',
+    buttons: [
+      {
+        text: '申請表單',
+        link: 'https://forms.gle/sGUxUtUaskchiTfG7',
+      },
+    ],
   };
   // 後勤
   const PlayerImage: imageContent = {
     imageUrl: t('join.player.image'),
     title: t('join.player.title'),
     features: [t('join.player.description')],
-    buttonLink: 'https://forms.gle/sGUxUtUaskchiTfG7',
-    buttonText: '申請表單',
+    buttons: [
+      {
+        text: '申請表單',
+        link: 'https://forms.gle/sGUxUtUaskchiTfG7',
+      },
+    ],
   };
   return (
     <>
+      <a target=""></a>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={join} />}
         headerTextArray={[t('join.description')]}
@@ -65,5 +84,4 @@ const JoinServer = () => {
     </>
   );
 };
-
 export default JoinServer;
