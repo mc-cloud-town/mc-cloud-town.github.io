@@ -128,6 +128,16 @@ const FeatureItem = styled.li`
   }
 `;
 
+const StyledButton = styled(Button)`
+  & > span {
+    font-size: 18px;
+  }
+  
+  &.dark {
+    color: #fff;
+  }
+`;
+
 /**
  * ImageContentSection component with an optional image position.
  * @param imageContent {imageContent} - The image content object.
@@ -177,16 +187,17 @@ const ImageContentSection = (
                   </Button>
                 </Link>
               ) : (
-                <Button
+                <StyledButton
                   key={index}
                   type={button.type || (darkMode ? 'default' : 'primary')}
                   ghost={darkMode}
                   href={button.href}
                   target={button.href ? '_blank' : ''}
                   onClick={button.action}
+                  className={darkMode ? 'dark' : ''}
                 >
                   {button.text}
-                </Button>
+                </StyledButton>
               )
             ))}
           </Flex>
