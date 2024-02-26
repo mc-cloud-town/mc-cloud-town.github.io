@@ -32,9 +32,7 @@ const OpenSourcePage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={
-          <HeaderImage imageUrl="https://frp.whitecloud.life/api/v1/pixiv/image/76831252" />
-        }
+        backgroundComponent={<HeaderImage imageUrl="" />}
         headerTextArray={[t('opensource.title')]}
         subHeaderContentArray={[t('opensource.description')]}
       />
@@ -48,7 +46,10 @@ const OpenSourcePage = () => {
             })
             .map((repo: Dict) => {
               return (
-                <CardOut key={repo.name} onClick={() => window.open(repo.html_url)}>
+                <CardOut
+                  key={repo.name}
+                  onClick={() => window.open(repo.html_url)}
+                >
                   <Card hoverable style={{ width: 300 }}>
                     <Meta title={repo.name} description={repo.description} />
                     <LangShow>
