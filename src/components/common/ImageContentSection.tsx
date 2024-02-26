@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -138,7 +138,7 @@ const ImageContentSection = (
   {
     imageContent,
     imageOnRight = false,
-    darkMode = false,
+    darkMode = false
   }: {
     imageContent: imageContent,
     imageOnRight?: boolean,
@@ -165,16 +165,30 @@ const ImageContentSection = (
               <FeatureItem key={index} className={darkMode ? 'dark' : ''}>{feature}</FeatureItem>
             ))}
           </FeatureList>
-          {imageContent.buttonLink && imageContent.buttonText && (
-            <Link to={imageContent.buttonLink}>
-              <Button
-                type={darkMode ? 'default' : 'primary'}
-                ghost={darkMode}
-              >
-                {imageContent.buttonText}
-              </Button>
-            </Link>
-          )}
+          <Flex gap={5}>
+            {imageContent.buttons && imageContent.buttons.map((button, index) => (
+              button.link ? (
+                <Link key={index} to={button.link}>
+                  <Button
+                    type={button.type || darkMode ? 'default' : 'primary'}
+                    ghost={darkMode}
+                  >
+                    {button.text}
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  key={index}
+                  type={button.type || darkMode ? 'default' : 'primary'}
+                  ghost={darkMode}
+                  href={button.href}
+                  onClick={button.action}
+                >
+                  {button.text}
+                </Button>
+              )
+            ))}
+          </Flex>
         </TextButtonContainer>
       </Container>
     </SectionContainer>

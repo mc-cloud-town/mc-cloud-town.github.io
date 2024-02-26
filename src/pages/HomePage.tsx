@@ -24,8 +24,12 @@ const HomePage = () => {
       t('home.about.features.3'),
       t('home.about.features.4'),
     ],
-    buttonLink: '/survival',
-    buttonText: t('home.about.button'),
+    buttons: [
+      {
+        text: t('home.about.button'),
+        link: '/survival',
+      },
+    ],
   };
 
   const featureSectionImageContents: imageContent[] = [
@@ -33,22 +37,34 @@ const HomePage = () => {
       imageUrl: t('home.feature.card.0.imageUrl'),
       title: t('home.feature.card.0.title'),
       paragraph: t('home.feature.card.0.description'),
-      buttonLink: '/building',
-      buttonText: t('home.feature.card.0.button'),
+      buttons: [
+        {
+          text: t('home.feature.card.0.button'),
+          link: '/building',
+        },
+      ],
     },
     {
       imageUrl: t('home.feature.card.1.imageUrl'),
       title: t('home.feature.card.1.title'),
       paragraph: t('home.feature.card.1.description'),
-      buttonLink: '/redstone',
-      buttonText: t('home.feature.card.1.button'),
+      buttons: [
+        {
+          text: t('home.feature.card.1.button'),
+          link: '/redstone',
+        },
+      ],
     },
     {
       imageUrl: t('home.feature.card.2.imageUrl'),
       title: t('home.feature.card.2.title'),
       paragraph: t('home.feature.card.2.description'),
-      buttonLink: '/hardware',
-      buttonText: t('home.feature.card.2.button'),
+      buttons: [
+        {
+          text: t('home.feature.card.2.button'),
+          link: '/hardware',
+        },
+      ],
     },
   ];
 
@@ -89,5 +105,4 @@ const HomePage = () => {
     </>
   );
 };
-
 export default HomePage;
