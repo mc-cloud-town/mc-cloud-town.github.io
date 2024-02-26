@@ -28,6 +28,11 @@ const JoinServer = () => {
         href: t('join.redstone.admin2.href'),
         type: 'link',
       },
+      {
+        text: t('join.redstone.channel.text'),
+        href: t('join.redstone.channel.href'),
+        type: 'link',
+      },
     ],
   };
   // 建築

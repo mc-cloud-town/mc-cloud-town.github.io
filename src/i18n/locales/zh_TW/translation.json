@@ -65,16 +65,14 @@
     "description": "各領域優秀成員，共創伺服器精彩紀錄"
   },
   "join": {
-    "description": "加入Discord伺服器並填寫申請表",
+    "description": "如何加入我們",
     "redstone": {
       "image": "join/redstone.png",
       "title": "紅石組",
       "description": [
         "投稿紅石作品至作品投稿或審核人員私訊來申請審核。",
         "我們將邀請優秀作品的作者加入。",
-        "審核人員DC:",
-        "fantasy_sakura",
-        "jezlarm"
+        "審核人員DC:"
       ],
       "admin1": {
         "text": "fantasy_sakura",
@@ -83,6 +81,10 @@
       "admin2": {
         "text": "jezlarm",
         "href": "https://discordapp.com/users/378510281250439168"
+      },
+      "channel": {
+        "text": "作品投稿頻道",
+        "href": "https://discord.com/channels/933290709589577728/1103568261683101696"
       }
     },
     "build": {
