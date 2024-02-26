@@ -88,7 +88,9 @@ const HomePage = () => {
         ]}
         useTyped={true}
       />
-      <ImageContentSection imageContent={aboutSectionImageContent} />
+      <ImageContentSection
+        imageContent={aboutSectionImageContent}
+      />
       <CardsSection
         title={t('home.feature.title')}
         darkMode={true}

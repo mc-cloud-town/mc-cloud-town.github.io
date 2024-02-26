@@ -131,6 +131,8 @@ const FeatureItem = styled.li`
 const StyledButton = styled(Button)`
   & > span {
     font-size: 18px;
+    font-weight: bold;
+    text-decoration: underline;
   }
   
   &.dark {
@@ -175,7 +177,7 @@ const ImageContentSection = (
               <FeatureItem key={index} className={darkMode ? 'dark' : ''}>{feature}</FeatureItem>
             ))}
           </FeatureList>
-          <Flex gap={5}>
+          <Flex wrap="wrap" gap="small">
             {imageContent.buttons && imageContent.buttons.map((button, index) => (
               button.link ? (
                 <Link key={index} to={button.link}>

@@ -112,6 +112,18 @@ const ImageWrapper = styled.div`
   }
 `;
 
+const StyledButton = styled(Button)`
+  & > span {
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: underline;
+  }
+  
+  &.dark {
+    color: #fff;
+  }
+`;
+
 /**
  * Cards Section Component
  * @param title {string} - Title of the section
@@ -154,7 +166,7 @@ const CardsSection = (
                 <FeatureItem key={idx}>{feature}</FeatureItem>
               ))}
             </FeatureList>
-            <Flex gap={5}>
+            <Flex wrap="wrap" gap="small" align='center'>
               {section.buttons && section.buttons.map((button, idx) => (
                 button.link ? (
                   <Link key={idx} to={button.link}>
@@ -166,7 +178,7 @@ const CardsSection = (
                     </Button>
                   </Link>
                 ) : (
-                  <Button
+                  <StyledButton
                     key={idx}
                     type={button.type || 'primary'}
                     ghost={(button.type !== 'link' && button.type !== 'text') && darkMode}
@@ -175,7 +187,7 @@ const CardsSection = (
                     onClick={button.action}
                   >
                     {button.text}
-                  </Button>
+                  </StyledButton>
                 )
               ))
               }
