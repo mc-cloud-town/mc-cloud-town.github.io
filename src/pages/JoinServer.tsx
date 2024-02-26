@@ -1,10 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
-import join from '@/assets/join/join.png';
-import { useTranslation } from 'react-i18next';
 import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
+
 import { imageContent } from '@/types/imageContent.ts';
+import join from '@/assets/join/join.jpg';
 
 const JoinServer = () => {
   const { t } = useTranslation();

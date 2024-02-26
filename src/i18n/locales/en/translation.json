@@ -26,7 +26,7 @@
         "Collaborative research and exchange with excellent players from various countries"
       ],
       "button": "Latest Progress",
-      "imageUrl": "homePage/CTEC_Redstone.png"
+      "imageUrl": "homePage/CTEC_Redstone.jpg"
     },
     "feature": {
       "title": "What We Offer",
@@ -41,13 +41,13 @@
           "title": "Advanced Redstone Technology",
           "description": "Our community boasts strong technical capabilities, with numerous Redstone technology developers proficient in various tech tree research, maintaining friendly relations with multiple international live electricity servers. Our team is dedicated to research and innovation, continuously rolling out various novel farms or components, providing more fun for community members. We have set up dedicated labs, including two creative servers and two mirror servers, allowing players who do not wish to play survival to join in the fun. We currently hold the world record certification for a copper oxidation farm.",
           "button": "View Redstone Works",
-          "imageUrl": "homePage/CTEC_Redstone.png"
+          "imageUrl": "homePage/CTEC_Redstone.jpg"
         },
         {
           "title": "Astonishing Equipment",
           "description": "We possess excellent server equipment, capable of supporting a large number of players online simultaneously for development and play. We have low-latency connection proxy servers in various countries, providing an excellent gaming experience for players from different regions. Our equipment features an i9-13900K, 128G RAM, 6TB Gen 4 SSD, and a UPS uninterrupted power supply system. We also have amateur engineers maintaining the servers, ensuring their stable operation.",
           "button": "View Server Equipment",
-          "imageUrl": "homePage/CTEC_Hardware.png"
+          "imageUrl": "homePage/CTEC_Hardware.jpg"
         }
       ]
     },
@@ -67,7 +67,7 @@
   "join": {
     "description": "How to Join Us",
     "redstone": {
-      "image": "join/redstone.png",
+      "image": "join/redstone.jpg",
       "title": "Redstone Team",
       "description": [
         "Submit your redstone creations to the submission channel or directly message a reviewer to apply for review.",
@@ -102,7 +102,7 @@
       }
     },
     "player": {
-      "image": "join/player.png",
+      "image": "join/player.jpg",
       "title": "Logistics Team",
       "description": "We hope to recruit Minecraft players who have basic redstone knowledge and are enthusiastic about the game. If you are dedicated, have a bit of redstone knowledge, and are full of passion for the game, please fill out the Cloud Town Craft Logistics Team form. If your score meets the standard, there will be a second review based on activity.",
       "forms": {
