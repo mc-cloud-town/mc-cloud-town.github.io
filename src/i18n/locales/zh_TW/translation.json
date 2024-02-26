@@ -64,8 +64,6 @@
     "title": "成員列表",
     "description": "各領域優秀成員，共創伺服器精彩紀錄"
   },
-  <<<<<<<
-  HEAD
   "join": {
     "description": "加入Discord伺服器並填寫申請表",
     "forms": "申請說明",
@@ -95,10 +93,10 @@
       "image": "join/player.png",
       "title": "後勤組",
       "description": "我們希望可以招收出具有基礎紅石常識和有遊戲熱忱的MC玩家，如果您很肝也有一點紅石知識還有滿滿的遊戲熱忱，歡迎填寫雲鎮工藝後勤組表單，若分數達標將會有活躍度的二次審核。"
-    },
-    "opensource": {
-      "title": "開源專案",
-      "description": "為提供玩家最好的體驗，我們自行研發許多插件"
     }
+  },
+  "opensource": {
+    "title": "開源專案",
+    "description": "為提供玩家最好的體驗，我們自行研發許多插件"
   }
 }
