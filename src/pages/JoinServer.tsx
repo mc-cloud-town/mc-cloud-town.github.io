@@ -77,6 +77,7 @@ const JoinServer = () => {
       {/*建築*/}
       <ImageContentSection
         imageContent={BuildPlayerImage}
+        imageOnRight={true}
       ></ImageContentSection>
       {/*後勤*/}
       <ImageContentSection
