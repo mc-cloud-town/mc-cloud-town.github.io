@@ -171,6 +171,7 @@ const CardsSection = (
                     type={button.type || 'primary'}
                     ghost={darkMode}
                     href={button.href}
+                    target={button.href ? '_blank' : ''}
                     onClick={button.action}
                   >
                     {button.text}

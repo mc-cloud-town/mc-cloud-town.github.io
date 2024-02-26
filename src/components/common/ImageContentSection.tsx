@@ -170,7 +170,7 @@ const ImageContentSection = (
               button.link ? (
                 <Link key={index} to={button.link}>
                   <Button
-                    type={button.type || darkMode ? 'default' : 'primary'}
+                    type={button.type || (darkMode ? 'default' : 'primary')}
                     ghost={darkMode}
                   >
                     {button.text}
@@ -179,9 +179,10 @@ const ImageContentSection = (
               ) : (
                 <Button
                   key={index}
-                  type={button.type || darkMode ? 'default' : 'primary'}
+                  type={button.type || (darkMode ? 'default' : 'primary')}
                   ghost={darkMode}
                   href={button.href}
+                  target={button.href ? '_blank' : ''}
                   onClick={button.action}
                 >
                   {button.text}
