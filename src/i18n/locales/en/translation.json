@@ -62,5 +62,9 @@
   "members": {
     "title": "Member List",
     "description": "Excellent members in various fields create wonderful server records"
+  },
+  "opensource": {
+    "title": "Open Source",
+    "description": "some good projects"
   }
 }

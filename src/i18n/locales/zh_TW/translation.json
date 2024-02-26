@@ -62,5 +62,9 @@
   "members": {
     "title": "成員列表",
     "description": "各領域優秀成員，共創伺服器精彩紀錄"
+  },
+  "opensource": {
+    "title": "開源專案",
+    "description": "為提供玩家最好的體驗，我們自行研發許多插件"
   }
 }
