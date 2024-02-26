@@ -2,7 +2,8 @@
   "menu": {
     "home": "Home",
     "survivalProgress": "Survival Progress",
-    "member": "Member"
+    "member": "Member",
+    "join": "Join Us"
   },
   "time": {
     "days": "days",

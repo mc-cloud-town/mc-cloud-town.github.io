@@ -2,7 +2,8 @@
   "menu": {
     "home": "首页",
     "survivalProgress": "生存服进度",
-    "member": "成员"
+    "member": "成员",
+    "join": "加入我们"
   },
   "time": {
     "days": "天",
