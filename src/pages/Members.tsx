@@ -7,20 +7,24 @@ import MemberCase from '#/members/MemberCase.tsx';
 
 import background from '@/assets/members/background.png';
 
-const MemberPageDiv = styled.div`
+const Container = styled.div`
+  padding: 50px 40px;
   background-color: #ecf0f1;
+  
+  @media (max-width: 400px) {
+    padding: 50px 10px;
+  }
 `;
 
 const MembersPage = () => {
-  const ttmember =
+  const member =
     {
       id: 'test',
       name: 'test',
       introduction: '這是一個比較長的介紹,這是一個比較長的介紹,這是一個比較長的介紹'
     };
 
-  // Generate a test member array (20 members)
-  const testMember = Array(20).fill(ttmember);
+  const testMember = Array(21).fill(member);
 
   const { t } = useTranslation();
 
@@ -35,11 +39,11 @@ const MembersPage = () => {
           t('members.description'),
         ]}
       />
-      <MemberPageDiv>
+      <Container>
         <MemberCase
           members={testMember}
         />
-      </MemberPageDiv>
+      </Container>
     </>
   );
 };
