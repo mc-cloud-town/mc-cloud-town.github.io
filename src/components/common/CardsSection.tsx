@@ -1,12 +1,13 @@
-import { Card, Button } from 'antd';
+import { Card, Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { imageContent } from '@/types/imageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
+
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 const fadeIn = keyframes`
   from {
@@ -153,11 +154,31 @@ const CardsSection = (
                 <FeatureItem key={idx}>{feature}</FeatureItem>
               ))}
             </FeatureList>
-            {section.buttonLink && section.buttonText && (
-              <Link to={section.buttonLink}>
-                <Button type="primary" ghost={darkMode}>{section.buttonText}</Button>
-              </Link>
-            )}
+            <Flex gap={5}>
+              {section.buttons && section.buttons.map((button, idx) => (
+                button.link ? (
+                  <Link key={idx} to={button.link}>
+                    <Button
+                      type={button.type || 'primary'}
+                      ghost={darkMode}
+                    >
+                      {button.text}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    key={idx}
+                    type={button.type || 'primary'}
+                    ghost={darkMode}
+                    href={button.href}
+                    onClick={button.action}
+                  >
+                    {button.text}
+                  </Button>
+                )
+              ))
+              }
+            </Flex>
           </StyledCard>
         ))}
       </CardContainer>
