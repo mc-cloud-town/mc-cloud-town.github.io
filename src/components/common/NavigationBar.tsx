@@ -73,11 +73,6 @@ const NavigationBar = () => {
     i18n.changeLanguage(lng).then();
   };
 
-  const getDefaultSelectedKeys = () => {
-    const path = location.pathname;
-    return path === '/survival' ? ['survival'] : ['home'];
-  };
-
   const languageItems: MenuProps['items'] = [
     { key: 'en', label: 'English', onClick: () => changeLanguage('en') },
     { key: 'zh_CN', label: '简体中文', onClick: () => changeLanguage('zh_CN') },
@@ -133,6 +128,12 @@ const NavigationBar = () => {
       ),
     },
   ];
+
+  const getDefaultSelectedKeys = () => {
+    const path = location.pathname;
+    if (path === '/') return ['home'];
+    return menuItems.find((item) => item?.key === path.slice(1)) ? [path.slice(1)] : ['404'];
+  };
 
   return (
     <NavigationBarContainer
