@@ -62,5 +62,9 @@
   "members": {
     "title": "成员列表",
     "description": "各领域优秀成员共创了服务器精彩纪录"
+  },
+  "opensource": {
+    "title": "开源列表",
+    "description": "看起来很赞 不是吗?"
   }
 }
