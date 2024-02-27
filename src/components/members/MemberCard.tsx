@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-import { member } from '@/types/member';
+import { IMember } from '@/types/IMember.ts';
 
 const fadeIn = keyframes`
   from {
@@ -52,12 +52,13 @@ const MemberCard = (
   {
     member
   }: {
-    member: member
+    member: IMember
   }) => {
   const { animate,  ref} = useAnimateOnScroll();
 
   const fullBodyUrl = 'https://mineskin.eu/armor/body/{}/100.png';
   const headUrl = 'https://mineskin.eu/helm/{}/100.png';
+  const introduction = member.introduction?.length === 0 || false ? undefined : member.introduction;
 
   return (
     <StyledCard ref={ref} className={animate ? 'fadeIn' : ''}>
@@ -77,7 +78,7 @@ const MemberCard = (
           </ImageWrapper>
         </Col>
         <Col span={18}>
-          <Card.Meta title={member.name} description={member.introduction} />
+          <Card.Meta title={`${member.name} (${member.id})`} description={introduction} />
         </Col>
       </Row>
     </StyledCard>

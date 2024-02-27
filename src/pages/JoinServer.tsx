@@ -5,13 +5,13 @@ import HeaderImage from '#/common/HeaderImage.tsx';
 import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 
-import { imageContent } from '@/types/imageContent.ts';
+import { IImageContent } from '@/types/IImageContent.ts';
 import join from '@/assets/join/join.jpg';
 
 const JoinServer = () => {
   const { t } = useTranslation();
   // 紅石
-  const RedstonePlayerImage: imageContent = {
+  const RedstonePlayerImage: IImageContent = {
     imageUrl: t('join.redstone.image'),
     title: t('join.redstone.title'),
     features: [
@@ -38,7 +38,7 @@ const JoinServer = () => {
     ],
   };
   // 建築
-  const BuildPlayerImage: imageContent = {
+  const BuildPlayerImage: IImageContent = {
     imageUrl: t('join.build.image'),
     title: t('join.build.title'),
     subTitle: t('join.build.subTitle'),
@@ -56,7 +56,7 @@ const JoinServer = () => {
     ],
   };
   // 後勤
-  const PlayerImage: imageContent = {
+  const PlayerImage: IImageContent = {
     imageUrl: t('join.player.image'),
     title: t('join.player.title'),
     features: [t('join.player.description')],

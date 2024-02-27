@@ -1,4 +1,4 @@
-import contentButton from '@/types/contentButton.ts';
+import IContentButton from '@/types/IContentButton.ts';
 
 /**
  * Interface for the imageContent object
@@ -7,14 +7,14 @@ import contentButton from '@/types/contentButton.ts';
  * @param subTitle {string?} - The subtitle of the image content.
  * @param paragraph {string?} - The paragraph of the image content.
  * @param features {string[]?} - The list of features to display.
- * @param buttons {contentButton[]?} - The list of buttons to display.
- * @interface imageContent - Interface for the imageContent object
+ * @param buttons {IContentButton[]?} - The list of buttons to display.
+ * @interface IImageContent - Interface for the imageContent object
  */
-export interface imageContent {
+export interface IImageContent {
   imageUrl: string;
   title: string;
   subTitle?: string;
   paragraph?: string;
   features?: string[];
-  buttons?: contentButton[];
+  buttons?: IContentButton[];
 }

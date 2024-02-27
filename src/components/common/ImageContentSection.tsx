@@ -4,7 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-import { imageContent } from '@/types/imageContent.ts';
+import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
 import 'react-lazy-load-image-component/src/effects/blur.css';
@@ -142,7 +142,7 @@ const StyledButton = styled(Button)`
 
 /**
  * ImageContentSection component with an optional image position.
- * @param imageContent {imageContent} - The image content object.
+ * @param imageContent {IImageContent} - The image content object.
  * @param imageOnRight {boolean} - If true, the image will be displayed on the right. Default is false.
  * @param darkMode {boolean} - If true, the section will be displayed in dark mode. Default is false.
  */
@@ -152,7 +152,7 @@ const ImageContentSection = (
     imageOnRight = false,
     darkMode = false
   }: {
-    imageContent: imageContent,
+    imageContent: IImageContent,
     imageOnRight?: boolean,
     darkMode?: boolean
   }) => {

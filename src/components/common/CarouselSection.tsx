@@ -3,7 +3,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import styled, { keyframes } from 'styled-components';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-import { imageContent } from '@/types/imageContent.ts';
+import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
 const fadeIn = keyframes`
@@ -76,7 +76,7 @@ const CarouselSection = (
     imageContentsSections
   }: {
     title: string;
-    imageContentsSections: imageContent[][];
+    imageContentsSections: IImageContent[][];
   }) => {
   const { ref, animate } = useAnimateOnScroll();
 
