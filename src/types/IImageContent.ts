@@ -1,4 +1,4 @@
-import IContentButton from '@/types/IContentButton.ts';
+import { IContentButton } from '@/types/IContentButton.ts';
 
 /**
  * Interface for the imageContent object

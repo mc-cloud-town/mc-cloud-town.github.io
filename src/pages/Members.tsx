@@ -5,10 +5,10 @@ import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
 import MemberCase from '#/members/MemberCase.tsx';
 
-import background from '@/assets/members/background.png';
-import useApi from '@/hooks/useApi.ts'; // 确保这个自定义钩子按预期工作
+import useApi from '@/hooks/useApi.ts';
 import { MEMBER_API } from '@/constants';
 import { IMember } from '@/types/IMember.ts';
+import background from '@/assets/members/background.png';
 
 const Container = styled.div`
   padding: 50px 40px;

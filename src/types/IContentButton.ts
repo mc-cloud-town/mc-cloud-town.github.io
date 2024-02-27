@@ -7,12 +7,10 @@
  * @param type {'primary' | 'default' | 'link' | 'text' | 'dashed'?} - The type of the button.
  * @interface IContentButton - Interface for the contentButton object
  */
-interface IContentButton {
+export interface IContentButton {
   text: string,
   link?: string,
   href?: string,
   action?: () => void,
   type?: 'primary' | 'default' | 'link' | 'text' | 'dashed',
 }
-
-export default IContentButton;
