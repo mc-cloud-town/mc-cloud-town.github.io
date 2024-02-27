@@ -4,7 +4,7 @@ import { Card } from 'antd';
 import { LanguageColorType } from '@/types/languageColor.ts';
 const { Meta } = Card;
 
-import languageColor from '@/assets/openSource/languageToColor.json';
+import languageColor from '@/assets/openSource/colors.json';
 import styled from 'styled-components';
 import { repoType } from '@/types/repoType';
 
@@ -36,7 +36,7 @@ const RepoCard = ({ repo }: { repo: repoType }) => {
         />
         <LangShow>
           <LeftOutlined />
-          <span style={{ color: Color[language] ? Color[language] : 'white' }}>
+          <span style={{ color: Color[language]?.color ?? 'white' }}>
             {language ? language : 'Other'}
           </span>
           <RightOutlined />
