@@ -10,7 +10,7 @@ import useApi from '@/hooks/useApi';
 import openSource from '@/assets/openSource/openSource.jpg';
 
 const RepoBlockList = styled.div`
-  background: #b1dde6;
+  background: #96bee6;
   padding: 30px;
 `;
 const OpenSourcePage = () => {
