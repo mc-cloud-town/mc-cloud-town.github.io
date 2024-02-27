@@ -110,6 +110,10 @@ const NavigationBar = () => {
       label: <Link to="/404">{404}</Link>,
     },
     {
+      key: 'openSource',
+      label: <Link to="/openSource">{t('menu.openSource')}</Link>,
+    },
+    {
       key: 'language',
       label: (
         <Dropdown
@@ -132,7 +136,9 @@ const NavigationBar = () => {
   const getDefaultSelectedKeys = () => {
     const path = location.pathname;
     if (path === '/') return ['home'];
-    return menuItems.find((item) => item?.key === path.slice(1)) ? [path.slice(1)] : ['404'];
+    return menuItems.find((item) => item?.key === path.slice(1))
+      ? [path.slice(1)]
+      : ['404'];
   };
 
   return (
