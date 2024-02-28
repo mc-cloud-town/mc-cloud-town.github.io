@@ -80,16 +80,18 @@ const PartnerCard = (Partnership: IPartnership) => {
         footer={Partnership.ModalFooter ?? ''}
       >
         <p>{Partnership.Introduce}</p>
-        <StyleVideo>
-          <StyleIframe
-            width="560"
-            height="315"
-            src="https://www.youtube.com/embed/4VcNp6jP8o0?si=fCTY3TeS3Q7MeAT3"
-            title="YouTube video player"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          ></StyleIframe>
-        </StyleVideo>
+        {Partnership.ShowVideo && (
+          <StyleVideo>
+            <StyleIframe
+              width="560"
+              height="315"
+              src={Partnership.ShowVideo}
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </StyleVideo>
+        )}
       </StyleModal>
     </Col>
   );

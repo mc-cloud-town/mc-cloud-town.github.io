@@ -13,43 +13,42 @@ const StyleRow = styled(Row)`
 
 const Partnership: IPartnership[] = [
   {
-    Partner: 'tst',
+    Partner: '阿睿',
     Image: 'partner/阿睿.jpg',
     ImageTitle: 'test',
-    ModalTitle: 'test',
-    Introduce: 'string',
-    ModalFooter: 'string',
-    ShowVideo: 'string',
+    ModalTitle: '阿睿',
+    Introduce: '',
+    ModalFooter: '',
+    ShowVideo: '',
     Link: {
       discord: 'test',
     },
   },
   {
-    Partner: 'tst',
+    Partner: '阿睿',
     Image: 'partner/阿睿.jpg',
-    ImageTitle: 'test',
-    ModalTitle: 'test',
-    Introduce: 'string',
-    ModalFooter: 'string',
-    ShowVideo: 'string',
+    ImageTitle: '阿睿',
+    ModalTitle: '阿睿',
+    Introduce: '',
+    ModalFooter: '',
+    ShowVideo: '',
     Link: {
       discord: 'test',
     },
   },
   {
-    Partner: 'tst',
+    Partner: '阿睿',
     Image: 'partner/阿睿.jpg',
-    ImageTitle: 'test',
-    ModalTitle: 'test',
-    Introduce: 'string',
-    ModalFooter: 'string',
-    ShowVideo: 'string',
+    ImageTitle: '阿睿',
+    ModalTitle: '阿睿',
+    Introduce: '',
+    ModalFooter: '',
+    ShowVideo: '',
     Link: {
       discord: 'test',
     },
   },
 ];
-
 const Partner = () => {
   const { t } = useTranslation();
   return (
