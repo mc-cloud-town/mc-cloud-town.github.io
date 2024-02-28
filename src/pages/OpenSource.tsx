@@ -9,6 +9,7 @@ import Repo from '#/openSource/openSourceDate.tsx';
 import useApi from '@/hooks/useApi';
 import openSource from '@/assets/openSource/openSource.jpg';
 import { IRepoType } from '@/types/IRepoType.ts';
+import { GITHUB_API } from '@/constants';
 
 const RepoBlockList = styled.div`
   background: #6f9b9c;
@@ -24,7 +25,7 @@ const OpenSourcePage = () => {
     data: IRepoType[] | null;
     loading: boolean;
     error: { message: string } | null;
-  } = useApi('https://api.github.com/orgs/mc-cloud-town/repos');
+  } = useApi(GITHUB_API);
 
   return (
     <>
@@ -38,9 +39,12 @@ const OpenSourcePage = () => {
           {error && <p>Error</p>}
           {loading && <p>Loading</p>}
           {Array.isArray(data) &&
-            data
-              .filter((repo) => !repo.name.toString().startsWith('.'))
-              .map((repo) => <Repo key={repo.name} repo={repo} />)}
+            data.map(
+              (repo) =>
+                !repo.name.startsWith('.') && (
+                  <Repo key={repo.name} repo={repo} />
+                ),
+            )}
         </Row>
       </RepoBlockList>
     </>
