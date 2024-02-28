@@ -9,11 +9,11 @@ import CarouselSection from '#/common/CarouselSection.tsx';
 import HeaderBackground from '#/homePage/header/HeaderBackground.tsx';
 import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 
-import { imageContent } from '@/types/imageContent.ts';
+import { IImageContent } from '@/types/IImageContent.ts';
 
 const HomePage = () => {
   const { t } = useTranslation();
-  const aboutSectionImageContent: imageContent = {
+  const aboutSectionImageContent: IImageContent = {
     imageUrl: t('home.about.imageUrl'),
     title: t('home.about.title'),
     subTitle: t('home.about.subTitle'),
@@ -32,7 +32,7 @@ const HomePage = () => {
     ],
   };
 
-  const featureSectionImageContents: imageContent[] = [
+  const featureSectionImageContents: IImageContent[] = [
     {
       imageUrl: t('home.feature.card.0.imageUrl'),
       title: t('home.feature.card.0.title'),

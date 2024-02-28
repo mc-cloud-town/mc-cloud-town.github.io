@@ -1,4 +1,5 @@
 {
+  "loading": "Loading...",
   "menu": {
     "home": "Home",
     "survivalProgress": "Survival Progress",

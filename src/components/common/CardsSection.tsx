@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
-import { imageContent } from '@/types/imageContent.ts';
+import { IImageContent } from '@/types/IImageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
@@ -128,7 +128,7 @@ const StyledButton = styled(Button)`
  * Cards Section Component
  * @param title {string} - Title of the section
  * @param darkMode {boolean} - Enable dark mode (default: false)
- * @param imageContentSections {imageContent[]} - Array of imageContent
+ * @param imageContentSections {IImageContent[]} - Array of imageContent
  * @constructor CardsSection - React Function Component
  */
 const CardsSection = (
@@ -139,7 +139,7 @@ const CardsSection = (
   }: {
     title: string;
     darkMode: boolean;
-    imageContentSections: imageContent[];
+    imageContentSections: IImageContent[];
   }) => {
   const { animate, ref } = useAnimateOnScroll();
 
