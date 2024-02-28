@@ -7,7 +7,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
 const StyledCard = styled(Card)`
-  margin: 20px;
+  margin: 16px;
   background-color: #f1f1f1;
   text-align: center;
 `;

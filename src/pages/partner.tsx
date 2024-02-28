@@ -48,6 +48,18 @@ const Partnership: IPartnership[] = [
       discord: 'test',
     },
   },
+  {
+    Partner: '阿睿',
+    Image: 'partner/阿睿.jpg',
+    ImageTitle: '阿睿',
+    ModalTitle: '阿睿',
+    Introduce: '',
+    ModalFooter: '',
+    ShowVideo: '',
+    Link: {
+      discord: 'test',
+    },
+  },
 ];
 const Partner = () => {
   const { t } = useTranslation();
@@ -57,7 +69,7 @@ const Partner = () => {
         backgroundComponent={<HeaderImage imageUrl={partner} />}
         headerTextArray={[t('partner.title')]}
       />
-      <StyleRow justify="center">
+      <StyleRow justify="center" gutter={[16, 0]}>
         {Partnership.map((repo: IPartnership) => (
           <PartnerCard
             Partner={repo.Partner}
