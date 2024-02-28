@@ -1,10 +1,8 @@
-export interface Link {
+export interface ILink {
   youtube?: string;
   discord?: string;
   bilibili?: string;
   facebook?: string;
-  telegram?: string;
-  Bahamut?: string;
   X?: string;
   other?: string;
 }
@@ -15,7 +13,6 @@ export interface IPartnership {
   ImageTitle: string;
   ModalTitle: string;
   Introduce: string[] | string;
-  ModalFooter?: string;
   ShowVideo?: string;
-  Link?: Link;
+  Link?: ILink;
 }

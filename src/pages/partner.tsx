@@ -14,10 +14,14 @@ const Partnership: IPartnership[] = [
     ImageTitle: 'test',
     ModalTitle: '阿睿',
     Introduce: '',
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/EP0Sh7wGL4o?si=5pGgB02j0Z__8K8Q',
     Link: {
-      discord: 'test',
+      youtube: 'partner',
+      discord: 'partner',
+      bilibili: 'partner',
+      facebook: 'partner',
+      X: 'partner',
+      other: 'partner',
     },
   },
   {
@@ -26,11 +30,8 @@ const Partnership: IPartnership[] = [
     ImageTitle: '碗碗',
     ModalTitle: '碗碗',
     Introduce: '',
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/fiiIWSAdFiw?si=-2RUZZoosd1apj0k',
-    Link: {
-      discord: 'test',
-    },
+    Link: {},
   },
   {
     Partner: '老宸',
@@ -38,11 +39,8 @@ const Partnership: IPartnership[] = [
     ImageTitle: '老宸',
     ModalTitle: '老宸',
     Introduce: '',
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/OhdMahPMqF4?si=U8aGKfLTk6G3Rh_f',
-    Link: {
-      discord: 'test',
-    },
+    Link: {},
   },
   {
     Partner: '酒鬼',
@@ -50,11 +48,8 @@ const Partnership: IPartnership[] = [
     ImageTitle: '酒鬼',
     ModalTitle: '酒鬼',
     Introduce: [],
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/2sfUTtM70Yc?si=qD4DlXcA2cGohOXa',
-    Link: {
-      discord: 'test',
-    },
+    Link: {},
   },
   {
     Partner: '82年的海尼根',
@@ -62,11 +57,8 @@ const Partnership: IPartnership[] = [
     ImageTitle: '82年的海尼根',
     ModalTitle: '82年的海尼根',
     Introduce: '',
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/xf8qQX5oJyM?si=aj5P-4pJ9PZ-5fca',
-    Link: {
-      discord: 'test',
-    },
+    Link: {},
   },
   {
     Partner: 'Reshar Ch.蝦蝦桑【FourZ live所屬】',
@@ -74,11 +66,8 @@ const Partnership: IPartnership[] = [
     ImageTitle: 'Reshar Ch.蝦蝦桑【FourZ live所屬】',
     ModalTitle: 'Reshar Ch.蝦蝦桑【FourZ live所屬】',
     Introduce: '',
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/4cvWd3zY8R8?si=GLoLY2YhuqSqtbMU',
-    Link: {
-      discord: 'test',
-    },
+    Link: {},
   },
   {
     Partner: '杯子蛋糕實驗室',
@@ -86,11 +75,8 @@ const Partnership: IPartnership[] = [
     ImageTitle: '杯子蛋糕實驗室',
     ModalTitle: '杯子蛋糕實驗室',
     Introduce: '',
-    ModalFooter: '',
     ShowVideo: 'https://www.youtube.com/embed/9W3QmzUZB8w?si=7txPXTR0PQuhavrR',
-    Link: {
-      discord: 'test',
-    },
+    Link: {},
   },
 ];
 
@@ -113,7 +99,6 @@ const Partner = () => {
             ImageTitle={repo.ImageTitle}
             ModalTitle={repo.ModalTitle}
             Introduce={repo.Introduce}
-            ModalFooter={repo.ModalFooter}
             ShowVideo={repo.ShowVideo}
             Link={repo.Link}
           />
