@@ -6,17 +6,17 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { serverLink } from '@/constants';
 import CTEC_banner from '@/assets/brand/CTEC_banner.png';
-import logo from '@/assets/logo/base.png';
+import logo from '@/assets/logo/base.webp';
 
 const TopFooterContainer = styled.div`
   background-color: #b1dde6;
   padding: 20px 60px;
   text-align: center;
-  
+
   @media (max-width: 375px) {
     padding: 20px 20px;
   }
-  
+
   @media (max-width: 800px) {
     padding: 20px 40px;
   }
@@ -33,7 +33,7 @@ const Copyright = styled.div`
 const BrandImageWrapper = styled.div`
   width: 100%;
   max-width: 300px;
-  
+
   & > span > img {
     width: 100%;
   }
@@ -46,7 +46,7 @@ const LogoImageWrapper = styled.div`
   @media (max-width: 768px) {
     display: none;
   }
-  
+
   & > span > img {
     width: 100px;
   }
@@ -55,7 +55,7 @@ const LogoImageWrapper = styled.div`
 const TopRow = styled(Row)`
   padding: 10px 0;
   justify-content: space-between;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
   }
@@ -96,10 +96,18 @@ const Footer = () => {
           </Col>
           <Col>
             <Space size="large">
-              <a href={serverLink.discord} target="_blank" rel="noopener noreferrer">
+              <a
+                href={serverLink.discord}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <DiscordOutlined style={{ fontSize: '50px' }} />
               </a>
-              <a href={serverLink.youtube} target="_blank" rel="noopener noreferrer">
+              <a
+                href={serverLink.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <YoutubeOutlined style={{ fontSize: '50px' }} />
               </a>
               <a href={serverLink.x} target="_blank" rel="noopener noreferrer">
@@ -113,7 +121,8 @@ const Footer = () => {
         <BottomRow justify="center">
           <Col>
             <Copyright>
-              © {new Date().getFullYear()} Cloud Town Exquisite Craft. All Rights Reserved.
+              © {new Date().getFullYear()} Cloud Town Exquisite Craft. All
+              Rights Reserved.
             </Copyright>
           </Col>
         </BottomRow>
