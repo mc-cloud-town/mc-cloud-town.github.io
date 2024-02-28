@@ -6,7 +6,11 @@
     "member": "成員",
     "join": "加入我們",
     "openSource": "開源項目",
-    "partner": "合作夥伴及團隊"
+    "partner": {
+      "title": "合作夥伴及團隊",
+      "people": "合作創作者",
+      "team": "合作團隊"
+    }
   },
   "time": {
     "days": "天",
@@ -123,6 +127,9 @@
     "description": "為提供玩家更好的體驗，我們開發了許多開源插件"
   },
   "partner": {
-    "title": "合作夥伴及團隊"
+    "title": "合作創作者"
+  },
+  "partnerTeam": {
+    "title": "合作團隊"
   }
 }

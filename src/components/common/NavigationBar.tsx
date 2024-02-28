@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { Dropdown, Menu, MenuProps, Space } from 'antd';
-import { GlobalOutlined } from '@ant-design/icons';
+import { GlobalOutlined, TeamOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import useScroll from '@/hooks/useScroll';
 
@@ -78,6 +78,21 @@ const NavigationBar = () => {
     { key: 'zh_CN', label: '简体中文', onClick: () => changeLanguage('zh_CN') },
     { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') },
   ];
+  const handleClick = (url: string) => {
+    window.location.assign(url);
+  };
+  const partner: MenuProps['items'] = [
+    {
+      key: 'people',
+      label: t('menu.partner.people'),
+      onClick: () => handleClick('partner'),
+    },
+    {
+      key: 'team',
+      label: t('menu.partner.team'),
+      onClick: () => handleClick('partnerTeam'),
+    },
+  ];
 
   const menuItems: MenuProps['items'] = [
     {
@@ -111,7 +126,20 @@ const NavigationBar = () => {
     },
     {
       key: 'partner',
-      label: <Link to="/partner">{t('menu.partner')}</Link>,
+      label: (
+        <Dropdown
+          menu={{
+            items: partner,
+          }}
+          placement="bottom"
+        >
+          <a onMouseLeave={(e) => e.preventDefault()}>
+            <Space>
+              <TeamOutlined /> {t('menu.partner.title')}
+            </Space>
+          </a>
+        </Dropdown>
+      ),
     },
     {
       key: '404',

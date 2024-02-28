@@ -9,7 +9,7 @@ import {
 import { Space } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
 
-const FooterCard = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
+const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
   return (
     <>
       <Space size="large">
@@ -68,4 +68,4 @@ const FooterCard = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
   );
 };
 
-export default FooterCard;
+export default PartnerLink;

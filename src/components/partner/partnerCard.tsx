@@ -5,7 +5,7 @@ import { IPartnership } from '@/types/IPartnership.ts';
 import { useState } from 'react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import FooterCard from '#/partner/footer.tsx';
+import PartnerLink from '#/partner/partnerLink.tsx';
 
 const StyledCard = styled(Card)`
   margin: 16px;
@@ -81,7 +81,7 @@ const PartnerCard = (partnerData: IPartnership) => {
         open={isModalOpen[0]}
         onOk={() => toggleModal(0, false)}
         onCancel={() => toggleModal(0, false)}
-        footer={<FooterCard partnerLink={partnerData.Link} />}
+        footer={<PartnerLink partnerLink={partnerData.Link} />}
       >
         {Array.isArray(partnerData.Introduce)
           ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
