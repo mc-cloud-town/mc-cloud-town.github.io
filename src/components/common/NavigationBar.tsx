@@ -110,6 +110,10 @@ const NavigationBar = () => {
       label: <Link to="/openSource">{t('menu.openSource')}</Link>,
     },
     {
+      key: 'partner',
+      label: <Link to="/partner">{t('menu.partner')}</Link>,
+    },
+    {
       key: '404',
       label: <Link to="/404">{404}</Link>,
     },

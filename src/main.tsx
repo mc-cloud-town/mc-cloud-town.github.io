@@ -12,6 +12,7 @@ import initI18n from './i18n/i18nConfig';
 
 import 'antd/dist/reset.css';
 import JoinServer from '@/pages/JoinServer.tsx';
+import Partner from '@/pages/partner.tsx';
 
 initI18n();
 
@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="survival" element={<SurvivalProgress />} />
           <Route path="member" element={<MemberPage />} />
           <Route path="openSource" element={<OpenSourcePage />} />
+          <Route path="partner" element={<Partner />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
