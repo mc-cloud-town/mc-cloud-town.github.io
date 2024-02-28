@@ -46,7 +46,7 @@ const StyleVideo = styled.div`
   display: flex;
   justify-content: center;
 `;
-const PartnerCard = (Partnership: IPartnership) => {
+const PartnerCard = (partnerData: IPartnership) => {
   const [isModalOpen, setIsModalOpen] = useState([false, false]);
 
   const toggleModal = (idx: number, target: boolean) => {
@@ -57,7 +57,7 @@ const PartnerCard = (Partnership: IPartnership) => {
   };
 
   return (
-    <Col key={Partnership.Partner} xs={48} sm={24} md={16} lg={12} xl={8}>
+    <Col key={partnerData.Partner} xs={48} sm={24} md={16} lg={12} xl={8}>
       <StyledCard
         hoverable
         onClick={() => toggleModal(0, true)}
@@ -65,33 +65,33 @@ const PartnerCard = (Partnership: IPartnership) => {
           <ImageWrapper>
             <LazyLoadImage
               style={{ borderRadius: '50%' }}
-              src={getImageUrl(Partnership.Image)}
-              alt={Partnership.ImageTitle}
+              src={getImageUrl(partnerData.Image)}
+              alt={partnerData.ImageTitle}
               effect="blur"
             />
           </ImageWrapper>
         }
       >
-        <StyleCardMeta title={Partnership.Partner} />
+        <StyleCardMeta title={partnerData.Partner} />
       </StyledCard>
       <StyleModal
         width={1040}
         centered={true}
-        title={<ModalTitle>{Partnership.ModalTitle}</ModalTitle>}
+        title={<ModalTitle>{partnerData.ModalTitle}</ModalTitle>}
         open={isModalOpen[0]}
         onOk={() => toggleModal(0, false)}
         onCancel={() => toggleModal(0, false)}
-        footer={<FooterCard link={Partnership.Link} />}
+        footer={<FooterCard partnerLink={partnerData.Link} />}
       >
-        {Array.isArray(Partnership.Introduce)
-          ? Partnership.Introduce.map((introduce) => <p>{introduce}</p>)
-          : Partnership.Introduce}
-        {Partnership.ShowVideo && (
+        {Array.isArray(partnerData.Introduce)
+          ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
+          : partnerData.Introduce}
+        {partnerData.ShowVideo && (
           <StyleVideo>
             <StyleIframe
               width="560"
               height="315"
-              src={Partnership.ShowVideo}
+              src={partnerData.ShowVideo}
               title="YouTube video player"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen

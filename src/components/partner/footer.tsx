@@ -9,37 +9,57 @@ import {
 import { Space } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
 
-const FooterCard = ({ link }: { link: ILink | undefined }) => {
+const FooterCard = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
   return (
     <>
       <Space size="large">
-        {link?.youtube && (
-          <a href={link?.youtube} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.youtube && (
+          <a
+            href={partnerLink?.youtube}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <YoutubeOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {link?.discord && (
-          <a href={link?.discord} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.discord && (
+          <a
+            href={partnerLink?.discord}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <DiscordOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {link?.bilibili && (
-          <a href={link?.bilibili} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.bilibili && (
+          <a
+            href={partnerLink?.bilibili}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <BilibiliOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {link?.facebook && (
-          <a href={link?.facebook} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.facebook && (
+          <a
+            href={partnerLink?.facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <FacebookOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {link?.X && (
-          <a href={link?.X} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.X && (
+          <a href={partnerLink?.X} target="_blank" rel="noopener noreferrer">
             <XOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {link?.other && (
-          <a href={link?.other} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.other && (
+          <a
+            href={partnerLink?.other}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <LinkOutlined style={{ fontSize: '50px' }} />
           </a>
         )}

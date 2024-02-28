@@ -92,15 +92,15 @@ const Partner = () => {
         headerTextArray={[t('partner.title')]}
       />
       <StyleRow justify="center">
-        {Partnership.map((repo: IPartnership) => (
+        {Partnership.map((partnerData: IPartnership) => (
           <PartnerCard
-            Partner={repo.Partner}
-            Image={repo.Image}
-            ImageTitle={repo.ImageTitle}
-            ModalTitle={repo.ModalTitle}
-            Introduce={repo.Introduce}
-            ShowVideo={repo.ShowVideo}
-            Link={repo.Link}
+            Partner={partnerData.Partner}
+            Image={partnerData.Image}
+            ImageTitle={partnerData.ImageTitle}
+            ModalTitle={partnerData.ModalTitle}
+            Introduce={partnerData.Introduce}
+            ShowVideo={partnerData.ShowVideo}
+            Link={partnerData.Link}
           />
         ))}
       </StyleRow>
