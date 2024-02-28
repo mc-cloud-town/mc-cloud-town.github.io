@@ -4,25 +4,27 @@ import styled from 'styled-components';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
-import RepoCard from '#/openSource/openSourceDate.tsx';
+import Repo from '#/openSource/openSourceDate.tsx';
 
 import useApi from '@/hooks/useApi';
 import openSource from '@/assets/openSource/openSource.jpg';
 import { IRepoType } from '@/types/IRepoType.ts';
 
 const RepoBlockList = styled.div`
-  background: #96bee6;
+  background: #6f9b9c;
   padding: 30px;
 `;
 const OpenSourcePage = () => {
   const { t } = useTranslation();
-  const { data, loading, error }: {
+  const {
+    data,
+    loading,
+    error,
+  }: {
     data: IRepoType[] | null;
     loading: boolean;
     error: { message: string } | null;
-  } = useApi(
-    'https://api.github.com/orgs/mc-cloud-town/repos',
-  );
+  } = useApi('https://api.github.com/orgs/mc-cloud-town/repos');
 
   return (
     <>
@@ -38,7 +40,7 @@ const OpenSourcePage = () => {
           {Array.isArray(data) &&
             data
               .filter((repo) => !repo.name.toString().startsWith('.'))
-              .map((repo) => <RepoCard key={repo.name} repo={repo} />)}
+              .map((repo) => <Repo key={repo.name} repo={repo} />)}
         </Row>
       </RepoBlockList>
     </>
