@@ -14,7 +14,7 @@ export interface IPartnership {
   Image: string;
   ImageTitle: string;
   ModalTitle: string;
-  Introduce: string;
+  Introduce: string[] | string;
   ModalFooter?: string;
   ShowVideo?: string;
   Link?: Link;

@@ -14,6 +14,10 @@ const StyledCard = styled(Card)`
 
 const StyleCardMeta = styled(Card.Meta)`
   text-align: center;
+
+  img {
+    border-radius: 50%;
+  }
 `;
 
 const ImageWrapper = styled.div`
@@ -32,8 +36,6 @@ const ModalTitle = styled.h1`
 const StyleModal = styled(Modal)`
   text-align: center;
 `;
-
-const StyleLazyLoadImage = styled(LazyLoadImage)``;
 
 const StyleIframe = styled.iframe`
   border: none;
@@ -60,7 +62,8 @@ const PartnerCard = (Partnership: IPartnership) => {
         onClick={() => toggleModal(0, true)}
         cover={
           <ImageWrapper>
-            <StyleLazyLoadImage
+            <LazyLoadImage
+              style={{ borderRadius: '50%' }}
               src={getImageUrl(Partnership.Image)}
               alt={Partnership.ImageTitle}
               effect="blur"
@@ -79,7 +82,9 @@ const PartnerCard = (Partnership: IPartnership) => {
         onCancel={() => toggleModal(0, false)}
         footer={Partnership.ModalFooter ?? ''}
       >
-        <p>{Partnership.Introduce}</p>
+        {Array.isArray(Partnership.Introduce)
+          ? Partnership.Introduce.map((introduce) => <p>{introduce}</p>)
+          : Partnership.Introduce}
         {Partnership.ShowVideo && (
           <StyleVideo>
             <StyleIframe
