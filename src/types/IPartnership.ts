@@ -1,9 +1,14 @@
 export interface ILink {
   youtube?: string;
-  discord?: string;
   bilibili?: string;
+  twitch?: string;
+  tiktok?: string;
+  discord?: string;
   facebook?: string;
+  weibo?: string;
+  telegram?: string;
   X?: string;
+  QQ?: string;
   other?: string;
 }
 

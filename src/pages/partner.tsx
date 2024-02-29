@@ -18,9 +18,14 @@ const Partnership: IPartnership[] = [
     Link: {
       youtube: 'partner',
       discord: 'partner',
+      twitch: 'partner',
+      tiktok: 'partner',
       bilibili: 'partner',
       facebook: 'partner',
+      telegram: 'partner',
+      weibo: 'partner',
       X: 'partner',
+      QQ: 'partner',
       other: 'partner',
     },
   },
@@ -80,6 +85,13 @@ const Partnership: IPartnership[] = [
   },
 ];
 
+const PartnershipTitle = styled.h1`
+  text-align: center;
+  background: #b1dde6;
+  box-shadow: 0 0 0 20px #b1dde6;
+  margin: 20px;
+`;
+
 const StyleRow = styled(Row)`
   background: #b1dde6;
 `;
@@ -89,8 +101,9 @@ const Partner = () => {
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={partner} />}
-        headerTextArray={[t('partner.title')]}
+        headerTextArray={[t('menu.partner.title')]}
       />
+      <PartnershipTitle>{t('partner.title')}</PartnershipTitle>
       <StyleRow justify="center">
         {Partnership.map((partnerData: IPartnership) => (
           <PartnerCard
