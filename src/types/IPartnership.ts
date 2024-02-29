@@ -10,9 +10,9 @@ export interface ILink {
 export interface IPartnership {
   Partner: string;
   Image: string;
-  ImageTitle: string;
   ModalTitle: string;
-  Introduce: string[] | string;
+  LongPartnership: boolean;
+  Introduce: (string | JSX.Element)[] | string | JSX.Element;
   ShowVideo?: string;
   Link?: ILink;
 }

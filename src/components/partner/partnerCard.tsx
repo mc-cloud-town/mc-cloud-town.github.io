@@ -34,6 +34,14 @@ const ModalTitle = styled.h1`
   text-align: center;
 `;
 
+const StyleIntroduce = styled.div`
+  text-align: center;
+`;
+
+const LongPartnership = styled.h2`
+  text-align: center;
+`;
+
 const StyleModal = styled(Modal)`
   text-align: center;
 `;
@@ -46,6 +54,7 @@ const StyleVideo = styled.div`
   display: flex;
   justify-content: center;
 `;
+
 const PartnerCard = (partnerData: IPartnership) => {
   const [isModalOpen, setIsModalOpen] = useState([false, false]);
 
@@ -66,13 +75,13 @@ const PartnerCard = (partnerData: IPartnership) => {
             <LazyLoadImage
               style={{ borderRadius: '50%' }}
               src={getImageUrl(partnerData.Image)}
-              alt={partnerData.ImageTitle}
+              alt={partnerData.Partner}
               effect="blur"
             />
           </ImageWrapper>
         }
       >
-        <StyleCardMeta title={partnerData.Partner} />
+        <StyleCardMeta title={<h2>{partnerData.Partner}</h2>} />
       </StyledCard>
       <StyleModal
         width={1040}
@@ -83,9 +92,16 @@ const PartnerCard = (partnerData: IPartnership) => {
         onCancel={() => toggleModal(0, false)}
         footer={<PartnerLink partnerLink={partnerData.Link} />}
       >
-        {Array.isArray(partnerData.Introduce)
-          ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
-          : partnerData.Introduce}
+        {partnerData.LongPartnership && (
+          <LongPartnership>長期合作夥伴</LongPartnership>
+        )}
+        {partnerData.Introduce && (
+          <StyleIntroduce>
+            {Array.isArray(partnerData.Introduce)
+              ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
+              : partnerData.Introduce}
+          </StyleIntroduce>
+        )}
         {partnerData.ShowVideo && (
           <StyleVideo>
             <StyleIframe
