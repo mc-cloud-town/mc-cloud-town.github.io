@@ -7,6 +7,7 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import { serverLink } from '@/constants';
 import CTEC_banner from '@/assets/brand/CTEC_banner.png';
 import logo from '@/assets/logo/base.webp';
+import PaypalSVG from '#/SVG/paypalSVG.tsx';
 
 const TopFooterContainer = styled.div`
   background-color: #b1dde6;
@@ -112,6 +113,13 @@ const Footer = () => {
               </a>
               <a href={serverLink.x} target="_blank" rel="noopener noreferrer">
                 <XOutlined style={{ fontSize: '50px' }} />
+              </a>
+              <a
+                href={serverLink.paypal}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <PaypalSVG />
               </a>
             </Space>
           </Col>
