@@ -9,12 +9,12 @@ import { IPartnership } from '@/types/IPartnership.ts';
 
 const Partnership: IPartnership[] = [
   {
-    Partner: '阿睿',
-    Image: 'partner/阿睿.jpg',
-    ModalTitle: '阿睿',
+    Partner: '這是測試頁面',
+    Image: 'logo/base.webp',
+    ModalTitle: '這是測試頁面',
     LongPartnership: true,
     Introduce: '',
-    ShowVideo: 'https://www.youtube.com/embed/EP0Sh7wGL4o?si=5pGgB02j0Z__8K8Q',
+    ShowVideo: 'https://www.youtube.com/embed/-djkWpp5SaU?si=uhey0MTDQxNY06Cb',
     Link: {
       youtube: 'partner',
       discord: 'partner',
@@ -28,6 +28,15 @@ const Partnership: IPartnership[] = [
       QQ: 'partner',
       other: 'partner',
     },
+  },
+  {
+    Partner: '阿睿',
+    Image: 'partner/阿睿.jpg',
+    ModalTitle: '阿睿',
+    LongPartnership: true,
+    Introduce: '',
+    ShowVideo: 'https://www.youtube.com/embed/EP0Sh7wGL4o?si=5pGgB02j0Z__8K8Q',
+    Link: {},
   },
   {
     Partner: '碗碗',

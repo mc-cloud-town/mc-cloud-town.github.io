@@ -73,7 +73,7 @@ const PartnerCard = (partnerData: IPartnership) => {
         cover={
           <ImageWrapper>
             <LazyLoadImage
-              style={{ borderRadius: '50%' }}
+              style={{ borderRadius: '50%', width: '176px', height: '176px' }}
               src={getImageUrl(partnerData.Image)}
               alt={partnerData.Partner}
               effect="blur"
