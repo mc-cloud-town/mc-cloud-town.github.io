@@ -15,27 +15,23 @@ const StyledCard = styled(Card)`
 
 const StyleCardMeta = styled(Card.Meta)`
   text-align: center;
-
-  img {
-    border-radius: 50%;
-  }
 `;
 
 const ImageWrapper = styled.div`
   width: 100%;
-  padding: 10px;
-
-  & > span > img {
-    width: 100%;
-  }
+  padding: 24px;
 `;
 
 const ModalTitle = styled.h1`
   text-align: center;
 `;
 
+const TextDiv = styled.div`
+  padding: 5%;
+`;
+
 const StyleIntroduce = styled.div`
-  text-align: center;
+  font-size: medium;
 `;
 
 const LongPartnership = styled.h2`
@@ -44,6 +40,7 @@ const LongPartnership = styled.h2`
 
 const StyleModal = styled(Modal)`
   text-align: center;
+  padding: 20px;
 `;
 
 const StyleIframe = styled.iframe`
@@ -81,10 +78,10 @@ const PartnerCard = (partnerData: IPartnership) => {
           </ImageWrapper>
         }
       >
-        <StyleCardMeta title={<h2>{partnerData.Partner}</h2>} />
+        <StyleCardMeta title={<h1>{partnerData.Partner}</h1>} />
       </StyledCard>
       <StyleModal
-        width={1040}
+        width={720}
         centered={true}
         title={<ModalTitle>{partnerData.ModalTitle}</ModalTitle>}
         open={isModalOpen[0]}
@@ -95,13 +92,15 @@ const PartnerCard = (partnerData: IPartnership) => {
         {partnerData.LongPartnership && (
           <LongPartnership>長期合作夥伴</LongPartnership>
         )}
-        {partnerData.Introduce && (
-          <StyleIntroduce>
-            {Array.isArray(partnerData.Introduce)
-              ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
-              : partnerData.Introduce}
-          </StyleIntroduce>
-        )}
+        <TextDiv>
+          {partnerData.Introduce && (
+            <StyleIntroduce>
+              {Array.isArray(partnerData.Introduce)
+                ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
+                : partnerData.Introduce}
+            </StyleIntroduce>
+          )}
+        </TextDiv>
         {partnerData.ShowVideo && (
           <StyleVideo>
             <StyleIframe

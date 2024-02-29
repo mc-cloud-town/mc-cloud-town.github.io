@@ -6,7 +6,7 @@ export interface ILink {
   discord?: string;
   facebook?: string;
   weibo?: string;
-  telegram?: string;
+  Instagram?: string;
   X?: string;
   QQ?: string;
   other?: string;

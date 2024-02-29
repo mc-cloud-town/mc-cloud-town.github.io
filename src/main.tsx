@@ -12,7 +12,7 @@ import initI18n from './i18n/i18nConfig';
 
 import 'antd/dist/reset.css';
 import JoinServer from '@/pages/JoinServer.tsx';
-import Partner from '@/pages/partner.tsx';
+import Partner from '@/pages/Partner.tsx';
 
 initI18n();
 

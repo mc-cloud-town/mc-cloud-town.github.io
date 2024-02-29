@@ -2,6 +2,7 @@ import {
   BilibiliOutlined,
   DiscordOutlined,
   FacebookOutlined,
+  InstagramOutlined,
   LinkOutlined,
   QqOutlined,
   TikTokOutlined,
@@ -10,7 +11,6 @@ import {
   XOutlined,
   YoutubeOutlined,
 } from '@ant-design/icons';
-import TelegramSVG from '#/partner/telegramSVG.tsx';
 import { Space } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
 
@@ -72,6 +72,15 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
             <FacebookOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
+        {partnerLink?.Instagram && (
+          <a
+            href={partnerLink?.Instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <InstagramOutlined style={{ fontSize: '50px' }} />
+          </a>
+        )}
         {partnerLink?.weibo && (
           <a
             href={partnerLink?.weibo}
@@ -89,15 +98,6 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
         {partnerLink?.QQ && (
           <a href={partnerLink?.QQ} target="_blank" rel="noopener noreferrer">
             <QqOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.telegram && (
-          <a
-            href={partnerLink?.telegram}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <TelegramSVG />
           </a>
         )}
         {partnerLink?.other && (
