@@ -131,7 +131,6 @@
         "Partner": "小柯",
         "Image": "partner/小柯.jpg",
         "ModalTitle": "小柯",
-        "LongPartnership": false,
         "Introduce": [
           "大家好，我是小柯！",
           "歡迎來到我的頻道，我的頻道的風格是日本和國外混搭，參考了不少日本和英文實況主！"
@@ -147,7 +146,6 @@
         "Partner": "脏小豆",
         "Image": "partner/脏小豆.avif",
         "ModalTitle": "脏小豆",
-        "LongPartnership": false,
         "Introduce": "哈嘍我是臟小豆，壹位來自石家莊的大鴿子！",
         "ShowVideo": "https://www.youtube.com/embed/FalaBcZ9PQo?si=r1CstPPfH28PnJe4",
         "Link": {
@@ -160,7 +158,6 @@
         "Partner": "老宸",
         "Image": "partner/老宸.jpg",
         "ModalTitle": "老宸",
-        "LongPartnership": false,
         "Introduce": [
           "大家好，我是老宸，一個愛玩遊戲的小玩家，",
           "愛玩各種類的遊戲，希望能跟大家同樂，一起去遊戲裡的世界冒險吧!!!"
@@ -178,7 +175,6 @@
         "Partner": "酒鬼",
         "Image": "partner/酒鬼.jpg",
         "ModalTitle": "酒鬼",
-        "LongPartnership": false,
         "Introduce": [
           "這個頻道基本每天更新麥塊影片",
           "有可能是有趣的小短片",
@@ -197,7 +193,6 @@
         "Partner": "82年的海尼根",
         "Image": "partner/82年的海尼根.jpg",
         "ModalTitle": "82年的海尼根",
-        "LongPartnership": false,
         "Introduce": [
           "大家早我是海尼根🍻",
           "是個因為爽所以發片的實況主",
@@ -219,7 +214,6 @@
         "Partner": "Reshar Ch.蝦蝦桑【FourZ live所屬】",
         "Image": "partner/Reshar Ch.蝦蝦桑【FourZ live所屬】.jpg",
         "ModalTitle": "Reshar Ch.蝦蝦桑【FourZ live所屬】",
-        "LongPartnership": false,
         "Introduce": [
           "大家好!我是台灣社團勢Vtuber蝦蝦桑!",
           "FourZ一期生",
@@ -241,7 +235,6 @@
         "Partner": "杯子蛋糕實驗室",
         "Image": "partner/杯子蛋糕實驗室.jpg",
         "ModalTitle": "杯子蛋糕實驗室",
-        "LongPartnership": false,
         "Introduce": "為什麼現實生活中這麼多電影才會出現的情節？",
         "ShowVideo": "https://www.youtube.com/embed/9W3QmzUZB8w?si=7txPXTR0PQuhavrR",
         "Link": {
@@ -255,7 +248,6 @@
         "Partner": "鬼鯨伺服器",
         "Image": "partner/鬼鯨伺服器.webp",
         "ModalTitle": "GhostWhaleServer【鬼鯨伺服器】",
-        "LongPartnership": false,
         "Introduce": [
           "我們是華語圈的建築伺服器—鬼鯨，",
           "一個因為對建築愛不釋手所以聚在一起的一群人。",
@@ -279,7 +271,6 @@
         "Partner": "阿爾薩斯工業 建築團隊",
         "Image": "partner/阿爾薩斯工業.avif",
         "ModalTitle": "阿爾薩斯工業 建築團隊",
-        "LongPartnership": false,
         "Introduce": "我们是一支成立于2020年的理想主义Minecraft团队，秉承自由、平等、团结的价值观，以卓越的团队氛围而自豪。在我们的世界里，创造和想象力没有边界，而我们的建筑技术则是国内前列，凭借着完整的建筑流程链，我们已经汇聚了150余名才华横溢的团队成员，每个人都为实现我们的梦想而努力奋斗。",
         "ShowVideo": "https://www.youtube.com/embed/CleVu1WICss?si=4ifRtrLFkBoPvbe7",
         "Link": {

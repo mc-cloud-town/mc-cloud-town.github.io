@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import { Flex } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
+import stopYoutubeVideo from '#/partner/stopVideo.tsx';
 
 type IconKey = keyof typeof icons;
 
@@ -38,7 +39,13 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
           const safeKey = key as IconKey;
           const IconComponent = icons[safeKey] || LinkOutlined;
           return (
-            <a key={key} href={link} target="_blank" rel="noopener noreferrer">
+            <a
+              key={key}
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => stopYoutubeVideo()}
+            >
               <IconComponent style={{ fontSize: '24px' }} />
             </a>
           );

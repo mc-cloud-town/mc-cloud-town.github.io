@@ -8,6 +8,7 @@ import PartnerLink from '#/partner/PartnerLink.tsx';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
+import stopYoutubeVideo from '#/partner/stopVideo.tsx';
 
 const StyledCard = styled(Card)`
   margin: 16px;
@@ -63,23 +64,9 @@ const PartnerCard = (partnerData: IPartnership) => {
     setIsModalOpen(true);
   };
 
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
-
   const handleCancel = () => {
     setIsModalOpen(false);
-  };
-
-  const stopYoutubeVideo = () => {
-    const video: HTMLIFrameElement = document.getElementById(
-      'video'
-    ) as HTMLIFrameElement;
-    video &&
-    video.contentWindow?.postMessage(
-      '{"event":"command", "func":"pauseVideo", "args":""}',
-      '*'
-    );
+    stopYoutubeVideo();
   };
 
   return (
@@ -105,19 +92,21 @@ const PartnerCard = (partnerData: IPartnership) => {
         centered={true}
         title={
           <ModalTitle>
-            {partnerData.ModalTitle} {partnerData.LongPartnership && "【長期合作夥伴】"}
-          </ModalTitle>}
+            {partnerData.ModalTitle}{' '}
+            {partnerData.LongPartnership && '【長期合作夥伴】'}
+          </ModalTitle>
+        }
         open={isModalOpen}
-        onOk={handleOk}
         onCancel={handleCancel}
         footer={<PartnerLink partnerLink={partnerData.Link} />}
-        afterClose={() => stopYoutubeVideo()}
       >
         <TextDiv>
           {partnerData.Introduce && (
             <StyleIntroduce>
               {Array.isArray(partnerData.Introduce)
-                ? partnerData.Introduce.map((introduce, index) => <p key={index}>{introduce}</p>)
+                ? partnerData.Introduce.map((introduce, index) => (
+                    <p key={index}>{introduce}</p>
+                  ))
                 : partnerData.Introduce}
             </StyleIntroduce>
           )}

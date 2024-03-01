@@ -16,7 +16,7 @@ export interface IPartnership {
   Partner: string;
   Image: string;
   ModalTitle: string;
-  LongPartnership: boolean;
+  LongPartnership?: boolean;
   Introduce: (string | JSX.Element)[] | string | JSX.Element;
   ShowVideo?: string;
   Link?: ILink;
