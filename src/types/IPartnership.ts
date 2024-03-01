@@ -6,9 +6,9 @@ export interface ILink {
   discord?: string;
   facebook?: string;
   weibo?: string;
-  Instagram?: string;
-  X?: string;
-  QQ?: string;
+  instagram?: string;
+  x?: string;
+  qq?: string;
   other?: string;
 }
 

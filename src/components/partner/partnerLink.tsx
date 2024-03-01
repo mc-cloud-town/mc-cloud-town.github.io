@@ -72,9 +72,9 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
             <FacebookOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {partnerLink?.Instagram && (
+        {partnerLink?.instagram && (
           <a
-            href={partnerLink?.Instagram}
+            href={partnerLink?.instagram}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -90,13 +90,13 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
             <WeiboOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {partnerLink?.X && (
-          <a href={partnerLink?.X} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.x && (
+          <a href={partnerLink?.x} target="_blank" rel="noopener noreferrer">
             <XOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
-        {partnerLink?.QQ && (
-          <a href={partnerLink?.QQ} target="_blank" rel="noopener noreferrer">
+        {partnerLink?.qq && (
+          <a href={partnerLink?.qq} target="_blank" rel="noopener noreferrer">
             <QqOutlined style={{ fontSize: '50px' }} />
           </a>
         )}
