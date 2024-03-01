@@ -62,6 +62,17 @@ const PartnerCard = (partnerData: IPartnership) => {
     });
   };
 
+  const stopYoutubeVideo = () => {
+    const video: HTMLIFrameElement = document.getElementById(
+      'video',
+    ) as HTMLIFrameElement;
+    video &&
+      video.contentWindow?.postMessage(
+        '{"event":"command", "func":"pauseVideo", "args":""}',
+        '*',
+      );
+  };
+
   return (
     <Col key={partnerData.Partner} xs={48} sm={24} md={16} lg={12} xl={8}>
       <StyledCard
@@ -88,6 +99,7 @@ const PartnerCard = (partnerData: IPartnership) => {
         onOk={() => toggleModal(0, false)}
         onCancel={() => toggleModal(0, false)}
         footer={<PartnerLink partnerLink={partnerData.Link} />}
+        afterClose={() => stopYoutubeVideo()}
       >
         {partnerData.LongPartnership && (
           <LongPartnership>長期合作夥伴</LongPartnership>
@@ -104,11 +116,11 @@ const PartnerCard = (partnerData: IPartnership) => {
         {partnerData.ShowVideo && (
           <StyleVideo>
             <StyleIframe
+              id={'video'}
               width="560"
               height="315"
-              src={partnerData.ShowVideo}
+              src={partnerData.ShowVideo + '&autoplay=0&enablejsapi=1'}
               title="YouTube video player"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           </StyleVideo>

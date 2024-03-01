@@ -39,8 +39,7 @@ const PartnerTeam: IPartnership[] = [
     LongPartnership: false,
     Introduce:
       '我们是一支成立于2020年的理想主义Minecraft团队，秉承自由、平等、团结的价值观，以卓越的团队氛围而自豪。在我们的世界里，创造和想象力没有边界，而我们的建筑技术则是国内前列，凭借着完整的建筑流程链，我们已经汇聚了150余名才华横溢的团队成员，每个人都为实现我们的梦想而努力奋斗。',
-    ShowVideo:
-      '//player.bilibili.com/player.html?aid=1051225190&bvid=BV14H4y1L7fi&cid=1451463026&p=1',
+    ShowVideo: 'https://www.youtube.com/embed/CleVu1WICss?si=4ifRtrLFkBoPvbe7',
     Link: {
       other: 'https://www.alsace.team/',
       youtube: 'https://www.youtube.com/@alsaceteam',
@@ -116,8 +115,7 @@ const Partnership: IPartnership[] = [
     ModalTitle: '脏小豆',
     LongPartnership: false,
     Introduce: '哈嘍我是臟小豆，壹位來自石家莊的大鴿子！',
-    ShowVideo:
-      '//player.bilibili.com/player.html?aid=1850762515&bvid=BV1mW421P7Cb&cid=1448346441&p=1',
+    ShowVideo: 'https://www.youtube.com/embed/FalaBcZ9PQo?si=r1CstPPfH28PnJe4',
     Link: {
       youtube: 'https://www.youtube.com/@zxdnb',
       bilibili: 'https://space.bilibili.com/5836069',
