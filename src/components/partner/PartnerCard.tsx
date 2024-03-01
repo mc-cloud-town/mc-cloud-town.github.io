@@ -22,27 +22,29 @@ const StyleCardMeta = styled(Card.Meta)`
 const ImageWrapper = styled.div`
   width: 100%;
   padding: 24px;
+
+  & > span > img {
+    border-radius: 50% !important;
+    max-width: 150px;
+    object-fit: cover;
+  }
 `;
 
-const ModalTitle = styled.h1`
+const ModalTitle = styled.span`
   text-align: center;
+  font-size: x-large;
 `;
 
 const TextDiv = styled.div`
-  padding: 5%;
+  margin-bottom: 20px;
 `;
 
 const StyleIntroduce = styled.div`
   font-size: medium;
 `;
 
-const LongPartnership = styled.h2`
-  text-align: center;
-`;
-
 const StyleModal = styled(Modal)`
   text-align: center;
-  padding: 20px;
 `;
 
 const StyleIframe = styled.iframe`
@@ -71,46 +73,46 @@ const PartnerCard = (partnerData: IPartnership) => {
 
   const stopYoutubeVideo = () => {
     const video: HTMLIFrameElement = document.getElementById(
-      'video',
+      'video'
     ) as HTMLIFrameElement;
     video &&
-      video.contentWindow?.postMessage(
-        '{"event":"command", "func":"pauseVideo", "args":""}',
-        '*',
-      );
+    video.contentWindow?.postMessage(
+      '{"event":"command", "func":"pauseVideo", "args":""}',
+      '*'
+    );
   };
 
   return (
-    <Col xs={24} sm={20} md={16} lg={12} xl={8}>
-      <StyledCard
-        hoverable
-        onClick={showModal}
-        cover={
-          <ImageWrapper>
-            <LazyLoadImage
-              style={{ borderRadius: '50%', width: '176px', height: '176px' }}
-              src={getImageUrl(partnerData.Image)}
-              alt={partnerData.Partner}
-              effect="blur"
-            />
-          </ImageWrapper>
-        }
-      >
-        <StyleCardMeta title={<h1>{partnerData.Partner}</h1>} />
-      </StyledCard>
+    <>
+      <Col xs={24} sm={20} md={16} lg={12} xl={8}>
+        <StyledCard
+          hoverable
+          onClick={showModal}
+          cover={
+            <ImageWrapper>
+              <LazyLoadImage
+                src={getImageUrl(partnerData.Image)}
+                alt={partnerData.Partner}
+                effect="blur"
+              />
+            </ImageWrapper>
+          }
+        >
+          <StyleCardMeta title={<h1>{partnerData.Partner}</h1>} />
+        </StyledCard>
+      </Col>
       <StyleModal
-        width={720}
         centered={true}
-        title={<ModalTitle>{partnerData.ModalTitle}</ModalTitle>}
+        title={
+          <ModalTitle>
+            {partnerData.ModalTitle} {partnerData.LongPartnership && "【長期合作夥伴】"}
+          </ModalTitle>}
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={<PartnerLink partnerLink={partnerData.Link} />}
         afterClose={() => stopYoutubeVideo()}
       >
-        {partnerData.LongPartnership && (
-          <LongPartnership>長期合作夥伴</LongPartnership>
-        )}
         <TextDiv>
           {partnerData.Introduce && (
             <StyleIntroduce>
@@ -133,7 +135,7 @@ const PartnerCard = (partnerData: IPartnership) => {
           </StyleVideo>
         )}
       </StyleModal>
-    </Col>
+    </>
   );
 };
 

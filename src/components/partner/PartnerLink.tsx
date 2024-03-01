@@ -11,106 +11,39 @@ import {
   XOutlined,
   YoutubeOutlined,
 } from '@ant-design/icons';
-import { Space } from 'antd';
+import { Flex } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
+
+type IconKey = keyof typeof icons;
+
+const icons = {
+  youtube: YoutubeOutlined,
+  bilibili: BilibiliOutlined,
+  twitch: TwitchOutlined,
+  tiktok: TikTokOutlined,
+  discord: DiscordOutlined,
+  facebook: FacebookOutlined,
+  instagram: InstagramOutlined,
+  weibo: WeiboOutlined,
+  x: XOutlined,
+  qq: QqOutlined,
+  other: LinkOutlined,
+};
 
 const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
   return (
-    <>
-      <Space size="large">
-        {partnerLink?.youtube && (
-          <a
-            href={partnerLink?.youtube}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <YoutubeOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.bilibili && (
-          <a
-            href={partnerLink?.bilibili}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <BilibiliOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.twitch && (
-          <a
-            href={partnerLink?.twitch}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <TwitchOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.tiktok && (
-          <a
-            href={partnerLink?.tiktok}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <TikTokOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.discord && (
-          <a
-            href={partnerLink?.discord}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <DiscordOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.facebook && (
-          <a
-            href={partnerLink?.facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FacebookOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.instagram && (
-          <a
-            href={partnerLink?.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <InstagramOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.weibo && (
-          <a
-            href={partnerLink?.weibo}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <WeiboOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.x && (
-          <a href={partnerLink?.x} target="_blank" rel="noopener noreferrer">
-            <XOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.qq && (
-          <a href={partnerLink?.qq} target="_blank" rel="noopener noreferrer">
-            <QqOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-        {partnerLink?.other && (
-          <a
-            href={partnerLink?.other}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <LinkOutlined style={{ fontSize: '50px' }} />
-          </a>
-        )}
-      </Space>
-    </>
+    <Flex wrap="wrap" gap="middle" justify="end">
+      {partnerLink &&
+        Object.entries(partnerLink).map(([key, link]) => {
+          const safeKey = key as IconKey;
+          const IconComponent = icons[safeKey] || LinkOutlined;
+          return (
+            <a key={key} href={link} target="_blank" rel="noopener noreferrer">
+              <IconComponent style={{ fontSize: '24px' }} />
+            </a>
+          );
+        })}
+    </Flex>
   );
 };
 
