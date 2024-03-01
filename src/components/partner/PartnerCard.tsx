@@ -26,7 +26,7 @@ const ImageWrapper = styled.div`
 
   & > span > img {
     border-radius: 50% !important;
-    max-width: 150px;
+    max-width: 176px;
     object-fit: cover;
   }
 `;
@@ -50,6 +50,20 @@ const StyleModal = styled(Modal)`
 
 const StyleIframe = styled.iframe`
   border: none;
+  width: 700px;
+  height: 390px;
+
+  @media only screen and (max-width: 620px) {
+    width: 100%;
+    max-width: 560px;
+    height: 300px;
+  }
+
+  @media only screen and (max-width: 345px) {
+    width: 100%;
+    max-width: 300px;
+    height: 170px;
+  }
 `;
 
 const StyleVideo = styled.div`
@@ -118,8 +132,6 @@ const PartnerCard = (partnerData: IPartnership) => {
           <StyleVideo>
             <StyleIframe
               id={'video'}
-              width="700"
-              height="390"
               src={partnerData.ShowVideo + '&autoplay=0&enablejsapi=1'}
               title="YouTube video player"
               allowFullScreen
