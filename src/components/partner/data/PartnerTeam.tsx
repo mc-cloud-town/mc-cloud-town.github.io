@@ -3,7 +3,7 @@ import { IPartnership } from '@/types/IPartnership.ts';
 const PartnerTeam: IPartnership[] = [
   {
     Partner: '鬼鯨伺服器',
-    Image: 'partner/鬼鯨伺服器.jpg',
+    Image: 'partner/鬼鯨伺服器.webp',
     ModalTitle: 'GhostWhaleServer【鬼鯨伺服器】',
     LongPartnership: false,
     Introduce: [
