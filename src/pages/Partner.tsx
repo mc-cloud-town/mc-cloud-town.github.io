@@ -5,9 +5,6 @@ import styled from 'styled-components';
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
 import PartnerCard from '#/partner/PartnerCard.tsx';
-import PartnerTeam from '#/partner/data/PartnerTeam.tsx';
-import Partnership from '#/partner/data/Partnership.tsx';
-import LongtimePartnership from '#/partner/data/LongtimePartnership.tsx';
 
 import { IPartnership } from '@/types/IPartnership.ts';
 import partner from '@/assets/partner/partner.webp';
@@ -31,6 +28,22 @@ const Container = styled.div`
 
 const Partner = () => {
   const { t } = useTranslation();
+
+  const PartnerData: IPartnership[] = t('Collaborative.Partnership', {
+    returnObjects: true,
+  });
+
+  const PartnerTeamData: IPartnership[] = t('Collaborative.PartnerServer', {
+    returnObjects: true,
+  });
+
+  const LongTimePartnerData: IPartnership[] = t(
+    'Collaborative.longTermPartner',
+    {
+      returnObjects: true,
+    },
+  );
+
   return (
     <>
       <PageHeader
@@ -40,7 +53,7 @@ const Partner = () => {
       <Container>
         <PartnershipTitle>{t('partnerTeam.title')}</PartnershipTitle>
         <Row justify="center">
-          {PartnerTeam.map((partnerData: IPartnership) => (
+          {PartnerTeamData.map((partnerData: IPartnership) => (
             <PartnerCard
               key={partnerData.Partner}
               Partner={partnerData.Partner}
@@ -55,7 +68,7 @@ const Partner = () => {
         </Row>
         <PartnershipTitle>{t('partner.longtime')}</PartnershipTitle>
         <Row justify="center">
-          {LongtimePartnership.map((partnerData: IPartnership) => (
+          {LongTimePartnerData.map((partnerData: IPartnership) => (
             <PartnerCard
               key={partnerData.Partner}
               Partner={partnerData.Partner}
@@ -70,7 +83,7 @@ const Partner = () => {
         </Row>
         <PartnershipTitle>{t('partner.title')}</PartnershipTitle>
         <Row justify="center">
-          {Partnership.map((partnerData: IPartnership) => (
+          {PartnerData.map((partnerData: IPartnership) => (
             <PartnerCard
               key={partnerData.Partner}
               Partner={partnerData.Partner}
