@@ -5,7 +5,8 @@
     "survivalProgress": "生存服进度",
     "member": "成员",
     "join": "加入我们",
-    "openSource": "开源项目"
+    "openSource": "开源项目",
+    "partner": "合作伙伴及团队"
   },
   "time": {
     "days": "天",
@@ -116,5 +117,12 @@
   "opensource": {
     "title": "开源列表",
     "description": "看起来很赞 不是吗?"
+  },
+  "partner": {
+    "title": "合作创作者",
+    "longtime": "长期合作创作者"
+  },
+  "partnerTeam": {
+    "title": "合作团队"
   }
 }

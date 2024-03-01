@@ -27,7 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="survival" element={<SurvivalProgress />} />
           <Route path="member" element={<MemberPage />} />
           <Route path="openSource" element={<OpenSourcePage />} />
-          <Route path="partner" element={<Partner />} />
+          <Route path="collaborative" element={<Partner />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

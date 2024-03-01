@@ -111,7 +111,7 @@ const NavigationBar = () => {
     },
     {
       key: 'partner',
-      label: <Link to={'/partner'}>{t('menu.partner.title')}</Link>,
+      label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>,
     },
     {
       key: '404',

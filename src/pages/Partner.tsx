@@ -26,7 +26,7 @@ const Partner = () => {
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={partner} />}
-        headerTextArray={[t('menu.partner.title')]}
+        headerTextArray={[t('menu.partner')]}
       />
       <PartnershipTitle>{t('partnerTeam.title')}</PartnershipTitle>
       <StyleRow justify="center">
