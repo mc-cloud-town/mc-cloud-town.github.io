@@ -2,7 +2,6 @@ import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
 
 import { serverLink } from '@/constants';
 import CTEC_banner from '@/assets/brand/CTEC_banner.png';

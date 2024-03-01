@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { Col, Modal } from 'antd';
 import { Card } from 'antd';
 import styled from 'styled-components';
-import { IPartnership } from '@/types/IPartnership.ts';
-import { useState } from 'react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
+
+import PartnerLink from '#/partner/PartnerLink.tsx';
+
 import getImageUrl from '@/utils/getImageUrl.ts';
-import PartnerLink from '#/partner/partnerLink.tsx';
+import { IPartnership } from '@/types/IPartnership.ts';
 
 const StyledCard = styled(Card)`
   margin: 16px;

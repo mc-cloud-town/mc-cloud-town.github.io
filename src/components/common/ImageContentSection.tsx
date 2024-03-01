@@ -7,8 +7,6 @@ import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
-import 'react-lazy-load-image-component/src/effects/blur.css';
-
 const fadeIn = keyframes`
   from {
     opacity: 0;
