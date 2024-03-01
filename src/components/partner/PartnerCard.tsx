@@ -55,13 +55,18 @@ const StyleVideo = styled.div`
 `;
 
 const PartnerCard = (partnerData: IPartnership) => {
-  const [isModalOpen, setIsModalOpen] = useState([false, false]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const toggleModal = (idx: number, target: boolean) => {
-    setIsModalOpen((p) => {
-      p[idx] = target;
-      return [...p];
-    });
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
   };
 
   const stopYoutubeVideo = () => {
@@ -76,10 +81,10 @@ const PartnerCard = (partnerData: IPartnership) => {
   };
 
   return (
-    <Col key={partnerData.Partner} xs={24} sm={20} md={16} lg={12} xl={8}>
+    <Col xs={24} sm={20} md={16} lg={12} xl={8}>
       <StyledCard
         hoverable
-        onClick={() => toggleModal(0, true)}
+        onClick={showModal}
         cover={
           <ImageWrapper>
             <LazyLoadImage
@@ -97,9 +102,9 @@ const PartnerCard = (partnerData: IPartnership) => {
         width={720}
         centered={true}
         title={<ModalTitle>{partnerData.ModalTitle}</ModalTitle>}
-        open={isModalOpen[0]}
-        onOk={() => toggleModal(0, false)}
-        onCancel={() => toggleModal(0, false)}
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
         footer={<PartnerLink partnerLink={partnerData.Link} />}
         afterClose={() => stopYoutubeVideo()}
       >
@@ -110,7 +115,7 @@ const PartnerCard = (partnerData: IPartnership) => {
           {partnerData.Introduce && (
             <StyleIntroduce>
               {Array.isArray(partnerData.Introduce)
-                ? partnerData.Introduce.map((introduce) => <p>{introduce}</p>)
+                ? partnerData.Introduce.map((introduce, index) => <p key={index}>{introduce}</p>)
                 : partnerData.Introduce}
             </StyleIntroduce>
           )}
