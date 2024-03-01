@@ -74,7 +74,7 @@ const PartnerCard = (partnerData: IPartnership) => {
   };
 
   return (
-    <Col key={partnerData.Partner} xs={48} sm={24} md={16} lg={12} xl={8}>
+    <Col key={partnerData.Partner} xs={24} sm={20} md={16} lg={12} xl={8}>
       <StyledCard
         hoverable
         onClick={() => toggleModal(0, true)}
