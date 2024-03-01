@@ -13,7 +13,7 @@ import {
 } from '@ant-design/icons';
 import { Flex } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
-import stopYoutubeVideo from '#/partner/stopVideo.tsx';
+import stopYoutubeVideo from '#/partner/StopVideo.tsx';
 
 type IconKey = keyof typeof icons;
 
@@ -34,22 +34,21 @@ const icons = {
 const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
   return (
     <Flex wrap="wrap" gap="middle" justify="end">
-      {partnerLink &&
-        Object.entries(partnerLink).map(([key, link]) => {
-          const safeKey = key as IconKey;
-          const IconComponent = icons[safeKey] || LinkOutlined;
-          return (
-            <a
-              key={key}
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => stopYoutubeVideo()}
-            >
-              <IconComponent style={{ fontSize: '24px' }} />
-            </a>
-          );
-        })}
+      {Object.entries(icons).map(([key, IconComponent]) => {
+        const link = partnerLink ? partnerLink[key as IconKey] : undefined;
+        if (!link) return null; // Do not render the icon if there's no link for it
+        return (
+          <a
+            key={key}
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => stopYoutubeVideo()}
+          >
+            <IconComponent style={{ fontSize: '36px' }} />
+          </a>
+        );
+      })}
     </Flex>
   );
 };

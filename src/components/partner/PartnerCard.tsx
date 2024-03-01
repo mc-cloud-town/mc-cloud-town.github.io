@@ -8,7 +8,7 @@ import PartnerLink from '#/partner/PartnerLink.tsx';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
-import stopYoutubeVideo from '#/partner/stopVideo.tsx';
+import stopYoutubeVideo from '#/partner/StopVideo.tsx';
 
 const StyledCard = styled(Card)`
   margin: 16px;
@@ -89,11 +89,12 @@ const PartnerCard = (partnerData: IPartnership) => {
         </StyledCard>
       </Col>
       <StyleModal
+        width={720}
         centered={true}
         title={
           <ModalTitle>
-            {partnerData.ModalTitle}{' '}
-            {partnerData.LongPartnership && '【長期合作夥伴】'}
+            {partnerData.ModalTitle}
+            {partnerData.LongPartnership && ' 【長期合作夥伴】'}
           </ModalTitle>
         }
         open={isModalOpen}
@@ -105,7 +106,9 @@ const PartnerCard = (partnerData: IPartnership) => {
             <StyleIntroduce>
               {Array.isArray(partnerData.Introduce)
                 ? partnerData.Introduce.map((introduce, index) => (
-                    <p key={index}>{introduce}</p>
+                    <p style={{ margin: '0 0 5px' }} key={index}>
+                      {introduce}
+                    </p>
                   ))
                 : partnerData.Introduce}
             </StyleIntroduce>
@@ -115,8 +118,8 @@ const PartnerCard = (partnerData: IPartnership) => {
           <StyleVideo>
             <StyleIframe
               id={'video'}
-              width="560"
-              height="315"
+              width="700"
+              height="390"
               src={partnerData.ShowVideo + '&autoplay=0&enablejsapi=1'}
               title="YouTube video player"
               allowFullScreen
