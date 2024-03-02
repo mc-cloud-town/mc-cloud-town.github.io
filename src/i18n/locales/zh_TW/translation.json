@@ -116,7 +116,17 @@
   },
   "survivalProgress": {
     "title": "生存服進度",
-    "description": "歷史並非毫無意義，而是為了在時光中留下我們走過的痕跡"
+    "description": "歷史並非毫無意義，而是為了在時光中留下我們走過的痕跡",
+    "event1": {
+      "image": "survivalProgress/background.jpg",
+      "title": "紅石組",
+      "description": "投稿紅石作品至作品投稿或審核人員私訊來申請審核。"
+    },
+    "event2": {
+      "image": "survivalProgress/background.jpg",
+      "title": "紅石組",
+      "description": "投稿紅石作品至作品投稿或審核人員私訊來申請審核。"
+    }
   },
   "opensource": {
     "title": "開源專案",
