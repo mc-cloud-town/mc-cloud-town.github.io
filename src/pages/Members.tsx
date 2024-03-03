@@ -9,6 +9,8 @@ import useApi from '@/hooks/useApi.ts';
 import { MEMBER_API } from '@/constants';
 import { IMember } from '@/types/IMember.ts';
 import background from '@/assets/members/background.png';
+import { WarningOutlined } from '@ant-design/icons';
+import { Spin } from 'antd';
 
 const Container = styled.div`
   padding: 50px 40px;
@@ -16,6 +18,21 @@ const Container = styled.div`
 
   @media (max-width: 400px) {
     padding: 50px 10px;
+  }
+`;
+
+const StatusContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  svg {
+    color: #6f9b9c !important;
+  }
+
+  span {
+    margin-left: 10px;
+    color: #6f9b9c;
   }
 `;
 
@@ -31,8 +48,18 @@ const MembersPage = () => {
         subHeaderContentArray={[t('members.description')]}
       />
       <Container>
-        {loading && <p>{t('loading')}</p>}
-        {error && <p>{error.message}</p>}
+        {error && (
+          <StatusContainer>
+            <WarningOutlined style={{ fontSize: '24px', color: '#feffe6' }} />
+            <span>{t('error')}</span>
+          </StatusContainer>
+        )}
+        {loading && (
+          <StatusContainer>
+            <Spin size="large" spinning={true} />
+            <span>{t('loading')}</span>
+          </StatusContainer>
+        )}
         {!loading && !error && data && <MemberCase members={data} />}
       </Container>
     </>
