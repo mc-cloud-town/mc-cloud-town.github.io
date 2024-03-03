@@ -11,19 +11,22 @@ import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 
 import { IImageContent } from '@/types/IImageContent.ts';
 
+interface IHomePageCard {
+  imageUrl: string;
+  title: string;
+  description: string;
+  button: string;
+  buttonLink: string;
+}
+
 const HomePage = () => {
   const { t } = useTranslation();
+  const features: string[] = t('home.about.features', { returnObjects: true });
   const aboutSectionImageContent: IImageContent = {
     imageUrl: t('home.about.imageUrl'),
     title: t('home.about.title'),
     subTitle: t('home.about.subTitle'),
-    features: [
-      t('home.about.features.0'),
-      t('home.about.features.1'),
-      t('home.about.features.2'),
-      t('home.about.features.3'),
-      t('home.about.features.4'),
-    ],
+    features: features,
     buttons: [
       {
         text: t('home.about.button'),
@@ -32,41 +35,22 @@ const HomePage = () => {
     ],
   };
 
-  const featureSectionImageContents: IImageContent[] = [
-    {
-      imageUrl: t('home.feature.card.0.imageUrl'),
-      title: t('home.feature.card.0.title'),
-      paragraph: t('home.feature.card.0.description'),
+  const cards: IHomePageCard[] = t('home.feature.card', { returnObjects: true });
+  const featureSectionImageContents: IImageContent[] = cards.map((card) => {
+    return {
+      imageUrl: card.imageUrl,
+      title: card.title,
+      paragraph: card.description,
       buttons: [
         {
-          text: t('home.feature.card.0.button'),
-          link: '/building',
+          text: card.button,
+          link: `/${card.buttonLink}`,
         },
       ],
-    },
-    {
-      imageUrl: t('home.feature.card.1.imageUrl'),
-      title: t('home.feature.card.1.title'),
-      paragraph: t('home.feature.card.1.description'),
-      buttons: [
-        {
-          text: t('home.feature.card.1.button'),
-          link: '/redstone',
-        },
-      ],
-    },
-    {
-      imageUrl: t('home.feature.card.2.imageUrl'),
-      title: t('home.feature.card.2.title'),
-      paragraph: t('home.feature.card.2.description'),
-      buttons: [
-        {
-          text: t('home.feature.card.2.button'),
-          link: '/hardware',
-        },
-      ],
-    },
-  ];
+    };
+  });
+
+  console.log(featureSectionImageContents);
 
   return (
     <>
