@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Col, Modal } from 'antd';
 import { Card } from 'antd';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import PartnerLink from '#/partner/PartnerLink.tsx';
@@ -9,11 +9,28 @@ import PartnerLink from '#/partner/PartnerLink.tsx';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
 import stopYoutubeVideo from '#/partner/StopVideo.tsx';
+import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const StyledCard = styled(Card)`
   margin: 16px;
   background-color: #f1f1f1;
   text-align: center;
+  opacity: 0;
+  
+  &.fadeIn {
+    animation: ${fadeIn} 0.8s ease-out forwards;
+  }
 `;
 
 const StyleCardMeta = styled(Card.Meta)`
@@ -73,6 +90,7 @@ const StyleVideo = styled.div`
 
 const PartnerCard = (partnerData: IPartnership) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const {animate, ref} = useAnimateOnScroll();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -87,6 +105,8 @@ const PartnerCard = (partnerData: IPartnership) => {
     <>
       <Col xs={24} sm={20} md={16} lg={12} xl={8}>
         <StyledCard
+          ref={ref}
+          className={animate ? 'fadeIn' : ''}
           hoverable
           onClick={showModal}
           cover={
