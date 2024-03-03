@@ -6,8 +6,8 @@
     "survivalProgress": "Survival Progress",
     "member": "Member",
     "join": "Join Us",
-    "openSource": "Open source projects",
-    "partner": "Partners and teams for collaboration"
+    "openSource": "Open Source",
+    "partner": "Partners"
   },
   "time": {
     "days": "days",
@@ -117,7 +117,7 @@
   },
   "opensource": {
     "title": "Open Source",
-    "description": "some good projects"
+    "description": "To contribute to the community, we have open-sourced some of our projects"
   },
   "partner": {
     "title": "Collaborative creators",
