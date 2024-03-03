@@ -3583,10 +3583,12 @@ react-lazy-load-image-component@^1.6.0:
     lodash.debounce "^4.0.8"
     lodash.throttle "^4.1.1"
 
-react-repo-card-v2@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/react-repo-card-v2/-/react-repo-card-v2-0.0.1.tgz#19359af8140efc201afc7e7eca51ba020f7455d8"
-  integrity sha512-BnvU28yUXaOwzI1rTlovYSMNty1/HdhJcx/NVY/y1nLESe3h+MNrPWjd5wD7xWz6CYXk5NRxqBHkDZUu/5Lvww==
+react-repo-card-v2@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/react-repo-card-v2/-/react-repo-card-v2-0.0.2.tgz#ce6a965b4f97d3e43c27595d9f1e1f3e7c7f2801"
+  integrity sha512-600EibnakRvOlHwQxWG3gCMeCxAAmGDk4A3r6ShPDt/QZOy9GH8fE47HOodR7xVcyxecEEd0tPvey5eWpOEvgw==
+  dependencies:
+    styled-components "^6.1.8"
 
 react-router-dom@^6.22.1:
   version "6.22.1"

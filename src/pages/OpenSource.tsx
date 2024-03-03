@@ -1,5 +1,8 @@
+import { Spin } from 'antd';
+import { RepoCard } from 'react-repo-card-v2';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
+import { WarningOutlined } from '@ant-design/icons';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
@@ -8,7 +11,6 @@ import useApi from '@/hooks/useApi';
 import openSource from '@/assets/openSource/openSource.jpg';
 import { IRepoType } from '@/types/IRepoType.ts';
 import { GITHUB_API } from '@/constants';
-import { RepoCard } from 'react-repo-card-v2';
 
 const RepoBlockList = styled.div`
   background: #6f9b9c;
@@ -20,6 +22,21 @@ const FlexContainer = styled.div`
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+`;
+
+const StatusContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  i {
+    background-color: #feffe6 !important;
+  }
+  
+  span {
+    margin-left: 10px;
+    color: #feffe6;
+  }
 `;
 
 const RepoCardContainer = styled.div`
@@ -41,8 +58,18 @@ const OpenSourcePage = () => {
       />
       <RepoBlockList>
         <FlexContainer>
-          {error && <p>{t('error')}</p>}
-          {loading && <p>{t('loading')}</p>}
+          {error && (
+            <StatusContainer>
+              <WarningOutlined style={{ fontSize: '24px', color: '#feffe6' }} />
+              <span>{t('error')}</span>
+            </StatusContainer>
+          )}
+          {loading && (
+            <StatusContainer>
+              <Spin size="large" spinning={true}/>
+              <span>{t('loading')}</span>
+            </StatusContainer>
+          )}
           {Array.isArray(data) && data.map((repo) => !repo.name.startsWith('.') && (
             <RepoCardContainer key={repo.id}>
               <RepoCard repository={repo} showIssues={false} />

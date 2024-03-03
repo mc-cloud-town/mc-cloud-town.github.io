@@ -1,5 +1,6 @@
 {
   "loading": "Loading...",
+  "error": "Error, Something went wrong",
   "menu": {
     "home": "Home",
     "survivalProgress": "Survival Progress",

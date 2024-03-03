@@ -1,5 +1,6 @@
 {
   "loading": "加載中...",
+  "error": "好像有什麼錯誤發生了...",
   "menu": {
     "home": "首頁",
     "survivalProgress": "生存服進度",
