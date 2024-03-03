@@ -26,6 +26,7 @@ const FullBodyImage = styled(LazyLoadImage)`
 const HeadImage = styled(LazyLoadImage)`
   width: 100%;
   display: none;
+  
   @media (max-width: 400px) {
     display: block;
   }
@@ -50,9 +51,9 @@ const ImageWrapper = styled.div`
 
 const MemberCard = (
   {
-    member
+    member,
   }: {
-    member: IMember
+    member: IMember;
   }) => {
   const { animate,  ref} = useAnimateOnScroll();
 

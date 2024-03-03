@@ -39,6 +39,7 @@ const StyleCardMeta = styled(Card.Meta)`
 
 const ImageWrapper = styled.div`
   width: 100%;
+  height: 224px;
   padding: 24px;
 
   & > span > img {

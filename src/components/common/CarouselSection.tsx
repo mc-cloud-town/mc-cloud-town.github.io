@@ -21,6 +21,10 @@ const Section = styled.section`
   background-color: #b1dde6;
   padding: 50px 20px;
   
+  @media (max-width: 400px) {
+    padding: 50px 5px;
+  }
+  
   &.dark {
     background-color: #6f9b9c;
     color: #fff;
@@ -64,9 +68,24 @@ const StyledCarousel = styled(Carousel)`
 `;
 
 const ImageWrapper = styled.div`
-  & > span > img {
-    width: 100%;
-    border-radius: 10px;
+  width: 100%;
+  padding-top: 56.25%;
+  position: relative;
+  overflow: hidden;
+
+  & > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+
+    & > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
   }
 `;
 

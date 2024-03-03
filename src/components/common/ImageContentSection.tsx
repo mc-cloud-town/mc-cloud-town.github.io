@@ -73,14 +73,29 @@ const Container = styled.div`
 
 const ImageWrapper = styled.div`
   width: 100%;
+  min-width: 320px;
+  padding-top: 56.25%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 0 10px 0 #000000;
+  background-color: white;
 
-  & > span > img {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 0 0 10px 0 #000000;
+  & > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+
+    & > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 `;
+
 
 const TextButtonContainer = styled.div`
   max-width: 600px;

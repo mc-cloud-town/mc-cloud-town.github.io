@@ -104,9 +104,21 @@ const FeatureItem = styled.li`
 
 const ImageWrapper = styled.div`
   width: 100%;
+  padding-top: 56.25%;
+  position: relative;
+  overflow: hidden;
 
-  & > span > img {
-    width: 100%;
+  & > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+
+    & > img {
+      width: 100%;
+      object-fit: cover;
+    }
   }
 `;
 
