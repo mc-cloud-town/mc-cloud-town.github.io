@@ -114,10 +114,6 @@ const NavigationBar = () => {
       label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>,
     },
     {
-      key: '404',
-      label: <Link to="/404">{404}</Link>,
-    },
-    {
       key: 'language',
       label: (
         <Dropdown
