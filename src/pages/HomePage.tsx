@@ -50,8 +50,6 @@ const HomePage = () => {
     };
   });
 
-  console.log(featureSectionImageContents);
-
   return (
     <>
       <PageHeader
