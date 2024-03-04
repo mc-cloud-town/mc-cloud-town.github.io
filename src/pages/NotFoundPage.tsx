@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
 
-import background from '@/assets/notFoundPage/background.jpg';
+import getImageUrl from '@/utils/getImageUrl.ts';
 
 const NotFoundPage = () => {
   const { t } = useTranslation();
@@ -13,7 +13,7 @@ const NotFoundPage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={background} />}
+        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('notFound.imageUrl'))} />}
         headerTextArray={[
           t('notFound.title')
         ]}

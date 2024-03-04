@@ -29,8 +29,7 @@
         "良好的创作环境与服务器设备",
         "与各国优秀玩家共同研究交流"
       ],
-      "button": "最新进度",
-      "imageUrl": "homePage/CTEC_Sort_7.jpg"
+      "button": "最新进度"
     },
     "feature": {
       "title": "我们拥有",
@@ -40,21 +39,21 @@
           "description": "极力于融合红石与建筑，呈现独有在生存模式的作品。云镇的建筑师来自各个领域，在至少一门风格脱颖而出的大师。我们相信只有站到巨人的肩膀才能够开阔自己的视野。在学习大佬的手法中也常跟在建筑圈深耕的团队和服务器交好，其中包含鬼鲸服务器，阿尔萨斯工业以及LIF框木的制作组。云镇也提供完善的插件和创作环境让建筑师尽显才华。",
           "button": "查看建筑作品",
           "buttonLink": "/build",
-          "imageUrl": "homePage/CTEC_Building.jpg"
+          "imageUrl": "homePage/CTEC_Building.webp"
         },
         {
           "title": "先进的红石技术",
           "description": "社群技术实力雄厚，拥有多位红石科技开发者，熟练掌握各种科技树研究，并与多个国际技术生存服务器维持友好关系。我们的团队致力于研究和创新，不断推出各种新颖的农场或原件，为社群成员提供更多的游戏乐趣。我们设置有专属研究室，包括两个创造服务器与两个镜像服务器，让不想玩生存的玩家也可以一同游玩。我们目前持有氧化铜农场的世界纪录认证。",
           "button": "查看红石作品",
           "buttonLink": "redstone",
-          "imageUrl": "homePage/CTEC_Redstone.jpg"
+          "imageUrl": "homePage/CTEC_Redstone.webp"
         },
         {
           "title": "令人惊叹的设备",
           "description": "我们拥有优秀的服务器设备，能够支持大量的同时在线玩家开发与游玩。并在各国拥有低延迟连接代理服务器，为不同地区的玩家提供了极佳的游戏体验。设备拥有 i9-13900K, 128G RAM, 6TB Gen 4 SSD, UPS 不断电系统。并有业余工程师维护，保证服务器的稳定运行。",
           "button": "查看服务器设备",
           "buttonLink": "hardware",
-          "imageUrl": "homePage/CTEC_Hardware.jpg"
+          "imageUrl": "homePage/CTEC_Hardware.webp"
         }
       ]
     },
@@ -65,16 +64,19 @@
   "notFound": {
     "title": "404 未找到",
     "description": "看起来这里已经化为灰烬了...",
+    "imageUrl": "notFoundPage/CTEC_Burning.webp",
     "backButton": "返回首页"
   },
   "members": {
     "title": "成员列表",
+    "imageUrl": "members/CTEC_Members.webp",
     "description": "各领域优秀成员共创了服务器精彩纪录"
   },
   "join": {
     "description": "如何加入我们",
+    "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
-      "image": "join/redstone.jpg",
+      "image": "join/CTEC_Redstone.webp",
       "title": "红石组",
       "description": [
         "投稿红石作品至作品投稿或审核人员私讯来申请审核。",
@@ -95,7 +97,7 @@
       }
     },
     "build": {
-      "image": "join/build.png",
+      "image": "join/CTEC_Build.webp",
       "title": "建筑组",
       "subTitle": "審核會根據這幾項標準來進行：",
       "description": [
@@ -109,7 +111,7 @@
       }
     },
     "player": {
-      "image": "join/player.jpg",
+      "image": "join/CTEC_Logistics.webp",
       "title": "后勤组",
       "description": "我们希望可以招收出具有基础红石常识和有游戏热忱的MC玩家，如果您很肝也有一点红石知识还有满满的游戏热忱，欢迎填写云镇工艺后勤组表单，若分数达标将会有活跃度的二次审核。",
       "forms": {
@@ -120,7 +122,8 @@
   },
   "opensource": {
     "title": "开源列表",
-    "description": "看起来很赞 不是吗?"
+    "description": "看起来很赞 不是吗?",
+    "imageUrl": "openSource/CTEC_Development.webp"
   },
   "partner": {
     "title": "合作创作者",

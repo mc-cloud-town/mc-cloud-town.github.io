@@ -6,9 +6,9 @@ import HeaderImage from '#/common/HeaderImage.tsx';
 import MemberCase from '#/members/MemberCase.tsx';
 
 import useApi from '@/hooks/useApi.ts';
+import getImageUrl from '@/utils/getImageUrl.ts';
 import { MEMBER_API } from '@/constants';
 import { IMember } from '@/types/IMember.ts';
-import background from '@/assets/members/background.png';
 import { WarningOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 
@@ -43,7 +43,7 @@ const MembersPage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={background} />}
+        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('members.imageUrl'))} />}
         headerTextArray={[t('members.title')]}
         subHeaderContentArray={[t('members.description')]}
       />

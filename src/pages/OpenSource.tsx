@@ -8,7 +8,7 @@ import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
 
 import useApi from '@/hooks/useApi';
-import openSource from '@/assets/openSource/openSource.jpg';
+import getImageUrl from '@/utils/getImageUrl.ts';
 import { IRepoType } from '@/types/IRepoType.ts';
 import { GITHUB_API } from '@/constants';
 
@@ -52,7 +52,7 @@ const OpenSourcePage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={openSource} />}
+        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('opensource.imageUrl'))} />}
         headerTextArray={[t('opensource.title')]}
         subHeaderContentArray={[t('opensource.description')]}
       />

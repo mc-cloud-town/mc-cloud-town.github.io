@@ -5,8 +5,8 @@ import HeaderImage from '#/common/HeaderImage.tsx';
 import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 
+import getImageUrl from '@/utils/getImageUrl.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
-import join from '@/assets/join/join.jpg';
 
 const JoinServer = () => {
   const { t } = useTranslation();
@@ -72,7 +72,7 @@ const JoinServer = () => {
     <>
       <a target=""></a>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={join} />}
+        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('join.imageUrl'))} />}
         headerTextArray={[t('join.description')]}
         subHeaderContentArray={[<HeaderTimer />]}
       />
