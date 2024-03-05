@@ -10,8 +10,13 @@
     "building": "建築作品",
     "join": "加入我們",
     "openSource": "開源項目",
-    "partner": "合作夥伴及團隊",
-    "donate": "贊助我們"
+    "partner": "合作夥伴及團隊"
+  },
+  "footer": {
+    "donate": {
+      "description": "支持我們",
+      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
+    }
   },
   "time": {
     "days": "天",

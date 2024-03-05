@@ -6,6 +6,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { serverLink } from '@/constants';
 import CTEC_banner from '@/assets/brand/CTEC_banner.png';
 import logo from '@/assets/logo/base.webp';
+import { useTranslation } from 'react-i18next';
 
 const TopFooterContainer = styled.div`
   background-color: #b1dde6;
@@ -26,6 +27,11 @@ const BottomFooterContainer = styled(TopFooterContainer)`
 `;
 
 const Copyright = styled.div`
+  color: #999;
+  user-select: none;
+`;
+
+const Donate = styled.a`
   color: #999;
 `;
 
@@ -62,9 +68,22 @@ const TopRow = styled(Row)`
 
 const BottomRow = styled(Row)`
   background: #96dbe6;
+  justify-content: center;
+
+  @media (min-width: 497px) {
+    justify-content: space-between;
+  }
+`;
+
+const CopyRightCol = styled(Col)`
+  @media (max-width: 496px) {
+    margin-bottom: 10px;
+  }
 `;
 
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer>
       <TopFooterContainer>
@@ -117,12 +136,17 @@ const Footer = () => {
         </TopRow>
       </TopFooterContainer>
       <BottomFooterContainer>
-        <BottomRow justify="center">
-          <Col>
+        <BottomRow align="middle">
+          <CopyRightCol>
             <Copyright>
               © {new Date().getFullYear()} Cloud Town Exquisite Craft. All
               Rights Reserved.
             </Copyright>
+          </CopyRightCol>
+          <Col>
+            <Donate href={t('footer.donate.link')} target="_blank" rel="noopener noreferrer">
+              {t('footer.donate.description')}
+            </Donate>
           </Col>
         </BottomRow>
       </BottomFooterContainer>

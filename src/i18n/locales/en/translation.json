@@ -10,8 +10,13 @@
     "building": "Building",
     "join": "Join Us",
     "openSource": "Open Source",
-    "partner": "Partners",
-    "donate": "Donate"
+    "partner": "Partners"
+  },
+  "footer": {
+    "donate": {
+      "description": "Support us",
+      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
+    }
   },
   "time": {
     "days": "days",

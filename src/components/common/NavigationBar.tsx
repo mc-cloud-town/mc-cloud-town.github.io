@@ -136,10 +136,6 @@ const NavigationBar = () => {
       label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>,
     },
     {
-      key: 'donate',
-      label: <Link to={'/donate'}>{t('menu.donate')}</Link>,
-    },
-    {
       key: 'language',
       label: (
         <Dropdown
