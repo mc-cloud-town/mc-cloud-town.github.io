@@ -7,6 +7,7 @@
  */
 export interface IMember {
   id: string,
+  uuid: string,
   name: string,
   introduction?: string,
 }
