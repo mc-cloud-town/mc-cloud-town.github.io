@@ -4,10 +4,14 @@
   "menu": {
     "home": "首页",
     "survivalProgress": "生存服进度",
+    "memberAndWork": "成员与作品",
     "member": "成员",
+    "redstone": "红石作品",
+    "building": "建筑作品",
     "join": "加入我们",
     "openSource": "开源项目",
-    "partner": "合作伙伴及团队"
+    "partner": "合作伙伴及团队",
+    "donate": "赞助我们"
   },
   "time": {
     "days": "天",
@@ -38,7 +42,7 @@
           "title": "顶尖建筑团队",
           "description": "极力于融合红石与建筑，呈现独有在生存模式的作品。云镇的建筑师来自各个领域，在至少一门风格脱颖而出的大师。我们相信只有站到巨人的肩膀才能够开阔自己的视野。在学习大佬的手法中也常跟在建筑圈深耕的团队和服务器交好，其中包含鬼鲸服务器，阿尔萨斯工业以及LIF框木的制作组。云镇也提供完善的插件和创作环境让建筑师尽显才华。",
           "button": "查看建筑作品",
-          "buttonLink": "/build",
+          "buttonLink": "building",
           "imageUrl": "homePage/CTEC_Building.webp"
         },
         {

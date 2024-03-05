@@ -54,6 +54,14 @@ const StyledMenu = styled(Menu)`
       color: #b1dde6;
     }
   }
+  
+  div.ant-menu-submenu-title > span {
+    color: white;
+  
+    &:hover {
+      color: #b1dde6;
+    }
+  }
 `;
 
 const NavigationBar = () => {
@@ -102,8 +110,22 @@ const NavigationBar = () => {
       label: <Link to="/survival">{t('menu.survivalProgress')}</Link>,
     },
     {
-      key: 'member',
-      label: <Link to="/member">{t('menu.member')}</Link>,
+      key: 'membersAndWork',
+      label: t('menu.memberAndWork'),
+      children: [
+        {
+          key: 'member',
+          label: <Link to="/member">{t('menu.member')}</Link>,
+        },
+        {
+          key: 'redstone',
+          label: <Link to="/redstone">{t('menu.redstone')}</Link>,
+        },
+        {
+          key: 'build',
+          label: <Link to="/building">{t('menu.building')}</Link>,
+        },
+      ],
     },
     {
       key: 'openSource',
@@ -112,6 +134,10 @@ const NavigationBar = () => {
     {
       key: 'collaborative',
       label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>,
+    },
+    {
+      key: 'donate',
+      label: <Link to={'/donate'}>{t('menu.donate')}</Link>,
     },
     {
       key: 'language',
