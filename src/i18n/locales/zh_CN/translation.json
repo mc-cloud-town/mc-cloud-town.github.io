@@ -79,7 +79,15 @@
   "members": {
     "title": "成员列表",
     "imageUrl": "members/CTEC_Members.webp",
-    "description": "各领域优秀成员共创了服务器精彩纪录"
+    "description": "各领域优秀成员共创了服务器精彩纪录",
+    "memberGroup": {
+      "title": "正式成员",
+      "subTitle": "这些老司机们已经在服务器上留下了自己的痕迹"
+    },
+    "trialGroup": {
+      "title": "新秀成员",
+      "subTitle": "新鲜的肝，等待你的发掘"
+    }
   },
   "join": {
     "description": "如何加入我们",

@@ -80,7 +80,15 @@
   "members": {
     "title": "成員列表",
     "imageUrl": "members/CTEC_Members.webp",
-    "description": "各領域優秀成員，共創伺服器精彩紀錄"
+    "description": "各領域優秀成員，共創伺服器精彩紀錄",
+    "memberGroup": {
+      "title": "正式成員",
+      "subTitle": "這些老江湖們已經在伺服器上留下了自己的痕跡"
+    },
+    "trialGroup": {
+      "title": "新秀成員",
+      "subTitle": "新鮮肝臟，等待你的發掘"
+    }
   },
   "join": {
     "description": "如何加入我們",

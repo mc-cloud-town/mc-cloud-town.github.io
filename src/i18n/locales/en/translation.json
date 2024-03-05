@@ -80,7 +80,15 @@
   "members": {
     "title": "Member List",
     "imageUrl": "members/CTEC_Members.webp",
-    "description": "Excellent members in various fields create wonderful server records"
+    "description": "Excellent members in various fields create wonderful server records",
+    "memberGroup": {
+      "title": "Member Group",
+      "subTitle": "Veteran members who have been with us for a long time"
+    },
+    "trialGroup": {
+      "title": "Trial Group",
+      "subTitle": "The rookie group is full of vitality"
+    }
   },
   "join": {
     "description": "How to Join Us",
