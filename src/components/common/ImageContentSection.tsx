@@ -1,6 +1,6 @@
 import { Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
@@ -18,7 +18,10 @@ const fadeIn = keyframes`
   }
 `;
 
-const SectionContainer = styled.div`
+const SectionContainer = styled.div<{
+  $dark: boolean;
+  $right: boolean;
+}>`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -26,10 +29,12 @@ const SectionContainer = styled.div`
   background-color: #ecf0f1;
   padding: 50px 40px;
 
-  &.dark {
+  ${(props) =>
+    props.$dark &&
+    `
     background-color: #6f9b9c;
     color: #fff;
-  }
+  `};
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -44,14 +49,14 @@ const SectionContainer = styled.div`
     padding: 50px 20px;
   }
 
-  &.right {
-    @media (min-width: 768px) {
-      flex-direction: row-reverse;
-    }
-  }
+  ${(props) =>
+    props.$right &&
+    `
+    flex-direction: row-reverse;
+  `};
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ $fadeIn: boolean }>`
   flex: 1;
   padding: 20px;
   transition: opacity 0.8s ease-out;
@@ -66,9 +71,10 @@ const Container = styled.div`
     }
   }
 
-  &.fadeIn {
-    animation: ${fadeIn} 0.8s ease-out forwards;
-  }
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const ImageWrapper = styled.div`
@@ -121,7 +127,7 @@ const FeatureList = styled.ul`
   margin-bottom: 20px;
 `;
 
-const FeatureItem = styled.li`
+const FeatureItem = styled.li<{ $darkMode: boolean }>`
   position: relative;
   margin-bottom: 10px;
   padding-left: 20px;
@@ -132,25 +138,27 @@ const FeatureItem = styled.li`
     position: absolute;
     left: 0;
     color: #6f9b9c;
-  }
-
-  &.dark {
-    &:before {
+    
+    ${(props) =>
+      props.$darkMode &&
+      `
       color: #fff;
-    }
+    `};
   }
 `;
 
-const StyledButton = styled(Button)`
+const StyledButton = styled(Button)<{ $darkMode: boolean }>`
   & > span {
     font-size: 18px;
     font-weight: bold;
     text-decoration: underline;
   }
   
-  &.dark {
+  ${(props) =>
+    props.$darkMode &&
+    `
     color: #fff;
-  }
+  `};
 `;
 
 /**
@@ -171,23 +179,21 @@ const ImageContentSection = (
   }) => {
   const { animate, ref } = useAnimateOnScroll();
 
-  const optionalStyle = (imageOnRight ? 'right' : '') + (darkMode ? ' dark' : '');
-
   return (
-    <SectionContainer ref={ref} className={optionalStyle}>
-      <Container className={animate ? 'fadeIn' : ''}>
+    <SectionContainer ref={ref} $dark={darkMode} $right={imageOnRight}>
+      <Container $fadeIn={animate}>
         <ImageWrapper>
           <LazyLoadImage src={getImageUrl(imageContent.imageUrl)} alt={imageContent.title} effect="blur" />
         </ImageWrapper>
       </Container>
-      <Container className={animate ? 'fadeIn' : ''}>
+      <Container $fadeIn={animate}>
         <TextButtonContainer>
           <Title>{imageContent.title}</Title>
           {imageContent.subTitle && <SubTitle>{imageContent.subTitle}</SubTitle>}
           {imageContent.paragraph && <Paragraph>{imageContent.paragraph}</Paragraph>}
           <FeatureList>
             {imageContent.features && imageContent.features.map((feature, index) => (
-              <FeatureItem key={index} className={darkMode ? 'dark' : ''}>{feature}</FeatureItem>
+              <FeatureItem key={index} $darkMode={darkMode}>{feature}</FeatureItem>
             ))}
           </FeatureList>
           <Flex wrap="wrap" gap="small">
@@ -209,7 +215,7 @@ const ImageContentSection = (
                   href={button.href}
                   target={button.href ? '_blank' : ''}
                   onClick={button.action}
-                  className={darkMode ? 'dark' : ''}
+                  $darkMode={darkMode}
                 >
                   {button.text}
                 </StyledButton>

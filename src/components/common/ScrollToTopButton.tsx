@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
+import { UpCircleFilled } from '@ant-design/icons';
 import styled from 'styled-components';
-import { UpCircleFilled, UpCircleOutlined } from '@ant-design/icons';
 
 import useScroll from '@/hooks/useScroll.ts';
 
-const StyledButton = styled.button<{ show: boolean }>`
+const StyledButton = styled.button<{ $show: boolean }>`
   position: fixed;
   right: 20px;
   bottom: 20px;
@@ -29,7 +29,7 @@ const StyledButton = styled.button<{ show: boolean }>`
   }
   
   ${(props) =>
-    props.show &&
+    props.$show &&
     `
     opacity: 0.5;
     visibility: visible;
@@ -54,7 +54,7 @@ const ScrollToTopButton = () => {
   };
 
   return (
-    <StyledButton onClick={scrollToTop} show={showButton} aria-label="Scroll to top">
+    <StyledButton onClick={scrollToTop} $show={showButton} aria-label="Scroll to top">
       <UpCircleFilled style={{ fontSize: '40px' }} />
     </StyledButton>
   );

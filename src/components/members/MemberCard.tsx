@@ -1,5 +1,5 @@
 import { Card, Col, Row } from 'antd';
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
@@ -32,13 +32,14 @@ const HeadImage = styled(LazyLoadImage)`
   }
 `;
 
-const StyledCard = styled(Card)`
+const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   opacity: 0;
   background-color: transparent;
   
-  &.fadeIn {
-    animation: ${fadeIn} 0.8s ease-out forwards;
-  }
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const ImageWrapper = styled.div`
@@ -62,7 +63,7 @@ const MemberCard = (
   const introduction = member.introduction?.length === 0 || false ? undefined : member.introduction;
 
   return (
-    <StyledCard ref={ref} className={animate ? 'fadeIn' : ''}>
+    <StyledCard ref={ref} $fadeIn={animate}>
       <Row gutter={[16, 16]} align="middle">
         <Col span={6}>
           <ImageWrapper>

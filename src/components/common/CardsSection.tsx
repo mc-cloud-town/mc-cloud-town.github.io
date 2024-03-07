@@ -1,6 +1,6 @@
 import { Card, Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import { IImageContent } from '@/types/IImageContent.ts';
@@ -18,14 +18,16 @@ const fadeIn = keyframes`
   }
 `;
 
-const Section = styled.section`
+const Section = styled.section<{ $darkMode: boolean }>`
   background-color: #ecf0f1;
   padding: 50px 20px;
-
-  &.dark {
+  
+  ${(props) =>
+    props.$darkMode &&
+    `
     background-color: #6f9b9c;
     color: #fff;
-  }
+  `};
 `;
 
 const CardContainer = styled.div`
@@ -39,7 +41,9 @@ const CardContainer = styled.div`
   }
 `;
 
-const StyledCard = styled(Card)`
+const StyledCard = styled(Card)<{
+  $fadeIn: boolean;
+}>`
   opacity: 0;
   flex: 1;
   min-width: 300px;
@@ -54,22 +58,24 @@ const StyledCard = styled(Card)`
   @media (max-width: 768px) {
     max-width: 85%;
   }
-
-  &.fadeIn {
-    animation: ${fadeIn} 0.8s ease-out forwards;
-  }
+  
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
-const SectionTitle = styled.h2`
+const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   opacity: 0;
   text-align: center;
   color: inherit;
   margin-bottom: 40px;
   font-weight: bolder;
-
-  &.fadeIn {
-    animation: ${fadeIn} 0.8s ease-out forwards;
-  }
+  
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const Title = styled.h3`
@@ -128,10 +134,6 @@ const StyledButton = styled(Button)`
     font-weight: bold;
     text-decoration: underline;
   }
-  
-  &.dark {
-    color: #fff;
-  }
 `;
 
 /**
@@ -154,13 +156,13 @@ const CardsSection = (
   const { animate, ref } = useAnimateOnScroll();
 
   return (
-    <Section ref={ref} className={darkMode ? 'dark' : ''}>
-      <SectionTitle className={animate ? 'fadeIn' : ''}>{title}</SectionTitle>
+    <Section ref={ref} $darkMode={darkMode}>
+      <SectionTitle $fadeIn={animate}>{title}</SectionTitle>
       <CardContainer>
         {imageContentSections.map((section, index) => (
           <StyledCard
             key={index}
-            className={animate ? 'fadeIn' : '' + (darkMode ? ' dark' : '')}
+            $fadeIn={animate}
             hoverable
             cover={
               <ImageWrapper>

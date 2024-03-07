@@ -1,6 +1,6 @@
 import { Carousel } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
@@ -20,22 +20,23 @@ const fadeIn = keyframes`
 const Section = styled.section`
   background-color: #b1dde6;
   padding: 50px 20px;
-  
+
   @media (max-width: 400px) {
     padding: 50px 5px;
   }
-  
-  &.dark {
-    background-color: #6f9b9c;
-    color: #fff;
-  }
 `;
 
-const SectionTitle = styled.h2`
+const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   text-align: center;
   color: inherit;
   margin-bottom: 40px;
   font-weight: bolder;
+  opacity: 0;
+  
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const CarouselContainer = styled.div`
@@ -59,12 +60,13 @@ const CarouselWrapper = styled.div`
   }
 `;
 
-const StyledCarousel = styled(Carousel)`
+const StyledCarousel = styled(Carousel)<{ $fadeIn: boolean }>`
   opacity: 0;
-  
-  &.fadeIn {
-    animation: ${fadeIn} 0.8s ease-out forwards;
-  }
+
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const ImageWrapper = styled.div`
@@ -101,7 +103,7 @@ const CarouselSection = (
 
   return (
     <Section ref={ref}>
-      <SectionTitle className={animate ? 'fadeIn' : ''}>{title}</SectionTitle>
+      <SectionTitle $fadeIn={animate}>{title}</SectionTitle>
       <CarouselContainer>
         {imageContentsSections.map((imageContentSections, index) => (
           <CarouselWrapper key={index}>
@@ -109,7 +111,7 @@ const CarouselSection = (
               key={index}
               autoplaySpeed={5000}
               autoplay={true}
-              className={animate ? 'fadeIn' : ''}
+              $fadeIn={animate}
             >
               {imageContentSections.map((imageContent, idx) => (
                 <ImageWrapper key={idx}>

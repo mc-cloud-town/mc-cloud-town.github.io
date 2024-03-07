@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Col, Modal } from 'antd';
 import { Card } from 'antd';
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import PartnerLink from '#/partner/PartnerLink.tsx';
@@ -22,15 +22,16 @@ const fadeIn = keyframes`
   }
 `;
 
-const StyledCard = styled(Card)`
+const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   margin: 16px;
   background-color: #f1f1f1;
   text-align: center;
   opacity: 0;
   
-  &.fadeIn {
-    animation: ${fadeIn} 0.8s ease-out forwards;
-  }
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const StyleCardMeta = styled(Card.Meta)`
@@ -107,7 +108,7 @@ const PartnerCard = (partnerData: IPartnership) => {
       <Col xs={24} sm={20} md={16} lg={12} xl={8}>
         <StyledCard
           ref={ref}
-          className={animate ? 'fadeIn' : ''}
+          $fadeIn={animate}
           hoverable
           onClick={showModal}
           cover={
