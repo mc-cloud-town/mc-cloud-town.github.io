@@ -56,13 +56,7 @@ const Partner = () => {
           {PartnerTeamData.map((partnerData: IPartnership) => (
             <PartnerCard
               key={partnerData.Partner}
-              Partner={partnerData.Partner}
-              Image={partnerData.Image}
-              ModalTitle={partnerData.ModalTitle}
-              LongPartnership={partnerData.LongPartnership}
-              Introduce={partnerData.Introduce}
-              ShowVideo={partnerData.ShowVideo}
-              Link={partnerData.Link}
+              {...partnerData}
             />
           ))}
         </Row>
@@ -71,13 +65,7 @@ const Partner = () => {
           {LongTimePartnerData.map((partnerData: IPartnership) => (
             <PartnerCard
               key={partnerData.Partner}
-              Partner={partnerData.Partner}
-              Image={partnerData.Image}
-              ModalTitle={partnerData.ModalTitle}
-              LongPartnership={partnerData.LongPartnership}
-              Introduce={partnerData.Introduce}
-              ShowVideo={partnerData.ShowVideo}
-              Link={partnerData.Link}
+              {...partnerData}
             />
           ))}
         </Row>
@@ -86,13 +74,7 @@ const Partner = () => {
           {PartnerData.map((partnerData: IPartnership) => (
             <PartnerCard
               key={partnerData.Partner}
-              Partner={partnerData.Partner}
-              Image={partnerData.Image}
-              ModalTitle={partnerData.ModalTitle}
-              LongPartnership={partnerData.LongPartnership}
-              Introduce={partnerData.Introduce}
-              ShowVideo={partnerData.ShowVideo}
-              Link={partnerData.Link}
+              {...partnerData}
             />
           ))}
         </Row>
