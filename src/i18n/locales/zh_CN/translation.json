@@ -111,48 +111,61 @@
     "description": "如何加入我们",
     "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
-      "image": "join/CTEC_Redstone.webp",
+      "imageUrl": "join/CTEC_Redstone.webp",
       "title": "红石组",
-      "description": [
+      "features": [
         "投稿红石作品至作品投稿或审核人员私讯来申请审核。",
         "我们将邀请优秀作品的作者加入。",
-        "审核人员DC:"
+        "审核人员 Discord:"
       ],
-      "admin1": {
-        "text": "fantasy_sakura",
-        "href": "https://discordapp.com/users/676261754782613514"
-      },
-      "admin2": {
-        "text": "jezlarm",
-        "href": "https://discordapp.com/users/378510281250439168"
-      },
-      "channel": {
-        "text": "作品投稿频道",
-        "href": "https://discord.com/channels/933290709589577728/1103568261683101696"
-      }
+      "buttons": [
+        {
+          "text": "fantasy_sakura",
+          "href": "https://discordapp.com/users/676261754782613514",
+          "type": "link"
+        },
+        {
+          "text": "jezlarm",
+          "href": "https://discordapp.com/users/378510281250439168",
+          "type": "link"
+        },
+        {
+          "text": "作品投稿频道",
+          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "type": "link"
+        }
+      ]
     },
     "build": {
-      "image": "join/CTEC_Build.webp",
+      "imageUrl": "join/CTEC_Build.webp",
       "title": "建筑组",
       "subTitle": "審核會根據這幾項標準來進行：",
-      "description": [
+      "features": [
         "结构合理性：不反牛顿（魔幻/奇幻除外，但夸张也要有一定的合理性），作品能够表现合理的搭建结构并且能够准确还原风格细节和结构，而不是空有其表。",
         "色彩应用：作品采用对色彩应用概念和调色技巧产生惊艳的视觉效果。",
         "创造力：云镇建筑部门严禁抄袭，恶劣二创等走审核漏洞机制，请尊重每个原创作品。 拥有丰富创造力的作者能够在作品中体现强烈的个人风格与独特的创新能力。"
       ],
-      "forms": {
-        "text": "申请表单",
-        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
-      }
+      "buttons": [
+        {
+          "text": "申请表单",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
+          "type": "link"
+        }
+      ]
     },
-    "player": {
-      "image": "join/CTEC_Logistics.webp",
+    "logistics": {
+      "imageUrl": "join/CTEC_Logistics.webp",
       "title": "后勤组",
-      "description": "我们希望可以招收出具有基础红石知识和有游戏热忱的MC玩家，如果您很肝也有一点红石知识还有满满的游戏热忱，欢迎填写云镇工艺后勤组表单，若分数达标将会有活跃度的二次审核。",
-      "forms": {
-        "text": "申请表单",
-        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
-      }
+      "features": [
+        "我们希望可以招收出具有基础红石知识和有游戏热忱的MC玩家，如果您很肝也有一点红石知识还有满满的游戏热忱，欢迎填写云镇工艺后勤组表单，若分数达标将会有活跃度的二次审核。"
+      ],
+      "buttons": [
+        {
+          "text": "申请表单",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
+          "type": "link"
+        }
+      ]
     }
   },
   "opensource": {

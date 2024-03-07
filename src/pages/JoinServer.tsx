@@ -6,68 +6,10 @@ import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { IImageContent } from '@/types/IImageContent.ts';
 
 const JoinServer = () => {
   const { t } = useTranslation();
-  // 紅石
-  const RedstonePlayerImage: IImageContent = {
-    imageUrl: t('join.redstone.image'),
-    title: t('join.redstone.title'),
-    features: [
-      t('join.redstone.description.0'),
-      t('join.redstone.description.1'),
-      t('join.redstone.description.2'),
-    ],
-    buttons: [
-      {
-        text: t('join.redstone.admin1.text'),
-        href: t('join.redstone.admin1.href'),
-        type: 'link',
-      },
-      {
-        text: t('join.redstone.admin2.text'),
-        href: t('join.redstone.admin2.href'),
-        type: 'link',
-      },
-      {
-        text: t('join.redstone.channel.text'),
-        href: t('join.redstone.channel.href'),
-        type: 'link',
-      },
-    ],
-  };
-  // 建築
-  const BuildPlayerImage: IImageContent = {
-    imageUrl: t('join.build.image'),
-    title: t('join.build.title'),
-    subTitle: t('join.build.subTitle'),
-    features: [
-      t('join.build.description.0'),
-      t('join.build.description.1'),
-      t('join.build.description.2'),
-    ],
-    buttons: [
-      {
-        text: t('join.build.forms.text'),
-        href: t('join.build.forms.href'),
-        type: 'link',
-      },
-    ],
-  };
-  // 後勤
-  const PlayerImage: IImageContent = {
-    imageUrl: t('join.player.image'),
-    title: t('join.player.title'),
-    features: [t('join.player.description')],
-    buttons: [
-      {
-        text: t('join.player.forms.text'),
-        href: t('join.player.forms.href'),
-        type: 'link',
-      },
-    ],
-  };
+
   return (
     <>
       <a target=""></a>
@@ -76,19 +18,16 @@ const JoinServer = () => {
         headerTextArray={[t('join.description')]}
         subHeaderContentArray={[<HeaderTimer />]}
       />
-      {/*紅石*/}
       <ImageContentSection
-        imageContent={RedstonePlayerImage}
+        imageContent={t('join.redstone', {returnObjects: true})}
         darkMode={true}
       ></ImageContentSection>
-      {/*建築*/}
       <ImageContentSection
-        imageContent={BuildPlayerImage}
+        imageContent={t('join.build', {returnObjects: true})}
         imageOnRight={true}
       ></ImageContentSection>
-      {/*後勤*/}
       <ImageContentSection
-        imageContent={PlayerImage}
+        imageContent={t('join.logistics', {returnObjects: true})}
         darkMode={true}
       ></ImageContentSection>
     </>

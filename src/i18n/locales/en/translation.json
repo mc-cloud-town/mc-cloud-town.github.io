@@ -111,48 +111,61 @@
     "description": "How to Join Us",
     "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
-      "image": "join/CTEC_Redstone.webp",
+      "imageUrl": "join/CTEC_Redstone.webp",
       "title": "Redstone Team",
-      "description": [
+      "features": [
         "Submit your redstone creations to the submission channel or directly message a reviewer to apply for review.",
         "We will invite authors of outstanding works to join.",
         "Reviewer Discord:"
       ],
-      "admin1": {
-        "text": "fantasy_sakura",
-        "href": "https://discordapp.com/users/676261754782613514"
-      },
-      "admin2": {
-        "text": "jezlarm",
-        "href": "https://discordapp.com/users/378510281250439168"
-      },
-      "channel": {
-        "text": "Submission Channel",
-        "href": "https://discord.com/channels/933290709589577728/1103568261683101696"
-      }
+      "buttons": [
+        {
+          "text": "fantasy_sakura",
+          "href": "https://discordapp.com/users/676261754782613514",
+          "type": "link"
+        },
+        {
+          "text": "jezlarm",
+          "href": "https://discordapp.com/users/378510281250439168",
+          "type": "link"
+        },
+        {
+          "text": "Submission Channel",
+          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "type": "link"
+        }
+      ]
     },
     "build": {
-      "image": "join/CTEC_Build.webp",
+      "imageUrl": "join/CTEC_Build.webp",
       "title": "Building Team",
       "subTitle": "The review will be based on the following criteria:",
-      "description": [
+      "features": [
         "Structural Rationality: Defies Newtonian physics (exceptions for magic/fantasy themes, but exaggeration must be reasonably grounded), the work should display rational building structures and accurately replicate stylistic details and structure, not just surface appearance.",
         "Color Application: The work employs stunning visual effects through the application of color concepts and coloring skills.",
         "Creativity: Plagiarism, poor secondary creation, and exploiting review loopholes are strictly prohibited in the Cloud Town building department. Please respect each original work. Authors with rich creativity can reflect a strong personal style and unique innovative ability in their work."
       ],
-      "forms": {
-        "text": "Application Form",
-        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
-      }
+      "buttons": [
+        {
+          "text": "Application Form",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
+          "type": "link"
+        }
+      ]
     },
-    "player": {
-      "image": "join/CTEC_Logistics.webp",
+    "logistics": {
+      "imageUrl": "join/CTEC_Logistics.webp",
       "title": "Logistics Team",
-      "description": "We hope to recruit Minecraft players who have basic redstone knowledge and are enthusiastic about the game. If you are dedicated, have a bit of redstone knowledge, and are full of passion for the game, please fill out the Cloud Town Craft Logistics Team form. If your score meets the standard, there will be a second review based on activity.",
-      "forms": {
-        "text": "Application Form",
-        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
-      }
+      "features": [
+        "We hope to recruit Minecraft players who have basic redstone knowledge and are enthusiastic about the game. If you are dedicated, have a bit of redstone knowledge, and are full of passion for the game, please fill out the Cloud Town Craft Logistics Team form. If your score meets the standard, there will be a second review based on activity."
+      ],
+      "buttons": [
+        {
+          "text": "Application Form",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
+          "type": "link"
+        }
+      ]
     }
   },
   "opensource": {

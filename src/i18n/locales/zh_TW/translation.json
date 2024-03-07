@@ -111,48 +111,61 @@
     "description": "如何加入我們",
     "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
-      "image": "join/CTEC_Redstone.webp",
+      "imageUrl": "join/CTEC_Redstone.webp",
       "title": "紅石組",
-      "description": [
+      "features": [
         "投稿紅石作品至作品投稿或審核人員私訊來申請審核。",
         "我們將邀請優秀作品的作者加入。",
-        "審核人員DC:"
+        "審核人員 Discord:"
       ],
-      "admin1": {
-        "text": "fantasy_sakura",
-        "href": "https://discordapp.com/users/676261754782613514"
-      },
-      "admin2": {
-        "text": "jezlarm",
-        "href": "https://discordapp.com/users/378510281250439168"
-      },
-      "channel": {
-        "text": "作品投稿頻道",
-        "href": "https://discord.com/channels/933290709589577728/1103568261683101696"
-      }
+      "buttons": [
+        {
+          "text": "fantasy_sakura",
+          "href": "https://discordapp.com/users/676261754782613514",
+          "type": "link"
+        },
+        {
+          "text": "jezlarm",
+          "href": "https://discordapp.com/users/378510281250439168",
+          "type": "link"
+        },
+        {
+          "text": "作品投稿頻道",
+          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "type": "link"
+        }
+      ]
     },
     "build": {
-      "image": "join/CTEC_Build.webp",
+      "imageUrl": "join/CTEC_Build.webp",
       "title": "建築組",
       "subTitle": "審核會根據這幾項標準來進行：",
-      "description": [
+      "features": [
         "結構合理性：不反牛頓（魔幻/奇幻除外，但誇張也要有一定的合理性），作品能夠表現合理的搭建結構並且能夠準確還原風格細節和結構，而不是空有其表。",
         "色彩應用：作品采用對色彩應用概念和調色技巧產生驚艷的視覺效果。",
         "創造力：雲鎮建築部門嚴禁抄襲，惡劣二創等走審核漏洞機製，請尊重每個原創作品。擁有豐富創造力的作者能夠在作品中體現強烈的個人風格與獨特的創新能力。"
       ],
-      "forms": {
-        "text": "申請表單",
-        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
-      }
+      "buttons": [
+        {
+          "text": "申請表單",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
+          "type": "link"
+        }
+      ]
     },
-    "player": {
-      "image": "join/CTEC_Logistics.webp",
+    "logistics": {
+      "imageUrl": "join/CTEC_Logistics.webp",
       "title": "後勤組",
-      "description": "我們希望可以招收具有基礎紅石知識且有遊戲熱忱的MC玩家，如果您很肝也有一點紅石知識還有滿滿的遊戲熱忱，歡迎填寫雲鎮工藝後勤組表單，若分數達標將會有活躍度的二次審核。",
-      "forms": {
-        "text": "申請表單",
-        "href": "https://forms.gle/sGUxUtUaskchiTfG7"
-      }
+      "features": [
+        "我們希望可以招收具有基礎紅石知識且有遊戲熱忱的MC玩家，如果您很肝也有一點紅石知識還有滿滿的遊戲熱忱，歡迎填寫雲鎮工藝後勤組表單，若分數達標將會有活躍度的二次審核。"
+      ],
+      "buttons": [
+        {
+          "text": "申請表單",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
+          "type": "link"
+        }
+      ]
     }
   },
   "survivalProgress": {
