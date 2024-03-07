@@ -29,6 +29,7 @@
     "serverRunning": "已創立",
     "joinButton": "創意啟航",
     "about": {
+      "imageUrl": "homePage/CTEC_Sort.webp",
       "title": "Cloud Town Exquisite Craft",
       "subTitle": "雲鎮工藝",
       "features": [
@@ -38,32 +39,48 @@
         "良好的創作環境與伺服器設備",
         "與各國優秀玩家共同研究交流"
       ],
-      "button": "最新進度",
-      "imageUrl": "homePage/CTEC_Sort.webp"
+      "buttons": [
+        {
+          "text": "最新進度",
+          "link": "/survival"
+        }
+      ]
     },
     "feature": {
       "title": "我們擁有",
       "card": [
         {
+          "imageUrl": "homePage/CTEC_Building.webp",
           "title": "頂尖建築團隊",
-          "description": "以高強度紅石工業基底支撐生存建築，以生存模式呈現頂尖作品。雲鎮工藝建築部門來自多方領域，以各方專業知識促進雙方成長。我們相信站在巨人的肩膀才能夠開闊自己的視野，所以我們的與多個頂尖建築團隊和伺服器互相合作與交流學習，其中包含鬼鯨伺服器，阿爾薩斯工業以及LIF幀木得製作組。雲鎮也提供完善的插件和創作環境讓建築師儘顯才華。",
-          "button": "查看建築作品",
-          "buttonLink": "building",
-          "imageUrl": "homePage/CTEC_Building.webp"
+          "paragraph": "以高強度紅石工業基底支撐生存建築，以生存模式呈現頂尖作品。雲鎮工藝建築部門來自多方領域，以各方專業知識促進雙方成長。我們相信站在巨人的肩膀才能夠開闊自己的視野，所以我們的與多個頂尖建築團隊和伺服器互相合作與交流學習，其中包含鬼鯨伺服器，阿爾薩斯工業以及LIF幀木得製作組。雲鎮也提供完善的插件和創作環境讓建築師儘顯才華。",
+          "buttons": [
+            {
+              "text": "查看建築作品",
+              "link": "/building"
+            }
+          ]
         },
         {
+          "imageUrl": "homePage/CTEC_Redstone.webp",
           "title": "紅石實力雄厚",
-          "description": "團隊擁有前瞻紅石技術實力，由各領域優秀開發者所組成，熟練掌握各種科技樹研究，並與多個國際技術性伺服器維持友好關係。致力於研究和創新，為社群研發各種高原創性的農場或原件，為社群成員提供更多的遊戲樂趣。設置紅石研究室，包括兩個創造與兩個生存鏡像伺服器，讓創造設計的玩家也可以加入雲鎮工藝的行列。我們目前持有氧化銅農場的世界紀錄認證。",
-          "button": "查看紅石作品",
-          "buttonLink": "redstone",
-          "imageUrl": "homePage/CTEC_Redstone.webp"
+          "paragraph": "團隊擁有前瞻紅石技術實力，由各領域優秀開發者所組成，熟練掌握各種科技樹研究，並與多個國際技術性伺服器維持友好關係。致力於研究和創新，為社群研發各種高原創性的農場或原件，為社群成員提供更多的遊戲樂趣。設置紅石研究室，包括兩個創造與兩個生存鏡像伺服器，讓創造設計的玩家也可以加入雲鎮工藝的行列。我們目前持有氧化銅農場的世界紀錄認證。",
+          "buttons": [
+            {
+              "text": "查看紅石作品",
+              "link": "/redstone"
+            }
+          ]
         },
         {
+          "imageUrl": "homePage/CTEC_Hardware.webp",
           "title": "世界頂尖的設備",
-          "description": "擁有優秀的伺服器設備，支持大量的同時在線玩家開發與遊玩。並在各國擁有低延遲連線代理伺服器，為不同地區的玩家提供了極佳的遊戲體驗。設備擁有 i9-13900K, 128G RAM, 6TB SSD, UPS 不斷電系統。並有專屬工程師維護，保證伺服器的穩定運行，為玩家提供優秀的紅石開發環境。",
-          "button": "查看伺服器設備",
-          "buttonLink": "hardware",
-          "imageUrl": "homePage/CTEC_Hardware.webp"
+          "paragraph": "擁有優秀的伺服器設備，支持大量的同時在線玩家開發與遊玩。並在各國擁有低延遲連線代理伺服器，為不同地區的玩家提供了極佳的遊戲體驗。設備擁有 i9-13900K, 128G RAM, 6TB SSD, UPS 不斷電系統。並有專屬工程師維護，保證伺服器的穩定運行，為玩家提供優秀的紅石開發環境。",
+          "buttons": [
+            {
+              "text": "查看伺服器設備",
+              "link": "/hardware"
+            }
+          ]
         }
       ]
     },

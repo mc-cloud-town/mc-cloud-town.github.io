@@ -29,6 +29,7 @@
     "serverRunning": "已创立",
     "joinButton": "创意启航",
     "about": {
+      "imageUrl": "homePage/CTEC_Sort.webp",
       "title": "Cloud Town Exquisite Craft",
       "subTitle": "云镇工艺",
       "features": [
@@ -38,31 +39,48 @@
         "良好的创作环境与服务器设备",
         "与各国优秀玩家共同研究交流"
       ],
-      "button": "最新进度"
+      "buttons": [
+        {
+          "text": "最新进度",
+          "link": "/survival"
+        }
+      ]
     },
     "feature": {
       "title": "我们拥有",
       "card": [
         {
+          "imageUrl": "homePage/CTEC_Building.webp",
           "title": "顶尖建筑团队",
-          "description": "极力于融合红石与建筑，呈现独有在生存模式的作品。云镇的建筑师来自各个领域，在至少一门风格脱颖而出的大师。我们相信只有站到巨人的肩膀才能够开阔自己的视野。在学习大佬的手法中也常跟在建筑圈深耕的团队和服务器交好，其中包含鬼鲸服务器，阿尔萨斯工业以及LIF框木的制作组。云镇也提供完善的插件和创作环境让建筑师尽显才华。",
-          "button": "查看建筑作品",
-          "buttonLink": "building",
-          "imageUrl": "homePage/CTEC_Building.webp"
+          "paragraph": "极力于融合红石与建筑，呈现独有在生存模式的作品。云镇的建筑师来自各个领域，在至少一门风格脱颖而出的大师。我们相信只有站到巨人的肩膀才能够开阔自己的视野。在学习大佬的手法中也常跟在建筑圈深耕的团队和服务器交好，其中包含鬼鲸服务器，阿尔萨斯工业以及LIF框木的制作组。云镇也提供完善的插件和创作环境让建筑师尽显才华。",
+          "buttons": [
+            {
+              "text": "查看建筑作品",
+              "link": "/building"
+            }
+          ]
         },
         {
+          "imageUrl": "homePage/CTEC_Redstone.webp",
           "title": "先进的红石技术",
-          "description": "团队拥有前瞻红石技术实力，由各领域优秀开发者所组成，熟练掌握各种科技树研究，并与多个国际技术性服务器维持友好关系。致力于研究和创新，为社区研发各种高原创性的农场或原件，为社区成员提供更多的游戏乐趣。设置红石研究室，包括两个创造与两个生存镜像服务器，让创造设计的玩家也可以加入云镇工艺的行列。我们目前持有氧化铜农场的世界纪录认证。",
-          "button": "查看红石作品",
-          "buttonLink": "redstone",
-          "imageUrl": "homePage/CTEC_Redstone.webp"
+          "paragraph": "团队拥有前瞻红石技术实力，由各领域优秀开发者所组成，熟练掌握各种科技树研究，并与多个国际技术性服务器维持友好关系。致力于研究和创新，为社区研发各种高原创性的农场或原件，为社区成员提供更多的游戏乐趣。设置红石研究室，包括两个创造与两个生存镜像服务器，让创造设计的玩家也可以加入云镇工艺的行列。我们目前持有氧化铜农场的世界纪录认证。",
+          "buttons": [
+            {
+              "text": "查看红石作品",
+              "link": "/redstone"
+            }
+          ]
         },
         {
+          "imageUrl": "homePage/CTEC_Hardware.webp",
           "title": "令人惊叹的设备",
-          "description": "我们拥有优秀的服务器设备，能够支持大量的同时在线玩家开发与游玩。并在各国拥有低延迟连接代理服务器，为不同地区的玩家提供了极佳的游戏体验。设备拥有 i9-13900K, 128G RAM, 6TB SSD, UPS 不断电系统。并有專属工程师维护，保证服务器的稳定运行。",
-          "button": "查看服务器设备",
-          "buttonLink": "hardware",
-          "imageUrl": "homePage/CTEC_Hardware.webp"
+          "paragraph": "我们拥有优秀的服务器设备，能够支持大量的同时在线玩家开发与游玩。并在各国拥有低延迟连接代理服务器，为不同地区的玩家提供了极佳的游戏体验。设备拥有 i9-13900K, 128G RAM, 6TB SSD, UPS 不断电系统。并有專属工程师维护，保证服务器的稳定运行。",
+          "buttons": [
+            {
+              "text": "查看服务器设备",
+              "link": "/hardware"
+            }
+          ]
         }
       ]
     },
