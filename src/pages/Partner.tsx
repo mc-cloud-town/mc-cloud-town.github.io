@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
 import PartnerCard from '#/partner/PartnerCard.tsx';
+import Contact from '#/partner/Contact.tsx';
 
 import { IPartnership } from '@/types/IPartnership.ts';
 import partner from '@/assets/partner/partner.webp';
@@ -26,59 +27,36 @@ const Container = styled.div`
   }
 `;
 
+type PartnerType = 'team' | 'longtime' | 'creator';
+
 const Partner = () => {
   const { t } = useTranslation();
-
-  const PartnerData: IPartnership[] = t('Collaborative.Partnership', {
-    returnObjects: true,
-  });
-
-  const PartnerTeamData: IPartnership[] = t('Collaborative.PartnerServer', {
-    returnObjects: true,
-  });
-
-  const LongTimePartnerData: IPartnership[] = t(
-    'Collaborative.longTermPartner',
-    {
-      returnObjects: true,
-    },
-  );
 
   return (
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={partner} />}
-        headerTextArray={[t('menu.partner')]}
+        headerTextArray={[t('partner.title')]}
       />
       <Container>
-        <PartnershipTitle>{t('partnerTeam.title')}</PartnershipTitle>
-        <Row justify="center">
-          {PartnerTeamData.map((partnerData: IPartnership) => (
-            <PartnerCard
-              key={partnerData.Partner}
-              {...partnerData}
-            />
-          ))}
-        </Row>
-        <PartnershipTitle>{t('partner.longtime')}</PartnershipTitle>
-        <Row justify="center">
-          {LongTimePartnerData.map((partnerData: IPartnership) => (
-            <PartnerCard
-              key={partnerData.Partner}
-              {...partnerData}
-            />
-          ))}
-        </Row>
-        <PartnershipTitle>{t('partner.title')}</PartnershipTitle>
-        <Row justify="center">
-          {PartnerData.map((partnerData: IPartnership) => (
-            <PartnerCard
-              key={partnerData.Partner}
-              {...partnerData}
-            />
-          ))}
-        </Row>
+        {
+          (['team', 'longtime', 'creator'] as PartnerType[]).map((type) => (
+            <div key={type}>
+              <PartnershipTitle>{t(`partner.${type}.title`)}</PartnershipTitle>
+              <Row justify="center">
+                {(t(`partner.${type}.partners`, { returnObjects: true }) as IPartnership[])
+                  .map((partnerData: IPartnership) => (
+                    <PartnerCard
+                      key={partnerData.Partner}
+                      {...partnerData}
+                    />
+                  ))}
+              </Row>
+            </div>
+          ))
+        }
       </Container>
+      <Contact contactInfo={t('partner.contact', { returnObjects: true })} />
     </>
   );
 };

@@ -190,10 +190,34 @@
     "imageUrl": "openSource/CTEC_Development.webp"
   },
   "partner": {
-    "title": "合作創作者",
-    "longtime": "長期合作創作者"
-  },
-  "partnerTeam": {
-    "title": "合作團隊"
+    "title": "合作夥伴及團隊",
+    "team": {
+      "title": "合作團隊"
+    },
+    "longtime": {
+      "title": "長期合作創作者"
+    },
+    "creator": {
+      "title": "合作創作者"
+    },
+    "contact": {
+      "title": "聯繫我們",
+      "subTitle": "如果您有任何合作意向，請聯繫我們",
+      "imageUrl": "brand/CTEC_banner_white.png",
+      "buttons": [
+        {
+          "text": "Email",
+          "link": "mailto:cloudtown0723@gmail.com"
+        },
+        {
+          "text": "Discord",
+          "link": "https://discordapp.com/users/525640608228966400"
+        },
+        {
+          "text": "YouTube",
+          "link": "https://www.youtube.com/channel/@CTEC_"
+        }
+      ]
+    }
   }
 }
