@@ -1,34 +1,91 @@
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components'; // 导入 styled-components 库
 
-const Eric = styled.div`
-  color: red;
-  font-size: 100px;
-`;
+import React from "react"
+import { Chrono } from "react-chrono";
+import { toUSVString } from 'util';
 
 const Timeline = () => {
-  const { t } = useTranslation();
-  const eventCount = 2; // 假设这里是 2，实际应根据你的 i18next 文件中的数据来确定
-
-  // 生成事件数组
-  const events = [];
-  for (let i = 1; i <= eventCount; i++) {
-    events.push({
-      title: t(`survivalProgress.event${i}.title`),
-      description: t(`survivalProgress.event${i}.description`)
-    });
-  }
+  const items = [
+    {
+      title: "May 1940",
+      cardTitle: "Dunkirk",
+      url: "http://www.history.com",
+      cardSubtitle: "Men of the British Expeditionary Force (BEF) wade out to..",
+      cardDetailedText: "Men of the British Expeditionary Force (BEF) wade out to..",
+      media: {
+        type: "IMAGE",
+        source: {
+          url: "http://someurl/image.jpg"
+        }
+      }
+    },
+    {
+      title: "May 1940",
+      cardTitle: "Dunkirk",
+      url: "http://www.history.com",
+      cardSubtitle: "Men of the British Expeditionary Force (BEF) wade out to..",
+      cardDetailedText: "Men of the British Expeditionary Force (BEF) wade out to..",
+      media: {
+        type: "IMAGE",
+        source: {
+          url: "http://someurl/image.jpg"
+        }
+      }
+    },
+    {
+      title: "May 1940",
+      cardTitle: "Dunkirk",
+      url: "http://www.history.com",
+      cardSubtitle: "Men of the British Expeditionary Force (BEF) wade out to..",
+      cardDetailedText: "Men of the British Expeditionary Force (BEF) wade out to..",
+      media: {
+        type: "IMAGE",
+        source: {
+          url: "http://someurl/image.jpg"
+        }
+      }
+    },
+    {
+      title: "May 1940",
+      cardTitle: "Dunkirk",
+      url: "http://www.history.com",
+      cardSubtitle: "Men of the British Expeditionary Force (BEF) wade out to..",
+      cardDetailedText: "Men of the British Expeditionary Force (BEF) wade out to..",
+      media: {
+        type: "IMAGE",
+        source: {
+          url: "http://someurl/image.jpg"
+        }
+      }
+    },
+    {
+      title: "May 1940",
+      cardTitle: "Dunkirk",
+      url: "http://www.history.com",
+      cardSubtitle: "Men of the British Expeditionary Force (BEF) wade out to..",
+      cardDetailedText: "Men of the British Expeditionary Force (BEF) wade out to..",
+      media: {
+        type: "IMAGE",
+        source: {
+          url: "http://someurl/image.jpg"
+        }
+      }
+    }
+  ];
 
   return (
-    <Eric>
-      {events.map((event, index) => (
-        <div key={index}>
-          <h2>{event.title}</h2>
-          <p>{event.description}</p>
-        </div>
-      ))}
-    </Eric>
-  );
-};
+    <div style={{ width: "100%", height: "100vh" }}>
+      <Chrono items={items}
+        mode="VERTICAL_ALTERNATING"
+        scrollable={true}
+        slideShow
+        slideItemDuration={2000}
+        slideShowType="reveal"
+        toolbarPosition="top"
+      />
+    </div>
+  )
+}
 
 export default Timeline;
