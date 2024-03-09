@@ -98,6 +98,8 @@
     "title": "Member List",
     "imageUrl": "members/CTEC_Members.webp",
     "description": "Excellent members in various fields create wonderful server records",
+    "searchPlaceholder": "Search for members",
+    "noResult": "No result",
     "memberGroup": {
       "title": "Member Group",
       "subTitle": "Veteran members who have been with us for a long time"

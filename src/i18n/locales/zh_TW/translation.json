@@ -98,6 +98,8 @@
     "title": "成員列表",
     "imageUrl": "members/CTEC_Members.webp",
     "description": "各領域優秀成員，共創伺服器精彩紀錄",
+    "searchPlaceholder": "搜尋成員",
+    "noResult": "沒有找到成員",
     "memberGroup": {
       "title": "正式成員",
       "subTitle": "這些老江湖們已經在伺服器上留下了自己的痕跡"

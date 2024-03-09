@@ -48,6 +48,13 @@ const MemberCase = ({ members }: { members: IMember[] }) => {
 
   return (
     <>
+      {
+        members.length === 0 && (
+          <SectionTitle>
+            {t('members.noResult')}
+          </SectionTitle>
+        )
+      }
       {Object.keys(memoizedGroupMap).map((group) => (
         <GroupRow key={group} gutter={[16, 16]}>
           <Col span={24}>
