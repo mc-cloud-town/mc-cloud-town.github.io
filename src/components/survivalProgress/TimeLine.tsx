@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Timeline } from 'antd';
 import styled from 'styled-components';
+import TimelineItemContent from '#/survivalProgress/TimeLineContent.tsx';
 
 import { IImageContent } from '@/types/IImageContent';
-import TimelineItemContent from '#/survivalProgress/TimeLineContent.tsx';
 import useScroll from '@/hooks/useScroll.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 

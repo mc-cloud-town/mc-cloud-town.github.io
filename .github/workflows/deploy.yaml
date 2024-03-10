@@ -41,6 +41,28 @@ jobs:
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
 
+      - name: Setup 404 page
+        run: |
+          cp dist/index.html dist/404.html
+          mkdir dist/join
+          cp dist/index.html dist/join/index.html
+          mkdir dist/survival
+          cp dist/index.html dist/survival/index.html
+          mkdir dist/member
+          cp dist/index.html dist/member/index.html
+          mkdir dist/openSource
+          cp dist/index.html dist/openSource/index.html
+          mkdir dist/collaborative
+          cp dist/index.html dist/collaborative/index.html
+          mkdir dist/partner
+          cp dist/index.html dist/partner/index.html
+          mkdir dist/redstone
+          cp dist/index.html dist/redstone/index.html
+          mkdir dist/building
+          cp dist/index.html dist/building/index.html
+          mkdir dist/hardware
+          cp dist/index.html dist/hardware/index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

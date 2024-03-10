@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import Timeline from '#/survivalProgress/TimeLine.tsx';
+
 import { IImageContent } from '@/types/IImageContent.ts';
 
 const timelineItems: IImageContent[] = [
