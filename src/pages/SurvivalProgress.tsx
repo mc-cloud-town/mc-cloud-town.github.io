@@ -2,8 +2,9 @@ import { useTranslation } from 'react-i18next';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import Timeline from '#/survivalProgress/TimeLine.tsx';
+import { IImageContent } from '@/types/IImageContent.ts';
 
-const timelineItems = [
+const timelineItems: IImageContent[] = [
   {
     imageUrl: 'homePage/CTEC_Redstone.webp',
     title: '2020 - Launch',
