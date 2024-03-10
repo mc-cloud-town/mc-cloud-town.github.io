@@ -23,6 +23,15 @@ export const Layout = () => {
           colorLink: '#6f9b9c',
           colorBorder: '#96dbe6',
         },
+        components: {
+          Timeline: {
+            dotBg: '#6f9b9c',
+            dotBorderWidth: 2,
+            itemPaddingBottom: 20,
+            tailColor: 'rgba(255, 255, 255, 0.2)',
+            tailWidth: 2,
+          },
+        },
       }}
     >
       <NavigationBar />

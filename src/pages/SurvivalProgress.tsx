@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import PageHeader from '#/common/PageHeader.tsx';
-import HeaderImage from '#/common/HeaderImage.tsx';
 import Timeline from '#/survivalProgress/TimeLine.tsx';
-
-import background from '@/assets/survivalProgress/background.jpg';
 
 const timelineItems = [
   {
@@ -40,7 +37,7 @@ const SurvivalProgress = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={background} />}
+        backgroundComponent={<></>}
         headerTextArray={[
           t('survivalProgress.title')
         ]}
