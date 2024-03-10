@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Col, Modal } from 'antd';
 import { Card } from 'antd';
-import styled, { css, keyframes } from 'styled-components';
+import styled, { css } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import PartnerLink from '#/partner/PartnerLink.tsx';
@@ -10,17 +10,7 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
 import stopYoutubeVideo from '#/partner/StopVideo.tsx';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
+import { fadeIn } from '@/styles/animation.tsx';
 
 const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   margin: 16px;

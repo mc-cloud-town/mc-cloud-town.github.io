@@ -36,7 +36,7 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
     <Flex wrap="wrap" gap="middle" justify="end">
       {Object.entries(icons).map(([key, IconComponent]) => {
         const link = partnerLink ? partnerLink[key as IconKey] : undefined;
-        if (!link) return null; // Do not render the icon if there's no link for it
+        if (!link) return null;
         return (
           <a
             key={key}

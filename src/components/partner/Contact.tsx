@@ -1,34 +1,64 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { MailOutlined, YoutubeOutlined, DiscordOutlined } from '@ant-design/icons';
 import { Button, Flex } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
+import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
+import { fadeIn } from '@/styles/animation.tsx';
 
 const ContactSection = styled.div`
   text-align: center;
   padding: 50px 60px;
   background-color: #6f9b9c;
   color: white;
-  
+
   @media (max-width: 400px) {
     padding: 50px 10px;
   }
 `;
 
-const ContactInfo = styled.h3`
+const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
+  font-weight: bolder;
+  opacity: 0;
+  
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
+`;
+
+const ContactInfo = styled.h3<{ $fadeIn: boolean }>`
   margin-bottom: 20px;
+  opacity: 0;
+  
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
-const StyledButton = styled(Button)`
+const StyledButton = styled(Button)<{ $fadeIn: boolean }>`
   margin: 0 10px;
+  opacity: 0;
+
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
-const ImageContainer = styled.div`
+const ImageContainer = styled.div<{ $fadeIn: boolean }>`
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
+  opacity: 0;
+
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
 `;
 
 const BrandImageWrapper = styled.div`
@@ -46,10 +76,12 @@ const Contact = (
   }: {
     contactInfo: IImageContent;
   }) => {
+  const { animate, ref } = useAnimateOnScroll();
 
   return (
-    <ContactSection>
-      <ImageContainer>
+    <ContactSection ref={ref}>
+      <ContactTitle $fadeIn={animate}>{contactInfo.title}</ContactTitle>
+      <ImageContainer $fadeIn={animate}>
         <BrandImageWrapper>
           <LazyLoadImage
             src={getImageUrl(contactInfo.imageUrl)}
@@ -58,12 +90,13 @@ const Contact = (
           />
         </BrandImageWrapper>
       </ImageContainer>
-      <ContactInfo>{contactInfo.subTitle}</ContactInfo>
+      <ContactInfo $fadeIn={animate}>{contactInfo.subTitle}</ContactInfo>
       <Flex justify="center" wrap="wrap" gap={10}>
         {
           contactInfo.buttons?.map((button, index) => {
             return (
               <StyledButton
+                $fadeIn={animate}
                 key={index}
                 type="default"
                 size="large"
