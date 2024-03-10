@@ -11,7 +11,11 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 50px 0;
+  padding: 50px 60px;
+
+  @media (max-width: 768px) {
+    padding: 50px 20px;
+  }
 `;
 
 const BackgroundContainer = styled.div<{ $bgImage: string }>`
@@ -67,13 +71,15 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items }) => {
 
     checkVisibility();
   }, [y, items]);
-  
+
+  const timelineMode = window.innerWidth < 768 ? 'left' : 'alternate';
+
   return (
     <>
       <BackgroundContainer $bgImage={getImageUrl(activeBgImage)} />
       <Container>
         <Timeline
-          mode="alternate"
+          mode={timelineMode}
           items={items.map((item, index) => ({
             key: index,
             children: (

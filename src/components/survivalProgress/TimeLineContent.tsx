@@ -8,13 +8,13 @@ import { fadeIn } from '@/styles/animation.ts';
 const { Title, Text } = Typography;
 
 const Image = styled.img`
-  width: 80%;
+  width: 100%;
   margin-bottom: 20px;
   border-radius: 10px;
 `;
 
 const TimelineItemContainer = styled.div<{ $animate: boolean }>`
-  width: 80%;
+  width: 95%;
   visibility: ${({ $animate }) => ($animate ? 'visible' : 'hidden')};
   animation: ${({ $animate }) => ($animate ? css`${fadeIn} 0.8s forwards` : 'none')};
   color: #fff;
