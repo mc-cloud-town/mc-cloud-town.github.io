@@ -6,7 +6,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { fadeIn } from '@/styles/animation.tsx';
+import { fadeIn } from '@/styles/animation.ts';
 
 const SectionContainer = styled.div<{
   $dark: boolean;

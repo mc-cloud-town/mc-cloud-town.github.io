@@ -6,7 +6,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { IImageContent } from '@/types/IImageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { fadeIn } from '@/styles/animation.tsx';
+import { fadeIn } from '@/styles/animation.ts';
 
 const Section = styled.section<{ $darkMode: boolean }>`
   background-color: #ecf0f1;

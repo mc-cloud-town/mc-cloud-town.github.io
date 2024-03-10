@@ -10,7 +10,7 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
 import stopYoutubeVideo from '#/partner/StopVideo.tsx';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-import { fadeIn } from '@/styles/animation.tsx';
+import { fadeIn } from '@/styles/animation.ts';
 
 const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   margin: 16px;

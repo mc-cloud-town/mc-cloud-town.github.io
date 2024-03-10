@@ -4,7 +4,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IMember } from '@/types/IMember.ts';
-import { fadeIn } from '@/styles/animation.tsx';
+import { fadeIn } from '@/styles/animation.ts';
 
 const FullBodyImage = styled(LazyLoadImage)`
   width: 100%;

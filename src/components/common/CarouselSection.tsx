@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { fadeIn } from '@/styles/animation.tsx';
+import { fadeIn } from '@/styles/animation.ts';
 
 const Section = styled.section`
   background-color: #b1dde6;

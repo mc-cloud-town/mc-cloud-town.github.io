@@ -6,7 +6,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-import { fadeIn } from '@/styles/animation.tsx';
+import { fadeIn } from '@/styles/animation.ts';
 
 const ContactSection = styled.div`
   text-align: center;
