@@ -14,6 +14,8 @@ import Partner from './pages/Partner.tsx';
 import initI18n from './i18n/i18nConfig';
 import 'antd/dist/reset.css';
 import 'react-lazy-load-image-component/src/effects/blur.css';
+import BuildingPortfolio from '@/pages/BuildingPortfolio.tsx';
+import RedstonePortfolio from '@/pages/RedstonePortfolio.tsx';
 
 initI18n();
 
@@ -30,6 +32,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="openSource" element={<OpenSourcePage />} />
           <Route path="collaborative" element={<Partner />} />
           <Route path="partner" element={<Partner />} />
+          <Route path="RedstonePortfolio" element={<BuildingPortfolio />} />
+          <Route path="BuildingPortfolio" element={<RedstonePortfolio />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

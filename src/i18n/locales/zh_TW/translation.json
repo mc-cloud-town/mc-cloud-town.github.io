@@ -219,5 +219,11 @@
         }
       ]
     }
+  },
+  "buildingPortfolio": {
+    "title": "建築作品集"
+  },
+  "redstonePortfolio": {
+    "title": "建築作品集"
   }
 }

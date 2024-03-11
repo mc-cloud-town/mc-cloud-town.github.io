@@ -16,7 +16,9 @@ const NavigationBarContainer = styled.div<{
   width: 100%;
   z-index: 1000;
   top: 0;
-  transition: top 0.3s, background-color 0.3s;
+  transition:
+    top 0.3s,
+    background-color 0.3s;
 
   ${(props) =>
     props.$hidden &&
@@ -85,7 +87,7 @@ const NavigationBar = () => {
   const languageItems: MenuProps['items'] = [
     { key: 'en', label: 'English', onClick: () => changeLanguage('en') },
     { key: 'zh_CN', label: '简体中文', onClick: () => changeLanguage('zh_CN') },
-    { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') }
+    { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') },
   ];
 
   const menuItems: MenuProps['items'] = [
@@ -96,19 +98,19 @@ const NavigationBar = () => {
           <Brand src={CTEC_banner_white} alt="Brand Logo" />
         </Link>
       ),
-      disabled: true
+      disabled: true,
     },
     {
       key: 'home',
-      label: <Link to="/">{t('menu.home')}</Link>
+      label: <Link to="/">{t('menu.home')}</Link>,
     },
     {
       key: 'join',
-      label: <Link to="/join">{t('menu.join')}</Link>
+      label: <Link to="/join">{t('menu.join')}</Link>,
     },
     {
       key: 'survival',
-      label: <Link to="/survival">{t('menu.survivalProgress')}</Link>
+      label: <Link to="/survival">{t('menu.survivalProgress')}</Link>,
     },
     {
       key: 'membersAndWork',
@@ -116,25 +118,25 @@ const NavigationBar = () => {
       children: [
         {
           key: 'member',
-          label: <Link to="/member">{t('menu.member')}</Link>
+          label: <Link to="/member">{t('menu.member')}</Link>,
         },
         {
-          key: 'redstone',
-          label: <Link to="/redstone">{t('menu.redstone')}</Link>
+          key: 'RedstonePortfolio',
+          label: <Link to="/RedstonePortfolio">{t('menu.redstone')}</Link>,
         },
         {
-          key: 'build',
-          label: <Link to="/building">{t('menu.building')}</Link>
-        }
-      ]
+          key: 'BuildingPortfolio',
+          label: <Link to="/BuildingPortfolio">{t('menu.building')}</Link>,
+        },
+      ],
     },
     {
       key: 'openSource',
-      label: <Link to="/openSource">{t('menu.openSource')}</Link>
+      label: <Link to="/openSource">{t('menu.openSource')}</Link>,
     },
     {
       key: 'collaborative',
-      label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>
+      label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>,
     },
     {
       key: 'language',
@@ -142,7 +144,7 @@ const NavigationBar = () => {
         <Dropdown
           menu={{
             items: languageItems,
-            onClick: ({ key }) => changeLanguage(key)
+            onClick: ({ key }) => changeLanguage(key),
           }}
           placement="bottom"
         >
@@ -152,8 +154,8 @@ const NavigationBar = () => {
             </Space>
           </a>
         </Dropdown>
-      )
-    }
+      ),
+    },
   ];
 
   const getDefaultSelectedKeys = () => {
