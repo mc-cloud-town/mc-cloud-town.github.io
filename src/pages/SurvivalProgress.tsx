@@ -177,8 +177,7 @@ const timelineItems: IImageContent[] = [
     paragraph: '',
   },
   {
-    imageUrl:
-      'SurvivalProgress/Desktop_Screenshot_2023.09.08_-_15.58.31.10.webp',
+    imageUrl: 'SurvivalProgress/EnderHome.webp',
     title: '2023/9/8 - 末地大廳',
     subTitle: '',
     paragraph: '',
