@@ -7,9 +7,6 @@ import { IImageContent } from '@/types/IImageContent.ts';
 
 const SurvivalProgress = () => {
   const { t } = useTranslation();
-  const imageContent: IImageContent[] = t('SurvivalProgress.data', {
-    returnObjects: true,
-  }) as IImageContent[];
 
   return (
     <>
@@ -18,7 +15,11 @@ const SurvivalProgress = () => {
         headerTextArray={[t('survivalProgress.title')]}
         subHeaderContentArray={[t('survivalProgress.description')]}
       />
-      <Timeline items={imageContent} />
+      <Timeline
+        items={
+          t('SurvivalProgress.data', { returnObjects: true }) as IImageContent[]
+        }
+      />
     </>
   );
 };
