@@ -17,7 +17,7 @@ const SurvivalProgress = () => {
       />
       <Timeline
         items={
-          t('SurvivalProgress.data', { returnObjects: true }) as IImageContent[]
+          t('survivalProgress.data', { returnObjects: true }) as IImageContent[]
         }
       />
     </>

@@ -173,16 +173,230 @@
   "survivalProgress": {
     "title": "生存服進度",
     "description": "歷史並非毫無意義，而是為了在時光中留下我們走過的痕跡",
-    "event1": {
-      "image": "survivalProgress/background.jpg",
-      "title": "紅石組",
-      "description": "投稿紅石作品至作品投稿或審核人員私訊來申請審核。"
-    },
-    "event2": {
-      "image": "survivalProgress/background.jpg",
-      "title": "紅石組",
-      "description": "投稿紅石作品至作品投稿或審核人員私訊來申請審核。"
-    }
+    "data": [
+      {
+        "imageUrl": "survivalProgress/2022-08-03_22.22.10.webp",
+        "title": "2022/7/23",
+        "subTitle": "雲鎮工藝開服",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-07-29_12.38.40.webp",
+        "title": "2022/7/29",
+        "subTitle": "史萊姆空置域完成",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-08-06_12.07.11.webp",
+        "title": "2022/8/5",
+        "subTitle": "出生點設施",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown.webp",
+        "title": "2022/8/6",
+        "subTitle": "主世界偽和平",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-08-07_23.54.46.webp",
+        "title": "2022/8/8",
+        "subTitle": "地獄大廳",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image.webp",
+        "title": "2022/8/27",
+        "subTitle": "史萊姆農場",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown_2.webp",
+        "title": "2022/8/30",
+        "subTitle": "72K刷冰機",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown_3.webp",
+        "title": "2022/09/28",
+        "subTitle": "四聯海貨塔",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/CT_quarry_screenshot_2.webp",
+        "title": "2022/09/23～09/28",
+        "subTitle": "512寬採礦機",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown_4.webp",
+        "title": "2022/10/10",
+        "subTitle": "蘑菇牛農場",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-11-23_01.39.31.webp",
+        "title": "2022/10/10",
+        "subTitle": "主世界切門完成",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/CTEC_Sort_7.webp",
+        "title": "2022/10/26",
+        "subTitle": "全物品",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-05_01.09.37.webp",
+        "title": "2022/12/03",
+        "subTitle": "終界農業區",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/FjIc0oYagAEaTIT.webp",
+        "title": "2022/12/05",
+        "subTitle": "白上空置域",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-11_11.57.06.webp",
+        "title": "2022/12/11",
+        "subTitle": "活塞自動合成90K/h",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-14_01.24.37.webp",
+        "title": "2022/12/14",
+        "subTitle": "前往地獄1k空置域之臨時珍珠砲",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-15_11.45.33.webp",
+        "title": "2022/12/15",
+        "subTitle": "虛空交易巔峰",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_2.webp",
+        "title": "2023/01/06",
+        "subTitle": "主世界1k空置域",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-01-16_23.18.46.webp",
+        "title": "2023/01/17",
+        "subTitle": "y0切門豬人農場地獄端",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_3.webp",
+        "title": "2023/01",
+        "subTitle": "史萊姆農場翻新",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_4.webp",
+        "title": "2023/01",
+        "subTitle": "EOL地獄收集",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/maxresdefault.webp",
+        "title": "2023/02/20",
+        "subTitle": "y0切門豬人農場主世界收集及裝飾",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-04-12_11.17.23.webp",
+        "title": "2023/04/12",
+        "subTitle": "EOL地獄收集翻新",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-07-21_10.53.51.webp",
+        "title": "2023/04/16",
+        "subTitle": "EOL主世界裝飾",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-04-24_23.webp",
+        "title": "2023/04/23",
+        "subTitle": "地獄1k空置域",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_5.webp",
+        "title": "2023/04/26",
+        "subTitle": "天使的秘密",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/My_wrath_can_consume_worlds._1.webp",
+        "title": "2023/6-2023/7",
+        "subTitle": "新出生點",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/Base_Profile_Screenshot_2023.11.05_-_20.25.12.76.webp",
+        "title": "2023/08/20",
+        "subTitle": "全編碼全物品",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/EnderHome.webp",
+        "title": "2023/9/8",
+        "subTitle": "末地大廳",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-09-25_20.webp",
+        "title": "2023/09/29",
+        "subTitle": "月宮",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/Base_Profile_Screenshot_2023.10.03_-_17.03.47.51.webp",
+        "title": "2023/10/03",
+        "subTitle": "蠑螈繁殖",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/Base_Profile_Screenshot_2023.11.13_-_00.07.43.61.webp",
+        "title": "2023/11/11",
+        "subTitle": "溺屍農場",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_6.webp",
+        "title": "2023/11/14",
+        "subTitle": "鞘翅砲",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/IMG_9507.webp",
+        "title": "2023/12/2",
+        "subTitle": "原石启铜",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/IMG_9532.webp",
+        "title": "2023/12/6",
+        "subTitle": "銅錠農場裝飾",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-12-14_01.25.17.webp",
+        "title": "2023/12/14",
+        "subTitle": "主世界豬人塔",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_7.webp",
+        "title": "2024/01/15",
+        "subTitle": "雲妹手挖像素畫",
+        "paragraph": ""
+      }
+    ]
   },
   "opensource": {
     "title": "開源專案",
@@ -225,231 +439,5 @@
   },
   "redstonePortfolio": {
     "title": "建築作品集"
-  },
-  "SurvivalProgress": {
-    "data": [
-      {
-        "imageUrl": "SurvivalProgress/2022-08-03_22.22.10.webp",
-        "title": "2022/7/23 - 雲鎮工藝開服",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-07-29_12.38.40.webp",
-        "title": "2022/7/29 - 史萊姆空置域完成",
-        "subTitle": "前期使用三向轟炸機完成",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-08-06_12.07.11.webp",
-        "title": "2022/8/5 - 出生點設施",
-        "subTitle": "專案經理:Fantasy_Sakura",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/unknown.webp",
-        "title": "2022/8/6 - 主世界凋零怪偽和平",
-        "subTitle": "建造者:GenMannnnnn、Malianda1990",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-08-07_23.54.46.webp",
-        "title": "2022/8/8 - 地獄大廳",
-        "subTitle": "地獄大廳、320熔爐工業區、百萬刷石機、虛空交易所完成、地獄偽和平",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image.webp",
-        "title": "2022/8/27 - 史萊姆農場",
-        "subTitle": "史萊姆農場、雙維度鐵人塔8.4w/h、襲擊農場翻新970k/h",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/unknown_2.webp",
-        "title": "2022/8/30 - 72K刷冰機",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/unknown_3.webp",
-        "title": "2022/09/28 - 四聯海貨塔",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/CT_quarry_screenshot_2.webp",
-        "title": "2022/09/23～09/28 - 512寬採礦機",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/unknown_4.webp",
-        "title": "2022/10/10 - 蘑菇牛農場",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-11-23_01.39.31.webp",
-        "title": "2022/10/10 - 主世界切門完成",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/CTEC_Sort_7.webp",
-        "title": "2022/10/26 - 全物品",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-12-05_01.09.37.webp",
-        "title": "2022/12/03 - 終界農業區",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/FjIc0oYagAEaTIT.webp",
-        "title": "2022/12/05 - 白上空置域",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-12-11_11.57.06.webp",
-        "title": "2022/12/11 - 活塞自動合成90K/h",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-12-14_01.24.37.webp",
-        "title": "2022/12/14 - 前往地獄1k空置域之臨時珍珠砲",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2022-12-15_11.45.33.webp",
-        "title": "2022/12/15 - 虛空交易巔峰",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image_2.webp",
-        "title": "2023/01/06 - 主世界1k空置域",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2023-01-16_23.18.46.webp",
-        "title": "2023/01/17 - y0切門豬人農場地獄端",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image_3.webp",
-        "title": "2023/01 - 史萊姆農場翻新",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image_4.webp",
-        "title": "2023/01 - EOL地獄收集",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/maxresdefault.webp",
-        "title": "2023/02/20 - y0切門豬人農場主世界收集及裝飾",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2023-04-12_11.17.23.webp",
-        "title": "2023/04/12 - EOL地獄收集翻新",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2023-07-21_10.53.51.webp",
-        "title": "2023/04/16 - EOL主世界裝飾",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2023-04-24_23.webp",
-        "title": "2023/04/23 - 地獄1k空置域",
-        "subTitle": "移除基岩共消耗508萬活塞、獲得遠古遺骸共6232個",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image_5.webp",
-        "title": "2023/04/26 - 天使的秘密",
-        "subTitle": "共91,841,829方塊",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/My_wrath_can_consume_worlds._1.webp",
-        "title": "2023/6-2023/7 - 新出生點",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/Base_Profile_Screenshot_2023.11.05_-_20.25.12.76.webp",
-        "title": "2023/08/20 - 全編碼全物品",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/EnderHome.webp",
-        "title": "2023/9/8 - 末地大廳",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2023-09-25_20.webp",
-        "title": "2023/09/29 - 月宮",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/Base_Profile_Screenshot_2023.10.03_-_17.03.47.51.webp",
-        "title": "2023/10/03 - 蠑螈繁殖",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/Base_Profile_Screenshot_2023.11.13_-_00.07.43.61.webp",
-        "title": "2023/11/11 - 溺屍農場",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image_6.webp",
-        "title": "2023/11/14 - 鞘翅砲",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/IMG_9507.webp",
-        "title": "2023/12/2 - 原石启铜",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/IMG_9532.webp",
-        "title": "2023/12/6 - 銅錠農場裝飾",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/2023-12-14_01.25.17.webp",
-        "title": "2023/12/14 - 主世界豬人塔",
-        "subTitle": "",
-        "paragraph": ""
-      },
-      {
-        "imageUrl": "SurvivalProgress/image_7.webp",
-        "title": "2024/01/15 - 雲妹手挖像素畫",
-        "subTitle": "",
-        "paragraph": ""
-      }
-    ]
   }
 }

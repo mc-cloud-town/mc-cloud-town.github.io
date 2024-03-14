@@ -170,6 +170,234 @@
       ]
     }
   },
+  "survivalProgress": {
+    "title": "Survival Server Progress",
+    "description": "History is not meaningless. it's to leave traces of our journey through time.",
+    "data": [
+      {
+        "imageUrl": "survivalProgress/2022-08-03_22.22.10.webp",
+        "title": "2022/7/23",
+        "subTitle": "Cloud Town Exquisite Craft Server Opens",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-07-29_12.38.40.webp",
+        "title": "2022/7/29",
+        "subTitle": "Slime Vacant Domain Completed",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-08-06_12.07.11.webp",
+        "title": "2022/8/5",
+        "subTitle": "Spawn Facility",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown.webp",
+        "title": "2022/8/6",
+        "subTitle": "Main World False Peace",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-08-07_23.54.46.webp",
+        "title": "2022/8/8",
+        "subTitle": "Nether Hall",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image.webp",
+        "title": "2022/8/27",
+        "subTitle": "Slime Farm",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown_2.webp",
+        "title": "2022/8/30",
+        "subTitle": "72K Ice Farm",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown_3.webp",
+        "title": "2022/09/28",
+        "subTitle": "Quad Ocean Freight Tower",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/CT_quarry_screenshot_2.webp",
+        "title": "2022/09/23～09/28",
+        "subTitle": "512-Wide Mining Machine",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/unknown_4.webp",
+        "title": "2022/10/10",
+        "subTitle": "Mushroom Cow Farm",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-11-23_01.39.31.webp",
+        "title": "2022/10/10",
+        "subTitle": "Main World Portal Cutter Completed",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/CTEC_Sort_7.webp",
+        "title": "2022/10/26",
+        "subTitle": "All-Item",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-05_01.09.37.webp",
+        "title": "2022/12/03",
+        "subTitle": "End Realm Agricultural Area",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/FjIc0oYagAEaTIT.webp",
+        "title": "2022/12/05",
+        "subTitle": "White Void Domain",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-11_11.57.06.webp",
+        "title": "2022/12/11",
+        "subTitle": "Piston Automatic Crafting 90K/h",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-14_01.24.37.webp",
+        "title": "2022/12/14",
+        "subTitle": "Temporary Pearl Cannon to Nether 1k Vacant Domain",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2022-12-15_11.45.33.webp",
+        "title": "2022/12/15",
+        "subTitle": "Peak of Void Trading",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_2.webp",
+        "title": "2023/01/06",
+        "subTitle": "Main World 1k Vacant Domain",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-01-16_23.18.46.webp",
+        "title": "2023/01/17",
+        "subTitle": "y0 Portal Cutter Piglin Farm in Nether",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_3.webp",
+        "title": "2023/01",
+        "subTitle": "Slime Farm Renovation",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_4.webp",
+        "title": "2023/01",
+        "subTitle": "EOL Nether Collection",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/maxresdefault.webp",
+        "title": "2023/02/20",
+        "subTitle": "y0 Portal Cutter Piglin Farm Main World Collection and Decoration",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-04-12_11.17.23.webp",
+        "title": "2023/04/12",
+        "subTitle": "EOL Nether Collection Renovation",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-07-21_10.53.51.webp",
+        "title": "2023/04/16",
+        "subTitle": "EOL Main World Decoration",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-04-24_23.webp",
+        "title": "2023/04/23",
+        "subTitle": "Nether 1k Vacant Domain",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_5.webp",
+        "title": "2023/04/26",
+        "subTitle": "Angel's Secret",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/My_wrath_can_consume_worlds._1.webp",
+        "title": "2023/6-2023/7",
+        "subTitle": "New Spawn Point",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/Base_Profile_Screenshot_2023.11.05_-_20.25.12.76.webp",
+        "title": "2023/08/20",
+        "subTitle": "Full Coding All-Item",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/EnderHome.webp",
+        "title": "2023/9/8",
+        "subTitle": "End Hall",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-09-25_20.webp",
+        "title": "2023/09/29",
+        "subTitle": "Moon Base",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/Base_Profile_Screenshot_2023.10.03_-_17.03.47.51.webp",
+        "title": "2023/10/03",
+        "subTitle": "Axolotl Breeding",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/Base_Profile_Screenshot_2023.11.13_-_00.07.43.61.webp",
+        "title": "2023/11/11",
+        "subTitle": "Drowned Farm",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_6.webp",
+        "title": "2023/11/14",
+        "subTitle": "Elytra Cannon",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/IMG_9507.webp",
+        "title": "2023/12/2",
+        "subTitle": "Stone Start Copper",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/IMG_9532.webp",
+        "title": "2023/12/6",
+        "subTitle": "Copper Ingot Farm Decoration",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/2023-12-14_01.25.17.webp",
+        "title": "2023/12/14",
+        "subTitle": "Main World Piglin Tower",
+        "paragraph": ""
+      },
+      {
+        "imageUrl": "survivalProgress/image_7.webp",
+        "title": "2024/01/15",
+        "subTitle": "Cloud Sister Pixel Art by Hand Digging",
+        "paragraph": ""
+      }
+    ]
+  },
   "opensource": {
     "title": "Open Source",
     "description": "To contribute to the community, we have open-sourced some of our projects",
