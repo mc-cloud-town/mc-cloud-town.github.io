@@ -21,11 +21,18 @@ const TimelineItemContainer = styled.div<{ $animate: boolean }>`
 `;
 
 const StyledTitle = styled(Title)`
+  font-size: 1.75rem;
   color: #fff !important;
 `;
 
 const StyledText = styled(Text)`
+  font-size: 1.5rem;
   color: #ddd !important;
+`;
+
+const StyledParagraph = styled.p`
+  font-size: 1rem;
+  color: grey;
 `;
 
 const TimelineItemContent = (
@@ -47,7 +54,7 @@ const TimelineItemContent = (
       <Image src={getImageUrl(imageUrl)} alt={title} />
       <StyledTitle level={4}>{title}</StyledTitle>
       <StyledText strong>{subTitle}</StyledText>
-      <p>{paragraph}</p>
+      <StyledParagraph>{paragraph}</StyledParagraph>
     </TimelineItemContainer>
   );
 };
