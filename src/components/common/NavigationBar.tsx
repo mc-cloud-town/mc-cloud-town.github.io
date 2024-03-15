@@ -32,7 +32,7 @@ const NavigationBarContainer = styled.div<{
     background-color: #6f9b9c;
 
     li.ant-menu-item-selected::after {
-      border-bottom-color: white;
+      border-bottom-color: white !important;
     }
   `};
 `;
