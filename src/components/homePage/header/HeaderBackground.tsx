@@ -42,12 +42,15 @@ const HeaderBackground = () => {
   const youtubeId = 'USJWCs-rlc0'; // Your YouTube Video ID here
   const placeholderUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
+
+  const isPrerendering = /bot|crawl|spider|googlebot/i.test(navigator.userAgent);
+
   useEffect(() => {
     YouTubeIframeLoader.load((YT) => {
       new YT.Player('youtube-background', {
         videoId: youtubeId,
         events: {
-          onReady: () => setTimeout(() => setIsVideoReady(true), 1000),
+          onReady: () => setTimeout(() => setIsVideoReady(true), 1500),
         },
         playerVars: {
           autoplay: 1,
@@ -69,8 +72,8 @@ const HeaderBackground = () => {
 
   return (
     <BackgroundContainer>
-      <VideoPlaceholder src={placeholderUrl} alt="Background video placeholder" $isVideoReady={isVideoReady} />
-      <BackgroundVideo id="youtube-background" />
+      <VideoPlaceholder src={placeholderUrl} alt="Background video placeholder" $isVideoReady={isVideoReady && !isPrerendering} />
+      {!isPrerendering && <BackgroundVideo id="youtube-background" />}
     </BackgroundContainer>
   );
 };
