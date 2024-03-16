@@ -21,6 +21,11 @@ const BackgroundHeader = styled.header`
   align-items: center;
 `;
 
+const StyledH1 = styled.h1`
+  font-size: inherit;
+  font-weight: inherit;
+`;
+
 const MaskA = styled.div`
   position: absolute;
   top: 50%;
@@ -106,23 +111,25 @@ const PageHeader = (
       <MaskA style={{ opacity: maskAOpacity }} />
       <MaskB style={{ opacity: maskBOpacity }} />
       <AnimatedHeaderTextContainer>
-        {useTyped ? (
-          <ReactTyped
-            strings={headerTextArray}
-            typeSpeed={40}
-            backSpeed={50}
-            loop={true}
-            showCursor={true}
-            cursorChar="|"
-            backDelay={1000}
-          />
-        ) : (
-          <>
-            {headerTextArray.map((text, index) =>
-              <span key={index}>{text}</span>
-            )}
-          </>
-        )}
+        <StyledH1>
+          {useTyped ? (
+            <ReactTyped
+              strings={headerTextArray}
+              typeSpeed={40}
+              backSpeed={50}
+              loop={true}
+              showCursor={true}
+              cursorChar="|"
+              backDelay={1000}
+            />
+          ) : (
+            <>
+              {headerTextArray.map((text, index) =>
+                <span key={index}>{text}</span>
+              )}
+            </>
+          )}
+        </StyledH1>
         {subHeaderContentArray && subHeaderContentArray.map((text, index) =>
           <AnimatedSubHeaderTextContainer key={index}>
             {text}
