@@ -93,7 +93,7 @@ const NavigationBar = () => {
       key: 'brand',
       label: (
         <Link to="/">
-          <Brand src={`${import.meta.env.NODE_ENV === 'production' ? `${import.meta.env.BASE_URL}/brand.png` : '/brand.png'}`} />
+          <Brand src="./brand.png" alt="brand" />
         </Link>
       ),
       disabled: true,
