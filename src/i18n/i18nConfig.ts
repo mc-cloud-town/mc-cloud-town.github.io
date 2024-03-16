@@ -1,11 +1,12 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 import translationEN from './locales/en/translation.json';
 import translationZH_CN from './locales/zh_CN/translation.json';
 import translationZH_TW from './locales/zh_TW/translation.json';
 
-const resources = {
+export const resources = {
   en: {
     translation: translationEN
   },
@@ -20,17 +21,21 @@ const resources = {
 const initI18n = () => {
   i18n
     .use(initReactI18next)
+    .use(LanguageDetector)
     .init({
       resources,
-      lng: 'zh_TW',
       fallbackLng: 'en',
+      debug: true,
+      detection: {
+        order: ['querystring', 'localStorage', 'htmlTag'],
+        lookupQuerystring: 'lang',
+        lookupLocalStorage: 'i18nextLng',
+        caches: ['localStorage'],
+      },
       interpolation: {
-        escapeValue: false
-      }
-    }).then()
-    .catch((err) => {
-      console.error(err);
-    });
+        escapeValue: false,
+      },
+    }).then();
 };
 
 export default initI18n;
