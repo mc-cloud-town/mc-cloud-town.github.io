@@ -25,7 +25,7 @@ const initI18n = () => {
     .init({
       resources,
       fallbackLng: 'en',
-      debug: true,
+      debug: false,
       detection: {
         order: ['querystring', 'localStorage', 'htmlTag'],
         lookupQuerystring: 'lang',
