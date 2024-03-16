@@ -6,8 +6,6 @@ import { GlobalOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import useScroll from '@/hooks/useScroll';
 
-import CTEC_banner_white from '@/assets/brand/CTEC_banner_white.png';
-
 const NavigationBarContainer = styled.div<{
   $hidden: boolean;
   $scrolled: boolean;
@@ -95,7 +93,7 @@ const NavigationBar = () => {
       key: 'brand',
       label: (
         <Link to="/">
-          <Brand src={CTEC_banner_white} alt="Brand Logo" />
+          <Brand src="/brand.png" alt="Brand Logo" />
         </Link>
       ),
       disabled: true,
