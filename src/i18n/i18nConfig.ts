@@ -15,6 +15,9 @@ export const resources = {
   },
   zh_TW: {
     translation: translationZH_TW
+  },
+  zh: {
+    translation: translationZH_TW
   }
 };
 
