@@ -93,7 +93,7 @@ const NavigationBar = () => {
       key: 'brand',
       label: (
         <Link to="/">
-          <Brand src="./brand.png" alt="brand" />
+          <Brand src="./brand.webp" alt="brand" />
         </Link>
       ),
       disabled: true,
