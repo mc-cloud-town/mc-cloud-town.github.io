@@ -50,7 +50,10 @@ const HeaderBackground = () => {
       new YT.Player('youtube-background', {
         videoId: youtubeId,
         events: {
-          onReady: () => setTimeout(() => setIsVideoReady(true), 1500),
+          'onStateChange': ({ data }: { data: number }) => {
+            if (data !== 1) return;
+            setIsVideoReady(true);
+          }
         },
         playerVars: {
           autoplay: 1,
@@ -64,15 +67,16 @@ const HeaderBackground = () => {
           modestbranding: 1,
           rel: 0,
           showinfo: 0,
-          start: 9,
-        },
+          start: 9
+        }
       });
     });
   }, [youtubeId]);
 
   return (
     <BackgroundContainer>
-      <VideoPlaceholder src={placeholderUrl} alt="Background video placeholder" $isVideoReady={isVideoReady && !isPrerendering} />
+      <VideoPlaceholder src={placeholderUrl} alt="Background video placeholder"
+                        $isVideoReady={isVideoReady && !isPrerendering} />
       {!isPrerendering && <BackgroundVideo id="youtube-background" />}
     </BackgroundContainer>
   );
