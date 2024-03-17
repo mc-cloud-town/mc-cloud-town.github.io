@@ -59,9 +59,9 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items }) => {
         const ref = itemRefs.current[index];
         if (ref) {
           const rect = ref.getBoundingClientRect();
-          const top = rect.top + window.scrollY;
+          const bottom = rect.bottom + window.scrollY;
 
-          if (top < windowBottom - 200) {
+          if (bottom < windowBottom) {
             setActiveBgImage(items[index].imageUrl);
             break;
           }
