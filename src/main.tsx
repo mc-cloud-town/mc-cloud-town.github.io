@@ -35,10 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="partner" element={<Partner />} />
           <Route path="RedstonePortfolio" element={<BuildingPortfolio />} />
           <Route path="BuildingPortfolio" element={<RedstonePortfolio />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-        <Route path="/test" element={<Layout />}>
-          <Route path="modal" element={<ModalTest />} />
+          <Route path="test" element={<ModalTest />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
