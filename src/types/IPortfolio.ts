@@ -1,6 +1,6 @@
 /**
  * "portfolio": {
- *   "Portfolio": ""
+ *   "portfolio": ""
  * }
  */
 export interface IPortfolio {

@@ -1,6 +1,6 @@
 import { ConfigProvider } from 'antd';
 import { Outlet } from 'react-router-dom';
-import NavigationBar from '#/common/NavigationBar';
+import NavigationBar from '#/common/NavigationBar.tsx';
 import Footer from '#/common/Footer.tsx';
 import ScrollToTopButton from '#/common/ScrollToTopButton.tsx';
 

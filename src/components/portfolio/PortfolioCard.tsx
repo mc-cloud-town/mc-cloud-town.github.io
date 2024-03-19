@@ -1,4 +1,4 @@
-import PortfolioModal from '#/Portfolio/PortfolioModal.tsx';
+import PortfolioModal from '#/portfolio/PortfolioModal.tsx';
 import { IPortfolioModal } from '@/types/IPortfolio.ts';
 import { useState } from 'react';
 import { Button } from 'antd';

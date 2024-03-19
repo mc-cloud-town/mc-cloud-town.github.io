@@ -3,20 +3,20 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { Layout } from './Layout';
-import NotFoundPage from './pages/NotFoundPage';
 import HomePage from './pages/HomePage';
-import MemberPage from './pages/Members';
-import SurvivalProgress from './pages/SurvivalProgress.tsx';
-import OpenSourcePage from './pages/OpenSource.tsx';
 import JoinServer from './pages/JoinServer.tsx';
+import SurvivalProgress from './pages/SurvivalProgress.tsx';
+import MemberPage from './pages/Members';
+import OpenSourcePage from './pages/OpenSource.tsx';
 import Partner from './pages/Partner.tsx';
+import BuildingPortfolio from './pages/BuildingPortfolio.tsx';
+import RedstonePortfolio from './pages/RedstonePortfolio.tsx';
+import ModalTest from './pages/test/ModalTest.tsx';
+import NotFoundPage from './pages/NotFoundPage';
 
 import initI18n from './i18n/i18nConfig';
 import 'antd/dist/reset.css';
 import 'react-lazy-load-image-component/src/effects/blur.css';
-import BuildingPortfolio from '@/pages/BuildingPortfolio.tsx';
-import RedstonePortfolio from '@/pages/RedstonePortfolio.tsx';
-import ModalTest from '@/pages/test/ModalTest.tsx';
 
 initI18n();
 

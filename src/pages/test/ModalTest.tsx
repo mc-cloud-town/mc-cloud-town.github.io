@@ -1,4 +1,4 @@
-import PortfolioCard from '#/Portfolio/PortfolioCard.tsx';
+import PortfolioCard from '#/portfolio/PortfolioCard.tsx';
 import PageHeader from '#/common/PageHeader.tsx';
 
 const ModalTest = () => {
