@@ -8,7 +8,6 @@ import PartnerLink from '#/partner/PartnerLink.tsx';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
-import stopYoutubeVideo from '#/partner/StopVideo.tsx';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { fadeIn } from '@/styles/animation.ts';
 
@@ -91,7 +90,6 @@ const PartnerCard = (partnerData: IPartnership) => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
-    stopYoutubeVideo();
   };
   return (
     <>
@@ -117,10 +115,7 @@ const PartnerCard = (partnerData: IPartnership) => {
       <StyleModal
         width={720}
         centered={true}
-        destroyOnClose={
-          partnerData.ShowVideo?.startsWith('https://player.bilibili.com') &&
-          true
-        }
+        destroyOnClose={true}
         title={
           <ModalTitle>
             {partnerData.ModalTitle}
