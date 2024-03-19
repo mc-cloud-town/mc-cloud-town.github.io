@@ -17,9 +17,10 @@ const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   background-color: #f1f1f1;
   text-align: center;
   opacity: 0;
-  
+
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -82,7 +83,7 @@ const StyleVideo = styled.div`
 
 const PartnerCard = (partnerData: IPartnership) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const {animate, ref} = useAnimateOnScroll();
+  const { animate, ref } = useAnimateOnScroll();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -92,7 +93,6 @@ const PartnerCard = (partnerData: IPartnership) => {
     setIsModalOpen(false);
     stopYoutubeVideo();
   };
-
   return (
     <>
       <Col xs={24} sm={20} md={16} lg={12} xl={8}>
@@ -117,6 +117,10 @@ const PartnerCard = (partnerData: IPartnership) => {
       <StyleModal
         width={720}
         centered={true}
+        destroyOnClose={
+          partnerData.ShowVideo?.startsWith('https://player.bilibili.com') &&
+          true
+        }
         title={
           <ModalTitle>
             {partnerData.ModalTitle}
