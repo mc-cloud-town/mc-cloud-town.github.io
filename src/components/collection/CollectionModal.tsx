@@ -1,12 +1,15 @@
-import { Modal, Tag } from 'antd';
-import { IPortfolioModal } from '@/types/IPortfolio.ts';
+import { Carousel, Modal, Tag } from 'antd';
+import { ICollectionModal } from '@/types/ICollection.ts';
 import React, { Dispatch, SetStateAction } from 'react';
 import styled from 'styled-components';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import './Carousel.css';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 
 interface CollectionModalProps {
   isModalOpen: boolean;
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
-  data: IPortfolioModal;
+  data: ICollectionModal;
 }
 
 const ModalTitle = styled.span`
@@ -58,16 +61,40 @@ const StyleIframe = styled.iframe`
   }
 `;
 
+const ImageWrapper = styled.div`
+  width: 100%;
+  padding-top: 56.25%;
+  position: relative;
+  overflow: hidden;
+
+  & > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+
+    & > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  }
+`;
+
 const CollectionModal: React.FC<CollectionModalProps> = ({
   isModalOpen,
   setIsModalOpen,
   data,
 }) => {
+  const test: number[] = Array.from({ length: 101 }, (_, index) => index);
   return (
     <>
       <Modal
         width={720}
         centered={true}
+        destroyOnClose={true}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         title={<ModalTitle>{data.Title}</ModalTitle>}
@@ -96,12 +123,11 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
             </StyleCreator>
           </>
         )}
-        {data.Link?.Video && (
+        {data.VideoOrImage && (
           <StyleVideo>
             <StyleIframe
               id={'video'}
-              src={data.Link?.Video + '&autoplay=0&enablejsapi=1'}
-              title="YouTube video player"
+              src={data.VideoOrImage + '&autoplay=0&enablejsapi=1'}
               allowFullScreen
             />
           </StyleVideo>
@@ -117,6 +143,22 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
               : data.Introduce}
           </StyleIntroduce>
         )}
+        {}
+        <Carousel
+          arrows={true}
+          prevArrow={<LeftOutlined />}
+          nextArrow={<RightOutlined />}
+        >
+          {test.map((d, i) => (
+            <ImageWrapper key={i}>
+              <LazyLoadImage
+                effect="blur"
+                key={d}
+                src={'https://via.placeholder.com/150'}
+              />
+            </ImageWrapper>
+          ))}
+        </Carousel>
       </Modal>
     </>
   );

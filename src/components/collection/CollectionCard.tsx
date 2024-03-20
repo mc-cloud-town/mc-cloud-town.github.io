@@ -1,9 +1,12 @@
 import CollectionModal from '#/collection/CollectionModal.tsx';
-import { IPortfolioModal } from '@/types/IPortfolio.ts';
+import { ICollectionModal } from '@/types/ICollection.ts';
 import { useState } from 'react';
 import { Button } from 'antd';
 
-const data: IPortfolioModal = {
+const data: ICollectionModal = {
+  Other: undefined,
+  VideoOrImage: '',
+  Link: undefined,
   Title: '出生點設施',
   Creator: [
     '專案經理:Fantasy_Sakura',
