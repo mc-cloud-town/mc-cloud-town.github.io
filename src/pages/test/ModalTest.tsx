@@ -1,11 +1,11 @@
-import PortfolioCard from '#/portfolio/PortfolioCard.tsx';
+import CollectionCard from '#/collection/CollectionCard.tsx';
 import PageHeader from '#/common/PageHeader.tsx';
 
 const ModalTest = () => {
   return (
     <>
       <PageHeader backgroundComponent={<></>} headerTextArray={['']} />
-      <PortfolioCard />
+      <CollectionCard />
     </>
   );
 };

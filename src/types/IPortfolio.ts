@@ -1,24 +1,31 @@
 /**
- * "portfolio": {
- *   "portfolio": ""
+ * "collection": {
+ *   "collection": ""
  * }
  */
 export interface IPortfolio {
-  Portfolio: string;
+  Image: string;
   Title: string;
   Creator: string;
-  Modal: IPortfolioModal;
+  Modal: IPortfolioModal[];
 }
 
 export interface IPortfolioModal {
   Title: string;
   Creator: string | string[];
-  Tage: string[];
+  Tage: ITag[];
   Introduce: string | string[];
   Link?: IModalLink;
 }
 
+export interface ITag {
+  Name: string;
+  Link: string;
+  Color: string;
+}
+
 export interface IModalLink {
-  share?: string;
-  download?: string;
+  Video?: string;
+  Share?: string;
+  Download?: string;
 }

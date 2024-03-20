@@ -119,12 +119,12 @@ const NavigationBar = () => {
           label: <Link to="/member">{t('menu.member')}</Link>,
         },
         {
-          key: 'RedstonePortfolio',
-          label: <Link to="/RedstonePortfolio">{t('menu.redstone')}</Link>,
+          key: 'redstoneCollection',
+          label: <Link to="/redstoneCollection">{t('menu.redstone')}</Link>,
         },
         {
-          key: 'BuildingPortfolio',
-          label: <Link to="/BuildingPortfolio">{t('menu.building')}</Link>,
+          key: 'architectureCollection',
+          label: <Link to="/architectureCollection">{t('menu.building')}</Link>,
         },
       ],
     },
@@ -133,8 +133,8 @@ const NavigationBar = () => {
       label: <Link to="/openSource">{t('menu.openSource')}</Link>,
     },
     {
-      key: 'collaborative',
-      label: <Link to={'/collaborative'}>{t('menu.partner')}</Link>,
+      key: 'partner',
+      label: <Link to={'/partner'}>{t('menu.partner')}</Link>,
     },
     {
       key: 'language',

@@ -9,8 +9,8 @@ import SurvivalProgress from './pages/SurvivalProgress.tsx';
 import MemberPage from './pages/Members';
 import OpenSourcePage from './pages/OpenSource.tsx';
 import Partner from './pages/Partner.tsx';
-import BuildingPortfolio from './pages/BuildingPortfolio.tsx';
-import RedstonePortfolio from './pages/RedstonePortfolio.tsx';
+import ArchitectureCollection from './pages/ArchitectureCollection.tsx';
+import RedstoneCollection from './pages/RedstoneCollection.tsx';
 import ModalTest from './pages/test/ModalTest.tsx';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -33,8 +33,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="openSource" element={<OpenSourcePage />} />
           <Route path="collaborative" element={<Partner />} />
           <Route path="partner" element={<Partner />} />
-          <Route path="RedstonePortfolio" element={<BuildingPortfolio />} />
-          <Route path="BuildingPortfolio" element={<RedstonePortfolio />} />
+          <Route path="redstoneCollection" element={<RedstoneCollection />} />
+          <Route
+            path="architectureCollection"
+            element={<ArchitectureCollection />}
+          />
           <Route path="test" element={<ModalTest />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

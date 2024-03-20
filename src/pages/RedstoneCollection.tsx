@@ -1,17 +1,17 @@
 import { useTranslation } from 'react-i18next';
 import PageHeader from '#/common/PageHeader.tsx';
 
-const BuildingPortfolio = () => {
+const RedstoneCollection = () => {
   const { t } = useTranslation();
 
   return (
     <>
       <PageHeader
         backgroundComponent={<></>}
-        headerTextArray={[t('buildingPortfolio.title')]}
+        headerTextArray={[t('redstonePortfolio.title')]}
       />
     </>
   );
 };
 
-export default BuildingPortfolio;
+export default RedstoneCollection;
