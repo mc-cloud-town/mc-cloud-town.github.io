@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button, Carousel, Image, Modal, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
@@ -19,10 +19,29 @@ const StyledSubTitle = styled.h3`
 `;
 
 const StyledCarousel = styled(Carousel)`
-  .slick-slide img {
-    margin: auto;
+  .slick-slide {
+    text-align: center;
   }
 `;
+
+const ImageWrapper = styled.div`
+  max-height: 400px;
+  text-align: center;
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
+    max-height: 300px;
+  }
+  
+  @media (max-width: 480px) {
+    max-height: 175px;
+  }
+`;
+
+const PreviewImage = styled(Image)`
+  object-fit: cover;
+`;
+
 
 const ThumbnailWrapper = styled.div`
   display: flex;
@@ -36,14 +55,19 @@ const ThumbnailWrapper = styled.div`
   }
 `;
 
-const Thumbnail = styled.img`
+const Thumbnail = styled.img<{ $isSelected: boolean }>`
   width: 80px;
   height: 60px;
   cursor: pointer;
-  border: 2px solid transparent;
+  box-shadow: none;
+  object-fit: cover;
+  
+  ${({ $isSelected }) => $isSelected && `
+    box-shadow: 0 0 5px 2px #6f9b9c;
+  `}
 
   &:hover {
-    border-color: #6f9b9c;
+    box-shadow: 0 0 5px 2px #6f9b9c;
   }
 `;
 
@@ -56,10 +80,6 @@ const TagContainer = styled.div`
 
 const StyledTag = styled(Tag)`
   margin-bottom: 8px;
-`;
-
-const StyledImage = styled(Image)`
-  width: 100%;
 `;
 
 const getTagColor = (tag: string): string => {
@@ -85,12 +105,14 @@ interface CollectionModalProps {
 
 const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose }) => {
   const { t } = useTranslation();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
 
   if (!item) return null;
 
   const handleThumbnailClick = (index: number) => {
-    carouselRef.current?.goTo(index);
+    setSelectedImageIndex(index);
+    carouselRef.current?.goTo(index, false);
   };
 
   const ModalFooter = (
@@ -113,13 +135,17 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose
       width={800}
       footer={ModalFooter}
     >
-      <StyledCarousel ref={carouselRef}>
-        {item.galleryImagesUrl?.map((url, index) => (
-          <div key={index}>
-            <StyledImage src={getImageUrl(url)} alt={`Gallery image ${index + 1}`} />
-          </div>
-        ))}
-      </StyledCarousel>
+      <Image.PreviewGroup>
+        <StyledCarousel ref={carouselRef} afterChange={setSelectedImageIndex}>
+          {item.galleryImagesUrl?.map((url, index) => (
+            <div key={index}>
+              <ImageWrapper>
+                <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index + 1}`} />
+              </ImageWrapper>
+            </div>
+          ))}
+        </StyledCarousel>
+      </Image.PreviewGroup>
 
       <ThumbnailWrapper>
         {item.galleryImagesUrl?.map((url, index) => (
@@ -128,6 +154,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose
             src={getImageUrl(url)}
             alt={`Thumbnail ${index + 1}`}
             onClick={() => handleThumbnailClick(index)}
+            $isSelected={selectedImageIndex === index}
           />
         ))}
       </ThumbnailWrapper>
