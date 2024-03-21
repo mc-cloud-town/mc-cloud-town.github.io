@@ -8,6 +8,7 @@ const ArchitectureCollection = () => {
     <>
       <PageHeader
         backgroundComponent={<></>}
+        maskColor={'#6f9b9c'}
         headerTextArray={[t('buildingCollection.title')]}
       />
     </>

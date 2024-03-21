@@ -38,9 +38,9 @@ const MaskA = styled.div`
   opacity: 0.6;
 `;
 
-const MaskB = styled(MaskA)`
+const MaskB = styled(MaskA)<{ $masColor: string }>`
   z-index: -997;
-  background: #ecf0f1;
+  background: ${({ $masColor }) => $masColor};
   opacity: 0;
 `;
 
@@ -93,11 +93,13 @@ const AnimatedSubHeaderTextContainer = styled(SubHeaderTextContainer)`
 const PageHeader = (
   {
     backgroundComponent,
+    maskColor,
     headerTextArray,
     subHeaderContentArray,
     useTyped = false
   }: {
     backgroundComponent: JSX.Element,
+    maskColor?: string,
     headerTextArray: string[],
     subHeaderContentArray?: (string | JSX.Element)[],
     useTyped?: boolean,
@@ -109,7 +111,7 @@ const PageHeader = (
   return (
     <BackgroundHeader>
       <MaskA style={{ opacity: maskAOpacity }} />
-      <MaskB style={{ opacity: maskBOpacity }} />
+      <MaskB style={{ opacity: maskBOpacity }} $masColor={maskColor ?? '#ecf0f1'} />
       <AnimatedHeaderTextContainer>
         <StyledH1>
           {useTyped ? (

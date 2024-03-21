@@ -15,6 +15,7 @@ const JoinServer = () => {
       <a target=""></a>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('join.imageUrl'))} />}
+        maskColor={'#6f9b9c'}
         headerTextArray={[t('join.description')]}
         subHeaderContentArray={[<HeaderTimer />]}
       />

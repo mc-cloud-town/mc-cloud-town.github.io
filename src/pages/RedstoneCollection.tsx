@@ -58,6 +58,7 @@ const RedstoneCollection = () => {
     <>
       <PageHeader
         backgroundComponent={<></>}
+        maskColor={'#6f9b9c'}
         headerTextArray={[t('redstoneCollection.title')]}
       />
       <CardsSection title={t('redstoneCollection.title')} darkMode={true} imageContentSections={bindEventImageContent} />

@@ -53,6 +53,7 @@ const OpenSourcePage = () => {
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('opensource.imageUrl'))} />}
+        maskColor={'#6f9b9c'}
         headerTextArray={[t('opensource.title')]}
         subHeaderContentArray={[t('opensource.description')]}
       />

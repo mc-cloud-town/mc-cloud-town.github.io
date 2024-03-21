@@ -36,6 +36,7 @@ const Partner = () => {
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={partner} />}
+        maskColor={'#b1dde6'}
         headerTextArray={[t('partner.title')]}
       />
       <Container>
