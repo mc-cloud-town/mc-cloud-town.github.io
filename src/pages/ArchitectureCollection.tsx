@@ -8,7 +8,7 @@ const ArchitectureCollection = () => {
     <>
       <PageHeader
         backgroundComponent={<></>}
-        headerTextArray={[t('buildingPortfolio.title')]}
+        headerTextArray={[t('buildingCollection.title')]}
       />
     </>
   );

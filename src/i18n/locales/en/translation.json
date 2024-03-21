@@ -1,6 +1,8 @@
 {
   "loading": "Loading...",
   "error": "Error, Something went wrong",
+  "download": "Download",
+  "share": "Share",
   "menu": {
     "home": "Home",
     "survivalProgress": "Survival Progress",

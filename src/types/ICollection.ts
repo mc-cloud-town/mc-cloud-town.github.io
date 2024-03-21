@@ -1,32 +1,11 @@
-export interface ICollection {
-  Image: string;
-  Title: string;
-  Creator: string;
-  Modal: ICollectionModal[];
-}
+import { IImageContent } from '@/types/IImageContent.ts';
 
-export interface ICollectionModal {
-  Title: string;
-  Creator: string | string[];
-  Tage: ITag[];
-  VideoOrImage: string;
-  Link?: IModalLink;
-  Introduce: string | string[];
-  Other?: IOther;
-}
-
-export interface IOther {
-  Link: string;
-  Image: string;
-}
-
-export interface ITag {
-  Name: string;
-  Link: string;
-  Color: string;
-}
-
-export interface IModalLink {
-  Share?: string;
-  Download?: string;
+export interface ICollection extends IImageContent {
+  tags?: string[];
+  creator: string[];
+  date: string;
+  videosUrl?: string[];
+  galleryImagesUrl?: string[];
+  introductions: string[];
+  downloadUrl?: string;
 }

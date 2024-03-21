@@ -91,6 +91,7 @@ const PartnerCard = (partnerData: IPartnership) => {
   const handleCancel = () => {
     setIsModalOpen(false);
   };
+
   return (
     <>
       <Col xs={24} sm={20} md={16} lg={12} xl={8}>

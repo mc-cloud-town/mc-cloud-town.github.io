@@ -11,7 +11,6 @@ import OpenSourcePage from './pages/OpenSource.tsx';
 import Partner from './pages/Partner.tsx';
 import ArchitectureCollection from './pages/ArchitectureCollection.tsx';
 import RedstoneCollection from './pages/RedstoneCollection.tsx';
-import ModalTest from './pages/test/ModalTest.tsx';
 import NotFoundPage from './pages/NotFoundPage';
 
 import initI18n from './i18n/i18nConfig';
@@ -38,7 +37,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             path="architectureCollection"
             element={<ArchitectureCollection />}
           />
-          <Route path="test" element={<ModalTest />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

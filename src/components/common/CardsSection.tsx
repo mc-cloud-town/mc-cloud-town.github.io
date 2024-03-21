@@ -159,6 +159,7 @@ const CardsSection = (
                 <LazyLoadImage src={getImageUrl(section.imageUrl)} alt={section.title} effect="blur" />
               </ImageWrapper>
             }
+            onClick={section.clickEvent}
           >
             <Title>{section.title}</Title>
             {section.subTitle && <SubTitle>{section.subTitle}</SubTitle>}

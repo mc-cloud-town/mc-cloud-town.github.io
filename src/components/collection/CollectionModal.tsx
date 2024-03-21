@@ -1,166 +1,136 @@
-import { Carousel, Modal, Tag } from 'antd';
-import { ICollectionModal } from '@/types/ICollection.ts';
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
+import { Button, Image, Modal, Tag } from 'antd';
+import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import './Carousel.css';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { DownloadOutlined, ShareAltOutlined } from '@ant-design/icons';
 
-interface CollectionModalProps {
-  isModalOpen: boolean;
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
-  data: ICollectionModal;
-}
+import { ICollection } from '@/types/ICollection.ts';
+import getImageUrl from '@/utils/getImageUrl.ts';
 
-const ModalTitle = styled.span`
-  text-align: center;
-  font-size: xx-large;
-`;
-
-const TagDiv = styled.div`
-  margin: 0 0 5px;
-`;
-
-const StyleTag = styled(Tag)`
-  font-weight: bold;
-`;
-
-const Creator = styled.div`
+const StyledTitle = styled.h2`
   font-size: 24px;
+  font-weight: bolder;
+`;
+
+const StyledSubTitle = styled.h3`
+  font-size: 20px;
   font-weight: bold;
-`;
-
-const StyleCreator = styled.div`
-  font-size: 18px;
-`;
-
-const StyleIntroduce = styled.div`
-  font-size: medium;
-`;
-
-const StyleVideo = styled.div`
-  display: flex;
-  justify-content: center;
-`;
-
-const StyleIframe = styled.iframe`
-  border: none;
-  width: 700px;
-  height: 390px;
-
-  @media only screen and (max-width: 620px) {
-    width: 100%;
-    max-width: 560px;
-    height: 300px;
-  }
-
-  @media only screen and (max-width: 345px) {
-    width: 100%;
-    max-width: 300px;
-    height: 170px;
-  }
 `;
 
 const ImageWrapper = styled.div`
-  width: 100%;
-  padding-top: 56.25%;
-  position: relative;
-  overflow: hidden;
+  padding: 24px 0;
+  text-align: center;
+`;
 
-  & > span {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
+const StyledImage = styled(Image)`
+  max-width: 100%;
+`;
 
-    & > img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 10px;
-    }
+const ThumbnailWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+`;
+
+const Thumbnail = styled.img`
+  width: 80px;
+  height: 60px;
+  cursor: pointer;
+  border: 2px solid transparent;
+
+  &:hover {
+    border-color: #6f9b9c;
   }
 `;
 
-const CollectionModal: React.FC<CollectionModalProps> = ({
-  isModalOpen,
-  setIsModalOpen,
-  data,
-}) => {
-  const test: number[] = Array.from({ length: 101 }, (_, index) => index);
-  return (
+const TagContainer = styled.div`
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const StyledTag = styled(Tag)`
+  margin-bottom: 8px;
+`;
+
+const getTagColor = (tag: string): string => {
+  switch (tag) {
+    case '紅石':
+      return '#f50';
+    case '設施':
+      return '#2db7f5';
+    case '自動化':
+      return '#87d068';
+    case '出生點':
+      return '#108ee9';
+    default:
+      return '#ccc';
+  }
+};
+
+interface CollectionModalProps {
+  isOpen: boolean;
+  item: ICollection | null;
+  onClose: () => void;
+}
+
+const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose }) => {
+  const { t } = useTranslation();
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
+
+  if (!item) return null;
+
+  const displayImageUrl = selectedImageUrl || (item.galleryImagesUrl?.[0] || '');
+
+  const ModalFooter = (
     <>
-      <Modal
-        width={720}
-        centered={true}
-        destroyOnClose={true}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        title={<ModalTitle>{data.Title}</ModalTitle>}
-        footer={null}
-      >
-        {data.Tage && (
-          <TagDiv>
-            {data.Tage.map((introduce, index) => (
-              <StyleTag color={introduce.Color} key={index}>
-                <a href={introduce.Link}>{introduce.Name}</a>
-              </StyleTag>
-            ))}
-          </TagDiv>
-        )}
-        {data.Creator && (
-          <>
-            <Creator>作者：</Creator>
-            <StyleCreator>
-              {Array.isArray(data.Creator)
-                ? data.Creator.map((introduce, index) => (
-                    <p style={{ margin: '0 10px 5px' }} key={index}>
-                      {introduce}
-                    </p>
-                  ))
-                : data.Creator}
-            </StyleCreator>
-          </>
-        )}
-        {data.VideoOrImage && (
-          <StyleVideo>
-            <StyleIframe
-              id={'video'}
-              src={data.VideoOrImage + '&autoplay=0&enablejsapi=1'}
-              allowFullScreen
-            />
-          </StyleVideo>
-        )}
-        {data.Introduce && (
-          <StyleIntroduce>
-            {Array.isArray(data.Introduce)
-              ? data.Introduce.map((introduce, index) => (
-                  <p style={{ margin: '0 0 5px' }} key={index}>
-                    {introduce}
-                  </p>
-                ))
-              : data.Introduce}
-          </StyleIntroduce>
-        )}
-        {}
-        <Carousel
-          arrows={true}
-          prevArrow={<LeftOutlined />}
-          nextArrow={<RightOutlined />}
-        >
-          {test.map((d, i) => (
-            <ImageWrapper key={i}>
-              <LazyLoadImage
-                effect="blur"
-                key={d}
-                src={'https://via.placeholder.com/150'}
-              />
-            </ImageWrapper>
-          ))}
-        </Carousel>
-      </Modal>
+      <Button icon={<DownloadOutlined />} href={item.downloadUrl} target="_blank">
+        {t('download')}
+      </Button>
+      <Button icon={<ShareAltOutlined />} onClick={() => console.log('Share')}>
+        {t('share')}
+      </Button>
     </>
+  );
+
+  return (
+    <Modal
+      title={<StyledTitle>{item.title}</StyledTitle>}
+      open={isOpen}
+      onOk={onClose}
+      onCancel={onClose}
+      width={800}
+      footer={ModalFooter}
+    >
+      <h3>{item.date}</h3>
+      <ImageWrapper>
+        <StyledImage src={getImageUrl(displayImageUrl)} alt="Gallery main image" />
+      </ImageWrapper>
+      <ThumbnailWrapper>
+        {item.galleryImagesUrl?.map((url, index) => (
+          <Thumbnail key={index} src={getImageUrl(url)} alt={`Thumbnail ${index + 1}`}
+                     onClick={() => setSelectedImageUrl(url)} />
+        ))}
+      </ThumbnailWrapper>
+      <TagContainer>
+        {item.tags?.map((tag, index) => (
+          <StyledTag key={index} color={getTagColor(tag)}>{tag}</StyledTag>
+        ))}
+      </TagContainer>
+      <StyledSubTitle>{item.subTitle}</StyledSubTitle>
+      <ul>
+        {item.creator.map((creator, index) => (
+          <li key={index}>{creator}</li>
+        ))}
+      </ul>
+      <div>
+        {item.introductions.map((intro, index) => (
+          <p key={index}>{intro}</p>
+        ))}
+      </div>
+    </Modal>
   );
 };
 
