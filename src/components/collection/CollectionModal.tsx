@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Button, Image, Modal, Tag } from 'antd';
+import React, { useRef } from 'react';
+import { Button, Carousel, Image, Modal, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
+import type { CarouselRef } from 'antd/lib/carousel';
 import { DownloadOutlined, ShareAltOutlined } from '@ant-design/icons';
 
 import { ICollection } from '@/types/ICollection.ts';
@@ -17,20 +18,21 @@ const StyledSubTitle = styled.h3`
   font-weight: bold;
 `;
 
-const ImageWrapper = styled.div`
-  padding: 24px 0;
-  text-align: center;
-`;
-
-const StyledImage = styled(Image)`
-  max-width: 100%;
+const StyledCarousel = styled(Carousel)`
+  .slick-slide img {
+    margin: auto;
+  }
 `;
 
 const ThumbnailWrapper = styled.div`
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin: 16px 0;
+  margin-top: 16px;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const Thumbnail = styled.img`
@@ -53,6 +55,10 @@ const TagContainer = styled.div`
 
 const StyledTag = styled(Tag)`
   margin-bottom: 8px;
+`;
+
+const StyledImage = styled(Image)`
+  width: 100%;
 `;
 
 const getTagColor = (tag: string): string => {
@@ -78,11 +84,13 @@ interface CollectionModalProps {
 
 const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose }) => {
   const { t } = useTranslation();
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
+  const carouselRef = useRef<CarouselRef>(null);
 
   if (!item) return null;
 
-  const displayImageUrl = selectedImageUrl || (item.galleryImagesUrl?.[0] || '');
+  const handleThumbnailClick = (index: number) => {
+    carouselRef.current?.goTo(index);
+  };
 
   const ModalFooter = (
     <>
@@ -104,14 +112,22 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose
       width={800}
       footer={ModalFooter}
     >
-      <h3>{item.date}</h3>
-      <ImageWrapper>
-        <StyledImage src={getImageUrl(displayImageUrl)} alt="Gallery main image" />
-      </ImageWrapper>
+      <StyledCarousel ref={carouselRef}>
+        {item.galleryImagesUrl?.map((url, index) => (
+          <div key={index}>
+            <StyledImage src={getImageUrl(url)} alt={`Gallery image ${index + 1}`} />
+          </div>
+        ))}
+      </StyledCarousel>
+
       <ThumbnailWrapper>
         {item.galleryImagesUrl?.map((url, index) => (
-          <Thumbnail key={index} src={getImageUrl(url)} alt={`Thumbnail ${index + 1}`}
-                     onClick={() => setSelectedImageUrl(url)} />
+          <Thumbnail
+            key={index}
+            src={getImageUrl(url)}
+            alt={`Thumbnail ${index + 1}`}
+            onClick={() => handleThumbnailClick(index)}
+          />
         ))}
       </ThumbnailWrapper>
       <TagContainer>
