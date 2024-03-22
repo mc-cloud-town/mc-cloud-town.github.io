@@ -27,6 +27,14 @@ const Container = styled.div`
   }
 `;
 
+const PartnerBlock = styled.div`
+  margin-bottom: 70px;
+  
+  &:last-child {
+    margin-bottom: 20px;
+  }
+`;
+
 type PartnerType = 'team' | 'longtime' | 'creator';
 
 const Partner = () => {
@@ -42,7 +50,7 @@ const Partner = () => {
       <Container>
         {
           (['team', 'longtime', 'creator'] as PartnerType[]).map((type) => (
-            <div key={type}>
+            <PartnerBlock key={type}>
               <PartnershipTitle>{t(`partner.${type}.title`)}</PartnershipTitle>
               <Row justify="center">
                 {(t(`partner.${type}.partners`, { returnObjects: true }) as IPartnership[])
@@ -53,7 +61,7 @@ const Partner = () => {
                     />
                   ))}
               </Row>
-            </div>
+            </PartnerBlock>
           ))
         }
       </Container>

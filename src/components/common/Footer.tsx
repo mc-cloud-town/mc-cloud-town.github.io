@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import { serverLink } from '@/constants';
-import CTEC_banner from '@/assets/brand/CTEC_banner.png';
+import CTEC_banner from '@/assets/brand/brand.webp';
 import logo from '@/assets/logo/base.webp';
 import { useTranslation } from 'react-i18next';
 

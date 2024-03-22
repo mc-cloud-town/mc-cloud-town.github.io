@@ -117,9 +117,11 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose
 
   const ModalFooter = (
     <>
-      <Button icon={<DownloadOutlined />} href={item.downloadUrl} target="_blank">
-        {t('download')}
-      </Button>
+      {item.downloadUrl && (
+        <Button icon={<DownloadOutlined />} href={item.downloadUrl} target="_blank">
+          {t('download')}
+        </Button>
+      )}
       <Button icon={<ShareAltOutlined />} onClick={() => console.log('Share')}>
         {t('share')}
       </Button>

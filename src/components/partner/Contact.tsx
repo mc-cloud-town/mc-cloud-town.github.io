@@ -10,18 +10,15 @@ import { fadeIn } from '@/styles/animation.ts';
 
 const ContactSection = styled.div`
   text-align: center;
-  padding: 50px 60px;
-  background-color: #6f9b9c;
-  color: white;
-
-  @media (max-width: 400px) {
-    padding: 50px 10px;
-  }
+  background-color: #b1dde6;
+  color: black;
+  padding: 0 40px 40px;
 `;
 
 const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
   font-weight: bolder;
   opacity: 0;
+  margin-bottom: 20px;
   
   ${(props) =>
     props.$fadeIn && css`
@@ -32,6 +29,7 @@ const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
 const ContactInfo = styled.h3<{ $fadeIn: boolean }>`
   margin-bottom: 20px;
   opacity: 0;
+  font-size: 24px;
   
   ${(props) =>
     props.$fadeIn && css`
@@ -98,11 +96,10 @@ const Contact = (
               <StyledButton
                 $fadeIn={animate}
                 key={index}
-                type="default"
+                type="primary"
                 size="large"
                 href={button.link}
                 target={button.link?.startsWith('mailto') ? '' : '_blank'}
-                ghost={true}
               >
                 {
                   button.link?.startsWith('mailto') && <MailOutlined />
