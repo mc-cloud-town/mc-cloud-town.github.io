@@ -3,6 +3,7 @@
   "error": "Error, Something went wrong",
   "download": "Download",
   "share": "Share",
+  "copyLink": "Copy Link",
   "copySuccess": "Copied Successfully",
   "copyFail": "Copy Failed",
   "menu": {

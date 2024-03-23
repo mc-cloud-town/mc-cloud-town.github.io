@@ -5,8 +5,10 @@ import {
   FacebookIcon,
   TwitterShareButton,
   XIcon,
-  LineShareButton,
-  LineIcon
+  WeiboShareButton,
+  WeiboIcon,
+  RedditShareButton,
+  RedditIcon,
 } from 'react-share';
 import { LinkOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -56,15 +58,18 @@ const ShareModal: React.FC<ShareModalProps> = ({ url, title }) => {
           <FacebookShareButton url={url} hashtag={'#minecraft'}>
             <FacebookIcon size={40} round />
           </FacebookShareButton>
+          <WeiboShareButton url={url} title={title}>
+            <WeiboIcon size={40} round />
+          </WeiboShareButton>
+          <RedditShareButton url={url} title={title}>
+            <RedditIcon size={40} round />
+          </RedditShareButton>
           <TwitterShareButton url={url} title={title}>
             <XIcon size={40} round />
           </TwitterShareButton>
-          <LineShareButton url={url} title={title}>
-            <LineIcon size={40} round />
-          </LineShareButton>
         </StyledContainer>
         <Button onClick={() => copyToClipboard(url)} block>
-          <LinkOutlined />
+          <LinkOutlined /> {t('copyLink')}
         </Button>
       </Modal>
     </>
