@@ -3,6 +3,8 @@
   "error": "好像有什麼錯誤發生了...",
   "download": "下載",
   "share": "分享",
+  "copySuccess": "已複製",
+  "copyFail": "複製失敗",
   "menu": {
     "home": "首頁",
     "survivalProgress": "生存服進度",

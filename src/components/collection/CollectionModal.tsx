@@ -3,10 +3,12 @@ import { Button, Carousel, Image, Modal, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 import type { CarouselRef } from 'antd/lib/carousel';
-import { DownloadOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { DownloadOutlined } from '@ant-design/icons';
 
 import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
+import { Link } from 'react-router-dom';
+import ShareModal from '#/common/ShareModal.tsx';
 
 const StyledTitle = styled.h2`
   font-size: 24px;
@@ -28,11 +30,11 @@ const ImageWrapper = styled.div`
   max-height: 400px;
   text-align: center;
   overflow: hidden;
-  
+
   @media (max-width: 768px) {
     max-height: 300px;
   }
-  
+
   @media (max-width: 480px) {
     max-height: 175px;
   }
@@ -61,11 +63,10 @@ const Thumbnail = styled.img<{ $isSelected: boolean }>`
   cursor: pointer;
   box-shadow: none;
   object-fit: cover;
-  
+
   ${({ $isSelected }) => $isSelected && `
     box-shadow: 0 0 5px 2px #6f9b9c;
   `}
-
   &:hover {
     box-shadow: 0 0 5px 2px #6f9b9c;
   }
@@ -80,6 +81,11 @@ const TagContainer = styled.div`
 
 const StyledTag = styled(Tag)`
   margin-bottom: 8px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
 `;
 
 const getTagColor = (tag: string): string => {
@@ -99,16 +105,15 @@ const getTagColor = (tag: string): string => {
 
 interface CollectionModalProps {
   isOpen: boolean;
-  item: ICollection | null;
+  item: ICollection;
+  index: number;
   onClose: () => void;
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose }) => {
+const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, onClose}) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
-
-  if (!item) return null;
 
   const handleThumbnailClick = (index: number) => {
     setSelectedImageIndex(index);
@@ -122,9 +127,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose
           {t('download')}
         </Button>
       )}
-      <Button icon={<ShareAltOutlined />} onClick={() => console.log('Share')}>
-        {t('share')}
-      </Button>
+      <ShareModal url={`${window.location.origin}/redstoneCollection?share=${index}`} title={item.title} />
     </>
   );
 
@@ -162,7 +165,9 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, onClose
       </ThumbnailWrapper>
       <TagContainer>
         {item.tags?.map((tag, index) => (
-          <StyledTag key={index} color={getTagColor(tag)}>{tag}</StyledTag>
+          <Link to={`/redstoneCollection?tag=${tag}`} key={index}>
+            <StyledTag key={index} color={getTagColor(tag)}>{tag}</StyledTag>
+          </Link>
         ))}
       </TagContainer>
       <StyledSubTitle>{item.subTitle}</StyledSubTitle>

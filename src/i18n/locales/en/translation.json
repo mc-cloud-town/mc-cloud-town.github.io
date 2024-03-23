@@ -3,6 +3,8 @@
   "error": "Error, Something went wrong",
   "download": "Download",
   "share": "Share",
+  "copySuccess": "Copied Successfully",
+  "copyFail": "Copy Failed",
   "menu": {
     "home": "Home",
     "survivalProgress": "Survival Progress",

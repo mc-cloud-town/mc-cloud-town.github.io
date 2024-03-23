@@ -3,6 +3,8 @@
   "error": "好像出了点问题...",
   "download": "下载",
   "share": "分享",
+  "copySuccess": "复制成功",
+  "copyFail": "复制失败",
   "menu": {
     "home": "首页",
     "survivalProgress": "生存服进度",

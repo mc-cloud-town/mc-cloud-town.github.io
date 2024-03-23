@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import PageHeader from '#/common/PageHeader.tsx';
@@ -49,10 +49,26 @@ const RedstoneCollection = () => {
   const { t } = useTranslation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ICollection | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{
+    item: ICollection;
+    index: number;
+  } | null>(null);
 
-  const handleCardClick = (item: ICollection) => {
-    setSelectedItem(item);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareIndex = params.get('share');
+    if (shareIndex !== null) {
+      const index = parseInt(shareIndex, 10);
+      const item = testData[index];
+      if (item) {
+        setSelectedItem({ item, index });
+        setIsModalOpen(true);
+      }
+    }
+  }, []);
+
+  const handleCardClick = (item: ICollection, index: number) => {
+    setSelectedItem({ item, index });
     setIsModalOpen(true);
   };
 
@@ -60,9 +76,9 @@ const RedstoneCollection = () => {
     setIsModalOpen(false);
   }
 
-  const bindEventImageContent: ICollection[] = testData.map((item) => ({
+  const bindEventImageContent: ICollection[] = testData.map((item, index) => ({
     ...item,
-    clickEvent: () => handleCardClick(item),
+    clickEvent: () => handleCardClick(item, index),
   }));
 
   return (
@@ -73,11 +89,14 @@ const RedstoneCollection = () => {
         headerTextArray={[t('redstoneCollection.title')]}
       />
       <CardsSection title={t('redstoneCollection.title')} darkMode={true} imageContentSections={bindEventImageContent} />
-      <CollectionModal
-        isOpen={isModalOpen}
-        item={selectedItem}
-        onClose={handleModalClose}
-      />
+      {selectedItem && (
+        <CollectionModal
+          isOpen={isModalOpen}
+          index={selectedItem.index}
+          item={selectedItem.item}
+          onClose={handleModalClose}
+        />
+      )}
     </>
   );
 };
