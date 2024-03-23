@@ -73,6 +73,7 @@ const MembersPage = () => {
             variant={'filled'}
             onChange={(e) => setSearchTerm(e.target.value)}
             size={'large'}
+            name={'Search Members'}
           />
         </SearchContainer>
         {error && (

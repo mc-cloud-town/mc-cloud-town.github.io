@@ -398,5 +398,11 @@
         }
       ]
     }
+  },
+  "buildingCollection": {
+    "title": "建筑作品集"
+  },
+  "redstoneCollection": {
+    "title": "紅石作品集"
   }
 }

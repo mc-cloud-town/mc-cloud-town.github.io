@@ -19,7 +19,7 @@ const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
   font-weight: bolder;
   opacity: 0;
   margin-bottom: 20px;
-  
+
   ${(props) =>
     props.$fadeIn && css`
       animation: ${fadeIn} 0.8s ease-out forwards;
@@ -30,7 +30,7 @@ const ContactInfo = styled.h3<{ $fadeIn: boolean }>`
   margin-bottom: 20px;
   opacity: 0;
   font-size: 24px;
-  
+
   ${(props) =>
     props.$fadeIn && css`
       animation: ${fadeIn} 0.8s ease-out forwards;
@@ -101,15 +101,9 @@ const Contact = (
                 href={button.link}
                 target={button.link?.startsWith('mailto') ? '' : '_blank'}
               >
-                {
-                  button.link?.startsWith('mailto') && <MailOutlined />
-                }
-                {
-                  button.link?.startsWith('https://www.youtube.com') && <YoutubeOutlined />
-                }
-                {
-                  button.link?.startsWith('https://discordapp.com/') && <DiscordOutlined />
-                }
+                {button.link?.startsWith('mailto') && <MailOutlined />}
+                {button.link?.startsWith('https://www.youtube.com') && <YoutubeOutlined />}
+                {button.link?.startsWith('https://discordapp.com/') && <DiscordOutlined />}
                 {button.text}
               </StyledButton>
             );

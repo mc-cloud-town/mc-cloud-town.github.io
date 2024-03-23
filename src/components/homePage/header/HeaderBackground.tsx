@@ -37,9 +37,15 @@ const BackgroundVideo = styled.div`
   }
 `;
 
-const HeaderBackground = () => {
+const HeaderBackground = (
+  {
+    youtubeId,
+    start,
+  }: {
+    youtubeId: string;
+    start: number;
+  }) => {
   const [isVideoReady, setIsVideoReady] = useState(false);
-  const youtubeId = 'USJWCs-rlc0'; // Your YouTube Video ID here
   const placeholderUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
 
@@ -67,7 +73,7 @@ const HeaderBackground = () => {
           modestbranding: 1,
           rel: 0,
           showinfo: 0,
-          start: 9
+          start: start,
         }
       });
     });

@@ -15,11 +15,11 @@ const HomePage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderBackground />}
+        backgroundComponent={<HeaderBackground {...t('home.backgroundVideo', { returnObjects: true })} />}
         headerTextArray={[
           'Cloud Town Exquisite Craft',
           '雲鎮工藝 | CTEC',
-          '云镇工艺 | CTEC',
+          '云镇工艺 | CTEC'
         ]}
         subHeaderContentArray={[
           <span>{t('home.description')}</span>,
@@ -28,7 +28,7 @@ const HomePage = () => {
             <Button color="primary" size="large" ghost={true}>
               {t('home.joinButton')}
             </Button>
-          </Link>,
+          </Link>
         ]}
         useTyped={true}
       />
@@ -45,7 +45,7 @@ const HomePage = () => {
         imageContentsSections={[
           t('home.feature.card', { returnObjects: true }),
           t('home.feature.card', { returnObjects: true }),
-          t('home.feature.card', { returnObjects: true }),
+          t('home.feature.card', { returnObjects: true })
         ]}
       />
     </>
