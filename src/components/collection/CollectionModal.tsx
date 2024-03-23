@@ -127,7 +127,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${window.location.origin}/redstoneCollection?share=${index}`} title={item.title} />
+      <ShareModal url={`${window.location.host}/redstoneCollection?share=${index}`} title={item.title} />
     </>
   );
 
