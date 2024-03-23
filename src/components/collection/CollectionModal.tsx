@@ -9,6 +9,7 @@ import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { Link } from 'react-router-dom';
 import ShareModal from '#/common/ShareModal.tsx';
+import { getBasePath } from '@/utils/getBaseUrl.ts';
 
 const StyledTitle = styled.h2`
   font-size: 24px;
@@ -127,7 +128,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${window.location.host}/redstoneCollection?share=${index}`} title={item.title} />
+      <ShareModal url={`${getBasePath()}/redstoneCollection?share=${index}`} title={item.title} />
     </>
   );
 
