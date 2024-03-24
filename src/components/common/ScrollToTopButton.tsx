@@ -40,6 +40,10 @@ const StyledButton = styled.button<{ $show: boolean }>`
   `}
 `;
 
+/**
+ * ScrollToTopButton component
+ * @constructor ScrollToTopButton - React Function Component
+ */
 const ScrollToTopButton = () => {
   const { y } = useScroll();
   const [showButton, setShowButton] = useState(false);

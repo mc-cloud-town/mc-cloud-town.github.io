@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Statistic, Row, Col } from 'antd';
 
-const HeaderTimer = () => {
+/**
+ * HeaderTimer component.
+ * @constructor HeaderTimer - React Function Component
+ */
+const HeaderTimer: React.FC = () => {
   const { t } = useTranslation();
   const [timeDiff, setTimeDiff] = useState(0);
 

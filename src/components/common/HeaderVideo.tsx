@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import YouTubeIframeLoader from 'youtube-iframe';
 
@@ -37,14 +37,18 @@ const BackgroundVideo = styled.div`
   }
 `;
 
-const HeaderBackground = (
-  {
-    youtubeId,
-    start,
-  }: {
-    youtubeId: string;
-    start: number;
-  }) => {
+interface HeaderVideoProps {
+  youtubeId: string;
+  start: number;
+}
+
+/**
+ * Header video component, responsive background video with placeholder
+ * @param youtubeId - YouTube video ID
+ * @param start - Start time of the video
+ * @constructor HeaderVideo - React Function Component
+ */
+const HeaderVideo: React.FC<HeaderVideoProps> = ({ youtubeId, start }) => {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const placeholderUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
@@ -77,7 +81,7 @@ const HeaderBackground = (
         }
       });
     });
-  }, [youtubeId]);
+  }, [start, youtubeId]);
 
   return (
     <BackgroundContainer>
@@ -88,4 +92,4 @@ const HeaderBackground = (
   );
 };
 
-export default HeaderBackground;
+export default HeaderVideo;

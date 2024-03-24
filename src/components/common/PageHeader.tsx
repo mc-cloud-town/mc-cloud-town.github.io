@@ -1,4 +1,4 @@
-import { JSX } from 'react';
+import React, { JSX } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { ReactTyped } from 'react-typed';
 import useScroll from '@/hooks/useScroll.ts';
@@ -78,32 +78,34 @@ const AnimatedSubHeaderTextContainer = styled(SubHeaderTextContainer)`
   animation: ${fadeInAnimation} 1.25s ease-out forwards;
 `;
 
+interface PageHeaderProps {
+  backgroundComponent: JSX.Element;
+  maskColor?: string;
+  headerTextArray: string[];
+  subHeaderContentArray?: (string | JSX.Element)[];
+  useTyped?: boolean;
+}
+
 /**
  * Renders a PageHeader component with customizable background and header text.
  * This component can display the header text with dynamic typing animation
  * when `useTyped` is enabled.
  *
- * @param backgroundComponent {JSX.Element} - The JSX component used as a background (e.g., Video, Image).
- * @param titleTextArray {string[]} - An array of strings for header title.
- *   If `useTyped` is true, texts are displayed with typing animation via ReactTyped.
- * @param subHeaderContentArray {string[] | JSX.Element[]} - An array of strings or JSX elements for sub-header title.
- * @param useTyped {boolean} - Flag to enable/disable typing animation for displaying header text.
+ * @param backgroundComponent - The JSX component used as a background (e.g., HeaderVideo, HeaderImage).
+ * @param maskColor - The color of the mask overlay when scrolling down to match the down part of the background.
+ * @param headerTextArray - An array of strings for header title. If `useTyped` is true, texts are displayed with typing animation via ReactTyped.
+ * @param subHeaderContentArray - An array of strings or JSX elements for sub-header title.
+ * @param useTyped - Flag to enable/disable typing animation for displaying header text.
  * @constructor PageHeader - React Function Component
  */
-const PageHeader = (
+const PageHeader: React.FC<PageHeaderProps> = (
   {
     backgroundComponent,
     maskColor,
     headerTextArray,
     subHeaderContentArray,
     useTyped = false
-  }: {
-    backgroundComponent: JSX.Element,
-    maskColor?: string,
-    headerTextArray: string[],
-    subHeaderContentArray?: (string | JSX.Element)[],
-    useTyped?: boolean,
-  }) => {
+  }: PageHeaderProps) => {
   const { y } = useScroll();
   const innerHeight = window.innerHeight;
   const maskAOpacity = 0.6 - (y / innerHeight) * 1.2;

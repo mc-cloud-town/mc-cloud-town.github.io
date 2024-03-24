@@ -6,8 +6,8 @@ import PageHeader from '#/common/PageHeader.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 import CardsSection from '#/common/CardsSection.tsx';
 import CarouselSection from '#/common/CarouselSection.tsx';
-import HeaderBackground from '#/homePage/header/HeaderBackground.tsx';
-import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
+import HeaderVideo from '#/common/HeaderVideo.tsx';
+import HeaderTimer from '#/common/HeaderTimer.tsx';
 
 const HomePage = () => {
   const { t } = useTranslation();
@@ -15,7 +15,7 @@ const HomePage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderBackground {...t('home.backgroundVideo', { returnObjects: true })} />}
+        backgroundComponent={<HeaderVideo {...t('home.backgroundVideo', { returnObjects: true })} />}
         headerTextArray={[
           'Cloud Town Exquisite Craft',
           '雲鎮工藝 | CTEC',

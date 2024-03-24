@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { Dropdown, Menu, MenuProps, Space } from 'antd';
@@ -65,7 +65,12 @@ const StyledMenu = styled(Menu)`
   }
 `;
 
-const NavigationBar = () => {
+/**
+ * Navigation bar component.
+ * Transparent when on top, hide when scrolling down, and show when scrolling up.
+ * @constructor NavigationBar - React Function Component
+ */
+const NavigationBar: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { y, lastY } = useScroll();
   const [isHidden, setIsHidden] = useState(false);

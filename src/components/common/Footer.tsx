@@ -1,3 +1,4 @@
+import React from 'react';
 import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
@@ -81,7 +82,11 @@ const CopyRightCol = styled(Col)`
   }
 `;
 
-const Footer = () => {
+/**
+ * Footer component
+ * @constructor Footer - React Function Component
+ */
+const Footer: React.FC = () => {
   const { t } = useTranslation();
 
   return (

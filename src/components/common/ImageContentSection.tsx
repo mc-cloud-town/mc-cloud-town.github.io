@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { css } from 'styled-components';
@@ -151,22 +152,25 @@ const StyledButton = styled(Button)<{ $darkMode: boolean }>`
   `};
 `;
 
+interface ImageContentSectionProps {
+  imageContent: IImageContent;
+  imageOnRight?: boolean;
+  darkMode?: boolean;
+}
+
 /**
- * ImageContentSection component with an optional image position.
- * @param imageContent {IImageContent} - The image content object.
- * @param imageOnRight {boolean} - If true, the image will be displayed on the right. Default is false.
- * @param darkMode {boolean} - If true, the section will be displayed in dark mode. Default is false.
+ * ImageContentSection component
+ * @param imageContent - Image content data
+ * @param imageOnRight - Image position
+ * @param darkMode - Dark mode
+ * @constructor ImageContentSection - React Function Component
  */
-const ImageContentSection = (
+const ImageContentSection: React.FC<ImageContentSectionProps> = (
   {
     imageContent,
     imageOnRight = false,
     darkMode = false
-  }: {
-    imageContent: IImageContent,
-    imageOnRight?: boolean,
-    darkMode?: boolean
-  }) => {
+  }: ImageContentSectionProps) => {
   const { animate, ref } = useAnimateOnScroll();
 
   return (

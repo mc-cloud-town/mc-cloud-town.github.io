@@ -1,3 +1,4 @@
+import React from 'react';
 import { Carousel } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import styled, { css } from 'styled-components';
@@ -81,14 +82,18 @@ const ImageWrapper = styled.div`
   }
 `;
 
-const CarouselSection = (
-  {
-    title,
-    imageContentsSections
-  }: {
-    title: string;
-    imageContentsSections: IImageContent[][];
-  }) => {
+interface CarouselSectionProps {
+  title: string;
+  imageContentsSections: IImageContent[][];
+}
+
+/**
+ * Carousel section component, display multiple carousels as cards, each carousel contains multiple images
+ * @param title - Section title
+ * @param imageContentsSections - Array of image content arrays
+ * @constructor CarouselSection - React Function Component
+ */
+const CarouselSection: React.FC<CarouselSectionProps> = ({ title, imageContentsSections }: CarouselSectionProps) => {
   const { ref, animate } = useAnimateOnScroll();
 
   return (

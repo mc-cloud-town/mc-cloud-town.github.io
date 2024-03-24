@@ -21,7 +21,7 @@ const StyledLazyLoadImageWrapper = styled.div`
 
 /**
  * Header background image with Lazy Load, Fade out effect and full screen
- * @param imageUrl {string} - Image URL for the background image
+ * @param imageUrl - Image URL for the background image
  * @constructor - React Function Component
  */
 const HeaderImage = ({ imageUrl }: { imageUrl: string }) => (

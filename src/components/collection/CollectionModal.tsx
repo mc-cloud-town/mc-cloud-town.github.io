@@ -45,7 +45,6 @@ const PreviewImage = styled(Image)`
   object-fit: cover;
 `;
 
-
 const ThumbnailWrapper = styled.div`
   display: flex;
   flex-wrap: wrap;

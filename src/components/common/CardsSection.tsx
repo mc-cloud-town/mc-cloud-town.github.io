@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { css } from 'styled-components';
@@ -11,7 +12,7 @@ import { fadeIn } from '@/styles/animation.ts';
 const Section = styled.section<{ $darkMode: boolean }>`
   background-color: #ecf0f1;
   padding: 50px 20px;
-  
+
   ${(props) =>
     props.$darkMode &&
     `
@@ -48,7 +49,7 @@ const StyledCard = styled(Card)<{
   @media (max-width: 768px) {
     max-width: 85%;
   }
-  
+
   ${(props) =>
     props.$fadeIn && css`
       animation: ${fadeIn} 0.8s ease-out forwards;
@@ -61,7 +62,7 @@ const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   color: inherit;
   margin-bottom: 40px;
   font-weight: bolder;
-  
+
   ${(props) =>
     props.$fadeIn && css`
       animation: ${fadeIn} 0.8s ease-out forwards;
@@ -126,23 +127,25 @@ const StyledButton = styled(Button)`
   }
 `;
 
+interface CardsSectionProps {
+  title: string;
+  darkMode?: boolean;
+  imageContentSections: IImageContent[];
+}
+
 /**
- * Cards Section Component
- * @param title {string} - Title of the section
- * @param darkMode {boolean} - Enable dark mode (default: false)
- * @param imageContentSections {IImageContent[]} - Array of imageContent
- * @constructor CardsSection - React Function Component
+ * Cards section component, for rendering multiple cards with image, title, subtitle, paragraph, features, and buttons
+ * @param title - Section title
+ * @param darkMode - Dark mode flag
+ * @param imageContentSections - Array of image content sections
+ * @constructor
  */
-const CardsSection = (
+const CardsSection: React.FC<CardsSectionProps> = (
   {
     title,
     darkMode = false,
     imageContentSections
-  }: {
-    title: string;
-    darkMode: boolean;
-    imageContentSections: IImageContent[];
-  }) => {
+  }: CardsSectionProps) => {
   const { animate, ref } = useAnimateOnScroll();
 
   return (
@@ -169,7 +172,7 @@ const CardsSection = (
                 <FeatureItem key={idx}>{feature}</FeatureItem>
               ))}
             </FeatureList>
-            <Flex wrap="wrap" gap="small" align='center'>
+            <Flex wrap="wrap" gap="small" align="center">
               {section.buttons && section.buttons.map((button, idx) => (
                 button.link ? (
                   <Link key={idx} to={button.link}>

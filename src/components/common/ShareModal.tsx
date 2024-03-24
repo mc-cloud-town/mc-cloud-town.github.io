@@ -23,6 +23,13 @@ interface ShareModalProps {
   title: string;
 }
 
+/**
+ * ShareModal for sharing content, the modal will show social media share buttons with Facebook, X, Weibo, Reddit.
+ * And a button to copy the link to clipboard.
+ * @param url - url to share
+ * @param title - title of the content
+ * @constructor ShareModal - React Function Component
+ */
 const ShareModal: React.FC<ShareModalProps> = ({ url, title }) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
-import HeaderTimer from '#/homePage/header/HeaderTimer.tsx';
+import HeaderTimer from '#/common/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
