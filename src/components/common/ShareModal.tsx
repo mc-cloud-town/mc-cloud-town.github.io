@@ -33,6 +33,7 @@ interface ShareModalProps {
 const ShareModal: React.FC<ShareModalProps> = ({ url, title }) => {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -49,14 +50,15 @@ const ShareModal: React.FC<ShareModalProps> = ({ url, title }) => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      message.success(t('copySuccess'));
+      messageApi.success(t('copySuccess'));
     } catch (err) {
-      message.error(t('copyFail'));
+      messageApi.error(t('copyFail'));
     }
   };
 
   return (
     <>
+      {contextHolder}
       <Button icon={<ShareAltOutlined />} onClick={showModal}>
         {t('share')}
       </Button>
