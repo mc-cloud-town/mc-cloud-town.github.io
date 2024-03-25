@@ -6,6 +6,8 @@ import CardsSection from '#/common/CardsSection.tsx';
 import CollectionModal from '#/collection/CollectionModal.tsx';
 
 import { ICollection } from '@/types/ICollection.ts';
+import HeaderImage from '#/common/HeaderImage.tsx';
+import getImageUrl from '@/utils/getImageUrl.ts';
 
 // To-Do: Remove this function after the data is available from the server
 const generateRandomFileName = (prefix: string, suffix: string, min: number, max: number): string => {
@@ -17,7 +19,7 @@ const generateRandomFileName = (prefix: string, suffix: string, min: number, max
 };
 
 const generateRandomData = (index: number): ICollection => {
-  return  {
+  return {
     title: '出生點設施' + index,
     subTitle: '匯集 4 個紅石設施 ' + index,
     imageUrl: generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
@@ -27,7 +29,7 @@ const generateRandomData = (index: number): ICollection => {
       generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
       generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
       generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
-      generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
+      generateRandomFileName('survivalProgress/p', 'webp', 1, 37)
     ],
     creator: [
       '專案經理:Fantasy_Sakura' + index,
@@ -39,14 +41,16 @@ const generateRandomData = (index: number): ICollection => {
     introductions: [
       '這個出生點設施匯集了 4 個紅石設施，包括混凝土固化機、百萬倉庫、自適應打包機和自動化糖蔗農場。' + index,
       '這些設施都是由不同的作者製作，這個出生點設施的製作者是Fantasy_Sakura。 ' + index
-    ],
+    ]
   };
-}
+};
 
 const testData: ICollection[] = Array.from({ length: 10 }, (_, index) => generateRandomData(index));
 
 const RedstoneCollection = () => {
   const { t } = useTranslation();
+  // To-Do: Change this to fetch data after the data is available from the server
+  const imageContents = testData;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -67,6 +71,9 @@ const RedstoneCollection = () => {
     }
   }, []);
 
+  const imageUrl = t('redstoneCollection.imageUrl') == 'redstoneCollection.imageUrl' ?
+    imageContents[Math.floor(Math.random() * testData.length)].imageUrl : t('redstoneCollection.imageUrl');
+
   const handleCardClick = (item: ICollection, index: number) => {
     setSelectedItem({ item, index });
     setIsModalOpen(true);
@@ -74,21 +81,22 @@ const RedstoneCollection = () => {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-  }
+  };
 
-  const bindEventImageContent: ICollection[] = testData.map((item, index) => ({
+  const bindEventImageContents: ICollection[] = imageContents.map((item, index) => ({
     ...item,
-    clickEvent: () => handleCardClick(item, index),
+    clickEvent: () => handleCardClick(item, index)
   }));
 
   return (
     <>
       <PageHeader
-        backgroundComponent={<></>}
+        backgroundComponent={<HeaderImage imageUrl={getImageUrl(imageUrl)} />}
         maskColor={'#6f9b9c'}
         headerTextArray={[t('redstoneCollection.title')]}
       />
-      <CardsSection title={t('redstoneCollection.title')} darkMode={true} imageContentSections={bindEventImageContent} />
+      <CardsSection title={t('redstoneCollection.title')} darkMode={true}
+                    imageContentSections={bindEventImageContents} />
       {selectedItem && (
         <CollectionModal
           isOpen={isModalOpen}
@@ -101,4 +109,4 @@ const RedstoneCollection = () => {
   );
 };
 
-export default RedstoneCollection
+export default RedstoneCollection;
