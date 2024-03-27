@@ -161,7 +161,7 @@ const NavigationBar: React.FC = () => {
     },
   ];
 
-  const getDefaultSelectedKeys = () => {
+  const getSelectedKeys = () => {
     const path = location.pathname;
     if (path === '/') return ['home'];
     return menuItems.find((item) => item?.key === path.slice(1))
@@ -169,13 +169,15 @@ const NavigationBar: React.FC = () => {
       : ['404'];
   };
 
+  console.log('NavigationBar', getSelectedKeys());
+
   return (
     <NavigationBarContainer $hidden={isHidden} $scrolled={scrolled}>
       <StyledMenu
         theme="dark"
         mode="horizontal"
         items={[...menuItems]}
-        defaultSelectedKeys={getDefaultSelectedKeys()}
+        selectedKeys={getSelectedKeys()}
       />
     </NavigationBarContainer>
   );

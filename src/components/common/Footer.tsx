@@ -1,6 +1,7 @@
 import React from 'react';
 import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
@@ -94,28 +95,30 @@ const Footer: React.FC = () => {
       <TopFooterContainer>
         <TopRow align="middle">
           <Col>
-            <Row align="middle">
-              <Col>
-                <LogoImageWrapper>
-                  <LazyLoadImage
-                    src={logo}
-                    alt="CTEC"
-                    effect="blur"
-                    wrapperClassName="lazy-load-image-wrapper"
-                  />
-                </LogoImageWrapper>
-              </Col>
-              <Col>
-                <BrandImageWrapper>
-                  <LazyLoadImage
-                    src={CTEC_banner}
-                    alt="CTEC"
-                    effect="blur"
-                    wrapperClassName="lazy-load-image-wrapper"
-                  />
-                </BrandImageWrapper>
-              </Col>
-            </Row>
+            <Link to="/">
+              <Row align="middle">
+                <Col>
+                  <LogoImageWrapper>
+                    <LazyLoadImage
+                      src={logo}
+                      alt="CTEC"
+                      effect="blur"
+                      wrapperClassName="lazy-load-image-wrapper"
+                    />
+                  </LogoImageWrapper>
+                </Col>
+                <Col>
+                  <BrandImageWrapper>
+                    <LazyLoadImage
+                      src={CTEC_banner}
+                      alt="CTEC"
+                      effect="blur"
+                      wrapperClassName="lazy-load-image-wrapper"
+                    />
+                  </BrandImageWrapper>
+                </Col>
+              </Row>
+            </Link>
           </Col>
           <Col>
             <Space size="large">

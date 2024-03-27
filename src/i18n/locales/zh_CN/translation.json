@@ -61,7 +61,7 @@
           "buttons": [
             {
               "text": "查看建筑作品",
-              "link": "/building"
+              "link": "/architectureCollection"
             }
           ]
         },
@@ -72,7 +72,7 @@
           "buttons": [
             {
               "text": "查看红石作品",
-              "link": "/redstone"
+              "link": "/redstoneCollection"
             }
           ]
         },

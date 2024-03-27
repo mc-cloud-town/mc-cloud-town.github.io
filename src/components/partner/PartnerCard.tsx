@@ -61,6 +61,7 @@ const StyleIframe = styled.iframe`
   border: none;
   width: 700px;
   height: 390px;
+  background: black;
 
   @media only screen and (max-width: 620px) {
     width: 100%;

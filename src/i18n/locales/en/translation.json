@@ -65,7 +65,7 @@
           "buttons": [
             {
               "text": "View Architectural Works",
-              "link": "/building"
+              "link": "/architectureCollection"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "buttons": [
             {
               "text": "View Redstone Works",
-              "link": "/redstone"
+              "link": "/redstoneCollection"
             }
           ]
         },

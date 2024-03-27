@@ -39,7 +39,7 @@ const StyledCard = styled(Card)<{
   flex: 1;
   min-width: 300px;
   text-align: left;
-
+  cursor: default;
   max-width: 30%;
 
   @media (max-width: 1024px) {
