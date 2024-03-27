@@ -90,12 +90,16 @@ const CopyRightCol = styled(Col)`
 const Footer: React.FC = () => {
   const { t } = useTranslation();
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer>
       <TopFooterContainer>
         <TopRow align="middle">
           <Col>
-            <Link to="/">
+            <Link to="/" onClick={() => setTimeout(scrollToTop, 500)}>
               <Row align="middle">
                 <Col>
                   <LogoImageWrapper>

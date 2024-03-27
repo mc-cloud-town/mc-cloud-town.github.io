@@ -378,7 +378,7 @@
   "partner": {
     "title": "Partners",
     "team": {
-      "title": "Collaborative team",
+      "title": "Collaborative Team",
       "partners": [
         {
           "Partner": "鬼鯨伺服器",
@@ -421,7 +421,7 @@
       ]
     },
     "longtime": {
-      "title": "Long-term collaborative creators",
+      "title": "Long-Term Collaborative Creators",
       "partners": [
         {
           "Partner": "阿睿",
@@ -464,7 +464,7 @@
       ]
     },
     "creator": {
-      "title": "Collaborative creators",
+      "title": "Collaborative Creators",
       "partners": [
         {
           "Partner": "小柯",

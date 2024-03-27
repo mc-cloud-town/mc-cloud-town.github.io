@@ -14,9 +14,8 @@ const NavigationBarContainer = styled.div<{
   width: 100%;
   z-index: 1000;
   top: 0;
-  transition:
-    top 0.3s,
-    background-color 0.3s;
+  transition: top 0.3s,
+  background-color 0.3s;
 
   ${(props) =>
     props.$hidden &&
@@ -87,33 +86,37 @@ const NavigationBar: React.FC = () => {
     i18n.changeLanguage(lng).then();
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const languageItems: MenuProps['items'] = [
     { key: 'en', label: 'English', onClick: () => changeLanguage('en') },
     { key: 'zh_CN', label: '简体中文', onClick: () => changeLanguage('zh_CN') },
-    { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') },
+    { key: 'zh_TW', label: '繁體中文', onClick: () => changeLanguage('zh_TW') }
   ];
 
   const menuItems: MenuProps['items'] = [
     {
       key: 'brand',
       label: (
-        <Link to="/">
+        <Link to="/" onClick={scrollToTop}>
           <Brand src="./brand.webp" alt="brand" />
         </Link>
       ),
-      disabled: true,
+      disabled: true
     },
     {
       key: 'home',
-      label: <Link to="/">{t('menu.home')}</Link>,
+      label: <Link to="/">{t('menu.home')}</Link>
     },
     {
       key: 'join',
-      label: <Link to="/join">{t('menu.join')}</Link>,
+      label: <Link to="/join">{t('menu.join')}</Link>
     },
     {
       key: 'survival',
-      label: <Link to="/survival">{t('menu.survivalProgress')}</Link>,
+      label: <Link to="/survival">{t('menu.survivalProgress')}</Link>
     },
     {
       key: 'membersAndWork',
@@ -121,25 +124,25 @@ const NavigationBar: React.FC = () => {
       children: [
         {
           key: 'member',
-          label: <Link to="/member">{t('menu.member')}</Link>,
+          label: <Link to="/member">{t('menu.member')}</Link>
         },
         {
           key: 'redstoneCollection',
-          label: <Link to="/redstoneCollection">{t('menu.redstone')}</Link>,
+          label: <Link to="/redstoneCollection">{t('menu.redstone')}</Link>
         },
         {
           key: 'architectureCollection',
-          label: <Link to="/architectureCollection">{t('menu.building')}</Link>,
-        },
-      ],
+          label: <Link to="/architectureCollection">{t('menu.building')}</Link>
+        }
+      ]
     },
     {
       key: 'openSource',
-      label: <Link to="/openSource">{t('menu.openSource')}</Link>,
+      label: <Link to="/openSource">{t('menu.openSource')}</Link>
     },
     {
       key: 'partner',
-      label: <Link to={'/partner'}>{t('menu.partner')}</Link>,
+      label: <Link to={'/partner'}>{t('menu.partner')}</Link>
     },
     {
       key: 'language',
@@ -147,7 +150,7 @@ const NavigationBar: React.FC = () => {
         <Dropdown
           menu={{
             items: languageItems,
-            onClick: ({ key }) => changeLanguage(key),
+            onClick: ({ key }) => changeLanguage(key)
           }}
           placement="bottom"
         >
@@ -157,19 +160,9 @@ const NavigationBar: React.FC = () => {
             </Space>
           </a>
         </Dropdown>
-      ),
-    },
+      )
+    }
   ];
-
-  const getSelectedKeys = () => {
-    const path = location.pathname;
-    if (path === '/') return ['home'];
-    return menuItems.find((item) => item?.key === path.slice(1))
-      ? [path.slice(1)]
-      : ['404'];
-  };
-
-  console.log('NavigationBar', getSelectedKeys());
 
   return (
     <NavigationBarContainer $hidden={isHidden} $scrolled={scrolled}>
@@ -177,7 +170,7 @@ const NavigationBar: React.FC = () => {
         theme="dark"
         mode="horizontal"
         items={[...menuItems]}
-        selectedKeys={getSelectedKeys()}
+        selectedKeys={location.pathname === '/' ? ['home'] : [location.pathname.slice(1)]}
       />
     </NavigationBarContainer>
   );

@@ -33,13 +33,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="collaborative" element={<Partner />} />
           <Route path="partner" element={<Partner />} />
           <Route path="redstoneCollection" element={<RedstoneCollection />} />
-          <Route
-            path="architectureCollection"
-            element={<ArchitectureCollection />}
-          />
+          <Route path="architectureCollection" element={<ArchitectureCollection />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
