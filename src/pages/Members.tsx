@@ -88,7 +88,7 @@ const MembersPage = () => {
             <span>{t('loading')}</span>
           </StatusContainer>
         )}
-        {!loading && !error && <MemberCase members={filteredMembers} />}
+        {!loading && !error && <MemberCase members={filteredMembers} searchMode={!!searchTerm} />}
       </Container>
     </>
   );

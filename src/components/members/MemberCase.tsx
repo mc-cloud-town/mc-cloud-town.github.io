@@ -23,7 +23,7 @@ const SectionSubtitle = styled.h3`
 
 const GroupRow = styled(Row)`
   margin-bottom: 50px;
-  
+
   &last-child {
     margin-bottom: 0;
   }
@@ -33,7 +33,15 @@ interface IMemberGroup {
   [key: string]: IMember[];
 }
 
-const MemberCase = ({ members }: { members: IMember[] }) => {
+interface MemberCaseProps {
+  members: IMember[];
+  searchMode: boolean;
+}
+
+const MemberCase = (
+  { members,
+    searchMode,
+  }: MemberCaseProps) => {
   const { t } = useTranslation();
 
   const memoizedGroupMap = useMemo(() => {
@@ -63,7 +71,7 @@ const MemberCase = ({ members }: { members: IMember[] }) => {
           </Col>
           {memoizedGroupMap[group].map((member, index) => (
             <Col key={index} span={24} sm={12} md={12} lg={8}>
-              <MemberCard member={member} />
+              <MemberCard member={member} searchMode={searchMode} />
             </Col>
           ))}
         </GroupRow>

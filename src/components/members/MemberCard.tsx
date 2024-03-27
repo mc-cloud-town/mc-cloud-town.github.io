@@ -43,8 +43,10 @@ const ImageWrapper = styled.div`
 const MemberCard = (
   {
     member,
+    searchMode,
   }: {
     member: IMember;
+    searchMode: boolean;
   }) => {
   const { animate,  ref} = useAnimateOnScroll();
 
@@ -53,7 +55,7 @@ const MemberCard = (
   const introduction = member.introduction?.length === 0 || false ? undefined : member.introduction;
 
   return (
-    <StyledCard ref={ref} $fadeIn={animate}>
+    <StyledCard ref={ref} $fadeIn={animate || searchMode}>
       <Row gutter={[16, 16]} align="middle">
         <Col span={6}>
           <ImageWrapper>
