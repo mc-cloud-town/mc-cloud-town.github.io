@@ -10,6 +10,7 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 import { Link } from 'react-router-dom';
 import ShareModal from '#/common/ShareModal.tsx';
 import { getBasePath } from '@/utils/getBaseUrl.ts';
+import stopYoutubeVideo from '@/utils/stopVideo.tsx';
 
 const StyledTitle = styled.h2`
   font-size: 24px;
@@ -174,9 +175,15 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
     carouselRef.current?.goTo(index, false);
   };
 
+  const closeModal = () => {
+    stopYoutubeVideo();
+    onClose();
+  };
+
   const carouselItems = [...(item.videosUrl ?? []).map((url, index) => (
     <VideoWrapper key={`video-wrapper-${index}`}>
       <VideoIframe
+        id="video"
         key={`video-${index}`}
         src={url}
         allowFullScreen
@@ -228,7 +235,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
       title={<StyledTitle>{item.title}</StyledTitle>}
       open={isOpen}
       onOk={onClose}
-      onCancel={onClose}
+      onCancel={closeModal}
       width={800}
       footer={ModalFooter}
     >
