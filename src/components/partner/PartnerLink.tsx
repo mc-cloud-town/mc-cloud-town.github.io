@@ -13,7 +13,7 @@ import {
 } from '@ant-design/icons';
 import { Flex } from 'antd';
 import { ILink } from '@/types/IPartnership.ts';
-import stopYoutubeVideo from '@/utils/stopVideo.tsx';
+import stopYoutubeVideo from '@/utils/stopVideo.ts';
 
 type IconKey = keyof typeof icons;
 
