@@ -28,21 +28,17 @@ const StyledCarousel = styled(Carousel)`
 `;
 
 const ImageWrapper = styled.div`
-  max-height: 400px;
+  height: 400px;
   text-align: center;
   overflow: hidden;
 
   @media (max-width: 768px) {
-    max-height: 300px;
+    height: 300px;
   }
 
   @media (max-width: 480px) {
-    max-height: 175px;
+    height: 175px;
   }
-`;
-
-const PreviewImage = styled(Image)`
-  object-fit: cover;
 `;
 
 const ThumbnailWrapper = styled.div`
@@ -88,23 +84,23 @@ const StyledTag = styled(Tag)`
   }
 `;
 
+const VideoWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
 const VideoIframe = styled.iframe`
   width: 100%;
   height: 400px;
   border: 0;
-  
+
   @media (max-width: 768px) {
     height: 300px;
   }
-  
+
   @media (max-width: 480px) {
     height: 175px;
   }
-`;
-
-const VideoWrapper = styled.div`
-  display: flex;
-  justify-content: center;
 `;
 
 const PlayIconOverlay = styled.div`
@@ -116,13 +112,13 @@ const PlayIconOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.5);
-  color: white; 
-  font-size: 24px; 
+  color: white;
+  font-size: 24px;
   cursor: pointer;
-  
+
   &:hover {
     color: #6f9b9c;
+    transition: color 0.3s ease;
   }
 `;
 
@@ -130,6 +126,20 @@ const ThumbnailWithOverlay = styled.div`
   position: relative;
   width: 80px;
   height: 60px;
+`;
+
+const PreviewImage = styled(Image)`
+  object-fit: cover;
+  width: 100%;
+  height: 400px !important;
+
+  @media (max-width: 768px) {
+    height: 300px !important;
+  }
+
+  @media (max-width: 480px) {
+    height: 175px !important;
+  }
 `;
 
 const getTagColor = (tag: string): string => {
@@ -154,7 +164,7 @@ interface CollectionModalProps {
   onClose: () => void;
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, onClose}) => {
+const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, onClose }) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
@@ -173,9 +183,11 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
       />
     </VideoWrapper>
   )), ...(item.galleryImagesUrl ?? []).map((url, index) => (
-    <ImageWrapper key={`image-${index}`}>
-      <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index}`} />
-    </ImageWrapper>
+    <div key={`image-${index}`}>
+      <ImageWrapper>
+        <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index}`} />
+      </ImageWrapper>
+    </div>
   ))];
 
   const thumbnails = [...(item.videosThumbnailUrl ?? []).map((thumbUrl, index) => (
@@ -221,7 +233,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
       footer={ModalFooter}
     >
       <Image.PreviewGroup>
-        <StyledCarousel ref={carouselRef} afterChange={setSelectedImageIndex}>
+        <StyledCarousel ref={carouselRef} afterChange={setSelectedImageIndex} infinite={false}>
           {carouselItems}
         </StyledCarousel>
       </Image.PreviewGroup>
@@ -229,6 +241,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
       <ThumbnailWrapper>
         {thumbnails}
       </ThumbnailWrapper>
+
       <TagContainer>
         {item.tags?.map((tag, index) => (
           <Link to={`/redstoneCollection?tag=${tag}`} key={index}>
