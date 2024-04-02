@@ -3,7 +3,7 @@ import { Button, Carousel, Image, Modal, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 import type { CarouselRef } from 'antd/lib/carousel';
-import { DownloadOutlined } from '@ant-design/icons';
+import { DownloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 
 import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
@@ -88,6 +88,50 @@ const StyledTag = styled(Tag)`
   }
 `;
 
+const VideoIframe = styled.iframe`
+  width: 100%;
+  height: 400px;
+  border: 0;
+  
+  @media (max-width: 768px) {
+    height: 300px;
+  }
+  
+  @media (max-width: 480px) {
+    height: 175px;
+  }
+`;
+
+const VideoWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+const PlayIconOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  color: white; 
+  font-size: 24px; 
+  cursor: pointer;
+  
+  &:hover {
+    color: #6f9b9c;
+  }
+`;
+
+const ThumbnailWithOverlay = styled.div`
+  position: relative;
+  width: 80px;
+  height: 60px;
+`;
+
 const getTagColor = (tag: string): string => {
   switch (tag) {
     case '紅石':
@@ -120,6 +164,42 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
     carouselRef.current?.goTo(index, false);
   };
 
+  const carouselItems = [...(item.videosUrl ?? []).map((url, index) => (
+    <VideoWrapper key={`video-wrapper-${index}`}>
+      <VideoIframe
+        key={`video-${index}`}
+        src={url}
+        allowFullScreen
+      />
+    </VideoWrapper>
+  )), ...(item.galleryImagesUrl ?? []).map((url, index) => (
+    <ImageWrapper key={`image-${index}`}>
+      <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index}`} />
+    </ImageWrapper>
+  ))];
+
+  const thumbnails = [...(item.videosThumbnailUrl ?? []).map((thumbUrl, index) => (
+    <ThumbnailWithOverlay key={`video-thumb-${index}`}>
+      <Thumbnail
+        src={getImageUrl(thumbUrl)}
+        alt={`Video thumbnail ${index}`}
+        onClick={() => handleThumbnailClick(index)}
+        $isSelected={selectedImageIndex === index}
+      />
+      <PlayIconOverlay onClick={() => handleThumbnailClick(index)}>
+        <PlayCircleOutlined />
+      </PlayIconOverlay>
+    </ThumbnailWithOverlay>
+  )), ...(item.galleryImagesUrl ?? []).map((url, index) => (
+    <Thumbnail
+      key={`image-thumb-${index}`}
+      src={getImageUrl(url)}
+      alt={`Image thumbnail ${index + (item.videosUrl?.length ?? 0)}`}
+      onClick={() => handleThumbnailClick(index + (item.videosUrl?.length ?? 0))}
+      $isSelected={selectedImageIndex === index + (item.videosUrl?.length ?? 0)}
+    />
+  ))];
+
   const ModalFooter = (
     <>
       {item.downloadUrl && (
@@ -142,26 +222,12 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item,index, o
     >
       <Image.PreviewGroup>
         <StyledCarousel ref={carouselRef} afterChange={setSelectedImageIndex}>
-          {item.galleryImagesUrl?.map((url, index) => (
-            <div key={index}>
-              <ImageWrapper>
-                <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index + 1}`} />
-              </ImageWrapper>
-            </div>
-          ))}
+          {carouselItems}
         </StyledCarousel>
       </Image.PreviewGroup>
 
       <ThumbnailWrapper>
-        {item.galleryImagesUrl?.map((url, index) => (
-          <Thumbnail
-            key={index}
-            src={getImageUrl(url)}
-            alt={`Thumbnail ${index + 1}`}
-            onClick={() => handleThumbnailClick(index)}
-            $isSelected={selectedImageIndex === index}
-          />
-        ))}
+        {thumbnails}
       </ThumbnailWrapper>
       <TagContainer>
         {item.tags?.map((tag, index) => (

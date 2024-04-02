@@ -5,6 +5,7 @@ export interface ICollection extends IImageContent {
   creator: string[];
   date: string;
   videosUrl?: string[];
+  videosThumbnailUrl?: string[];
   galleryImagesUrl?: string[];
   introductions: string[];
   downloadUrl?: string;

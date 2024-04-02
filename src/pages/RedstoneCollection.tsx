@@ -31,6 +31,12 @@ const generateRandomData = (index: number): ICollection => {
       generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
       generateRandomFileName('survivalProgress/p', 'webp', 1, 37)
     ],
+    videosUrl: [
+      'https://www.youtube.com/embed/9W3QmzUZB8w?si=7txPXTR0PQuhavrR',
+    ],
+    videosThumbnailUrl: [
+      generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
+    ],
     creator: [
       '專案經理:Fantasy_Sakura' + index,
       '混凝土固化機作者:yisibite' + index,
