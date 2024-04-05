@@ -10,7 +10,7 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 import { Link } from 'react-router-dom';
 import ShareModal from '#/common/ShareModal.tsx';
 import { getBasePath } from '@/utils/getBaseUrl.ts';
-import stopYoutubeVideo from '@/utils/stopVideo.ts';
+import stopVideo from '@/utils/stopVideo.ts';
 
 const StyledTitle = styled.h2`
   font-size: 24px;
@@ -176,7 +176,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
   };
 
   const closeModal = () => {
-    stopYoutubeVideo();
+    stopVideo();
     onClose();
   };
 
