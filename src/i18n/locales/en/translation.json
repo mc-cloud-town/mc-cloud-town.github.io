@@ -366,9 +366,24 @@
       {
         "imageUrl": "survivalProgress/p29.webp",
         "title": "2024/01/15",
-        "subTitle": "Cloud Sister Pixel Art Hand Dig Parameter"
+        "subTitle": "Yun Mei Pixel Art Hand Dig Parameter"
+      },
+      {
+        "imageUrl":"survivalProgress/p38.jpg",
+        "title":"2024/02/13",
+        "subTitle":"2D Million Piglin Barter"
+      },
+      {
+        "imageUrl":"survivalProgress/p39.jpg",
+        "title":"2024/02/24",
+        "subTitle":"Member Worship Hall"
+      },
+      {
+        "imageUrl":"survivalProgress/p40.jpg",
+        "title":"2024/03/22",
+        "subTitle":"Attack on Titan-The Wall of Maria"
       }
-    ]
+         ]
   },
   "opensource": {
     "title": "Open Source",
