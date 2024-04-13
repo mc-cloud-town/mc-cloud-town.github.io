@@ -6,6 +6,9 @@
   "copyLink": "Copy Link",
   "copySuccess": "Copied Successfully",
   "copyFail": "Copy Failed",
+  "creator": "Creator",
+  "credit": "Special Thanks",
+  "introduction": "Introduction",
   "menu": {
     "home": "Home",
     "survivalProgress": "Survival Progress",

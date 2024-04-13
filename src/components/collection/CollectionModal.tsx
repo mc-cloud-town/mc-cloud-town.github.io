@@ -180,12 +180,12 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
     onClose();
   };
 
-  const carouselItems = [...(item.videosUrl ?? []).map((url, index) => (
+  const carouselItems = [...(item.videosUrl ?? []).map((video, index) => (
     <VideoWrapper key={`video-wrapper-${index}`}>
       <VideoIframe
         id="video"
         key={`video-${index}`}
-        src={url}
+        src={video.url}
         allowFullScreen
       />
     </VideoWrapper>
@@ -197,10 +197,12 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
     </div>
   ))];
 
-  const thumbnails = [...(item.videosThumbnailUrl ?? []).map((thumbUrl, index) => (
+  // 如果未提供 videoUrl 的預覽圖片，則使用 YouTube 的預覽圖片
+
+  const thumbnails = [...(item.videosUrl ?? []).map((video, index) => (
     <ThumbnailWithOverlay key={`video-thumb-${index}`}>
       <Thumbnail
-        src={getImageUrl(thumbUrl)}
+        src={getImageUrl(video.thumbnailUrl)}
         alt={`Video thumbnail ${index}`}
         onClick={() => handleThumbnailClick(index)}
         $isSelected={selectedImageIndex === index}
@@ -232,7 +234,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
 
   return (
     <Modal
-      title={<StyledTitle>{item.title}</StyledTitle>}
+      title={<StyledTitle>{item.title} - {item.subTitle}</StyledTitle>}
       open={isOpen}
       onOk={onClose}
       onCancel={closeModal}
@@ -256,17 +258,28 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
           </Link>
         ))}
       </TagContainer>
-      <StyledSubTitle>{item.subTitle}</StyledSubTitle>
+      <StyledSubTitle>{t('creator')}</StyledSubTitle>
       <ul>
         {item.creator.map((creator, index) => (
           <li key={index}>{creator}</li>
         ))}
       </ul>
+      <StyledSubTitle>{t('introduction')}</StyledSubTitle>
       <div>
         {item.introductions.map((intro, index) => (
           <p key={index}>{intro}</p>
         ))}
       </div>
+      {item.credits && <StyledSubTitle>{t('credit')}</StyledSubTitle>}
+      <ul>
+        {item.credits?.map((credit, index) => (
+          <li key={index}>
+            {credit.url ? (
+              <a href={credit.url} target="_blank" rel="noreferrer">{credit.name}</a>
+            ) : credit.name}
+          </li>
+        ))}
+      </ul>
     </Modal>
   );
 };

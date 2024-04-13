@@ -32,16 +32,29 @@ const generateRandomData = (index: number): ICollection => {
       generateRandomFileName('survivalProgress/p', 'webp', 1, 37)
     ],
     videosUrl: [
-      'https://www.youtube.com/embed/9W3QmzUZB8w?si=7txPXTR0PQuhavrR',
-    ],
-    videosThumbnailUrl: [
-      generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
+      {
+        url: 'https://www.youtube.com/embed/9W3QmzUZB8w?si=7txPXTR0PQuhavrR',
+        thumbnailUrl: generateRandomFileName('survivalProgress/p', 'webp', 1, 37)
+      },
     ],
     creator: [
       '專案經理:Fantasy_Sakura' + index,
       '混凝土固化機作者:yisibite' + index,
       '百萬倉庫作者:acaciachan' + index,
       '自適應打包機:redberd' + index
+    ],
+    credits: [
+      {
+        name: 'Fantasy_Sakura' + index,
+        url: 'https://www.youtube.com/channel/UCVZy5X6KqX2g6r6pUgMw9Kw'
+      },
+      {
+        name: 'yisibite' + index,
+        url: 'https://www.youtube.com/channel/UCVZy5X6KqX2g6r6pUgMw9Kw'
+      },
+      {
+        name: 'acaciachan' + index,
+      },
     ],
     tags: ['紅石', '設施', '自動化', '出生點', '出生點設施' + index],
     introductions: [

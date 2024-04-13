@@ -6,6 +6,9 @@
   "copyLink": "复制链接",
   "copySuccess": "复制成功",
   "copyFail": "复制失败",
+  "creator": "创作者",
+  "credit": "特别鸣谢",
+  "introduction": "简介",
   "menu": {
     "home": "首页",
     "survivalProgress": "生存服进度",
