@@ -9,67 +9,9 @@ import { ICollection } from '@/types/ICollection.ts';
 import HeaderImage from '#/common/HeaderImage.tsx';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
-// To-Do: Remove this function after the data is available from the server
-const generateRandomFileName = (prefix: string, suffix: string, min: number, max: number): string => {
-  // Calculate a random number within the specified range
-  const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-
-  // Construct the file name using the prefix, random number, and suffix
-  return `${prefix}${randomNumber}.${suffix}`;
-};
-
-const generateRandomData = (index: number): ICollection => {
-  return {
-    title: '出生點設施' + index,
-    subTitle: '匯集 4 個紅石設施 ' + index,
-    imageUrl: generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
-    date: '2023-08-01' + index,
-    downloadUrl: 'https://discord.com/channels/933290709589577728/1001472836625518612/1220232556486725662',
-    galleryImagesUrl: [
-      generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
-      generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
-      generateRandomFileName('survivalProgress/p', 'webp', 1, 37),
-      generateRandomFileName('survivalProgress/p', 'webp', 1, 37)
-    ],
-    videosUrl: [
-      {
-        url: 'https://www.youtube.com/embed/9W3QmzUZB8w?si=7txPXTR0PQuhavrR',
-        thumbnailUrl: generateRandomFileName('survivalProgress/p', 'webp', 1, 37)
-      },
-    ],
-    creator: [
-      '專案經理:Fantasy_Sakura' + index,
-      '混凝土固化機作者:yisibite' + index,
-      '百萬倉庫作者:acaciachan' + index,
-      '自適應打包機:redberd' + index
-    ],
-    credits: [
-      {
-        name: 'Fantasy_Sakura' + index,
-        url: 'https://www.youtube.com/channel/UCVZy5X6KqX2g6r6pUgMw9Kw'
-      },
-      {
-        name: 'yisibite' + index,
-        url: 'https://www.youtube.com/channel/UCVZy5X6KqX2g6r6pUgMw9Kw'
-      },
-      {
-        name: 'acaciachan' + index,
-      },
-    ],
-    tags: ['紅石', '設施', '自動化', '出生點', '出生點設施' + index],
-    introductions: [
-      '這個出生點設施匯集了 4 個紅石設施，包括混凝土固化機、百萬倉庫、自適應打包機和自動化糖蔗農場。' + index,
-      '這些設施都是由不同的作者製作，這個出生點設施的製作者是Fantasy_Sakura。 ' + index
-    ]
-  };
-};
-
-const testData: ICollection[] = Array.from({ length: 10 }, (_, index) => generateRandomData(index));
-
 const RedstoneCollection = () => {
   const { t } = useTranslation();
-  // To-Do: Change this to fetch data after the data is available from the server
-  const imageContents = testData;
+  const imageContents: ICollection[] = t('redstoneCollection.collections', { returnObjects: true })
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -82,7 +24,7 @@ const RedstoneCollection = () => {
     const shareIndex = params.get('share');
     if (shareIndex !== null) {
       const index = parseInt(shareIndex, 10);
-      const item = testData[index];
+      const item = imageContents[index];
       if (item) {
         setSelectedItem({ item, index });
         setIsModalOpen(true);
@@ -91,7 +33,7 @@ const RedstoneCollection = () => {
   }, []);
 
   const imageUrl = t('redstoneCollection.imageUrl') == 'redstoneCollection.imageUrl' ?
-    imageContents[Math.floor(Math.random() * testData.length)].imageUrl : t('redstoneCollection.imageUrl');
+    imageContents[Math.floor(Math.random() * imageContents.length)].imageUrl : t('redstoneCollection.imageUrl');
 
   const handleCardClick = (item: ICollection, index: number) => {
     setSelectedItem({ item, index });

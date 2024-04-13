@@ -234,7 +234,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
 
   return (
     <Modal
-      title={<StyledTitle>{item.title} - {item.subTitle}</StyledTitle>}
+      title={<StyledTitle>{item.title} - {item.date}</StyledTitle>}
       open={isOpen}
       onOk={onClose}
       onCancel={closeModal}
@@ -264,9 +264,9 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
           <li key={index}>{creator}</li>
         ))}
       </ul>
-      <StyledSubTitle>{t('introduction')}</StyledSubTitle>
+      {item.introductions && <StyledSubTitle>{t('introduction')}</StyledSubTitle>}
       <div>
-        {item.introductions.map((intro, index) => (
+        {item.introductions?.map((intro, index) => (
           <p key={index}>{intro}</p>
         ))}
       </div>
