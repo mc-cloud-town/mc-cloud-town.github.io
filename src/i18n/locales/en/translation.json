@@ -669,6 +669,7 @@
   },
   "redstoneCollection": {
     "title": "Redstone Collection",
+    "imageUrl": "survivalProgress/p30.webp",
     "collections": [
       {
         "title": "360FTL-StarBow-Mini",
