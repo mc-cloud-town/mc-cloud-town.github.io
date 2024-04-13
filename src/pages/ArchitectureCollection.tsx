@@ -64,6 +64,7 @@ const ArchitectureCollection = () => {
           index={selectedItem.index}
           item={selectedItem.item}
           onClose={handleModalClose}
+          type={'architecture'}
         />
       )}
     </>

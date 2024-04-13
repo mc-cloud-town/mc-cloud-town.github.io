@@ -64,6 +64,7 @@ const RedstoneCollection = () => {
           index={selectedItem.index}
           item={selectedItem.item}
           onClose={handleModalClose}
+          type={'redstone'}
         />
       )}
     </>

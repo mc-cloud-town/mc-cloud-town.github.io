@@ -163,9 +163,10 @@ interface CollectionModalProps {
   item: ICollection;
   index: number;
   onClose: () => void;
+  type: 'architecture' | 'redstone';
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, onClose }) => {
+const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, onClose, type }) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
@@ -197,8 +198,6 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
     </div>
   ))];
 
-  // 如果未提供 videoUrl 的預覽圖片，則使用 YouTube 的預覽圖片
-
   const thumbnails = [...(item.videosUrl ?? []).map((video, index) => (
     <ThumbnailWithOverlay key={`video-thumb-${index}`}>
       <Thumbnail
@@ -228,7 +227,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${getBasePath()}/redstoneCollection?share=${index}`} title={item.title} />
+      <ShareModal url={`${getBasePath()}/${type}Collection?share=${index}`} title={item.title} />
     </>
   );
 
