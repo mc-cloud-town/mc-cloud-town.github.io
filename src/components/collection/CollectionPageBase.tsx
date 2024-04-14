@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
@@ -11,7 +12,8 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 
 const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redstone' }) => {
   const { t } = useTranslation();
-  const imageContents: ICollection[] = t(`${pageType}Collection.collections`, { returnObjects: true })
+  const imageContents: ICollection[] = t(`${pageType}Collection.collections`, { returnObjects: true });
+  const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -21,7 +23,7 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const shareIndex = params.get('share');
+    const shareIndex = params.get('share') ?? params.get('index');
     if (shareIndex !== null) {
       const index = parseInt(shareIndex, 10);
       const item = imageContents[index];
@@ -42,6 +44,7 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
 
   const handleModalClose = () => {
     setIsModalOpen(false);
+    navigate(`/${pageType}Collection`);
   };
 
   const bindEventImageContents: ICollection[] = imageContents.map((item, index) => ({
