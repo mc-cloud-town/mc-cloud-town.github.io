@@ -1,6 +1,6 @@
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
@@ -9,8 +9,26 @@ import CarouselSection from '#/common/CarouselSection.tsx';
 import HeaderVideo from '#/common/HeaderVideo.tsx';
 import HeaderTimer from '#/common/HeaderTimer.tsx';
 
+import { IImageContent } from '@/types/IImageContent.ts';
+
 const HomePage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const createSections = (key: string, route: string) => {
+    const data = t(key, { returnObjects: true }) as IImageContent[];
+    const sliceIndex = Math.max(data.length - 3, 0);
+    return data.slice(sliceIndex).map((item, index) => ({
+      ...item,
+      clickEvent: () => navigate(`/${route}?index=${sliceIndex + index}`)
+    }));
+  };
+
+  const imageContentsSections = [
+    createSections('survivalProgress.data', 'survivalProgress'),
+    createSections('architectureCollection.collections', 'architectureCollection'),
+    createSections('redstoneCollection.collections', 'redstoneCollection'),
+  ];
 
   return (
     <>
@@ -42,11 +60,8 @@ const HomePage = () => {
       />
       <CarouselSection
         title={t('home.carousel.title')}
-        imageContentsSections={[
-          t('home.feature.card', { returnObjects: true }),
-          t('home.feature.card', { returnObjects: true }),
-          t('home.feature.card', { returnObjects: true })
-        ]}
+        subtitles={t('home.carousel.subtitles', { returnObjects: true }) as string[]}
+        imageContentsSections={imageContentsSections}
       />
     </>
   );

@@ -9,7 +9,6 @@ import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { Link } from 'react-router-dom';
 import ShareModal from '#/common/ShareModal.tsx';
-import { getBasePath } from '@/utils/getBaseUrl.ts';
 import stopVideo from '@/utils/stopVideo.ts';
 
 const StyledTitle = styled.h2`
@@ -94,6 +93,7 @@ const VideoIframe = styled.iframe`
   width: 100%;
   height: 400px;
   border: 0;
+  background-color: black;
 
   @media (max-width: 768px) {
     height: 300px;
@@ -163,9 +163,17 @@ interface CollectionModalProps {
   item: ICollection;
   index: number;
   onClose: () => void;
+  pageType: 'architecture' | 'redstone';
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, onClose }) => {
+const CollectionModal: React.FC<CollectionModalProps> = (
+  {
+    isOpen,
+    item,
+    index,
+    onClose,
+    pageType
+  }) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
@@ -197,8 +205,6 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
     </div>
   ))];
 
-  // 如果未提供 videoUrl 的預覽圖片，則使用 YouTube 的預覽圖片
-
   const thumbnails = [...(item.videosUrl ?? []).map((video, index) => (
     <ThumbnailWithOverlay key={`video-thumb-${index}`}>
       <Thumbnail
@@ -228,7 +234,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${getBasePath()}/redstoneCollection?share=${index}`} title={item.title} />
+      <ShareModal url={`${window.location.host}${import.meta.env.BASE_URL}${pageType}Collection?share=${index}`} title={item.title} />
     </>
   );
 

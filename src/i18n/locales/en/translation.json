@@ -97,7 +97,12 @@
       ]
     },
     "carousel": {
-      "title": "Server Content"
+      "title": "Server Content",
+      "subtitles": [
+        "Latest Survival Progress",
+        "Latest Redstone Creations",
+        "Latest Architectural Works"
+      ]
     }
   },
   "notFound": {
@@ -372,17 +377,17 @@
         "subTitle": "Yun Mei Pixel Art Hand Dig Parameter"
       },
       {
-        "imageUrl":"survivalProgress/p38.jpg",
+        "imageUrl":"survivalProgress/p38.webp",
         "title":"2024/02/13",
         "subTitle":"2D Million Piglin Barter"
       },
       {
-        "imageUrl":"survivalProgress/p39.jpg",
+        "imageUrl":"survivalProgress/p39.webp",
         "title":"2024/02/24",
         "subTitle":"Member Worship Hall"
       },
       {
-        "imageUrl":"survivalProgress/p40.jpg",
+        "imageUrl":"survivalProgress/p40.webp",
         "title":"2024/03/22",
         "subTitle":"Attack on Titan-The Wall of Maria"
       }
@@ -621,12 +626,55 @@
       ]
     }
   },
-  "buildingCollection": {
+  "architectureCollection": {
     "title": "Building Collection",
-    "imageUrl": "homePage/CTEC_Building.webp"
+    "imageUrl": "homePage/CTEC_Building.webp",
+    "collections": [
+      {
+        "title": "雲鎮工藝出生點-恐懼",
+        "imageUrl": "architectureCollection/spawn.png",
+        "date": "2024-03-17",
+        "galleryImagesUrl": [
+          "architectureCollection/spawn.png",
+          "architectureCollection/spawn_1.png",
+          "architectureCollection/spawn_2.png"
+        ],
+        "creator": [
+          "_R6,XiaoYu2021"
+        ],
+        "credits": [
+          {
+            "name": "Etymology_Ghost",
+            "url": "https://twitter.com/EtymologyGhost"
+          }
+        ],
+        "tags": ["建築", "雕塑", "海怪", "Karken", "建模"]
+      },
+      {
+        "title": "雲鎮工藝出生點-冰船賽道",
+        "imageUrl": "architectureCollection/ice_boat.png",
+        "date": "2024-03-03",
+        "downloadUrl": "",
+        "creator": [
+          "XiaoYu2021,bow_lsaa"
+        ],
+        "galleryImagesUrl": [
+          "architectureCollection/ice_boat.png",
+          "architectureCollection/ice_boat_1.png",
+          "architectureCollection/ice_boat_2.png"
+        ],
+        "credits": [
+          {
+            "name": "XiaoYu2021 - 渲染圖片"
+          }
+        ],
+        "tags": ["建築", "冰船賽道", "聖誕節"]
+      }
+    ]
   },
   "redstoneCollection": {
     "title": "Redstone Collection",
+    "imageUrl": "survivalProgress/p30.webp",
     "collections": [
       {
         "title": "360FTL-StarBow-Mini",

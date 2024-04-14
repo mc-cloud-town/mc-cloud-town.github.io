@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: yarn build
         env:
-          BASE_URL: /cloudtown-website
+          BASE_URL: /
           HOSTNAME: https://mc-cloud-town.github.io/
 
       - name: deploy
