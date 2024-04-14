@@ -23,7 +23,21 @@ const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   margin-bottom: 40px;
   font-weight: bolder;
   opacity: 0;
-  
+
+  ${(props) =>
+    props.$fadeIn && css`
+      animation: ${fadeIn} 0.8s ease-out forwards;
+    `};
+`;
+
+const SectionSubtitle = styled.h3<{ $fadeIn: boolean }>`
+  text-align: center;
+  font-weight: bold;
+  margin-top: 20px;
+  opacity: 0;
+  color: #6f9b9c;
+  border-radius: 10px;
+
   ${(props) =>
     props.$fadeIn && css`
       animation: ${fadeIn} 0.8s ease-out forwards;
@@ -41,6 +55,14 @@ const CarouselContainer = styled.div`
 const CarouselWrapper = styled.div`
   flex: 1;
   max-width: 30%;
+  
+  @media (max-width: 1024px) {
+    margin-bottom: 40px;
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   @media (max-width: 1024px) {
     max-width: 45%;
@@ -85,16 +107,23 @@ const ImageWrapper = styled.div`
 
 interface CarouselSectionProps {
   title: string;
+  subtitles?: string[];
   imageContentsSections: IImageContent[][];
 }
 
 /**
  * Carousel section component, display multiple carousels as cards, each carousel contains multiple images
  * @param title - Section title
+ * @param subtitles - Section subtitles
  * @param imageContentsSections - Array of image content arrays
  * @constructor CarouselSection - React Function Component
  */
-const CarouselSection: React.FC<CarouselSectionProps> = ({ title, imageContentsSections }: CarouselSectionProps) => {
+const CarouselSection: React.FC<CarouselSectionProps> = (
+  {
+    title,
+    subtitles: sectionSubtitle = [],
+    imageContentsSections
+  }: CarouselSectionProps) => {
   const { ref, animate } = useAnimateOnScroll();
 
   return (
@@ -119,6 +148,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ title, imageContentsS
                 </ImageWrapper>
               ))}
             </StyledCarousel>
+            <SectionSubtitle $fadeIn={animate}>{sectionSubtitle[index]}</SectionSubtitle>
           </CarouselWrapper>
         ))}
       </CarouselContainer>

@@ -97,7 +97,12 @@
       ]
     },
     "carousel": {
-      "title": "Server Content"
+      "title": "Server Content",
+      "subtitles": [
+        "Latest Survival Progress",
+        "Latest Redstone Creations",
+        "Latest Architectural Works"
+      ]
     }
   },
   "notFound": {

@@ -26,8 +26,8 @@ const HomePage = () => {
 
   const imageContentsSections = [
     createSections('survivalProgress.data', 'survivalProgress'),
+    createSections('architectureCollection.collections', 'architectureCollection'),
     createSections('redstoneCollection.collections', 'redstoneCollection'),
-    createSections('architectureCollection.collections', 'architectureCollection')
   ];
 
   return (
@@ -60,6 +60,7 @@ const HomePage = () => {
       />
       <CarouselSection
         title={t('home.carousel.title')}
+        subtitles={t('home.carousel.subtitles', { returnObjects: true }) as string[]}
         imageContentsSections={imageContentsSections}
       />
     </>
