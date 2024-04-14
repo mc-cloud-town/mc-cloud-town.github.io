@@ -30,6 +30,7 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
       if (item) {
         setSelectedItem({ item, index });
         setIsModalOpen(true);
+        navigate(`/${pageType}Collection`);
       }
     }
   }, [imageContents]);
@@ -44,7 +45,6 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    navigate(`/${pageType}Collection`);
   };
 
   const bindEventImageContents: ICollection[] = imageContents.map((item, index) => ({

@@ -8,6 +8,7 @@ import CardsSection from '#/common/CardsSection.tsx';
 import CarouselSection from '#/common/CarouselSection.tsx';
 import HeaderVideo from '#/common/HeaderVideo.tsx';
 import HeaderTimer from '#/common/HeaderTimer.tsx';
+
 import { IImageContent } from '@/types/IImageContent.ts';
 
 const HomePage = () => {
@@ -16,8 +17,8 @@ const HomePage = () => {
 
   const createSections = (key: string, route: string) => {
     const data = t(key, { returnObjects: true }) as IImageContent[];
-    const sliceIndex = data.length - 3;
-    return data.slice(-3).map((item, index) => ({
+    const sliceIndex = Math.max(data.length - 3, 0);
+    return data.slice(sliceIndex).map((item, index) => ({
       ...item,
       clickEvent: () => navigate(`/${route}?index=${sliceIndex + index}`)
     }));
@@ -28,7 +29,6 @@ const HomePage = () => {
     createSections('redstoneCollection.collections', 'redstoneCollection'),
     createSections('architectureCollection.collections', 'architectureCollection')
   ];
-
 
   return (
     <>

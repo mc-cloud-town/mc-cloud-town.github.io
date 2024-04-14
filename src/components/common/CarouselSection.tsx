@@ -65,6 +65,7 @@ const ImageWrapper = styled.div`
   padding-top: 56.25%;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 
   & > span {
     position: absolute;
@@ -109,7 +110,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({ title, imageContentsS
               $fadeIn={animate}
             >
               {imageContentSections.map((imageContent, idx) => (
-                <ImageWrapper key={idx}>
+                <ImageWrapper key={idx} onClick={imageContent.clickEvent}>
                   <LazyLoadImage
                     alt={imageContent.title}
                     effect="blur"
