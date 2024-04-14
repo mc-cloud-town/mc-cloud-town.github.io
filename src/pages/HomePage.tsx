@@ -8,6 +8,7 @@ import CardsSection from '#/common/CardsSection.tsx';
 import CarouselSection from '#/common/CarouselSection.tsx';
 import HeaderVideo from '#/common/HeaderVideo.tsx';
 import HeaderTimer from '#/common/HeaderTimer.tsx';
+import { IImageContent } from '@/types/IImageContent.ts';
 
 const HomePage = () => {
   const { t } = useTranslation();
@@ -43,9 +44,9 @@ const HomePage = () => {
       <CarouselSection
         title={t('home.carousel.title')}
         imageContentsSections={[
-          t('home.feature.card', { returnObjects: true }),
-          t('home.feature.card', { returnObjects: true }),
-          t('home.feature.card', { returnObjects: true })
+          (t('survivalProgress.data', { returnObjects: true }) as IImageContent[]).slice(-3),
+          (t('redstoneCollection.collections', { returnObjects: true }) as IImageContent[]).slice(-3),
+          (t('architectureCollection.collections', { returnObjects: true }) as IImageContent[]).slice(-3)
         ]}
       />
     </>
