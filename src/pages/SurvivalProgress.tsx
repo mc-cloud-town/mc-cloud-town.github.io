@@ -8,6 +8,9 @@ import { IImageContent } from '@/types/IImageContent.ts';
 const SurvivalProgress = () => {
   const { t } = useTranslation();
 
+  const params = new URLSearchParams(window.location.search);
+  const shareIndex = parseInt(params.get('index') ?? '-1');
+
   return (
     <>
       <PageHeader
@@ -19,6 +22,7 @@ const SurvivalProgress = () => {
         items={
           t('survivalProgress.data', { returnObjects: true }) as IImageContent[]
         }
+        activeIndex={shareIndex}
       />
     </>
   );

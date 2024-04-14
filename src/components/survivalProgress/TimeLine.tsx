@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Timeline } from 'antd';
 import styled from 'styled-components';
+import { throttle } from 'lodash';
+
 import TimelineItemContent from '#/survivalProgress/TimeLineContent.tsx';
 
 import { IImageContent } from '@/types/IImageContent';
@@ -44,17 +46,17 @@ const BackgroundContainer = styled.div<{ $bgImage: string }>`
 
 interface TimelineProps {
   items: IImageContent[];
+  activeIndex?: number;
 }
 
-const TimelineComponent: React.FC<TimelineProps> = ({ items }) => {
+const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
   const { y } = useScroll();
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [activeBgImage, setActiveBgImage] = useState<string>(items[0]?.imageUrl || '');
 
   useEffect(() => {
-    const checkVisibility = () => {
+    const checkVisibility = throttle(() => {
       const windowBottom = y + window.innerHeight;
-
       for (let index = itemRefs.current.length - 1; index >= 0; index--) {
         const ref = itemRefs.current[index];
         if (ref) {
@@ -67,10 +69,27 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items }) => {
           }
         }
       }
-    };
+    }, 100);
 
     checkVisibility();
+
+    window.addEventListener('resize', checkVisibility);
+    return () => {
+      window.removeEventListener('resize', checkVisibility);
+      checkVisibility.cancel();
+    };
   }, [y, items]);
+
+  useEffect(() => {
+    if (typeof activeIndex === 'number' && itemRefs.current[activeIndex]) {
+      setTimeout(() => {
+          itemRefs.current[activeIndex]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }, 500);
+    }
+  }, [activeIndex]);
 
   const timelineMode = window.innerWidth < 768 ? 'left' : 'alternate';
 
@@ -86,7 +105,7 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items }) => {
               <div ref={(el) => (itemRefs.current[index] = el)}>
                 <TimelineItemContent {...item} />
               </div>
-            ),
+            )
           }))}
         />
       </Container>
