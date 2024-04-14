@@ -9,7 +9,6 @@ import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { Link } from 'react-router-dom';
 import ShareModal from '#/common/ShareModal.tsx';
-import { getBasePath } from '@/utils/getBaseUrl.ts';
 import stopVideo from '@/utils/stopVideo.ts';
 
 const StyledTitle = styled.h2`
@@ -235,7 +234,7 @@ const CollectionModal: React.FC<CollectionModalProps> = (
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${getBasePath()}/${pageType}Collection?share=${index}`} title={item.title} />
+      <ShareModal url={`${window.location.host}${import.meta.env.BASE_URL}${pageType}Collection?share=${index}`} title={item.title} />
     </>
   );
 
