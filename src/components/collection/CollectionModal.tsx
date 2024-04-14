@@ -94,6 +94,7 @@ const VideoIframe = styled.iframe`
   width: 100%;
   height: 400px;
   border: 0;
+  background-color: black;
 
   @media (max-width: 768px) {
     height: 300px;
@@ -163,10 +164,17 @@ interface CollectionModalProps {
   item: ICollection;
   index: number;
   onClose: () => void;
-  type: 'architecture' | 'redstone';
+  pageType: 'architecture' | 'redstone';
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, onClose, type }) => {
+const CollectionModal: React.FC<CollectionModalProps> = (
+  {
+    isOpen,
+    item,
+    index,
+    onClose,
+    pageType
+  }) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
@@ -227,7 +235,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, item, index, 
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${getBasePath()}/${type}Collection?share=${index}`} title={item.title} />
+      <ShareModal url={`${getBasePath()}/${pageType}Collection?share=${index}`} title={item.title} />
     </>
   );
 
