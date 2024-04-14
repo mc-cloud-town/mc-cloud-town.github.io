@@ -44,6 +44,10 @@ const BackgroundContainer = styled.div<{ $bgImage: string }>`
   }
 `;
 
+const StyledTimeline = styled(Timeline)`
+  width: 100%;
+`;
+
 interface TimelineProps {
   items: IImageContent[];
   activeIndex?: number;
@@ -87,7 +91,7 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
             behavior: 'smooth',
             block: 'center'
           });
-        }, 1000);
+        }, 500);
     }
   }, [activeIndex]);
 
@@ -97,7 +101,7 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
     <>
       <BackgroundContainer $bgImage={getImageUrl(activeBgImage)} />
       <Container>
-        <Timeline
+        <StyledTimeline
           mode={timelineMode}
           items={items.map((item, index) => ({
             key: index,

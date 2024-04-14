@@ -7,10 +7,29 @@ import { fadeIn } from '@/styles/animation.ts';
 
 const { Title, Text } = Typography;
 
-const Image = styled.img`
+const ImageWrapper = styled.div`
   width: 100%;
   margin-bottom: 20px;
   border-radius: 10px;
+  background-color: #ccc;
+  position: relative;
+  overflow: hidden; 
+
+  &:before {
+    content: "";
+    display: block;
+    padding-top: 56.25%;
+  }
+`;
+
+const Image = styled.img`
+  width: 100%;
+  height: 100%; 
+  object-fit: cover;
+  border-radius: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
 `;
 
 const TimelineItemContainer = styled.div<{ $animate: boolean }>`
@@ -51,7 +70,9 @@ const TimelineItemContent = (
 
   return (
     <TimelineItemContainer $animate={animate} ref={ref}>
-      <Image src={getImageUrl(imageUrl)} alt={title} />
+      <ImageWrapper>
+        <Image src={getImageUrl(imageUrl)} alt={title} />
+      </ImageWrapper>
       <StyledTitle level={4}>{title}</StyledTitle>
       <StyledText strong>{subTitle}</StyledText>
       <StyledParagraph>{paragraph}</StyledParagraph>
