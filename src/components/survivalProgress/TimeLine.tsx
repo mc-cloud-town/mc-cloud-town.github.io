@@ -87,7 +87,7 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
             behavior: 'smooth',
             block: 'center'
           });
-        }, 500);
+        }, 1000);
     }
   }, [activeIndex]);
 
