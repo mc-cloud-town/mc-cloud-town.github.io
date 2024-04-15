@@ -100,8 +100,8 @@
       "title": "Server Content",
       "subtitles": [
         "Latest Survival Progress",
-        "Latest Redstone Creations",
-        "Latest Architectural Works"
+        "Latest Architectural Works",
+        "Latest Redstone Creations"
       ]
     }
   },
@@ -632,7 +632,7 @@
     "collections": [
       {
         "title": "雲鎮工藝出生點-恐懼",
-        "imageUrl": "architectureCollection/spawn.png",
+        "imageUrl": "architectureCollection/spawn.webp",
         "date": "2024-03-17",
         "galleryImagesUrl": [
           "architectureCollection/spawn.png",
@@ -652,7 +652,7 @@
       },
       {
         "title": "雲鎮工藝出生點-冰船賽道",
-        "imageUrl": "architectureCollection/ice_boat.png",
+        "imageUrl": "architectureCollection/ice_boat.webp",
         "date": "2024-03-03",
         "downloadUrl": "",
         "creator": [
@@ -688,7 +688,7 @@
           }
         ],
         "galleryImagesUrl": [
-          "redstoneCollection/360ftl_star_bow.png"
+          "redstoneCollection/360ftl_star_bow.webp"
         ],
         "creator": [
           "FlandreLed"
@@ -703,7 +703,7 @@
       },
       {
         "title": "432K高压主世界TNT刷沙机",
-        "imageUrl": "redstoneCollection/432K_sand_duper.png",
+        "imageUrl": "redstoneCollection/432K_sand_duper.webp",
         "date": "2024-03-03",
         "downloadUrl": "https://discord.com/channels/933290709589577728/1001472836625518612/1213776551548559421",
         "creator": [
