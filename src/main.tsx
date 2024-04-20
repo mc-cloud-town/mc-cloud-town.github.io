@@ -2,16 +2,16 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import { Layout } from './Layout';
-import HomePage from './pages/HomePage';
+import { Layout } from './Layout.tsx';
+import HomePage from './pages/HomePage.tsx';
 import JoinServer from './pages/JoinServer.tsx';
 import SurvivalProgress from './pages/SurvivalProgress.tsx';
-import MemberPage from './pages/Members';
+import MemberPage from './pages/Members.tsx';
 import OpenSourcePage from './pages/OpenSource.tsx';
 import Partner from './pages/Partner.tsx';
 import ArchitectureCollection from './pages/ArchitectureCollection.tsx';
 import RedstoneCollection from './pages/RedstoneCollection.tsx';
-import NotFoundPage from './pages/NotFoundPage';
+import NotFoundPage from './pages/NotFoundPage.tsx';
 
 import initI18n from './i18n/i18nConfig';
 import 'antd/dist/reset.css';
