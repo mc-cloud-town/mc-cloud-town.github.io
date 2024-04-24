@@ -50,8 +50,8 @@ const MemberCard = ({
 }) => {
   const { animate, ref } = useAnimateOnScroll();
 
-  const fullBodyUrl = 'https://mineskin.eu/armor/body/';
-  const headUrl = 'https://mineskin.eu/helm/';
+  const fullBodyUrl = 'https://mineskin.eu/armor/body';
+  const headUrl = 'https://mineskin.eu/helm';
   const introduction =
     member.introduction?.length === 0 || false
       ? undefined
@@ -60,7 +60,7 @@ const MemberCard = ({
   return (
     <StyledCard ref={ref} $fadeIn={animate || searchMode}>
       <Row gutter={[16, 16]} align="middle">
-        <Col span={6}>
+        <Col span={11}>
           <ImageWrapper>
             <FullBodyImage
               src={`${fullBodyUrl}${member.uuid}/100.png`}
@@ -74,7 +74,7 @@ const MemberCard = ({
             />
           </ImageWrapper>
         </Col>
-        <Col span={18}>
+        <Col span={13}>
           <Card.Meta title={member.name} description={introduction} />
         </Col>
       </Row>

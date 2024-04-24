@@ -34,26 +34,29 @@ interface IMemberGroup {
 
 interface MemberCaseProps {
   searchMode: boolean;
-  members: IMemberGroup;
+  memberGroups: IMemberGroup;
 }
 
-const MemberCase = ({ members, searchMode }: MemberCaseProps) => {
+const MemberCase = ({ memberGroups, searchMode }: MemberCaseProps) => {
   const { t } = useTranslation();
 
   return (
     <>
-      {Object.keys(members).length === 0 && (
+      {/* Show when all members ar empty */}
+      {Object.values(memberGroups).every((members) => members.length === 0) && (
         <SectionTitle>{t('members.noResult')}</SectionTitle>
       )}
-      {Object.entries(members).map(([group, members]) => (
+      {Object.entries(memberGroups).map(([group, members]) => (
         <GroupRow key={group} gutter={[16, 16]}>
-          <Col span={24}>
-            <SectionTitle>{t(`members.${group}Group.title`)}</SectionTitle>
-            <SectionSubtitle>
-              {t(`members.${group}Group.subTitle`)}
-            </SectionSubtitle>
-          </Col>
-          {members.map((member, index) => (
+          {members.length > 0 && (
+            <Col span={24}>
+              <SectionTitle>{t(`members.${group}Group.title`)}</SectionTitle>
+              <SectionSubtitle>
+                {t(`members.${group}Group.subTitle`)}
+              </SectionSubtitle>
+            </Col>
+          )}
+          {members.length > 0 && members.map((member, index) => (
             <Col key={index} span={24} sm={12} md={12} lg={8}>
               <MemberCard member={member} searchMode={searchMode} />
             </Col>

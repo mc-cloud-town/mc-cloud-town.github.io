@@ -55,21 +55,18 @@ const MembersPage = () => {
   const filteredMembers = useMemo(() => {
     const groups = ['member', 'trial'];
 
-    const d = Object.fromEntries(
+    return Object.fromEntries(
       Object.entries(data || {})
         .filter(([category]) => groups.includes(category))
         .map(([category, items]) => {
           return [
             category,
             items.filter((item) =>
-              item.name.includes(searchTerm.toLowerCase()),
+              item.name.toLowerCase().includes(searchTerm.toLowerCase()),
             ),
           ];
         }),
     );
-    console.log(d);
-
-    return d;
   }, [data, searchTerm]);
 
   return (
@@ -104,7 +101,7 @@ const MembersPage = () => {
           </StatusContainer>
         )}
         {!loading && !error && (
-          <MemberCase members={filteredMembers} searchMode={!!searchTerm} />
+          <MemberCase memberGroups={filteredMembers} searchMode={!!searchTerm} />
         )}
       </Container>
     </>
