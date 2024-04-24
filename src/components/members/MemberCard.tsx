@@ -50,7 +50,7 @@ const MemberCard = ({
 }) => {
   const { animate, ref } = useAnimateOnScroll();
 
-  const fullBodyUrl = 'https://mineskin.eu/armor/body';
+  const fullBodyUrl = 'https://mineskin.eu/armor/body/';
   const headUrl = 'https://mineskin.eu/helm';
   const introduction =
     member.introduction?.length === 0 || false
