@@ -7,17 +7,24 @@ import { IMember } from '@/types/IMember.ts';
 import { fadeIn } from '@/styles/animation.ts';
 
 const FullBodyImage = styled(LazyLoadImage)`
-  width: 100%;
+  width: 100px;
+  height: 200px;
+
   @media (max-width: 400px) {
+    width: 0;
+    height: 0;
     display: none;
   }
 `;
 
 const HeadImage = styled(LazyLoadImage)`
-  width: 100%;
+  width: 0;
+  height: 0;
   display: none;
 
   @media (max-width: 400px) {
+    width: 100px;
+    height: 100px;
     display: block;
   }
 `;
