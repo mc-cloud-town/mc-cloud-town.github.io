@@ -16,7 +16,7 @@ const FullBodyImage = styled(LazyLoadImage)`
 const HeadImage = styled(LazyLoadImage)`
   width: 100%;
   display: none;
-  
+
   @media (max-width: 400px) {
     display: block;
   }
@@ -25,9 +25,10 @@ const HeadImage = styled(LazyLoadImage)`
 const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   opacity: 0;
   background-color: transparent;
-  
+
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -40,19 +41,21 @@ const ImageWrapper = styled.div`
   }
 `;
 
-const MemberCard = (
-  {
-    member,
-    searchMode,
-  }: {
-    member: IMember;
-    searchMode: boolean;
-  }) => {
-  const { animate,  ref} = useAnimateOnScroll();
+const MemberCard = ({
+  member,
+  searchMode,
+}: {
+  member: IMember;
+  searchMode: boolean;
+}) => {
+  const { animate, ref } = useAnimateOnScroll();
 
   const fullBodyUrl = 'https://mineskin.eu/armor/body/';
   const headUrl = 'https://mineskin.eu/helm/';
-  const introduction = member.introduction?.length === 0 || false ? undefined : member.introduction;
+  const introduction =
+    member.introduction?.length === 0 || false
+      ? undefined
+      : member.introduction;
 
   return (
     <StyledCard ref={ref} $fadeIn={animate || searchMode}>
@@ -72,7 +75,7 @@ const MemberCard = (
           </ImageWrapper>
         </Col>
         <Col span={18}>
-          <Card.Meta title={`${member.name ?? member.id} (${member.id})`} description={introduction} />
+          <Card.Meta title={member.name} description={introduction} />
         </Col>
       </Row>
     </StyledCard>
