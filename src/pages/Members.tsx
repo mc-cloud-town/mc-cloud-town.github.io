@@ -11,7 +11,7 @@ import MemberCase from '#/members/MemberCase.tsx';
 import useApi from '@/hooks/useApi.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { MEMBER_API } from '@/constants';
-import { IMember } from '@/types/IMember.ts';
+import { IMembers } from '@/types/IMember.ts';
 
 const Container = styled.div`
   padding: 50px 40px;
@@ -48,21 +48,36 @@ const StyledInput = styled(Input)`
 `;
 
 const MembersPage = () => {
-  const { data, loading, error } = useApi<IMember[]>(MEMBER_API);
+  const { data, loading, error } = useApi<IMembers>(MEMBER_API);
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredMembers = useMemo(() => {
-    return data?.filter(member =>
-      member.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    const groups = ['member', 'trial'];
+
+    const d = Object.fromEntries(
+      Object.entries(data || {})
+        .filter(([category]) => groups.includes(category))
+        .map(([category, items]) => {
+          return [
+            category,
+            items.filter((item) =>
+              item.name.includes(searchTerm.toLowerCase()),
+            ),
+          ];
+        }),
+    );
+    console.log(d);
+
+    return d;
   }, [data, searchTerm]);
 
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('members.imageUrl'))} />}
+        backgroundComponent={
+          <HeaderImage imageUrl={getImageUrl(t('members.imageUrl'))} />
+        }
         headerTextArray={[t('members.title')]}
         subHeaderContentArray={[t('members.description')]}
       />
@@ -88,7 +103,9 @@ const MembersPage = () => {
             <span>{t('loading')}</span>
           </StatusContainer>
         )}
-        {!loading && !error && <MemberCase members={filteredMembers} searchMode={!!searchTerm} />}
+        {!loading && !error && (
+          <MemberCase members={filteredMembers} searchMode={!!searchTerm} />
+        )}
       </Container>
     </>
   );

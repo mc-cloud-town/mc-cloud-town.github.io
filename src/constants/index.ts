@@ -5,7 +5,10 @@ export const serverLink = {
   paypal: 'https://www.paypal.com/paypalme/cloudtownctec',
 };
 
+// export const MEMBER_API =
+//   'https://raw.githubusercontent.com/mc-cloud-town/static-data/main/data/member.json';
+
 export const MEMBER_API =
-  'https://raw.githubusercontent.com/mc-cloud-town/static-data/main/data/member.json';
+  'https://mc-cloud-town.github.io/static-data/member.json';
 
 export const GITHUB_API = 'https://api.github.com/orgs/mc-cloud-town/repos';
