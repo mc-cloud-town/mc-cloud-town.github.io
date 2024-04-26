@@ -259,7 +259,7 @@ const CollectionModal: React.FC<CollectionModalProps> = (
 
       <TagContainer>
         {item.tags?.map((tag, index) => (
-          <Link to={`/redstoneCollection?tag=${tag}`} key={index}>
+          <Link to={`/${pageType}Collection?tag=${tag}`} key={index}>
             <StyledTag key={index} color={getTagColor(tag)}>{tag}</StyledTag>
           </Link>
         ))}
