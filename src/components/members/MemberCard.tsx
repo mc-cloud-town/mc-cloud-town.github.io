@@ -8,8 +8,8 @@ import { fadeIn } from '@/styles/animation.ts';
 
 const FullBodyImage = styled(LazyLoadImage)`
   width: 100px;
-  height: 200px;
-
+  height: auto;
+  
   @media (max-width: 400px) {
     width: 0;
     height: 0;
@@ -24,7 +24,7 @@ const HeadImage = styled(LazyLoadImage)`
 
   @media (max-width: 400px) {
     width: 100px;
-    height: 100px;
+    height: auto;
     display: block;
   }
 `;
