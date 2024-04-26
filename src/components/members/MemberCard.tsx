@@ -11,15 +11,11 @@ const FullBodyImage = styled(LazyLoadImage)`
   height: auto;
   
   @media (max-width: 400px) {
-    width: 0;
-    height: 0;
     display: none;
   }
 `;
 
 const HeadImage = styled(LazyLoadImage)`
-  width: 0;
-  height: 0;
   display: none;
 
   @media (max-width: 400px) {
