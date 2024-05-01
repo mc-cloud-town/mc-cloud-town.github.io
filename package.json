@@ -70,7 +70,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,css,json,md}": [
+    "*.{js,jsx,ts,tsx,css,scss,json,md}": [
       "prettier . --write --ignore-unknown",
       "git add"
     ]
