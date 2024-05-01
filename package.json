@@ -50,7 +50,9 @@
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "husky": "^9.0.11",
     "lightningcss": "^1.24.1",
+    "lint-staged": "^15.2.2",
     "prettier": "3.2.5",
     "sharp": "^0.33.2",
     "sitemap-ts": "^1.6.1",
@@ -61,5 +63,16 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-image-optimizer": "^1.1.7",
     "vite-react-ssg": "^0.6.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
