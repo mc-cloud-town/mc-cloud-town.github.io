@@ -16,8 +16,3 @@ export interface ICollection extends IImageContent {
   introductions: string[];
   downloadUrl?: string;
 }
-
-
-
-
-
