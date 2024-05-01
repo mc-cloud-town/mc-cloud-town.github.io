@@ -52,18 +52,19 @@ const HeaderVideo: React.FC<HeaderVideoProps> = ({ youtubeId, start }) => {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const placeholderUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
-
-  const isPrerendering = /bot|crawl|spider|googlebot/i.test(navigator.userAgent);
+  const isPrerendering = /bot|crawl|spider|googlebot/i.test(
+    navigator.userAgent,
+  );
 
   useEffect(() => {
     YouTubeIframeLoader.load((YT) => {
       new YT.Player('youtube-background', {
         videoId: youtubeId,
         events: {
-          'onStateChange': ({ data }: { data: number }) => {
+          onStateChange: ({ data }: { data: number }) => {
             if (data !== 1) return;
             setIsVideoReady(true);
-          }
+          },
         },
         playerVars: {
           autoplay: 1,
@@ -78,16 +79,19 @@ const HeaderVideo: React.FC<HeaderVideoProps> = ({ youtubeId, start }) => {
           rel: 0,
           showinfo: 0,
           start: start,
-        }
+        },
       });
     });
   }, [start, youtubeId]);
 
   return (
     <BackgroundContainer>
-      <VideoPlaceholder src={placeholderUrl} alt="Background video placeholder"
-                        $isVideoReady={isVideoReady && !isPrerendering} />
-      {!isPrerendering && <BackgroundVideo id="youtube-background" />}
+      <VideoPlaceholder
+        src={placeholderUrl}
+        alt='Background video placeholder'
+        $isVideoReady={isVideoReady && !isPrerendering}
+      />
+      {!isPrerendering && <BackgroundVideo id='youtube-background' />}
     </BackgroundContainer>
   );
 };

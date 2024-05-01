@@ -106,7 +106,7 @@ const PartnerCard = (partnerData: IPartnership) => {
               <LazyLoadImage
                 src={getImageUrl(partnerData.Image)}
                 alt={partnerData.Partner}
-                effect="blur"
+                effect='blur'
               />
             </ImageWrapper>
           }
@@ -146,7 +146,7 @@ const PartnerCard = (partnerData: IPartnership) => {
             <StyleIframe
               id={'video'}
               src={partnerData.ShowVideo + '&autoplay=0&enablejsapi=1'}
-              title="YouTube video player"
+              title='YouTube video player'
               allowFullScreen
             />
           </StyleVideo>

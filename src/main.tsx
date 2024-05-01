@@ -23,21 +23,24 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path='/' element={<Layout />}>
           <Route index element={<HomePage />} />
-          <Route path="home" element={<HomePage />} />
-          <Route path="join" element={<JoinServer />} />
-          <Route path="survival" element={<SurvivalProgress />} />
-          <Route path="survivalProgress" element={<SurvivalProgress />} />
-          <Route path="member" element={<MemberPage />} />
-          <Route path="openSource" element={<OpenSourcePage />} />
-          <Route path="collaborative" element={<Partner />} />
-          <Route path="partner" element={<Partner />} />
-          <Route path="redstoneCollection" element={<RedstoneCollection />} />
-          <Route path="architectureCollection" element={<ArchitectureCollection />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path='home' element={<HomePage />} />
+          <Route path='join' element={<JoinServer />} />
+          <Route path='survival' element={<SurvivalProgress />} />
+          <Route path='survivalProgress' element={<SurvivalProgress />} />
+          <Route path='member' element={<MemberPage />} />
+          <Route path='openSource' element={<OpenSourcePage />} />
+          <Route path='collaborative' element={<Partner />} />
+          <Route path='partner' element={<Partner />} />
+          <Route path='redstoneCollection' element={<RedstoneCollection />} />
+          <Route
+            path='architectureCollection'
+            element={<ArchitectureCollection />}
+          />
+          <Route path='*' element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

@@ -7,7 +7,9 @@ import axios, { AxiosError } from 'axios';
  * @param url {string} The URL of the API.
  * @returns {Object} The data, loading state, and error state.
  */
-const useApi = <T,>(url: string): {
+const useApi = <T>(
+  url: string,
+): {
   data: T | null;
   loading: boolean;
   error: { message: string } | null;
@@ -20,7 +22,8 @@ const useApi = <T,>(url: string): {
     let isMounted = true; // 标志组件是否挂载
 
     setLoading(true);
-    axios.get<T>(url)
+    axios
+      .get<T>(url)
       .then((response) => {
         if (isMounted) {
           setData(response.data);

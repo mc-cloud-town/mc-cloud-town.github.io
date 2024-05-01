@@ -33,7 +33,7 @@ const BackgroundContainer = styled.div<{ $bgImage: string }>`
   transition: background-image 0.5s ease-in-out;
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
@@ -56,7 +56,9 @@ interface TimelineProps {
 const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
   const { y } = useScroll();
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const [activeBgImage, setActiveBgImage] = useState<string>(items[0]?.imageUrl || '');
+  const [activeBgImage, setActiveBgImage] = useState<string>(
+    items[0]?.imageUrl || '',
+  );
 
   useEffect(() => {
     const checkVisibility = throttle(() => {
@@ -87,11 +89,11 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
   useEffect(() => {
     if (typeof activeIndex === 'number' && itemRefs.current[activeIndex]) {
       setTimeout(() => {
-          itemRefs.current[activeIndex]?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }, 500);
+        itemRefs.current[activeIndex]?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }, 500);
     }
   }, [activeIndex]);
 
@@ -109,7 +111,7 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
               <div ref={(el) => (itemRefs.current[index] = el)}>
                 <TimelineItemContent {...item} />
               </div>
-            )
+            ),
           }))}
         />
       </Container>

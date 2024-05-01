@@ -377,21 +377,21 @@
         "subTitle": "Yun Mei Pixel Art Hand Dig Parameter"
       },
       {
-        "imageUrl":"survivalProgress/p38.webp",
-        "title":"2024/02/13",
-        "subTitle":"2D Million Piglin Barter"
+        "imageUrl": "survivalProgress/p38.webp",
+        "title": "2024/02/13",
+        "subTitle": "2D Million Piglin Barter"
       },
       {
-        "imageUrl":"survivalProgress/p39.webp",
-        "title":"2024/02/24",
-        "subTitle":"Member Worship Hall"
+        "imageUrl": "survivalProgress/p39.webp",
+        "title": "2024/02/24",
+        "subTitle": "Member Worship Hall"
       },
       {
-        "imageUrl":"survivalProgress/p40.webp",
-        "title":"2024/03/22",
-        "subTitle":"Attack on Titan-The Wall of Maria"
+        "imageUrl": "survivalProgress/p40.webp",
+        "title": "2024/03/22",
+        "subTitle": "Attack on Titan-The Wall of Maria"
       }
-         ]
+    ]
   },
   "opensource": {
     "title": "Open Source",
@@ -639,9 +639,7 @@
           "architectureCollection/spawn_1.png",
           "architectureCollection/spawn_2.png"
         ],
-        "creator": [
-          "_R6,XiaoYu2021"
-        ],
+        "creator": ["_R6,XiaoYu2021"],
         "credits": [
           {
             "name": "Etymology_Ghost",
@@ -655,9 +653,7 @@
         "imageUrl": "architectureCollection/ice_boat.webp",
         "date": "2024-03-03",
         "downloadUrl": "",
-        "creator": [
-          "XiaoYu2021,bow_lsaa"
-        ],
+        "creator": ["XiaoYu2021,bow_lsaa"],
         "galleryImagesUrl": [
           "architectureCollection/ice_boat.png",
           "architectureCollection/ice_boat_1.png",
@@ -687,12 +683,8 @@
             "thumbnailUrl": "redstoneCollection/360ftl_star_bow_video_page.webp"
           }
         ],
-        "galleryImagesUrl": [
-          "redstoneCollection/360ftl_star_bow.png"
-        ],
-        "creator": [
-          "FlandreLed"
-        ],
+        "galleryImagesUrl": ["redstoneCollection/360ftl_star_bow.png"],
+        "creator": ["FlandreLed"],
         "credits": [
           {
             "name": "672FTL - PearlCannon - _Emir",
@@ -706,12 +698,8 @@
         "imageUrl": "redstoneCollection/432K_sand_duper.webp",
         "date": "2024-03-03",
         "downloadUrl": "https://discord.com/channels/933290709589577728/1001472836625518612/1213776551548559421",
-        "creator": [
-          "Petris 5256"
-        ],
-        "galleryImagesUrl": [
-          "redstoneCollection/432K_sand_duper.png"
-        ],
+        "creator": ["Petris 5256"],
+        "galleryImagesUrl": ["redstoneCollection/432K_sand_duper.png"],
         "credits": [
           {
             "name": "432K/h sand duper axialeaa"

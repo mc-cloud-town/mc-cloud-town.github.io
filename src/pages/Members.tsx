@@ -96,12 +96,15 @@ const MembersPage = () => {
         )}
         {loading && (
           <StatusContainer>
-            <Spin size="large" />
+            <Spin size='large' />
             <span>{t('loading')}</span>
           </StatusContainer>
         )}
         {!loading && !error && (
-          <MemberCase memberGroups={filteredMembers} searchMode={!!searchTerm} />
+          <MemberCase
+            memberGroups={filteredMembers}
+            searchMode={!!searchTerm}
+          />
         )}
       </Container>
     </>

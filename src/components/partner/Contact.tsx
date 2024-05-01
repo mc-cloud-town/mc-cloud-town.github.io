@@ -1,5 +1,9 @@
 import styled, { css } from 'styled-components';
-import { MailOutlined, YoutubeOutlined, DiscordOutlined } from '@ant-design/icons';
+import {
+  MailOutlined,
+  YoutubeOutlined,
+  DiscordOutlined,
+} from '@ant-design/icons';
 import { Button, Flex } from 'antd';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
@@ -21,7 +25,8 @@ const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
   margin-bottom: 20px;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -32,7 +37,8 @@ const ContactInfo = styled.h3<{ $fadeIn: boolean }>`
   font-size: 24px;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -42,7 +48,8 @@ const StyledButton = styled(Button)<{ $fadeIn: boolean }>`
   opacity: 0;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -54,7 +61,8 @@ const ImageContainer = styled.div<{ $fadeIn: boolean }>`
   opacity: 0;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -68,12 +76,7 @@ const BrandImageWrapper = styled.div`
   }
 `;
 
-const Contact = (
-  {
-    contactInfo
-  }: {
-    contactInfo: IImageContent;
-  }) => {
+const Contact = ({ contactInfo }: { contactInfo: IImageContent }) => {
   const { animate, ref } = useAnimateOnScroll();
 
   return (
@@ -83,32 +86,34 @@ const Contact = (
         <BrandImageWrapper>
           <LazyLoadImage
             src={getImageUrl(contactInfo.imageUrl)}
-            alt="Brand Icon"
-            effect="blur"
+            alt='Brand Icon'
+            effect='blur'
           />
         </BrandImageWrapper>
       </ImageContainer>
       <ContactInfo $fadeIn={animate}>{contactInfo.subTitle}</ContactInfo>
-      <Flex justify="center" wrap="wrap" gap={10}>
-        {
-          contactInfo.buttons?.map((button, index) => {
-            return (
-              <StyledButton
-                $fadeIn={animate}
-                key={index}
-                type="primary"
-                size="large"
-                href={button.link}
-                target={button.link?.startsWith('mailto') ? '' : '_blank'}
-              >
-                {button.link?.startsWith('mailto') && <MailOutlined />}
-                {button.link?.startsWith('https://www.youtube.com') && <YoutubeOutlined />}
-                {button.link?.startsWith('https://discordapp.com/') && <DiscordOutlined />}
-                {button.text}
-              </StyledButton>
-            );
-          })
-        }
+      <Flex justify='center' wrap='wrap' gap={10}>
+        {contactInfo.buttons?.map((button, index) => {
+          return (
+            <StyledButton
+              $fadeIn={animate}
+              key={index}
+              type='primary'
+              size='large'
+              href={button.link}
+              target={button.link?.startsWith('mailto') ? '' : '_blank'}
+            >
+              {button.link?.startsWith('mailto') && <MailOutlined />}
+              {button.link?.startsWith('https://www.youtube.com') && (
+                <YoutubeOutlined />
+              )}
+              {button.link?.startsWith('https://discordapp.com/') && (
+                <DiscordOutlined />
+              )}
+              {button.text}
+            </StyledButton>
+          );
+        })}
       </Flex>
     </ContactSection>
   );

@@ -97,17 +97,17 @@ const Footer: React.FC = () => {
   return (
     <footer>
       <TopFooterContainer>
-        <TopRow align="middle">
+        <TopRow align='middle'>
           <Col>
-            <Link to="/" onClick={() => setTimeout(scrollToTop, 500)}>
-              <Row align="middle">
+            <Link to='/' onClick={() => setTimeout(scrollToTop, 500)}>
+              <Row align='middle'>
                 <Col>
                   <LogoImageWrapper>
                     <LazyLoadImage
                       src={logo}
-                      alt="CTEC"
-                      effect="blur"
-                      wrapperClassName="lazy-load-image-wrapper"
+                      alt='CTEC'
+                      effect='blur'
+                      wrapperClassName='lazy-load-image-wrapper'
                     />
                   </LogoImageWrapper>
                 </Col>
@@ -115,9 +115,9 @@ const Footer: React.FC = () => {
                   <BrandImageWrapper>
                     <LazyLoadImage
                       src={CTEC_banner}
-                      alt="CTEC"
-                      effect="blur"
-                      wrapperClassName="lazy-load-image-wrapper"
+                      alt='CTEC'
+                      effect='blur'
+                      wrapperClassName='lazy-load-image-wrapper'
                     />
                   </BrandImageWrapper>
                 </Col>
@@ -125,22 +125,22 @@ const Footer: React.FC = () => {
             </Link>
           </Col>
           <Col>
-            <Space size="large">
+            <Space size='large'>
               <a
                 href={serverLink.discord}
-                target="_blank"
-                rel="noopener noreferrer"
+                target='_blank'
+                rel='noopener noreferrer'
               >
                 <DiscordOutlined style={{ fontSize: '50px' }} />
               </a>
               <a
                 href={serverLink.youtube}
-                target="_blank"
-                rel="noopener noreferrer"
+                target='_blank'
+                rel='noopener noreferrer'
               >
                 <YoutubeOutlined style={{ fontSize: '50px' }} />
               </a>
-              <a href={serverLink.x} target="_blank" rel="noopener noreferrer">
+              <a href={serverLink.x} target='_blank' rel='noopener noreferrer'>
                 <XOutlined style={{ fontSize: '50px' }} />
               </a>
             </Space>
@@ -148,7 +148,7 @@ const Footer: React.FC = () => {
         </TopRow>
       </TopFooterContainer>
       <BottomFooterContainer>
-        <BottomRow align="middle">
+        <BottomRow align='middle'>
           <CopyRightCol>
             <Copyright>
               © {new Date().getFullYear()} Cloud Town Exquisite Craft. All
@@ -156,7 +156,11 @@ const Footer: React.FC = () => {
             </Copyright>
           </CopyRightCol>
           <Col>
-            <Donate href={t('footer.donate.link')} target="_blank" rel="noopener noreferrer">
+            <Donate
+              href={t('footer.donate.link')}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
               {t('footer.donate.description')}
             </Donate>
           </Col>

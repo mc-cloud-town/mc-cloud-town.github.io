@@ -25,7 +25,8 @@ const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   opacity: 0;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -39,7 +40,8 @@ const SectionSubtitle = styled.h3<{ $fadeIn: boolean }>`
   border-radius: 10px;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -55,11 +57,11 @@ const CarouselContainer = styled.div`
 const CarouselWrapper = styled.div`
   flex: 1;
   max-width: 30%;
-  
+
   @media (max-width: 1024px) {
     margin-bottom: 40px;
   }
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -77,7 +79,8 @@ const StyledCarousel = styled(Carousel)<{ $fadeIn: boolean }>`
   opacity: 0;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -118,12 +121,11 @@ interface CarouselSectionProps {
  * @param imageContentsSections - Array of image content arrays
  * @constructor CarouselSection - React Function Component
  */
-const CarouselSection: React.FC<CarouselSectionProps> = (
-  {
-    title,
-    subtitles: sectionSubtitle = [],
-    imageContentsSections
-  }: CarouselSectionProps) => {
+const CarouselSection: React.FC<CarouselSectionProps> = ({
+  title,
+  subtitles: sectionSubtitle = [],
+  imageContentsSections,
+}: CarouselSectionProps) => {
   const { ref, animate } = useAnimateOnScroll();
 
   return (
@@ -142,13 +144,15 @@ const CarouselSection: React.FC<CarouselSectionProps> = (
                 <ImageWrapper key={idx} onClick={imageContent.clickEvent}>
                   <LazyLoadImage
                     alt={imageContent.title}
-                    effect="blur"
+                    effect='blur'
                     src={getImageUrl(imageContent.imageUrl)}
                   />
                 </ImageWrapper>
               ))}
             </StyledCarousel>
-            <SectionSubtitle $fadeIn={animate}>{sectionSubtitle[index]}</SectionSubtitle>
+            <SectionSubtitle $fadeIn={animate}>
+              {sectionSubtitle[index]}
+            </SectionSubtitle>
           </CarouselWrapper>
         ))}
       </CarouselContainer>

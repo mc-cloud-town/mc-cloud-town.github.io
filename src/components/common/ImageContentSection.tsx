@@ -63,7 +63,8 @@ const Container = styled.div<{ $fadeIn: boolean }>`
   }
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -92,7 +93,6 @@ const ImageWrapper = styled.div`
     }
   }
 `;
-
 
 const TextButtonContainer = styled.div`
   max-width: 600px;
@@ -129,7 +129,7 @@ const FeatureItem = styled.li<{ $darkMode: boolean }>`
     position: absolute;
     left: 0;
     color: #6f9b9c;
-    
+
     ${(props) =>
       props.$darkMode &&
       `
@@ -144,7 +144,7 @@ const StyledButton = styled(Button)<{ $darkMode: boolean }>`
     font-weight: bold;
     text-decoration: underline;
   }
-  
+
   ${(props) =>
     props.$darkMode &&
     `
@@ -165,56 +165,71 @@ interface ImageContentSectionProps {
  * @param darkMode - Dark mode
  * @constructor ImageContentSection - React Function Component
  */
-const ImageContentSection: React.FC<ImageContentSectionProps> = (
-  {
-    imageContent,
-    imageOnRight = false,
-    darkMode = false
-  }: ImageContentSectionProps) => {
+const ImageContentSection: React.FC<ImageContentSectionProps> = ({
+  imageContent,
+  imageOnRight = false,
+  darkMode = false,
+}: ImageContentSectionProps) => {
   const { animate, ref } = useAnimateOnScroll();
 
   return (
     <SectionContainer ref={ref} $dark={darkMode} $right={imageOnRight}>
       <Container $fadeIn={animate}>
         <ImageWrapper>
-          <LazyLoadImage src={getImageUrl(imageContent.imageUrl)} alt={imageContent.title} effect="blur" />
+          <LazyLoadImage
+            src={getImageUrl(imageContent.imageUrl)}
+            alt={imageContent.title}
+            effect='blur'
+          />
         </ImageWrapper>
       </Container>
       <Container $fadeIn={animate}>
         <TextButtonContainer>
           <Title>{imageContent.title}</Title>
-          {imageContent.subTitle && <SubTitle>{imageContent.subTitle}</SubTitle>}
-          {imageContent.paragraph && <Paragraph>{imageContent.paragraph}</Paragraph>}
+          {imageContent.subTitle && (
+            <SubTitle>{imageContent.subTitle}</SubTitle>
+          )}
+          {imageContent.paragraph && (
+            <Paragraph>{imageContent.paragraph}</Paragraph>
+          )}
           <FeatureList>
-            {imageContent.features && imageContent.features.map((feature, index) => (
-              <FeatureItem key={index} $darkMode={darkMode}>{feature}</FeatureItem>
-            ))}
+            {imageContent.features &&
+              imageContent.features.map((feature, index) => (
+                <FeatureItem key={index} $darkMode={darkMode}>
+                  {feature}
+                </FeatureItem>
+              ))}
           </FeatureList>
-          <Flex wrap="wrap" gap="small">
-            {imageContent.buttons && imageContent.buttons.map((button, index) => (
-              button.link ? (
-                <Link key={index} to={button.link}>
-                  <Button
+          <Flex wrap='wrap' gap='small'>
+            {imageContent.buttons &&
+              imageContent.buttons.map((button, index) =>
+                button.link ? (
+                  <Link key={index} to={button.link}>
+                    <Button
+                      type={button.type || (darkMode ? 'default' : 'primary')}
+                      ghost={darkMode}
+                    >
+                      {button.text}
+                    </Button>
+                  </Link>
+                ) : (
+                  <StyledButton
+                    key={index}
                     type={button.type || (darkMode ? 'default' : 'primary')}
-                    ghost={darkMode}
+                    ghost={
+                      button.type !== 'link' &&
+                      button.type !== 'text' &&
+                      darkMode
+                    }
+                    href={button.href}
+                    target={button.href ? '_blank' : ''}
+                    onClick={button.action}
+                    $darkMode={darkMode}
                   >
                     {button.text}
-                  </Button>
-                </Link>
-              ) : (
-                <StyledButton
-                  key={index}
-                  type={button.type || (darkMode ? 'default' : 'primary')}
-                  ghost={(button.type !== 'link' && button.type !== 'text') && darkMode}
-                  href={button.href}
-                  target={button.href ? '_blank' : ''}
-                  onClick={button.action}
-                  $darkMode={darkMode}
-                >
-                  {button.text}
-                </StyledButton>
-              )
-            ))}
+                  </StyledButton>
+                ),
+              )}
           </Flex>
         </TextButtonContainer>
       </Container>

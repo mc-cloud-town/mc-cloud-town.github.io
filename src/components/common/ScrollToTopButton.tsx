@@ -21,13 +21,15 @@ const StyledButton = styled.button<{ $show: boolean }>`
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
-  
+  transition:
+    opacity 0.3s,
+    visibility 0.3s;
+
   @media (max-width: 300px) {
     right: 40px;
     bottom: 20px;
   }
-  
+
   ${(props) =>
     props.$show &&
     `
@@ -58,7 +60,11 @@ const ScrollToTopButton = () => {
   };
 
   return (
-    <StyledButton onClick={scrollToTop} $show={showButton} aria-label="Scroll to top">
+    <StyledButton
+      onClick={scrollToTop}
+      $show={showButton}
+      aria-label='Scroll to top'
+    >
       <UpCircleFilled style={{ fontSize: '40px' }} />
     </StyledButton>
   );
