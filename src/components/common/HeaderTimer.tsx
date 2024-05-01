@@ -27,26 +27,44 @@ const HeaderTimer: React.FC = () => {
   }, [serverStartTime]);
 
   const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const hours = Math.floor(
+    (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+  );
   const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
 
   return (
-    <Row gutter={16} align="middle" justify='center'>
+    <Row gutter={16} align='middle' justify='center'>
       <Col>
         <div>{t('home.serverRunning')}</div>
       </Col>
       <Col>
-        <Statistic value={days} suffix={t('time.days')} valueStyle={{ color: 'white' }} />
+        <Statistic
+          value={days}
+          suffix={t('time.days')}
+          valueStyle={{ color: 'white' }}
+        />
       </Col>
       <Col>
-        <Statistic value={hours} suffix={t('time.hours')} valueStyle={{ color: 'white' }} />
+        <Statistic
+          value={hours}
+          suffix={t('time.hours')}
+          valueStyle={{ color: 'white' }}
+        />
       </Col>
       <Col>
-        <Statistic value={minutes} suffix={t('time.minutes')} valueStyle={{ color: 'white' }} />
+        <Statistic
+          value={minutes}
+          suffix={t('time.minutes')}
+          valueStyle={{ color: 'white' }}
+        />
       </Col>
       <Col>
-        <Statistic value={seconds} suffix={t('time.seconds')} valueStyle={{ color: 'white' }} />
+        <Statistic
+          value={seconds}
+          suffix={t('time.seconds')}
+          valueStyle={{ color: 'white' }}
+        />
       </Col>
     </Row>
   );

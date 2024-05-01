@@ -10,12 +10,9 @@ import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 export default defineConfig({
   plugins: [
     react({
-      plugins: [[
-        '@swc/plugin-styled-components', {
-          'displayName': false,
-          'ssr': true,
-        }
-      ]],
+      plugins: [
+        ['@swc/plugin-styled-components', { displayName: false, ssr: true }],
+      ],
     }),
     viteCompression(),
     ViteImageOptimizer({

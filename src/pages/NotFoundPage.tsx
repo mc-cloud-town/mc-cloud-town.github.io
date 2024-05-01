@@ -13,21 +13,18 @@ const NotFoundPage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('notFound.imageUrl'))} />}
-        headerTextArray={[
-          t('notFound.title')
-        ]}
+        backgroundComponent={
+          <HeaderImage imageUrl={getImageUrl(t('notFound.imageUrl'))} />
+        }
+        headerTextArray={[t('notFound.title')]}
         subHeaderContentArray={[
           t('notFound.description'),
-          <Link to="/home">
-            <Button
-              color="primary"
-              size="large"
-              ghost={true}
-            >
+          // eslint-disable-next-line react/jsx-key
+          <Link to='/home'>
+            <Button color='primary' size='large' ghost={true}>
               {t('notFound.backButton')}
             </Button>
-          </Link>
+          </Link>,
         ]}
       />
     </>

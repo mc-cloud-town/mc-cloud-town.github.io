@@ -20,33 +20,43 @@ const HomePage = () => {
     const sliceIndex = Math.max(data.length - 3, 0);
     return data.slice(sliceIndex).map((item, index) => ({
       ...item,
-      clickEvent: () => navigate(`/${route}?index=${sliceIndex + index}`)
+      clickEvent: () => navigate(`/${route}?index=${sliceIndex + index}`),
     }));
   };
 
   const imageContentsSections = [
     createSections('survivalProgress.data', 'survivalProgress'),
-    createSections('architectureCollection.collections', 'architectureCollection'),
+    createSections(
+      'architectureCollection.collections',
+      'architectureCollection',
+    ),
     createSections('redstoneCollection.collections', 'redstoneCollection'),
   ];
 
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderVideo {...t('home.backgroundVideo', { returnObjects: true })} />}
+        backgroundComponent={
+          <HeaderVideo
+            {...t('home.backgroundVideo', { returnObjects: true })}
+          />
+        }
         headerTextArray={[
           'Cloud Town Exquisite Craft',
           '雲鎮工藝 | CTEC',
-          '云镇工艺 | CTEC'
+          '云镇工艺 | CTEC',
         ]}
         subHeaderContentArray={[
+          // eslint-disable-next-line react/jsx-key
           <span>{t('home.description')}</span>,
+          // eslint-disable-next-line react/jsx-key
           <HeaderTimer />,
-          <Link to="/join">
-            <Button color="primary" size="large" ghost={true}>
+          // eslint-disable-next-line react/jsx-key
+          <Link to='/join'>
+            <Button color='primary' size='large' ghost={true}>
               {t('home.joinButton')}
             </Button>
-          </Link>
+          </Link>,
         ]}
         useTyped={true}
       />
@@ -60,7 +70,9 @@ const HomePage = () => {
       />
       <CarouselSection
         title={t('home.carousel.title')}
-        subtitles={t('home.carousel.subtitles', { returnObjects: true }) as string[]}
+        subtitles={
+          t('home.carousel.subtitles', { returnObjects: true }) as string[]
+        }
         imageContentsSections={imageContentsSections}
       />
     </>

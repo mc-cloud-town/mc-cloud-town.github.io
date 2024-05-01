@@ -28,9 +28,9 @@ const HeaderImage = ({ imageUrl }: { imageUrl: string }) => (
   <StyledLazyLoadImageWrapper>
     <LazyLoadImage
       src={imageUrl}
-      alt="background"
-      effect="blur"
-      wrapperClassName="lazy-load-image-wrapper"
+      alt='background'
+      effect='blur'
+      wrapperClassName='lazy-load-image-wrapper'
     />
   </StyledLazyLoadImageWrapper>
 );

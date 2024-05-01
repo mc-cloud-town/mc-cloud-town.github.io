@@ -51,7 +51,8 @@ const StyledCard = styled(Card)<{
   }
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -64,7 +65,8 @@ const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   font-weight: bolder;
 
   ${(props) =>
-    props.$fadeIn && css`
+    props.$fadeIn &&
+    css`
       animation: ${fadeIn} 0.8s ease-out forwards;
     `};
 `;
@@ -140,12 +142,11 @@ interface CardsSectionProps {
  * @param imageContentSections - Array of image content sections
  * @constructor
  */
-const CardsSection: React.FC<CardsSectionProps> = (
-  {
-    title,
-    darkMode = false,
-    imageContentSections
-  }: CardsSectionProps) => {
+const CardsSection: React.FC<CardsSectionProps> = ({
+  title,
+  darkMode = false,
+  imageContentSections,
+}: CardsSectionProps) => {
   const { animate, ref } = useAnimateOnScroll();
 
   return (
@@ -159,7 +160,11 @@ const CardsSection: React.FC<CardsSectionProps> = (
             hoverable
             cover={
               <ImageWrapper>
-                <LazyLoadImage src={getImageUrl(section.imageUrl)} alt={section.title} effect="blur" />
+                <LazyLoadImage
+                  src={getImageUrl(section.imageUrl)}
+                  alt={section.title}
+                  effect='blur'
+                />
               </ImageWrapper>
             }
             onClick={section.clickEvent}
@@ -172,31 +177,32 @@ const CardsSection: React.FC<CardsSectionProps> = (
                 <FeatureItem key={idx}>{feature}</FeatureItem>
               ))}
             </FeatureList>
-            <Flex wrap="wrap" gap="small" align="center">
-              {section.buttons && section.buttons.map((button, idx) => (
-                button.link ? (
-                  <Link key={idx} to={button.link}>
-                    <Button
+            <Flex wrap='wrap' gap='small' align='center'>
+              {section.buttons &&
+                section.buttons.map((button, idx) =>
+                  button.link ? (
+                    <Link key={idx} to={button.link}>
+                      <Button type={button.type || 'primary'} ghost={darkMode}>
+                        {button.text}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <StyledButton
+                      key={idx}
                       type={button.type || 'primary'}
-                      ghost={darkMode}
+                      ghost={
+                        button.type !== 'link' &&
+                        button.type !== 'text' &&
+                        darkMode
+                      }
+                      href={button.href}
+                      target={button.href ? '_blank' : ''}
+                      onClick={button.action}
                     >
                       {button.text}
-                    </Button>
-                  </Link>
-                ) : (
-                  <StyledButton
-                    key={idx}
-                    type={button.type || 'primary'}
-                    ghost={(button.type !== 'link' && button.type !== 'text') && darkMode}
-                    href={button.href}
-                    target={button.href ? '_blank' : ''}
-                    onClick={button.action}
-                  >
-                    {button.text}
-                  </StyledButton>
-                )
-              ))
-              }
+                    </StyledButton>
+                  ),
+                )}
             </Flex>
           </StyledCard>
         ))}

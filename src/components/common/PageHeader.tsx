@@ -98,22 +98,25 @@ interface PageHeaderProps {
  * @param useTyped - Flag to enable/disable typing animation for displaying header text.
  * @constructor PageHeader - React Function Component
  */
-const PageHeader: React.FC<PageHeaderProps> = (
-  {
-    backgroundComponent,
-    maskColor,
-    headerTextArray,
-    subHeaderContentArray,
-    useTyped = false
-  }: PageHeaderProps) => {
+const PageHeader: React.FC<PageHeaderProps> = ({
+  backgroundComponent,
+  maskColor,
+  headerTextArray,
+  subHeaderContentArray,
+  useTyped = false,
+}: PageHeaderProps) => {
   const { y } = useScroll();
   const innerHeight = window.innerHeight;
   const maskAOpacity = 0.6 - (y / innerHeight) * 1.2;
-  const maskBOpacity = y < innerHeight / 2 ? 0 : (y - innerHeight / 2) / (innerHeight / 3);
+  const maskBOpacity =
+    y < innerHeight / 2 ? 0 : (y - innerHeight / 2) / (innerHeight / 3);
   return (
     <BackgroundHeader>
       <MaskA style={{ opacity: maskAOpacity }} />
-      <MaskB style={{ opacity: maskBOpacity }} $masColor={maskColor ?? '#ecf0f1'} />
+      <MaskB
+        style={{ opacity: maskBOpacity }}
+        $masColor={maskColor ?? '#ecf0f1'}
+      />
       <AnimatedHeaderTextContainer>
         <StyledH1>
           {useTyped ? (
@@ -123,26 +126,25 @@ const PageHeader: React.FC<PageHeaderProps> = (
               backSpeed={50}
               loop={true}
               showCursor={true}
-              cursorChar="|"
+              cursorChar='|'
               backDelay={1000}
             />
           ) : (
             <>
-              {headerTextArray.map((text, index) =>
+              {headerTextArray.map((text, index) => (
                 <span key={index}>{text}</span>
-              )}
+              ))}
             </>
           )}
         </StyledH1>
-        {subHeaderContentArray && subHeaderContentArray.map((text, index) =>
-          <AnimatedSubHeaderTextContainer key={index}>
-            {text}
-          </AnimatedSubHeaderTextContainer>
-        )}
+        {subHeaderContentArray &&
+          subHeaderContentArray.map((text, index) => (
+            <AnimatedSubHeaderTextContainer key={index}>
+              {text}
+            </AnimatedSubHeaderTextContainer>
+          ))}
       </AnimatedHeaderTextContainer>
-      <BackgroundContainer>
-        {backgroundComponent}
-      </BackgroundContainer>
+      <BackgroundContainer>{backgroundComponent}</BackgroundContainer>
     </BackgroundHeader>
   );
 };

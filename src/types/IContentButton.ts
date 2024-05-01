@@ -8,9 +8,9 @@
  * @interface IContentButton - Interface for the contentButton object
  */
 export interface IContentButton {
-  text: string,
-  link?: string,
-  href?: string,
-  action?: () => void,
-  type?: 'primary' | 'default' | 'link' | 'text' | 'dashed',
+  text: string;
+  link?: string;
+  href?: string;
+  action?: () => void;
+  type?: 'primary' | 'default' | 'link' | 'text' | 'dashed';
 }

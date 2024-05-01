@@ -12,23 +12,26 @@ const JoinServer = () => {
 
   return (
     <>
-      <a target=""></a>
+      <a target=''></a>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('join.imageUrl'))} />}
+        backgroundComponent={
+          <HeaderImage imageUrl={getImageUrl(t('join.imageUrl'))} />
+        }
         maskColor={'#6f9b9c'}
         headerTextArray={[t('join.description')]}
+        // eslint-disable-next-line react/jsx-key
         subHeaderContentArray={[<HeaderTimer />]}
       />
       <ImageContentSection
-        imageContent={t('join.redstone', {returnObjects: true})}
+        imageContent={t('join.redstone', { returnObjects: true })}
         darkMode={true}
       ></ImageContentSection>
       <ImageContentSection
-        imageContent={t('join.build', {returnObjects: true})}
+        imageContent={t('join.build', { returnObjects: true })}
         imageOnRight={true}
       ></ImageContentSection>
       <ImageContentSection
-        imageContent={t('join.logistics', {returnObjects: true})}
+        imageContent={t('join.logistics', { returnObjects: true })}
         darkMode={true}
       ></ImageContentSection>
     </>

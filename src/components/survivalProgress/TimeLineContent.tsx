@@ -13,10 +13,10 @@ const ImageWrapper = styled.div`
   border-radius: 10px;
   background-color: #ccc;
   position: relative;
-  overflow: hidden; 
+  overflow: hidden;
 
   &:before {
-    content: "";
+    content: '';
     display: block;
     padding-top: 56.25%;
   }
@@ -24,7 +24,7 @@ const ImageWrapper = styled.div`
 
 const Image = styled.img`
   width: 100%;
-  height: 100%; 
+  height: 100%;
   object-fit: cover;
   border-radius: 10px;
   position: absolute;
@@ -35,7 +35,12 @@ const Image = styled.img`
 const TimelineItemContainer = styled.div<{ $animate: boolean }>`
   width: 95%;
   visibility: ${({ $animate }) => ($animate ? 'visible' : 'hidden')};
-  animation: ${({ $animate }) => ($animate ? css`${fadeIn} 0.8s forwards` : 'none')};
+  animation: ${({ $animate }) =>
+    $animate
+      ? css`
+          ${fadeIn} 0.8s forwards
+        `
+      : 'none'};
   color: #fff;
 `;
 
@@ -54,18 +59,17 @@ const StyledParagraph = styled.p`
   color: grey;
 `;
 
-const TimelineItemContent = (
-  {
-    imageUrl,
-    title,
-    subTitle,
-    paragraph
-  }: {
-    imageUrl: string;
-    title: string;
-    subTitle?: string;
-    paragraph?: string;
-  }) => {
+const TimelineItemContent = ({
+  imageUrl,
+  title,
+  subTitle,
+  paragraph,
+}: {
+  imageUrl: string;
+  title: string;
+  subTitle?: string;
+  paragraph?: string;
+}) => {
   const { animate, ref } = useAnimateOnScroll();
 
   return (

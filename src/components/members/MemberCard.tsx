@@ -9,7 +9,7 @@ import { fadeIn } from '@/styles/animation.ts';
 const FullBodyImage = styled(LazyLoadImage)`
   width: 100px;
   height: auto;
-  
+
   @media (max-width: 400px) {
     display: none;
   }
@@ -62,18 +62,18 @@ const MemberCard = ({
 
   return (
     <StyledCard ref={ref} $fadeIn={animate || searchMode}>
-      <Row gutter={[16, 16]} align="middle">
+      <Row gutter={[16, 16]} align='middle'>
         <Col span={11}>
           <ImageWrapper>
             <FullBodyImage
               src={`${fullBodyUrl}${member.uuid}/100.png`}
               alt={member.name + ' full body'}
-              effect="blur"
+              effect='blur'
             />
             <HeadImage
               src={`${headUrl}${member.uuid}/100.png`}
               alt={member.name + ' head'}
-              effect="blur"
+              effect='blur'
             />
           </ImageWrapper>
         </Col>

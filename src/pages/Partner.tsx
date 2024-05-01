@@ -29,7 +29,7 @@ const Container = styled.div`
 
 const PartnerBlock = styled.div`
   margin-bottom: 70px;
-  
+
   &:last-child {
     margin-bottom: 20px;
   }
@@ -48,22 +48,20 @@ const Partner = () => {
         headerTextArray={[t('partner.title')]}
       />
       <Container>
-        {
-          (['team', 'longtime', 'creator'] as PartnerType[]).map((type) => (
-            <PartnerBlock key={type}>
-              <PartnershipTitle>{t(`partner.${type}.title`)}</PartnershipTitle>
-              <Row justify="center">
-                {(t(`partner.${type}.partners`, { returnObjects: true }) as IPartnership[])
-                  .map((partnerData: IPartnership) => (
-                    <PartnerCard
-                      key={partnerData.Partner}
-                      {...partnerData}
-                    />
-                  ))}
-              </Row>
-            </PartnerBlock>
-          ))
-        }
+        {(['team', 'longtime', 'creator'] as PartnerType[]).map((type) => (
+          <PartnerBlock key={type}>
+            <PartnershipTitle>{t(`partner.${type}.title`)}</PartnershipTitle>
+            <Row justify='center'>
+              {(
+                t(`partner.${type}.partners`, {
+                  returnObjects: true,
+                }) as IPartnership[]
+              ).map((partnerData: IPartnership) => (
+                <PartnerCard key={partnerData.Partner} {...partnerData} />
+              ))}
+            </Row>
+          </PartnerBlock>
+        ))}
       </Container>
       <Contact contactInfo={t('partner.contact', { returnObjects: true })} />
     </>
