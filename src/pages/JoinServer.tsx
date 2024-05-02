@@ -12,7 +12,6 @@ const JoinServer = () => {
 
   return (
     <>
-      <a target=''></a>
       <PageHeader
         backgroundComponent={
           <HeaderImage imageUrl={getImageUrl(t('join.imageUrl'))} />
@@ -25,15 +24,15 @@ const JoinServer = () => {
       <ImageContentSection
         imageContent={t('join.redstone', { returnObjects: true })}
         darkMode={true}
-      ></ImageContentSection>
+      />
       <ImageContentSection
         imageContent={t('join.build', { returnObjects: true })}
         imageOnRight={true}
-      ></ImageContentSection>
+      />
       <ImageContentSection
         imageContent={t('join.logistics', { returnObjects: true })}
         darkMode={true}
-      ></ImageContentSection>
+      />
     </>
   );
 };
