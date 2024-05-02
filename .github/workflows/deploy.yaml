@@ -28,7 +28,7 @@ jobs:
           cache: yarn
 
       - name: Install
-        run: | 
+        run: |
           yarn install
           yarn add sharp --ignore-engines
 

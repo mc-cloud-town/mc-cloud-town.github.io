@@ -81,7 +81,7 @@
         },
         {
           "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "令人惊叹的设备",
+          "title": "長效穩定的服务器设备",
           "paragraph": "我们拥有优秀的服务器设备，能够支持大量的同时在线玩家开发与游玩。并在各国拥有低延迟连接代理服务器，为不同地区的玩家提供了极佳的游戏体验。设备拥有 i9-13900K, 128G RAM, 6TB SSD, UPS 不断电系统。并有专属工程师维护，保证服务器的稳定运行。",
           "buttons": [
             {
@@ -94,11 +94,7 @@
     },
     "carousel": {
       "title": "服务器内容",
-      "subtitles": [
-        "最新生存进度",
-        "最新红石作品",
-        "最新建筑作品"
-      ]
+      "subtitles": ["最新生存进度", "最新建筑作品", "最新红石作品"]
     }
   },
   "notFound": {
@@ -373,19 +369,19 @@
         "subTitle": "云妹手挖像素画"
       },
       {
-        "imageUrl":"survivalProgress/p38.webp",
-        "title":"2024/02/13",
-        "subTitle":"双维度百万猪灵交易"
+        "imageUrl": "survivalProgress/p38.webp",
+        "title": "2024/02/13",
+        "subTitle": "双维度百万猪灵交易"
       },
       {
-        "imageUrl":"survivalProgress/p39.webp",
-        "title":"2024/02/24",
-        "subTitle":"成员礼拜堂"
+        "imageUrl": "survivalProgress/p39.webp",
+        "title": "2024/02/24",
+        "subTitle": "成员礼拜堂"
       },
       {
-        "imageUrl":"survivalProgress/p40.webp",
-        "title":"2024/03/22",
-        "subTitle":"进撃の巨人-玛莉亚之墙"
+        "imageUrl": "survivalProgress/p40.webp",
+        "title": "2024/03/22",
+        "subTitle": "进撃の巨人-玛莉亚之墙"
       }
     ]
   },

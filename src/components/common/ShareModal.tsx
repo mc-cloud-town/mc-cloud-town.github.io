@@ -62,7 +62,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ url, title }) => {
       <Button icon={<ShareAltOutlined />} onClick={showModal}>
         {t('share')}
       </Button>
-      <Modal title={`${t('share')} ${title}`} open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={null}>
+      <Modal
+        title={`${t('share')} ${title}`}
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        footer={null}
+      >
         <StyledContainer justify={'center'} gap={10}>
           <FacebookShareButton url={url} hashtag={'#minecraft'}>
             <FacebookIcon size={40} round />

@@ -8,17 +8,17 @@ import translationZH_TW from './locales/zh_TW/translation.json';
 
 export const resources = {
   en: {
-    translation: translationEN
+    translation: translationEN,
   },
   zh_CN: {
-    translation: translationZH_CN
+    translation: translationZH_CN,
   },
   zh_TW: {
-    translation: translationZH_TW
+    translation: translationZH_TW,
   },
   zh: {
-    translation: translationZH_TW
-  }
+    translation: translationZH_TW,
+  },
 };
 
 const initI18n = () => {
@@ -38,7 +38,8 @@ const initI18n = () => {
       interpolation: {
         escapeValue: false,
       },
-    }).then();
+    })
+    .then();
 };
 
 export default initI18n;

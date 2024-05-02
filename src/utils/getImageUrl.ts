@@ -4,6 +4,6 @@
  */
 const getImageUrl = (snippet: string) => {
   return new URL(`/src/assets/${snippet}`, import.meta.url).href;
-}
+};
 
 export default getImageUrl;

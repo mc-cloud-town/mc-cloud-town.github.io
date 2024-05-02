@@ -60,7 +60,9 @@ const Thumbnail = styled.img<{ $isSelected: boolean }>`
   box-shadow: none;
   object-fit: cover;
 
-  ${({ $isSelected }) => $isSelected && `
+  ${({ $isSelected }) =>
+    $isSelected &&
+    `
     box-shadow: 0 0 5px 2px #6f9b9c;
   `}
   &:hover {
@@ -166,14 +168,13 @@ interface CollectionModalProps {
   pageType: 'architecture' | 'redstone';
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = (
-  {
-    isOpen,
-    item,
-    index,
-    onClose,
-    pageType
-  }) => {
+const CollectionModal: React.FC<CollectionModalProps> = ({
+  isOpen,
+  item,
+  index,
+  onClose,
+  pageType,
+}) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const carouselRef = useRef<CarouselRef>(null);
@@ -188,59 +189,80 @@ const CollectionModal: React.FC<CollectionModalProps> = (
     onClose();
   };
 
-  const carouselItems = [...(item.videosUrl ?? []).map((video, index) => (
-    <VideoWrapper key={`video-wrapper-${index}`}>
-      <VideoIframe
-        id="video"
-        key={`video-${index}`}
-        src={video.url}
-        allowFullScreen
-      />
-    </VideoWrapper>
-  )), ...(item.galleryImagesUrl ?? []).map((url, index) => (
-    <div key={`image-${index}`}>
-      <ImageWrapper>
-        <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index}`} />
-      </ImageWrapper>
-    </div>
-  ))];
+  const carouselItems = [
+    ...(item.videosUrl ?? []).map((video, index) => (
+      <VideoWrapper key={`video-wrapper-${index}`}>
+        <VideoIframe
+          id='video'
+          key={`video-${index}`}
+          src={video.url}
+          allowFullScreen
+        />
+      </VideoWrapper>
+    )),
+    ...(item.galleryImagesUrl ?? []).map((url, index) => (
+      <div key={`image-${index}`}>
+        <ImageWrapper>
+          <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index}`} />
+        </ImageWrapper>
+      </div>
+    )),
+  ];
 
-  const thumbnails = [...(item.videosUrl ?? []).map((video, index) => (
-    <ThumbnailWithOverlay key={`video-thumb-${index}`}>
+  const thumbnails = [
+    ...(item.videosUrl ?? []).map((video, index) => (
+      <ThumbnailWithOverlay key={`video-thumb-${index}`}>
+        <Thumbnail
+          src={getImageUrl(video.thumbnailUrl)}
+          alt={`Video thumbnail ${index}`}
+          onClick={() => handleThumbnailClick(index)}
+          $isSelected={selectedImageIndex === index}
+        />
+        <PlayIconOverlay onClick={() => handleThumbnailClick(index)}>
+          <PlayCircleOutlined />
+        </PlayIconOverlay>
+      </ThumbnailWithOverlay>
+    )),
+    ...(item.galleryImagesUrl ?? []).map((url, index) => (
       <Thumbnail
-        src={getImageUrl(video.thumbnailUrl)}
-        alt={`Video thumbnail ${index}`}
-        onClick={() => handleThumbnailClick(index)}
-        $isSelected={selectedImageIndex === index}
+        key={`image-thumb-${index}`}
+        src={getImageUrl(url)}
+        alt={`Image thumbnail ${index + (item.videosUrl?.length ?? 0)}`}
+        onClick={() =>
+          handleThumbnailClick(index + (item.videosUrl?.length ?? 0))
+        }
+        $isSelected={
+          selectedImageIndex === index + (item.videosUrl?.length ?? 0)
+        }
       />
-      <PlayIconOverlay onClick={() => handleThumbnailClick(index)}>
-        <PlayCircleOutlined />
-      </PlayIconOverlay>
-    </ThumbnailWithOverlay>
-  )), ...(item.galleryImagesUrl ?? []).map((url, index) => (
-    <Thumbnail
-      key={`image-thumb-${index}`}
-      src={getImageUrl(url)}
-      alt={`Image thumbnail ${index + (item.videosUrl?.length ?? 0)}`}
-      onClick={() => handleThumbnailClick(index + (item.videosUrl?.length ?? 0))}
-      $isSelected={selectedImageIndex === index + (item.videosUrl?.length ?? 0)}
-    />
-  ))];
+    )),
+  ];
 
   const ModalFooter = (
     <>
       {item.downloadUrl && (
-        <Button icon={<DownloadOutlined />} href={item.downloadUrl} target="_blank">
+        <Button
+          icon={<DownloadOutlined />}
+          href={item.downloadUrl}
+          target='_blank'
+        >
           {t('download')}
         </Button>
       )}
-      <ShareModal url={`${window.location.host}${import.meta.env.BASE_URL}${pageType}Collection?share=${index}`} title={item.title} />
+      <ShareModal
+        url={`${window.location.host}${import.meta.env.BASE_URL}${pageType}Collection?share=${index}`}
+        title={item.title}
+      />
     </>
   );
 
   return (
     <Modal
-      title={<StyledTitle>{item.title} - {item.date}</StyledTitle>}
+      title={
+        <StyledTitle>
+          {item.title} - {item.date}
+        </StyledTitle>
+      }
       open={isOpen}
       onOk={onClose}
       onCancel={closeModal}
@@ -248,19 +270,23 @@ const CollectionModal: React.FC<CollectionModalProps> = (
       footer={ModalFooter}
     >
       <Image.PreviewGroup>
-        <StyledCarousel ref={carouselRef} afterChange={setSelectedImageIndex} infinite={false}>
+        <StyledCarousel
+          ref={carouselRef}
+          afterChange={setSelectedImageIndex}
+          infinite={false}
+        >
           {carouselItems}
         </StyledCarousel>
       </Image.PreviewGroup>
 
-      <ThumbnailWrapper>
-        {thumbnails}
-      </ThumbnailWrapper>
+      <ThumbnailWrapper>{thumbnails}</ThumbnailWrapper>
 
       <TagContainer>
         {item.tags?.map((tag, index) => (
-          <Link to={`/redstoneCollection?tag=${tag}`} key={index}>
-            <StyledTag key={index} color={getTagColor(tag)}>{tag}</StyledTag>
+          <Link to={`/${pageType}Collection?tag=${tag}`} key={index}>
+            <StyledTag key={index} color={getTagColor(tag)}>
+              {tag}
+            </StyledTag>
           </Link>
         ))}
       </TagContainer>
@@ -270,19 +296,23 @@ const CollectionModal: React.FC<CollectionModalProps> = (
           <li key={index}>{creator}</li>
         ))}
       </ul>
-      {item.introductions && <StyledSubTitle>{t('introduction')}</StyledSubTitle>}
+      {item.introductions && (
+        <StyledSubTitle>{t('introduction')}</StyledSubTitle>
+      )}
       <div>
-        {item.introductions?.map((intro, index) => (
-          <p key={index}>{intro}</p>
-        ))}
+        {item.introductions?.map((intro, index) => <p key={index}>{intro}</p>)}
       </div>
       {item.credits && <StyledSubTitle>{t('credit')}</StyledSubTitle>}
       <ul>
         {item.credits?.map((credit, index) => (
           <li key={index}>
             {credit.url ? (
-              <a href={credit.url} target="_blank" rel="noreferrer">{credit.name}</a>
-            ) : credit.name}
+              <a href={credit.url} target='_blank' rel='noreferrer'>
+                {credit.name}
+              </a>
+            ) : (
+              credit.name
+            )}
           </li>
         ))}
       </ul>

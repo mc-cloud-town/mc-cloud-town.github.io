@@ -85,7 +85,7 @@
         },
         {
           "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "Astonishing Equipment",
+          "title": "Stable and Reliable Server Equipment",
           "paragraph": "We possess excellent server equipment, capable of supporting a large number of players online simultaneously for development and play. We have low-latency connection proxy servers in various countries, providing an excellent gaming experience for players from different regions. Our equipment features an i9-13900K, 128G RAM, 6TB Gen 4 SSD, and a UPS uninterrupted power supply system. We also have amateur engineers maintaining the servers, ensuring their stable operation.",
           "buttons": [
             {
@@ -100,8 +100,8 @@
       "title": "Server Content",
       "subtitles": [
         "Latest Survival Progress",
-        "Latest Redstone Creations",
-        "Latest Architectural Works"
+        "Latest Architectural Works",
+        "Latest Redstone Creations"
       ]
     }
   },
@@ -377,21 +377,21 @@
         "subTitle": "Yun Mei Pixel Art Hand Dig Parameter"
       },
       {
-        "imageUrl":"survivalProgress/p38.webp",
-        "title":"2024/02/13",
-        "subTitle":"2D Million Piglin Barter"
+        "imageUrl": "survivalProgress/p38.webp",
+        "title": "2024/02/13",
+        "subTitle": "2D Million Piglin Barter"
       },
       {
-        "imageUrl":"survivalProgress/p39.webp",
-        "title":"2024/02/24",
-        "subTitle":"Member Worship Hall"
+        "imageUrl": "survivalProgress/p39.webp",
+        "title": "2024/02/24",
+        "subTitle": "Member Worship Hall"
       },
       {
-        "imageUrl":"survivalProgress/p40.webp",
-        "title":"2024/03/22",
-        "subTitle":"Attack on Titan-The Wall of Maria"
+        "imageUrl": "survivalProgress/p40.webp",
+        "title": "2024/03/22",
+        "subTitle": "Attack on Titan-The Wall of Maria"
       }
-         ]
+    ]
   },
   "opensource": {
     "title": "Open Source",
@@ -632,16 +632,14 @@
     "collections": [
       {
         "title": "雲鎮工藝出生點-恐懼",
-        "imageUrl": "architectureCollection/spawn.png",
+        "imageUrl": "architectureCollection/spawn.webp",
         "date": "2024-03-17",
         "galleryImagesUrl": [
           "architectureCollection/spawn.png",
           "architectureCollection/spawn_1.png",
           "architectureCollection/spawn_2.png"
         ],
-        "creator": [
-          "_R6,XiaoYu2021"
-        ],
+        "creator": ["_R6,XiaoYu2021"],
         "credits": [
           {
             "name": "Etymology_Ghost",
@@ -652,12 +650,10 @@
       },
       {
         "title": "雲鎮工藝出生點-冰船賽道",
-        "imageUrl": "architectureCollection/ice_boat.png",
+        "imageUrl": "architectureCollection/ice_boat.webp",
         "date": "2024-03-03",
         "downloadUrl": "",
-        "creator": [
-          "XiaoYu2021,bow_lsaa"
-        ],
+        "creator": ["XiaoYu2021,bow_lsaa"],
         "galleryImagesUrl": [
           "architectureCollection/ice_boat.png",
           "architectureCollection/ice_boat_1.png",
@@ -684,15 +680,11 @@
         "videosUrl": [
           {
             "url": "https://www.youtube.com/embed/gFAjlbvHx0o?si=364H5gltOtsedO3x",
-            "thumbnailUrl": "redstoneCollection/360ftl_star_bow_video_page.png"
+            "thumbnailUrl": "redstoneCollection/360ftl_star_bow_video_page.webp"
           }
         ],
-        "galleryImagesUrl": [
-          "redstoneCollection/360ftl_star_bow.png"
-        ],
-        "creator": [
-          "FlandreLed"
-        ],
+        "galleryImagesUrl": ["redstoneCollection/360ftl_star_bow.png"],
+        "creator": ["FlandreLed"],
         "credits": [
           {
             "name": "672FTL - PearlCannon - _Emir",
@@ -703,15 +695,11 @@
       },
       {
         "title": "432K高压主世界TNT刷沙机",
-        "imageUrl": "redstoneCollection/432K_sand_duper.png",
+        "imageUrl": "redstoneCollection/432K_sand_duper.webp",
         "date": "2024-03-03",
         "downloadUrl": "https://discord.com/channels/933290709589577728/1001472836625518612/1213776551548559421",
-        "creator": [
-          "Petris 5256"
-        ],
-        "galleryImagesUrl": [
-          "redstoneCollection/432K_sand_duper.png"
-        ],
+        "creator": ["Petris 5256"],
+        "galleryImagesUrl": ["redstoneCollection/432K_sand_duper.png"],
         "credits": [
           {
             "name": "432K/h sand duper axialeaa"

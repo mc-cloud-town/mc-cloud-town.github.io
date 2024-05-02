@@ -10,9 +10,15 @@ import CollectionModal from '#/collection/CollectionModal.tsx';
 import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 
-const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redstone' }) => {
+const CollectionPageBase = ({
+  pageType,
+}: {
+  pageType: 'architecture' | 'redstone';
+}) => {
   const { t } = useTranslation();
-  const imageContents: ICollection[] = t(`${pageType}Collection.collections`, { returnObjects: true });
+  const imageContents: ICollection[] = t(`${pageType}Collection.collections`, {
+    returnObjects: true,
+  });
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,10 +39,12 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
         navigate(`/${pageType}Collection`);
       }
     }
-  }, [imageContents]);
+  }, [imageContents, navigate, pageType]);
 
-  const imageUrl = t(`${pageType}Collection.imageUrl`) == `${pageType}Collection.imageUrl` ?
-    imageContents[Math.floor(Math.random() * imageContents.length)].imageUrl : t(`${pageType}Collection.imageUrl`);
+  const imageUrl =
+    t(`${pageType}Collection.imageUrl`) == `${pageType}Collection.imageUrl`
+      ? imageContents[Math.floor(Math.random() * imageContents.length)].imageUrl
+      : t(`${pageType}Collection.imageUrl`);
 
   const handleCardClick = (item: ICollection, index: number) => {
     setSelectedItem({ item, index });
@@ -47,10 +55,12 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
     setIsModalOpen(false);
   };
 
-  const bindEventImageContents: ICollection[] = imageContents.map((item, index) => ({
-    ...item,
-    clickEvent: () => handleCardClick(item, index)
-  }));
+  const bindEventImageContents: ICollection[] = imageContents.map(
+    (item, index) => ({
+      ...item,
+      clickEvent: () => handleCardClick(item, index),
+    }),
+  );
 
   return (
     <>
@@ -59,8 +69,11 @@ const CollectionPageBase  = ({ pageType }: { pageType: 'architecture' | 'redston
         maskColor={'#6f9b9c'}
         headerTextArray={[t(`${pageType}Collection.title`)]}
       />
-      <CardsSection title={t(`${pageType}Collection.title`)} darkMode={true}
-                    imageContentSections={bindEventImageContents} />
+      <CardsSection
+        title={t(`${pageType}Collection.title`)}
+        darkMode={true}
+        imageContentSections={bindEventImageContents}
+      />
       {selectedItem && (
         <CollectionModal
           isOpen={isModalOpen}

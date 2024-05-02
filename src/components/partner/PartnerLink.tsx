@@ -33,7 +33,7 @@ const icons = {
 
 const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
   return (
-    <Flex wrap="wrap" gap="middle" justify="end">
+    <Flex wrap='wrap' gap='middle' justify='end'>
       {Object.entries(icons).map(([key, IconComponent]) => {
         const link = partnerLink ? partnerLink[key as IconKey] : undefined;
         if (!link) return null;
@@ -41,8 +41,8 @@ const PartnerLink = ({ partnerLink }: { partnerLink: ILink | undefined }) => {
           <a
             key={key}
             href={link}
-            target="_blank"
-            rel="noopener noreferrer"
+            target='_blank'
+            rel='noopener noreferrer'
             onClick={() => stopVideo()}
           >
             <IconComponent style={{ fontSize: '36px' }} />

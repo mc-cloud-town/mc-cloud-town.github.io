@@ -32,7 +32,7 @@ const StatusContainer = styled.div`
   i {
     background-color: #feffe6 !important;
   }
-  
+
   span {
     margin-left: 10px;
     color: #feffe6;
@@ -52,7 +52,9 @@ const OpenSourcePage = () => {
   return (
     <>
       <PageHeader
-        backgroundComponent={<HeaderImage imageUrl={getImageUrl(t('opensource.imageUrl'))} />}
+        backgroundComponent={
+          <HeaderImage imageUrl={getImageUrl(t('opensource.imageUrl'))} />
+        }
         maskColor={'#6f9b9c'}
         headerTextArray={[t('opensource.title')]}
         subHeaderContentArray={[t('opensource.description')]}
@@ -67,15 +69,19 @@ const OpenSourcePage = () => {
           )}
           {loading && (
             <StatusContainer>
-              <Spin size="large" spinning={true}/>
+              <Spin size='large' spinning={true} />
               <span>{t('loading')}</span>
             </StatusContainer>
           )}
-          {Array.isArray(data) && data.map((repo) => !repo.name.startsWith('.') && (
-            <RepoCardContainer key={repo.id}>
-              <RepoCard repository={repo} showIssues={false} />
-            </RepoCardContainer>
-          ))}
+          {Array.isArray(data) &&
+            data.map(
+              (repo) =>
+                !repo.name.startsWith('.') && (
+                  <RepoCardContainer key={repo.id}>
+                    <RepoCard repository={repo} showIssues={false} />
+                  </RepoCardContainer>
+                ),
+            )}
         </FlexContainer>
       </RepoBlockList>
     </>
