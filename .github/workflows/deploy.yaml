@@ -36,7 +36,7 @@ jobs:
         run: yarn build
         env:
           BASE_URL: /
-          HOSTNAME: https://mc-cloud-town.github.io/
+          HOSTNAME: https://mc-ctec.org/
 
       - name: deploy
         run: |
