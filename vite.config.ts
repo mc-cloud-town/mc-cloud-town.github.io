@@ -18,6 +18,7 @@ export default defineConfig({
     ViteImageOptimizer({
       cache: true,
       cacheLocation: 'cache-images',
+      test: /(?<!\$)\.(jpe?g|png|gif|tiff|webp|svg|avif)$/i,
     }),
   ],
   resolve: {
