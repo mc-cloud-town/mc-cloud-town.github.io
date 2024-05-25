@@ -32,18 +32,9 @@
       content="minecraft,minecraft 伺服器,紅石服,紅石,建築,生存,生電服,雲鎮,我的世界,技術"
     />
 
-    <meta
-      property="og:image"
-      content="https://www.mc-list.xyz/banner/1-1212.png"
-    />
-    <meta
-      property="og:image:secure_url"
-      content="https://www.mc-list.xyz/banner/1-1212.png"
-    />
-    <meta
-      property="twitter:image"
-      content="https://www.mc-list.xyz/banner/1-1212.png"
-    />
+    <meta property="og:image" content="/banner.jpg" />
+    <meta property="og:image:secure_url" content="/banner.jpg" />
+    <meta property="twitter:image" content="/banner.jpg" />
 
     <meta name="theme-color" content="#ffffff" />
     <meta property="og:url" content="https://mc-ctec.org/" />
@@ -79,5 +70,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EVWYMTQ7J6"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+
+      gtag('config', 'G-EVWYMTQ7J6');
+    </script>
   </body>
 </html>
