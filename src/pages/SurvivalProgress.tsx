@@ -19,9 +19,9 @@ const SurvivalProgress = () => {
         subHeaderContentArray={[t('survivalProgress.description')]}
       />
       <Timeline
-        items={
+        items={(
           t('survivalProgress.data', { returnObjects: true }) as IImageContent[]
-        }
+        ).reverse()}
         activeIndex={shareIndex}
       />
     </>

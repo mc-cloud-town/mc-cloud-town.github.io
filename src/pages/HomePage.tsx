@@ -17,6 +17,18 @@ const HomePage = () => {
 
   const createSections = (key: string, route: string) => {
     const data = t(key, { returnObjects: true }) as IImageContent[];
+
+    if (route === 'survivalProgress') {
+      const sliceIndex = Math.max(data.length - 3, 0);
+      return data
+        .slice(sliceIndex)
+        .reverse()
+        .map((item, index) => ({
+          ...item,
+          clickEvent: () => navigate(`/${route}?index=${index}`),
+        }));
+    }
+
     const sliceIndex = Math.max(data.length - 3, 0);
     return data.slice(sliceIndex).map((item, index) => ({
       ...item,
