@@ -1,5 +1,7 @@
 # React + TypeScript + Vite
 
+[![Crowdin](https://badges.crowdin.net/ctec-website/localized.svg)](https://crowdin.com/project/ctec-website)
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
