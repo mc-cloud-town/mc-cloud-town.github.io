@@ -44,6 +44,22 @@ jobs:
           [ -f 404.html ] || ln -s index.html 404.html
           if [ "none" !=  "$cname" ]; then echo "$cname" > CNAME; fi
 
+          dirs=(
+            "home"
+            "join"
+            "survival"
+            "survivalProgress"
+            "member"
+            "openSource"
+            "collaborative"
+            "partner"
+            "redstoneCollection"
+            "architectureCollection"
+          )
+
+          for dir in "${dirs[@]}"; do
+            mkdir -p "$dir" && ln -s index.html "$dir/index.html"
+          done
       - name: Fix permissions
         run: |
           chmod -c -R +rX "_site/" | while read line; do
