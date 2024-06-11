@@ -102,7 +102,7 @@ const NavigationBar: React.FC = () => {
       key: 'brand',
       label: (
         <Link to='/' onClick={scrollToTop}>
-          <Brand src='./brand.webp' alt='brand' />
+          <Brand src='/brand.webp' alt='brand' />
         </Link>
       ),
       disabled: true,
