@@ -64,7 +64,7 @@ const HomePage = () => {
           // eslint-disable-next-line react/jsx-key
           <HeaderTimer />,
           // eslint-disable-next-line react/jsx-key
-          <Link to='/join'>
+          <Link to='/join/'>
             <Button color='primary' size='large' ghost={true}>
               {t('home.joinButton')}
             </Button>

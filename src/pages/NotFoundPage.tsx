@@ -20,7 +20,7 @@ const NotFoundPage = () => {
         subHeaderContentArray={[
           t('notFound.description'),
           // eslint-disable-next-line react/jsx-key
-          <Link to='/home'>
+          <Link to='/home/'>
             <Button color='primary' size='large' ghost={true}>
               {t('notFound.backButton')}
             </Button>

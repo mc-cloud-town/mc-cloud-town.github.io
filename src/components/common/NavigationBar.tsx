@@ -113,11 +113,11 @@ const NavigationBar: React.FC = () => {
     },
     {
       key: 'join',
-      label: <Link to='/join'>{t('menu.join')}</Link>,
+      label: <Link to='/join/'>{t('menu.join')}</Link>,
     },
     {
       key: 'survival',
-      label: <Link to='/survival'>{t('menu.survivalProgress')}</Link>,
+      label: <Link to='/survival/'>{t('menu.survivalProgress')}</Link>,
     },
     {
       key: 'membersAndWork',
@@ -125,25 +125,27 @@ const NavigationBar: React.FC = () => {
       children: [
         {
           key: 'member',
-          label: <Link to='/member'>{t('menu.member')}</Link>,
+          label: <Link to='/member/'>{t('menu.member')}</Link>,
         },
         {
           key: 'redstoneCollection',
-          label: <Link to='/redstoneCollection'>{t('menu.redstone')}</Link>,
+          label: <Link to='/redstoneCollection/'>{t('menu.redstone')}</Link>,
         },
         {
           key: 'architectureCollection',
-          label: <Link to='/architectureCollection'>{t('menu.building')}</Link>,
+          label: (
+            <Link to='/architectureCollection/'>{t('menu.building')}</Link>
+          ),
         },
       ],
     },
     {
       key: 'openSource',
-      label: <Link to='/openSource'>{t('menu.openSource')}</Link>,
+      label: <Link to='/openSource/'>{t('menu.openSource')}</Link>,
     },
     {
       key: 'partner',
-      label: <Link to={'/partner'}>{t('menu.partner')}</Link>,
+      label: <Link to={'/partner/'}>{t('menu.partner')}</Link>,
     },
     {
       key: 'language',
