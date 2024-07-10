@@ -7,7 +7,6 @@ import { DownloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 
 import { ICollection } from '@/types/ICollection.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { Link } from 'react-router-dom';
 import ShareModal from '#/common/ShareModal.tsx';
 import stopVideo from '@/utils/stopVideo.ts';
 
@@ -166,6 +165,7 @@ interface CollectionModalProps {
   index: number;
   onClose: () => void;
   pageType: 'architecture' | 'redstone';
+  handleTagChange: (tags: string[]) => void;
 }
 
 const CollectionModal: React.FC<CollectionModalProps> = ({
@@ -174,6 +174,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
   index,
   onClose,
   pageType,
+  handleTagChange,
 }) => {
   const { t } = useTranslation();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -187,6 +188,11 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
   const closeModal = () => {
     stopVideo();
     onClose();
+  };
+
+  const onTagClick = (tag: string) => {
+    handleTagChange([tag]);
+    closeModal();
   };
 
   const carouselItems = [
@@ -283,11 +289,13 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
 
       <TagContainer>
         {item.tags?.map((tag, index) => (
-          <Link to={`/${pageType}Collection?tag=${tag}`} key={index}>
-            <StyledTag key={index} color={getTagColor(tag)}>
-              {tag}
-            </StyledTag>
-          </Link>
+          <StyledTag
+            key={index}
+            color={getTagColor(tag)}
+            onClick={() => onTagClick(tag)}
+          >
+            {tag}
+          </StyledTag>
         ))}
       </TagContainer>
       <StyledSubTitle>{t('creator')}</StyledSubTitle>

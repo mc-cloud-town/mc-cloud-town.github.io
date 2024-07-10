@@ -447,9 +447,11 @@
     }
   },
   "architectureCollection": {
-    "title": "建筑作品集"
+    "title": "建筑作品集",
+    "searchPlaceholder": "搜索标签或名称"
   },
   "redstoneCollection": {
-    "title": "紅石作品集"
+    "title": "紅石作品集",
+    "searchPlaceholder": "搜索标签或名称"
   }
 }
