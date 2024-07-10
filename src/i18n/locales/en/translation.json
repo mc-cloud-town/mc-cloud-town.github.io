@@ -451,9 +451,11 @@
     }
   },
   "architectureCollection": {
-    "title": "Building Collection"
+    "title": "Building Collection",
+    "searchPlaceholder": "搜尋標籤或名稱"
   },
   "redstoneCollection": {
-    "title": "Redstone Collection"
+    "title": "Redstone Collection",
+    "searchPlaceholder": "搜尋標籤或名稱"
   }
 }
