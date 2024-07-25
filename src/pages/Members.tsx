@@ -10,7 +10,7 @@ import MemberCase from '#/members/MemberCase.tsx';
 
 import useApi from '@/hooks/useApi.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { MEMBER_API } from '@/constants';
+import { STATIC_DATA_API } from '@/constants';
 import { IMembers } from '@/types/IMember.ts';
 
 const Container = styled.div`
@@ -48,7 +48,9 @@ const StyledInput = styled(Input)`
 `;
 
 const MembersPage = () => {
-  const { data, loading, error } = useApi<IMembers>(MEMBER_API);
+  const { data, loading, error } = useApi<IMembers>(
+    `${STATIC_DATA_API}/member.json`,
+  );
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
 

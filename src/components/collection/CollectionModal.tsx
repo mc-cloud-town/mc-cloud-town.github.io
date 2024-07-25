@@ -6,9 +6,9 @@ import type { CarouselRef } from 'antd/lib/carousel';
 import { DownloadOutlined, PlayCircleOutlined } from '@ant-design/icons';
 
 import { ICollection } from '@/types/ICollection.ts';
-import getImageUrl from '@/utils/getImageUrl.ts';
 import ShareModal from '#/common/ShareModal.tsx';
 import stopVideo from '@/utils/stopVideo.ts';
+import { STATIC_DATA_API } from '@/constants';
 
 const StyledTitle = styled.h2`
   font-size: 24px;
@@ -209,7 +209,10 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
     ...(item.galleryImagesUrl ?? []).map((url, index) => (
       <div key={`image-${index}`}>
         <ImageWrapper>
-          <PreviewImage src={getImageUrl(url)} alt={`Gallery image ${index}`} />
+          <PreviewImage
+            src={`${STATIC_DATA_API}/images/${url}`}
+            alt={`Gallery image ${index}`}
+          />
         </ImageWrapper>
       </div>
     )),
@@ -219,7 +222,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
     ...(item.videosUrl ?? []).map((video, index) => (
       <ThumbnailWithOverlay key={`video-thumb-${index}`}>
         <Thumbnail
-          src={getImageUrl(video.thumbnailUrl)}
+          src={`${STATIC_DATA_API}/images/${video.thumbnailUrl}`}
           alt={`Video thumbnail ${index}`}
           onClick={() => handleThumbnailClick(index)}
           $isSelected={selectedImageIndex === index}
@@ -232,7 +235,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
     ...(item.galleryImagesUrl ?? []).map((url, index) => (
       <Thumbnail
         key={`image-thumb-${index}`}
-        src={getImageUrl(url)}
+        src={`${STATIC_DATA_API}/images/${url}`}
         alt={`Image thumbnail ${index + (item.videosUrl?.length ?? 0)}`}
         onClick={() =>
           handleThumbnailClick(index + (item.videosUrl?.length ?? 0))

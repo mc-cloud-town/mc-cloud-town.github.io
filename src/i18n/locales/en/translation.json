@@ -654,86 +654,11 @@
   "architectureCollection": {
     "title": "Building Collection",
     "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "Search Tags/Name...",
-    "collections": [
-      {
-        "title": "雲鎮工藝出生點-恐懼",
-        "imageUrl": "architectureCollection/spawn.webp",
-        "date": "2024-03-17",
-        "galleryImagesUrl": [
-          "architectureCollection/spawn.png",
-          "architectureCollection/spawn_1.png",
-          "architectureCollection/spawn_2.png"
-        ],
-        "creator": ["_R6,XiaoYu2021"],
-        "credits": [
-          {
-            "name": "Etymology_Ghost",
-            "url": "https://twitter.com/EtymologyGhost"
-          }
-        ],
-        "tags": ["建築", "雕塑", "海怪", "Karken", "建模"]
-      },
-      {
-        "title": "雲鎮工藝出生點-冰船賽道",
-        "imageUrl": "architectureCollection/ice_boat.webp",
-        "date": "2024-03-03",
-        "downloadUrl": "",
-        "creator": ["XiaoYu2021,bow_lsaa"],
-        "galleryImagesUrl": [
-          "architectureCollection/ice_boat.png",
-          "architectureCollection/ice_boat_1.png",
-          "architectureCollection/ice_boat_2.png"
-        ],
-        "credits": [
-          {
-            "name": "XiaoYu2021 - 渲染圖片"
-          }
-        ],
-        "tags": ["建築", "冰船賽道", "聖誕節"]
-      }
-    ]
+    "searchPlaceholder": "Search Tags/Name..."
   },
   "redstoneCollection": {
     "title": "Redstone Collection",
     "imageUrl": "survivalProgress/p30.webp",
-    "searchPlaceholder": "Search Tags or Name",
-    "collections": [
-      {
-        "title": "360FTL-StarBow-Mini",
-        "imageUrl": "redstoneCollection/360ftl_star_bow.png",
-        "date": "2024-03-17",
-        "downloadUrl": "https://discord.com/channels/933290709589577728/1001472836625518612/1220232415314968586",
-        "videosUrl": [
-          {
-            "url": "https://www.youtube.com/embed/gFAjlbvHx0o?si=364H5gltOtsedO3x",
-            "thumbnailUrl": "redstoneCollection/360ftl_star_bow_video_page.webp"
-          }
-        ],
-        "galleryImagesUrl": ["redstoneCollection/360ftl_star_bow.png"],
-        "creator": ["FlandreLed"],
-        "credits": [
-          {
-            "name": "672FTL - PearlCannon - _Emir",
-            "url": "https://www.youtube.com/@emiraleph"
-          }
-        ],
-        "tags": ["紅石", "設施", "TNT", "珍珠炮", "FTL"]
-      },
-      {
-        "title": "432K高压主世界TNT刷沙机",
-        "imageUrl": "redstoneCollection/432K_sand_duper.webp",
-        "date": "2024-03-03",
-        "downloadUrl": "https://discord.com/channels/933290709589577728/1001472836625518612/1213776551548559421",
-        "creator": ["Petris 5256"],
-        "galleryImagesUrl": ["redstoneCollection/432K_sand_duper.png"],
-        "credits": [
-          {
-            "name": "432K/h sand duper axialeaa"
-          }
-        ],
-        "tags": ["紅石", "設施", "粉末複製"]
-      }
-    ]
+    "searchPlaceholder": "Search Tags or Name"
   }
 }

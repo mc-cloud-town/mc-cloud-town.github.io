@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectProps } from 'antd';
+import { Select, SelectProps, Spin } from 'antd';
 import styled from 'styled-components';
 
 import PageHeader from '#/common/PageHeader.tsx';
@@ -10,7 +10,10 @@ import CardsSection from '#/common/CardsSection.tsx';
 import CollectionModal from '#/collection/CollectionModal.tsx';
 
 import { ICollection } from '@/types/ICollection.ts';
+import { STATIC_DATA_API } from '@/constants';
 import getImageUrl from '@/utils/getImageUrl.ts';
+import useApi from '@/hooks/useApi.ts';
+import { WarningOutlined } from '@ant-design/icons';
 
 const Container = styled.div`
   padding: 50px 40px;
@@ -31,16 +34,31 @@ const StyledSelect = styled(Select)<SelectProps>`
   width: 100%;
 `;
 
+const StatusContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  svg {
+    color: #6f9b9c !important;
+  }
+
+  span {
+    margin-left: 10px;
+    color: #6f9b9c;
+  }
+`;
+
 const CollectionPageBase = ({
   pageType,
 }: {
   pageType: 'architecture' | 'redstone';
 }) => {
-  const { t } = useTranslation();
-  const imageContents: ICollection[] = useMemo(
-    () => t(`${pageType}Collection.collections`, { returnObjects: true }),
-    [t, pageType],
+  const { t, i18n } = useTranslation();
+  const { data, loading, error } = useApi<ICollection[]>(
+    `${STATIC_DATA_API}/${i18n.language}/${pageType}Collection.json`,
   );
+
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,17 +67,22 @@ const CollectionPageBase = ({
     index: number;
   } | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [filteredContents, setFilteredContents] =
-    useState<ICollection[]>(imageContents);
+  const [filteredContents, setFilteredContents] = useState<ICollection[]>(
+    data ?? [],
+  );
 
   useEffect(() => {
+    if (!data) {
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const shareIndex = params.get('share') ?? params.get('index');
     const tags = params.get('tag');
 
     if (shareIndex !== null) {
       const index = parseInt(shareIndex, 10);
-      const item = imageContents[index];
+      const item = data[index];
       if (item) {
         setSelectedItem({ item, index });
         setIsModalOpen(true);
@@ -70,24 +93,29 @@ const CollectionPageBase = ({
         setSelectedTags(tags.split(','));
       }
     }
-  }, [imageContents, navigate, pageType]);
+  }, [data, navigate, pageType]);
 
   useEffect(() => {
+    if (!data) {
+      return;
+    }
+
     if (selectedTags.length === 0) {
-      setFilteredContents(imageContents);
+      setFilteredContents(data);
     } else {
-      const filtered = imageContents.filter((item) =>
+      const filtered = data.filter((item) =>
         selectedTags.every(
           (tag) => item.tags?.includes(tag) || item.title.includes(tag),
         ),
       );
       setFilteredContents(filtered);
     }
-  }, [selectedTags, imageContents]);
+  }, [selectedTags, data]);
 
   const imageUrl =
-    t(`${pageType}Collection.imageUrl`) === `${pageType}Collection.imageUrl`
-      ? imageContents[Math.floor(Math.random() * imageContents.length)].imageUrl
+    t(`${pageType}Collection.imageUrl`) === `${pageType}Collection.imageUrl` &&
+    data
+      ? data[Math.floor(Math.random() * data.length)].imageUrl
       : t(`${pageType}Collection.imageUrl`);
 
   const handleCardClick = (item: ICollection, index: number) => {
@@ -108,10 +136,12 @@ const CollectionPageBase = ({
   };
 
   const allTags = useMemo(() => {
-    return Array.from(
-      new Set(imageContents.flatMap((item) => item.tags || [])),
-    );
-  }, [imageContents]);
+    if (!data) {
+      return [];
+    }
+
+    return Array.from(new Set(data.flatMap((item) => item.tags || [])));
+  }, [data]);
 
   const tagOptions = allTags.map((tag) => ({ value: tag, label: tag }));
 
@@ -144,7 +174,20 @@ const CollectionPageBase = ({
           title={t(`${pageType}Collection.title`)}
           darkMode={true}
           imageContentSections={bindEventImageContents}
+          useStaticDataApi={true}
         />
+        {error && (
+          <StatusContainer>
+            <WarningOutlined style={{ fontSize: '24px', color: '#feffe6' }} />
+            <span>{t('error')}</span>
+          </StatusContainer>
+        )}
+        {loading && (
+          <StatusContainer>
+            <Spin size='large' spinning={true} />
+            <span>{t('loading')}</span>
+          </StatusContainer>
+        )}
         {selectedItem && (
           <CollectionModal
             isOpen={isModalOpen}

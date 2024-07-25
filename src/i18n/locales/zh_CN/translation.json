@@ -448,10 +448,12 @@
   },
   "architectureCollection": {
     "title": "建筑作品集",
+    "imageUrl": "homePage/CTEC_Building.webp",
     "searchPlaceholder": "搜索标签或名称"
   },
   "redstoneCollection": {
     "title": "紅石作品集",
+    "imageUrl": "survivalProgress/p30.webp",
     "searchPlaceholder": "搜索标签或名称"
   }
 }

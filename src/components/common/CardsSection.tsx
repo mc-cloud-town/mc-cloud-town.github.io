@@ -8,6 +8,7 @@ import { IImageContent } from '@/types/IImageContent.ts';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { fadeIn } from '@/styles/animation.ts';
+import { STATIC_DATA_API } from '@/constants';
 
 const Section = styled.section<{ $darkMode: boolean }>`
   background-color: #ecf0f1;
@@ -133,6 +134,7 @@ interface CardsSectionProps {
   title: string;
   darkMode?: boolean;
   imageContentSections: IImageContent[];
+  useStaticDataApi?: boolean;
 }
 
 /**
@@ -140,12 +142,14 @@ interface CardsSectionProps {
  * @param title - Section title
  * @param darkMode - Dark mode flag
  * @param imageContentSections - Array of image content sections
+ * @param useStaticDataApi - Flag to use static data API, otherwise use the image in assets
  * @constructor
  */
 const CardsSection: React.FC<CardsSectionProps> = ({
   title,
   darkMode = false,
   imageContentSections,
+  useStaticDataApi = false,
 }: CardsSectionProps) => {
   const { animate, ref } = useAnimateOnScroll();
 
@@ -161,7 +165,11 @@ const CardsSection: React.FC<CardsSectionProps> = ({
             cover={
               <ImageWrapper>
                 <LazyLoadImage
-                  src={getImageUrl(section.imageUrl)}
+                  src={
+                    useStaticDataApi
+                      ? `${STATIC_DATA_API}/images/${section.imageUrl}`
+                      : getImageUrl(section.imageUrl)
+                  }
                   alt={section.title}
                   effect='blur'
                 />
