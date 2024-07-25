@@ -33,6 +33,10 @@
     "seconds": "seconds"
   },
   "home": {
+    "backgroundVideo": {
+      "youtubeId": "USJWCs-rlc0",
+      "start": 9
+    },
     "description": "The true work of art is but a shadow of the divine perfection",
     "serverRunning": "Created for",
     "joinButton": "Embark on Creativity",
