@@ -10,14 +10,21 @@ import HeaderVideo from '#/common/HeaderVideo.tsx';
 import HeaderTimer from '#/common/HeaderTimer.tsx';
 
 import { IImageContent } from '@/types/IImageContent.ts';
+import { STATIC_DATA_API } from '@/constants';
+import useApi from '@/hooks/useApi.ts';
 
 const HomePage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { data: redstoneCollection } = useApi<IImageContent[]>(
+    `${STATIC_DATA_API}/${i18n.language}/redstoneCollection.json`,
+  );
+  const { data: architectureCollection } = useApi<IImageContent[]>(
+    `${STATIC_DATA_API}/${i18n.language}/architectureCollection.json`,
+  );
+
   const navigate = useNavigate();
 
-  const createSections = (key: string, route: string) => {
-    const data = t(key, { returnObjects: true }) as IImageContent[];
-
+  const createSections = (data: IImageContent[], route: string) => {
     if (route === 'survivalProgress') {
       const sliceIndex = Math.max(data.length - 3, 0);
       return data
@@ -37,13 +44,21 @@ const HomePage = () => {
   };
 
   const imageContentsSections = [
-    createSections('survivalProgress.data', 'survivalProgress'),
     createSections(
-      'architectureCollection.collections',
-      'architectureCollection',
+      t('survivalProgress.data', { returnObjects: true }),
+      'survivalProgress',
     ),
-    createSections('redstoneCollection.collections', 'redstoneCollection'),
   ];
+
+  if (redstoneCollection) {
+    imageContentsSections.push(createSections(redstoneCollection, 'redstone'));
+  }
+
+  if (architectureCollection) {
+    imageContentsSections.push(
+      createSections(architectureCollection, 'architecture'),
+    );
+  }
 
   return (
     <>
