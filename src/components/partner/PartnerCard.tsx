@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Col, Modal } from 'antd';
 import { Card } from 'antd';
 import styled, { css } from 'styled-components';
@@ -6,10 +7,10 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import PartnerLink from '#/partner/PartnerLink.tsx';
 
-import getImageUrl from '@/utils/getImageUrl.ts';
 import { IPartnership } from '@/types/IPartnership.ts';
-import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
+import { STATIC_DATA_API } from '@/constants';
 import { fadeIn } from '@/styles/animation.ts';
+import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 
 const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   margin: 16px;
@@ -82,6 +83,8 @@ const StyleVideo = styled.div`
 `;
 
 const PartnerCard = (partnerData: IPartnership) => {
+  const { t } = useTranslation();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { animate, ref } = useAnimateOnScroll();
 
@@ -104,7 +107,7 @@ const PartnerCard = (partnerData: IPartnership) => {
           cover={
             <ImageWrapper>
               <LazyLoadImage
-                src={getImageUrl(partnerData.Image)}
+                src={`${STATIC_DATA_API}/images/${partnerData.Image}`}
                 alt={partnerData.Partner}
                 effect='blur'
               />
@@ -121,7 +124,8 @@ const PartnerCard = (partnerData: IPartnership) => {
         title={
           <ModalTitle>
             {partnerData.ModalTitle}
-            {partnerData.LongPartnership && ' 【長期合作夥伴】'}
+            {partnerData.LongPartnership &&
+              ` 【${t('partner.longtime.title')}】`}
           </ModalTitle>
         }
         open={isModalOpen}

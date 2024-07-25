@@ -9,6 +9,9 @@ import Contact from '#/partner/Contact.tsx';
 
 import { IPartnership } from '@/types/IPartnership.ts';
 import partner from '@/assets/partner/partner.webp';
+import { STATIC_DATA_API } from '@/constants';
+import useApi from '@/hooks/useApi.ts';
+import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
 
 const PartnershipTitle = styled.h1`
   text-align: center;
@@ -37,8 +40,42 @@ const PartnerBlock = styled.div`
 
 type PartnerType = 'team' | 'longtime' | 'creator';
 
+type PartnerData = {
+  [key in PartnerType]: IPartnership[];
+};
+
 const Partner = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { data: partnerTeams } = useApi<IPartnership[]>(
+    `${STATIC_DATA_API}/${i18n.language}/partnerTeams.json`,
+  );
+  const { data: partnerLongTerm } = useApi<IPartnership[]>(
+    `${STATIC_DATA_API}/${i18n.language}/partnerLongTerm.json`,
+  );
+  const { data: partnerCreators } = useApi<IPartnership[]>(
+    `${STATIC_DATA_API}/${i18n.language}/partnerCreators.json`,
+  );
+
+  if (!partnerTeams || !partnerLongTerm || !partnerCreators) {
+    return (
+      <>
+        <PageHeader
+          backgroundComponent={<HeaderImage imageUrl={partner} />}
+          maskColor={'#b1dde6'}
+          headerTextArray={[t('partner.title')]}
+        />{' '}
+        <Container>
+          <StatusShowingGroup loading={true} error={null} />
+        </Container>
+      </>
+    );
+  }
+
+  const partnerData: PartnerData = {
+    team: partnerTeams,
+    longtime: partnerLongTerm,
+    creator: partnerCreators,
+  };
 
   return (
     <>
@@ -48,17 +85,15 @@ const Partner = () => {
         headerTextArray={[t('partner.title')]}
       />
       <Container>
-        {(['team', 'longtime', 'creator'] as PartnerType[]).map((type) => (
+        {Object.keys(partnerData).map((type) => (
           <PartnerBlock key={type}>
             <PartnershipTitle>{t(`partner.${type}.title`)}</PartnershipTitle>
             <Row justify='center'>
-              {(
-                t(`partner.${type}.partners`, {
-                  returnObjects: true,
-                }) as IPartnership[]
-              ).map((partnerData: IPartnership) => (
-                <PartnerCard key={partnerData.Partner} {...partnerData} />
-              ))}
+              {partnerData[type as PartnerType].map(
+                (partnerData: IPartnership) => (
+                  <PartnerCard key={partnerData.Partner} {...partnerData} />
+                ),
+              )}
             </Row>
           </PartnerBlock>
         ))}
