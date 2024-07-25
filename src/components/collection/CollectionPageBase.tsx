@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectProps, Spin } from 'antd';
+import { Select, SelectProps } from 'antd';
 import styled from 'styled-components';
 
 import PageHeader from '#/common/PageHeader.tsx';
@@ -13,7 +13,7 @@ import { ICollection } from '@/types/ICollection.ts';
 import { STATIC_DATA_API } from '@/constants';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import useApi from '@/hooks/useApi.ts';
-import { WarningOutlined } from '@ant-design/icons';
+import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
 
 const Container = styled.div`
   padding: 50px 40px;
@@ -32,21 +32,6 @@ const SelectWrapper = styled.div`
 const StyledSelect = styled(Select)<SelectProps>`
   max-width: 400px;
   width: 100%;
-`;
-
-const StatusContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  svg {
-    color: #6f9b9c !important;
-  }
-
-  span {
-    margin-left: 10px;
-    color: #6f9b9c;
-  }
 `;
 
 const CollectionPageBase = ({
@@ -176,18 +161,7 @@ const CollectionPageBase = ({
           imageContentSections={bindEventImageContents}
           useStaticDataApi={true}
         />
-        {error && (
-          <StatusContainer>
-            <WarningOutlined style={{ fontSize: '24px', color: '#feffe6' }} />
-            <span>{t('error')}</span>
-          </StatusContainer>
-        )}
-        {loading && (
-          <StatusContainer>
-            <Spin size='large' spinning={true} />
-            <span>{t('loading')}</span>
-          </StatusContainer>
-        )}
+        <StatusShowingGroup error={error} loading={loading} />
         {selectedItem && (
           <CollectionModal
             isOpen={isModalOpen}

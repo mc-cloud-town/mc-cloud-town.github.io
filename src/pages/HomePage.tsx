@@ -15,6 +15,9 @@ import useApi from '@/hooks/useApi.ts';
 
 const HomePage = () => {
   const { t, i18n } = useTranslation();
+  const { data: survivalProgress } = useApi<IImageContent[]>(
+    `${STATIC_DATA_API}/${i18n.language}/survivalProgress.json`,
+  );
   const { data: redstoneCollection } = useApi<IImageContent[]>(
     `${STATIC_DATA_API}/${i18n.language}/redstoneCollection.json`,
   );
@@ -43,12 +46,13 @@ const HomePage = () => {
     }));
   };
 
-  const imageContentsSections = [
-    createSections(
-      t('survivalProgress.data', { returnObjects: true }),
-      'survivalProgress',
-    ),
-  ];
+  const imageContentsSections = [];
+
+  if (survivalProgress) {
+    imageContentsSections.push(
+      createSections(survivalProgress, 'survivalProgress'),
+    );
+  }
 
   if (redstoneCollection) {
     imageContentsSections.push(

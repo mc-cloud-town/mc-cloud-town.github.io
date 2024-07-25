@@ -2,8 +2,8 @@ import { Typography } from 'antd';
 import styled, { css } from 'styled-components';
 
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
-import getImageUrl from '@/utils/getImageUrl.ts';
 import { fadeIn } from '@/styles/animation.ts';
+import { STATIC_DATA_API } from '@/constants';
 
 const { Title, Text } = Typography;
 
@@ -75,7 +75,7 @@ const TimelineItemContent = ({
   return (
     <TimelineItemContainer $animate={animate} ref={ref}>
       <ImageWrapper>
-        <Image src={getImageUrl(imageUrl)} alt={title} />
+        <Image src={`${STATIC_DATA_API}/images/${imageUrl}`} alt={title} />
       </ImageWrapper>
       <StyledTitle level={4}>{title}</StyledTitle>
       <StyledText strong>{subTitle}</StyledText>

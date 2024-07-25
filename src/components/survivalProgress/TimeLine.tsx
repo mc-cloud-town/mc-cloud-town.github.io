@@ -7,7 +7,7 @@ import TimelineItemContent from '#/survivalProgress/TimeLineContent.tsx';
 
 import { IImageContent } from '@/types/IImageContent';
 import useScroll from '@/hooks/useScroll.ts';
-import getImageUrl from '@/utils/getImageUrl.ts';
+import { STATIC_DATA_API } from '@/constants';
 
 const Container = styled.div`
   display: flex;
@@ -101,7 +101,9 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
 
   return (
     <>
-      <BackgroundContainer $bgImage={getImageUrl(activeBgImage)} />
+      <BackgroundContainer
+        $bgImage={`${STATIC_DATA_API}/images/${activeBgImage}`}
+      />
       <Container>
         <StyledTimeline
           mode={timelineMode}
