@@ -7,6 +7,7 @@ import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { fadeIn } from '@/styles/animation.ts';
+import { STATIC_DATA_API } from '@/constants';
 
 const Section = styled.section`
   background-color: #b1dde6;
@@ -112,6 +113,7 @@ interface CarouselSectionProps {
   title: string;
   subtitles?: string[];
   imageContentsSections: IImageContent[][];
+  useStaticDataApi?: boolean;
 }
 
 /**
@@ -119,12 +121,14 @@ interface CarouselSectionProps {
  * @param title - Section title
  * @param subtitles - Section subtitles
  * @param imageContentsSections - Array of image content arrays
+ * @param useStaticDataApi - Flag to use static data api
  * @constructor CarouselSection - React Function Component
  */
 const CarouselSection: React.FC<CarouselSectionProps> = ({
   title,
   subtitles: sectionSubtitle = [],
   imageContentsSections,
+  useStaticDataApi = false,
 }: CarouselSectionProps) => {
   const { ref, animate } = useAnimateOnScroll();
 
@@ -145,7 +149,11 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
                   <LazyLoadImage
                     alt={imageContent.title}
                     effect='blur'
-                    src={getImageUrl(imageContent.imageUrl)}
+                    src={
+                      useStaticDataApi
+                        ? `${STATIC_DATA_API}/images/${imageContent.imageUrl}`
+                        : getImageUrl(imageContent.imageUrl)
+                    }
                   />
                 </ImageWrapper>
               ))}

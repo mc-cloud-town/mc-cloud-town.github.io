@@ -51,12 +51,14 @@ const HomePage = () => {
   ];
 
   if (redstoneCollection) {
-    imageContentsSections.push(createSections(redstoneCollection, 'redstone'));
+    imageContentsSections.push(
+      createSections(redstoneCollection, 'redstoneCollection'),
+    );
   }
 
   if (architectureCollection) {
     imageContentsSections.push(
-      createSections(architectureCollection, 'architecture'),
+      createSections(architectureCollection, 'architectureCollection'),
     );
   }
 
@@ -101,6 +103,7 @@ const HomePage = () => {
           t('home.carousel.subtitles', { returnObjects: true }) as string[]
         }
         imageContentsSections={imageContentsSections}
+        useStaticDataApi={true}
       />
     </>
   );
