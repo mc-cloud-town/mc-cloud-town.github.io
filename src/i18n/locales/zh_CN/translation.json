@@ -33,6 +33,10 @@
     "seconds": "秒"
   },
   "home": {
+    "backgroundVideo": {
+      "youtubeId": "USJWCs-rlc0",
+      "start": 9
+    },
     "description": "真正的艺术作品不过是神圣完美的倒影",
     "serverRunning": "已创立",
     "joinButton": "创意启航",
