@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button, Flex } from 'antd';
+import { Card, Button, Flex, theme, GlobalToken } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -10,16 +10,18 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 import { fadeIn } from '@/styles/animation.ts';
 import { STATIC_DATA_API } from '@/constants';
 
-const Section = styled.section<{ $darkMode: boolean }>`
-  background-color: #ecf0f1;
-  padding: 50px 20px;
+const Section = styled.section<{
+  $type: 'default' | 'dark' | 'primary';
+  $token: GlobalToken;
+}>`
+  background-color: ${(props) =>
+    props.$type === 'dark'
+      ? props.$token.colorPrimaryBg
+      : props.$type === 'primary'
+        ? props.$token.colorPrimary
+        : props.$token.colorBgBase};
 
-  ${(props) =>
-    props.$darkMode &&
-    `
-    background-color: #6f9b9c;
-    color: #fff;
-  `};
+  padding: 50px 20px;
 `;
 
 const CardContainer = styled.div`
@@ -132,7 +134,7 @@ const StyledButton = styled(Button)`
 
 interface CardsSectionProps {
   title: string;
-  darkMode?: boolean;
+  type?: 'default' | 'dark' | 'primary';
   imageContentSections: IImageContent[];
   useStaticDataApi?: boolean;
 }
@@ -147,14 +149,15 @@ interface CardsSectionProps {
  */
 const CardsSection: React.FC<CardsSectionProps> = ({
   title,
-  darkMode = false,
+  type = 'default',
   imageContentSections,
   useStaticDataApi = false,
-}: CardsSectionProps) => {
+}) => {
   const { animate, ref } = useAnimateOnScroll();
+  const { token } = theme.useToken();
 
   return (
-    <Section ref={ref} $darkMode={darkMode}>
+    <Section ref={ref} $type={type} $token={token}>
       <SectionTitle $fadeIn={animate}>{title}</SectionTitle>
       <CardContainer>
         {imageContentSections.map((section, index) => (
@@ -190,7 +193,10 @@ const CardsSection: React.FC<CardsSectionProps> = ({
                 section.buttons.map((button, idx) =>
                   button.link ? (
                     <Link key={idx} to={button.link}>
-                      <Button type={button.type || 'primary'} ghost={darkMode}>
+                      <Button
+                        type={button.type || 'primary'}
+                        ghost={type === 'dark'}
+                      >
                         {button.text}
                       </Button>
                     </Link>
@@ -201,7 +207,7 @@ const CardsSection: React.FC<CardsSectionProps> = ({
                       ghost={
                         button.type !== 'link' &&
                         button.type !== 'text' &&
-                        darkMode
+                        type === 'dark'
                       }
                       href={button.href}
                       target={button.href ? '_blank' : ''}

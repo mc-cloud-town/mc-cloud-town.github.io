@@ -98,7 +98,7 @@ const HomePage = () => {
       />
       <CardsSection
         title={t('home.feature.title')}
-        darkMode={true}
+        type={'dark'}
         imageContentSections={t('home.feature.card', { returnObjects: true })}
       />
       <CarouselSection

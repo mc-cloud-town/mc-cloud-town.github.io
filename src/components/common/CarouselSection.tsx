@@ -10,7 +10,7 @@ import { fadeIn } from '@/styles/animation.ts';
 import { STATIC_DATA_API } from '@/constants';
 
 const Section = styled.section`
-  background-color: #b1dde6;
+  background-color: #ecf0f1;
   padding: 50px 20px;
 
   @media (max-width: 400px) {
@@ -37,7 +37,6 @@ const SectionSubtitle = styled.h3<{ $fadeIn: boolean }>`
   font-weight: bold;
   margin-top: 20px;
   opacity: 0;
-  color: #6f9b9c;
   border-radius: 10px;
 
   ${(props) =>

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectProps } from 'antd';
+import { GlobalToken, Select, SelectProps, theme } from 'antd';
 import styled from 'styled-components';
 
 import PageHeader from '#/common/PageHeader.tsx';
@@ -15,9 +15,10 @@ import getImageUrl from '@/utils/getImageUrl.ts';
 import useApi from '@/hooks/useApi.ts';
 import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
 
-const Container = styled.div`
+const Container = styled.div<{ $token: GlobalToken }>`
   padding: 50px 40px;
-  background-color: #6f9b9c;
+  color: #fff;
+  background-color: ${(props) => props.$token.colorPrimary};
 
   @media (max-width: 400px) {
     padding: 50px 10px;
@@ -45,6 +46,7 @@ const CollectionPageBase = ({
   );
 
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -141,10 +143,10 @@ const CollectionPageBase = ({
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={getImageUrl(imageUrl)} />}
-        maskColor={'#6f9b9c'}
+        maskColor={token.colorPrimary}
         headerTextArray={[t(`${pageType}Collection.title`)]}
       />
-      <Container>
+      <Container $token={token}>
         <SelectWrapper>
           <StyledSelect
             size={'large'}
@@ -157,7 +159,7 @@ const CollectionPageBase = ({
         </SelectWrapper>
         <CardsSection
           title={t(`${pageType}Collection.title`)}
-          darkMode={true}
+          type={'primary'}
           imageContentSections={bindEventImageContents}
           useStaticDataApi={true}
         />
