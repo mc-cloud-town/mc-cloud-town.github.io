@@ -31,7 +31,7 @@
     "react-share": "^5.1.0",
     "react-typed": "^2.0.12",
     "styled-components": "^6.1.8",
-    "vite": "^5.1.7",
+    "vite": "^5.4.21",
     "youtube-iframe": "^1.0.3"
   },
   "devDependencies": {
