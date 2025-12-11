@@ -63,6 +63,12 @@ const StyledMenu = styled(Menu)`
       color: #b1dde6;
     }
   }
+
+  /* brand */
+  &:first-child .ant-menu-title-content {
+    cursor: pointer;
+    display: block;
+  }
 `;
 
 /**
@@ -106,7 +112,6 @@ const NavigationBar: React.FC = () => {
         </Link>
       ),
       disabled: true,
-      style: { cursor: 'pointer' },
     },
     {
       key: 'home',
