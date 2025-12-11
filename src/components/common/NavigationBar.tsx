@@ -37,7 +37,6 @@ const NavigationBarContainer = styled.div<{
 
 const Brand = styled.img`
   height: 40px;
-  margin-right: 20px;
 
   @media (max-width: 290px) {
     display: none;
@@ -62,6 +61,11 @@ const StyledMenu = styled(Menu)`
     &:hover {
       color: #b1dde6;
     }
+  }
+
+  /* brand */
+  .ant-menu-item:first-child::after {
+    border-bottom: none !important;
   }
 `;
 
@@ -105,7 +109,6 @@ const NavigationBar: React.FC = () => {
           <Brand src='/brand.webp' alt='brand' />
         </Link>
       ),
-      disabled: true,
     },
     {
       key: 'home',
@@ -174,7 +177,9 @@ const NavigationBar: React.FC = () => {
         mode='horizontal'
         items={[...menuItems]}
         selectedKeys={
-          location.pathname === '/' ? ['home'] : [location.pathname.slice(1)]
+          location.pathname === '/'
+            ? ['home']
+            : [location.pathname.replace(/^\/+|\/+$/g, '')]
         }
       />
     </NavigationBarContainer>
