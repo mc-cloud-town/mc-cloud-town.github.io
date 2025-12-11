@@ -50,7 +50,7 @@
         "Optimized survival, redstone technologies and aesthetic builds",
         "State-of-the-art server equipment that fosters creativity",
         "Collaborative research in friendly forums with outstanding players from various countries",
-        "The farm holds the world record for being ranked sixth globally and first in Asia."
+        "農場世界紀錄持有量世界第六、亞洲第一"
       ],
       "buttons": [
         {
@@ -76,7 +76,7 @@
         {
           "imageUrl": "homePage/CTEC_Redstone.webp",
           "title": "Advanced Redstone Technology",
-          "paragraph": "Our community boasts strong technical capabilities, with numerous Redstone technology developers proficient in various tech tree research, maintaining friendly relations with multiple international Technical Minecraft Communities. Our team is dedicated to research and innovation, continuously rolling out various novel farms or components, providing more fun for community members. We have set up dedicated labs, including two creative servers and two mirror servers, allowing players who do not wish to play survival to join in the fun. Our farms hold the world record for being ranked sixth globally and first in Asia.",
+          "paragraph": "團隊擁有前瞻紅石技術實力，由各領域優秀開發者所組成，熟練掌握各種科技樹研究，並與多個國際技術性伺服器維持友好關係。致力於研究和創新，為社群研發各種高原創性的農場或原件，為社群成員提供更多的遊戲樂趣。設置紅石研究室，包括兩個創造與兩個生存鏡像伺服器，讓創造設計的玩家也可以加入雲鎮工藝的行列。我們目前持有農場世界紀錄認證排名世界第六、亞洲第一。",
           "buttons": [
             {
               "text": "View Redstone Works",
@@ -101,8 +101,8 @@
       "title": "Server Content",
       "subtitles": [
         "Latest Survival Progress",
-        "Latest Redstone Creations",
-        "Latest Architectural Works"
+        "最新紅石作品",
+        "最新建築作品"
       ]
     }
   },
@@ -231,11 +231,11 @@
   "architectureCollection": {
     "title": "Building Collection",
     "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "Search Tags/Name..."
+    "searchPlaceholder": "搜尋標籤或名稱"
   },
   "redstoneCollection": {
     "title": "Redstone Collection",
     "imageUrl": "redstoneCollection/p30.webp",
-    "searchPlaceholder": "Search Tags or Name"
+    "searchPlaceholder": "搜尋標籤或名稱"
   }
 }
