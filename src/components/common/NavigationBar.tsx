@@ -106,6 +106,7 @@ const NavigationBar: React.FC = () => {
         </Link>
       ),
       disabled: true,
+      style: { cursor: 'pointer' },
     },
     {
       key: 'home',
