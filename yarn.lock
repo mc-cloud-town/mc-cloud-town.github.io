@@ -897,6 +897,13 @@
   resolved "https://registry.yarnpkg.com/@types/stylis/-/stylis-4.2.5.tgz#1daa6456f40959d06157698a653a9ab0a70281df"
   integrity sha512-1Xve+NMN7FWjY14vLoY5tL3BVEQ/n42YLwaqJIPYhotZ9uBHt87VceMwWQpzmdEt2TNXIorIFG+YeCUUW7RInw==
 
+"@types/throttle@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@types/throttle/-/throttle-1.0.5.tgz#72b35dc9d48b062eaee1c5cafd04a868df1f117b"
+  integrity sha512-f4RtD3mB2lvGP1LIl/ejZ373MDTaaTvNFB6aJlYS8SzDbzcquVBr4+JhcH2qjzg2AoOu8HAMA1/plc3fzD1k0Q==
+  dependencies:
+    "@types/node" "*"
+
 "@typescript-eslint/eslint-plugin@^6.21.0":
   version "6.21.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/eslint-plugin/-/eslint-plugin-6.21.0.tgz#30830c1ca81fd5f3c2714e524c4303e0194f9cd3"

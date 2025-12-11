@@ -41,6 +41,7 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@types/styled-components": "^5.1.34",
+    "@types/throttle": "^1.0.5",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react-swc": "^4.2.2",
@@ -64,6 +65,5 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-image-optimizer": "^1.1.7",
     "vite-react-ssg": "^0.8.9"
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  }
 }
