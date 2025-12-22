@@ -14,12 +14,16 @@ const Section = styled.section<{
   $type: 'default' | 'dark' | 'primary';
   $token: GlobalToken;
 }>`
-  background-color: ${(props) =>
+  background: ${(props) =>
     props.$type === 'dark'
-      ? props.$token.colorPrimaryBg
+      ? `linear-gradient(135deg, ${props.$token.colorPrimaryBg} 0%, #4a7c7d 50%, ${props.$token.colorPrimaryBg} 100%)`
       : props.$type === 'primary'
-        ? props.$token.colorPrimary
-        : props.$token.colorBgBase};
+        ? `linear-gradient(135deg, ${props.$token.colorPrimary} 0%, #5a9b9c 50%, ${props.$token.colorPrimary} 100%)`
+        : `linear-gradient(180deg, ${props.$token.colorBgBase} 0%, #f0f4f5 50%, ${props.$token.colorBgBase} 100%)`};
+
+  /* Set text color for dark/primary modes */
+  color: ${(props) =>
+    props.$type === 'dark' || props.$type === 'primary' ? '#fff' : 'inherit'};
 
   padding: 50px 20px;
 `;

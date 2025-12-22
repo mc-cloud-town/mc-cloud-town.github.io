@@ -15,8 +15,10 @@ const NavigationBarContainer = styled.div<{
   z-index: 1000;
   top: 0;
   transition:
-    top 0.3s,
-    background-color 0.3s;
+    top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.4s ease,
+    backdrop-filter 0.4s ease,
+    box-shadow 0.4s ease;
 
   ${(props) =>
     props.$hidden &&
@@ -25,13 +27,19 @@ const NavigationBarContainer = styled.div<{
   `};
 
   ${(props) =>
-    props.$scrolled &&
-    `
-    background-color: #6f9b9c;
+    props.$scrolled
+      ? `
+    background: linear-gradient(135deg, rgba(74, 139, 141, 0.95) 0%, rgba(91, 184, 201, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 
     li.ant-menu-item-selected::after {
       border-bottom-color: white !important;
     }
+  `
+      : `
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
   `};
 `;
 

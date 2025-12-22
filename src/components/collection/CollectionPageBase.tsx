@@ -28,6 +28,7 @@ const Container = styled.div<{ $token: GlobalToken }>`
 const SelectWrapper = styled.div`
   display: flex;
   justify-content: center;
+  margin-bottom: 30px;
 `;
 
 const StyledSelect = styled(Select)<SelectProps>`
