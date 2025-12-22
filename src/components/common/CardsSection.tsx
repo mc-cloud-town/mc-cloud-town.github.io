@@ -11,21 +11,30 @@ import { fadeIn } from '@/styles/animation.ts';
 import { STATIC_DATA_API } from '@/constants';
 
 const Section = styled.section<{
-  $type: 'default' | 'dark' | 'primary';
+  $type: 'default' | 'dark' | 'primary' | 'transparent';
   $token: GlobalToken;
 }>`
   background: ${(props) =>
-    props.$type === 'dark'
-      ? `linear-gradient(135deg, ${props.$token.colorPrimaryBg} 0%, #4a7c7d 50%, ${props.$token.colorPrimaryBg} 100%)`
-      : props.$type === 'primary'
-        ? `linear-gradient(135deg, ${props.$token.colorPrimary} 0%, #5a9b9c 50%, ${props.$token.colorPrimary} 100%)`
-        : `linear-gradient(180deg, ${props.$token.colorBgBase} 0%, #f0f4f5 50%, ${props.$token.colorBgBase} 100%)`};
+    props.$type === 'transparent'
+      ? 'transparent'
+      : props.$type === 'dark'
+        ? `linear-gradient(135deg, ${props.$token.colorPrimaryBg} 0%, #4a7c7d 50%, ${props.$token.colorPrimaryBg} 100%)`
+        : props.$type === 'primary'
+          ? `linear-gradient(135deg, ${props.$token.colorPrimary} 0%, #5a9b9c 50%, ${props.$token.colorPrimary} 100%)`
+          : `linear-gradient(180deg, ${props.$token.colorBgBase} 0%, #f0f4f5 50%, ${props.$token.colorBgBase} 100%)`};
 
-  /* Set text color for dark/primary modes */
+  /* Set text color for dark/primary/transparent modes */
   color: ${(props) =>
-    props.$type === 'dark' || props.$type === 'primary' ? '#fff' : 'inherit'};
+    props.$type === 'dark' ||
+    props.$type === 'primary' ||
+    props.$type === 'transparent'
+      ? '#fff'
+      : 'inherit'};
 
-  padding: 50px 20px;
+  padding: ${(props) =>
+    props.$type === 'transparent' ? '20px 0' : '50px 20px'};
+  position: relative;
+  z-index: 1;
 `;
 
 const CardContainer = styled.div`
@@ -138,7 +147,7 @@ const StyledButton = styled(Button)`
 
 interface CardsSectionProps {
   title: string;
-  type?: 'default' | 'dark' | 'primary';
+  type?: 'default' | 'dark' | 'primary' | 'transparent';
   imageContentSections: IImageContent[];
   useStaticDataApi?: boolean;
 }

@@ -16,24 +16,129 @@ import useApi from '@/hooks/useApi.ts';
 import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
 
 const Container = styled.div<{ $token: GlobalToken }>`
-  padding: 50px 40px;
+  position: relative;
+  overflow: hidden;
+  padding: 60px 40px;
   color: #fff;
-  background-color: ${(props) => props.$token.colorPrimary};
+
+  /* Rich layered gradient background */
+  background: radial-gradient(
+      ellipse at 15% 85%,
+      rgba(74, 139, 141, 0.4) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 85% 15%,
+      rgba(150, 219, 230, 0.25) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      135deg,
+      ${(props) => props.$token.colorPrimary} 0%,
+      #5a9b9c 25%,
+      #4a8b8d 50%,
+      #5a9b9c 75%,
+      ${(props) => props.$token.colorPrimary} 100%
+    );
+
+  /* Glassmorphism inner glow */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+
+  /* Decorative geometric accent */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(
+      circle,
+      rgba(150, 219, 230, 0.15) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -150px;
+    right: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+  }
 
   @media (max-width: 400px) {
-    padding: 50px 10px;
+    padding: 50px 15px;
   }
 `;
 
 const SelectWrapper = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
 `;
 
 const StyledSelect = styled(Select)<SelectProps>`
-  max-width: 400px;
+  max-width: 500px;
   width: 100%;
+
+  /* Glassmorphism styling for the select */
+  .ant-select-selector {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 8px 16px !important;
+    height: auto !important;
+    min-height: 48px !important;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease !important;
+  }
+
+  .ant-select-selector:hover {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .ant-select-selection-placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  .ant-select-selection-item {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 6px !important;
+    color: #fff !important;
+  }
+
+  .ant-select-selection-item-remove {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  &.ant-select-focused .ant-select-selector {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      0 0 0 2px rgba(150, 219, 230, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  }
 `;
 
 const CollectionPageBase = ({
@@ -160,7 +265,7 @@ const CollectionPageBase = ({
         </SelectWrapper>
         <CardsSection
           title={t(`${pageType}Collection.title`)}
-          type={'primary'}
+          type={'transparent'}
           imageContentSections={bindEventImageContents}
           useStaticDataApi={true}
         />
