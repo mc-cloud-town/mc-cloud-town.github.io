@@ -6,24 +6,25 @@ import styled, { css } from 'styled-components';
 import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
-import { fadeIn } from '@/styles/animation.ts';
+import { slideUpSpring, fadeIn } from '@/styles/animation.ts';
 import { STATIC_DATA_API } from '@/constants';
 
 const Section = styled.section`
   background-color: #ecf0f1;
-  padding: 50px 20px;
+  padding: 80px 40px;
 
   @media (max-width: 400px) {
-    padding: 50px 5px;
+    padding: 60px 20px;
   }
 `;
 
 const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   text-align: center;
   color: inherit;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
   font-weight: bolder;
   opacity: 0;
+  font-size: 2rem;
 
   ${(props) =>
     props.$fadeIn &&
@@ -38,6 +39,8 @@ const SectionSubtitle = styled.h3<{ $fadeIn: boolean }>`
   margin-top: 20px;
   opacity: 0;
   border-radius: 10px;
+  color: #2c3e50;
+  font-size: 1.1rem;
 
   ${(props) =>
     props.$fadeIn &&
@@ -50,24 +53,24 @@ const CarouselContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 20px;
+  gap: 30px;
   padding: 20px 0;
 `;
 
-const CarouselWrapper = styled.div`
+const CarouselWrapper = styled.div<{ $index?: number }>`
   flex: 1;
   max-width: 30%;
+  opacity: 0;
+  animation: ${slideUpSpring} 0.6s ease-out forwards;
+  animation-delay: ${(props) => (props.$index || 0) * 0.15}s;
 
   @media (max-width: 1024px) {
     margin-bottom: 40px;
+    max-width: 45%;
   }
 
   &:last-child {
     margin-bottom: 0;
-  }
-
-  @media (max-width: 1024px) {
-    max-width: 45%;
   }
 
   @media (max-width: 768px) {
@@ -76,13 +79,21 @@ const CarouselWrapper = styled.div`
 `;
 
 const StyledCarousel = styled(Carousel)<{ $fadeIn: boolean }>`
-  opacity: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease;
 
-  ${(props) =>
-    props.$fadeIn &&
-    css`
-      animation: ${fadeIn} 0.8s ease-out forwards;
-    `};
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  }
+
+  .slick-dots li button {
+    background: #4a8b8d !important;
+  }
 `;
 
 const ImageWrapper = styled.div`
@@ -103,8 +114,12 @@ const ImageWrapper = styled.div`
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 10px;
+      transition: transform 0.5s ease-out;
     }
+  }
+
+  &:hover > span > img {
+    transform: scale(1.08);
   }
 `;
 
@@ -136,7 +151,7 @@ const CarouselSection: React.FC<CarouselSectionProps> = ({
       <SectionTitle $fadeIn={animate}>{title}</SectionTitle>
       <CarouselContainer>
         {imageContentsSections.map((imageContentSections, index) => (
-          <CarouselWrapper key={index}>
+          <CarouselWrapper key={index} $index={index}>
             <StyledCarousel
               key={index}
               autoplaySpeed={5000}

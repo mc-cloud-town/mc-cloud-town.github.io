@@ -1,5 +1,5 @@
 import React, { JSX } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { ReactTyped } from 'react-typed';
 import useScroll from '@/hooks/useScroll.ts';
 
@@ -26,6 +26,7 @@ const StyledH1 = styled.h1`
   font-weight: inherit;
 `;
 
+// Enhanced gradient mask overlay - keeps dark overlay for text readability
 const MaskA = styled.div`
   position: absolute;
   top: 50%;
@@ -52,6 +53,7 @@ const HeaderTextContainer = styled.div`
   position: absolute;
   text-align: center;
   z-index: 3;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
 `;
 
 const SubHeaderTextContainer = styled.div`
@@ -59,23 +61,67 @@ const SubHeaderTextContainer = styled.div`
   color: white;
   font-size: 1.5rem;
   margin-top: 20px;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+
+  /* Enhanced button styling within */
+  button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25) !important;
+      border-color: white !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 255, 255, 0.2);
+    }
+  }
 `;
 
 const fadeInAnimation = keyframes`
   from {
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 `;
 
 const AnimatedHeaderTextContainer = styled(HeaderTextContainer)`
   animation: ${fadeInAnimation} 1s ease-out forwards;
+
+  /* Add subtle float effect after initial animation */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    );
+    border-radius: 2px;
+  }
 `;
 
-const AnimatedSubHeaderTextContainer = styled(SubHeaderTextContainer)`
-  animation: ${fadeInAnimation} 1.25s ease-out forwards;
+const AnimatedSubHeaderTextContainer = styled(SubHeaderTextContainer)<{
+  $delay?: number;
+}>`
+  opacity: 0;
+  animation: ${fadeInAnimation} 0.8s ease-out forwards;
+  ${(props) =>
+    props.$delay &&
+    css`
+      animation-delay: ${props.$delay}s;
+    `}
 `;
 
 interface PageHeaderProps {

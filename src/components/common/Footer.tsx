@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import { serverLink } from '@/constants';
@@ -10,31 +10,144 @@ import CTEC_banner from '@/assets/brand/brand.webp';
 import logo from '@/assets/logo/base.webp';
 import { useTranslation } from 'react-i18next';
 
+// Subtle gradient animation
+const gradientShift = keyframes`
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+`;
+
 const TopFooterContainer = styled.div`
-  background-color: #b1dde6;
-  padding: 20px 60px;
+  position: relative;
+  overflow: hidden;
+
+  /* Rich layered gradient background */
+  background: radial-gradient(
+      ellipse at 10% 90%,
+      rgba(74, 139, 141, 0.15) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 90% 10%,
+      rgba(150, 219, 230, 0.2) 0%,
+      transparent 50%
+    ),
+    linear-gradient(
+      135deg,
+      #a5d8e6 0%,
+      #b8e4ee 25%,
+      #c5ebf3 50%,
+      #b8e4ee 75%,
+      #a5d8e6 100%
+    );
+  background-size: 200% 200%;
+  animation: ${gradientShift} 20s ease infinite;
+  padding: 50px 80px;
   text-align: center;
+
+  /* Glassmorphism top accent line */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.6) 20%,
+      rgba(255, 255, 255, 0.8) 50%,
+      rgba(255, 255, 255, 0.6) 80%,
+      transparent 100%
+    );
+  }
+
+  /* Decorative geometric shape */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.15) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+
+  @media (max-width: 375px) {
+    padding: 40px 20px;
+  }
+
+  @media (max-width: 800px) {
+    padding: 40px 30px;
+  }
+`;
+
+const BottomFooterContainer = styled.div`
+  position: relative;
+
+  /* Richer gradient with depth */
+  background: linear-gradient(
+    180deg,
+    rgba(142, 212, 230, 0.9) 0%,
+    #8ed4e6 30%,
+    #7dccd8 70%,
+    rgba(109, 192, 206, 0.95) 100%
+  );
+  padding: 24px 80px;
+  text-align: center;
+
+  /* Subtle shine line at top */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 30%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.4) 70%,
+      transparent 100%
+    );
+  }
 
   @media (max-width: 375px) {
     padding: 20px 20px;
   }
 
   @media (max-width: 800px) {
-    padding: 20px 40px;
+    padding: 20px 30px;
   }
 `;
 
-const BottomFooterContainer = styled(TopFooterContainer)`
-  background-color: #96dbe6;
-`;
-
 const Copyright = styled.div`
-  color: #999;
+  color: #5a7a8a;
   user-select: none;
+  font-size: 0.9rem;
 `;
 
 const Donate = styled.a`
-  color: #999;
+  color: #5a7a8a;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #3d5a6a;
+  }
 `;
 
 const BrandImageWrapper = styled.div`
@@ -59,17 +172,38 @@ const LogoImageWrapper = styled.div`
   }
 `;
 
+// Animated social icon
+const SocialIcon = styled.a`
+  color: #4a8b8d;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+
+  &:hover {
+    color: #3d7374;
+    transform: translateY(-3px) scale(1.1);
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 25px rgba(74, 139, 141, 0.25);
+  }
+
+  .anticon {
+    font-size: 32px !important;
+  }
+`;
+
 const TopRow = styled(Row)`
   padding: 10px 0;
   justify-content: space-between;
 
   @media (max-width: 768px) {
     flex-direction: column;
+    gap: 20px;
   }
 `;
 
 const BottomRow = styled(Row)`
-  background: #96dbe6;
   justify-content: center;
 
   @media (min-width: 497px) {
@@ -126,23 +260,27 @@ const Footer: React.FC = () => {
           </Col>
           <Col>
             <Space size='large'>
-              <a
+              <SocialIcon
                 href={serverLink.discord}
                 target='_blank'
                 rel='noopener noreferrer'
               >
-                <DiscordOutlined style={{ fontSize: '50px' }} />
-              </a>
-              <a
+                <DiscordOutlined />
+              </SocialIcon>
+              <SocialIcon
                 href={serverLink.youtube}
                 target='_blank'
                 rel='noopener noreferrer'
               >
-                <YoutubeOutlined style={{ fontSize: '50px' }} />
-              </a>
-              <a href={serverLink.x} target='_blank' rel='noopener noreferrer'>
-                <XOutlined style={{ fontSize: '50px' }} />
-              </a>
+                <YoutubeOutlined />
+              </SocialIcon>
+              <SocialIcon
+                href={serverLink.x}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                <XOutlined />
+              </SocialIcon>
             </Space>
           </Col>
         </TopRow>

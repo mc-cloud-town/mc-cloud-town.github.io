@@ -17,23 +17,80 @@ const SectionContainer = styled.div<{
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  background-color: #ecf0f1;
-  padding: 50px 40px;
+  padding: 80px 60px;
+  position: relative;
+  overflow: hidden;
+
+  /* Enhanced light mode with layered gradient and subtle texture */
+  background: radial-gradient(
+      ellipse at 20% 80%,
+      rgba(111, 155, 156, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 20%,
+      rgba(150, 219, 230, 0.1) 0%,
+      transparent 50%
+    ),
+    linear-gradient(180deg, #f5f7f8 0%, #e8eef0 35%, #dfe6e8 65%, #ecf0f1 100%);
+
+  /* Subtle top/bottom borders for depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+
+  /* Decorative geometric accent */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(
+      circle,
+      rgba(111, 155, 156, 0.06) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
 
   ${(props) =>
     props.$dark &&
     `
-    background-color: #6f9b9c;
+    /* Enhanced dark mode with rich layered gradients */
+    background: 
+      radial-gradient(ellipse at 30% 100%, rgba(74, 139, 141, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 0%, rgba(150, 219, 230, 0.2) 0%, transparent 50%),
+      linear-gradient(135deg, #5a8586 0%, #6f9b9c 25%, #5d8889 50%, #6f9b9c 75%, #5a8586 100%);
     color: #fff;
+    
+    /* Glassmorphism inner glow */
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    
+    /* Ensure links are visible in dark mode */
+    a {
+      color: #b1dde6 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    a:hover {
+      color: #fff !important;
+    }
+    
+    &::before {
+      background: radial-gradient(circle, rgba(150, 219, 230, 0.15) 0%, transparent 70%);
+    }
   `};
 
   @media (max-width: 768px) {
     flex-direction: column;
-    padding: 50px 0;
+    padding: 60px 20px;
   }
 
   @media (max-width: 678px) {
-    padding: 50px 50px;
+    padding: 50px 30px;
   }
 
   @media (max-width: 400px) {
