@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button, Flex, theme, GlobalToken } from 'antd';
+import { Card, Button, Flex } from 'antd';
 import { Link } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -12,16 +12,15 @@ import { STATIC_DATA_API } from '@/constants';
 
 const Section = styled.section<{
   $type: 'default' | 'dark' | 'primary' | 'transparent';
-  $token: GlobalToken;
 }>`
   background: ${(props) =>
     props.$type === 'transparent'
       ? 'transparent'
       : props.$type === 'dark'
-        ? `linear-gradient(135deg, ${props.$token.colorPrimaryBg} 0%, #4a7c7d 50%, ${props.$token.colorPrimaryBg} 100%)`
+        ? 'var(--bg-secondary)'
         : props.$type === 'primary'
-          ? `linear-gradient(135deg, ${props.$token.colorPrimary} 0%, #5a9b9c 50%, ${props.$token.colorPrimary} 100%)`
-          : `linear-gradient(180deg, ${props.$token.colorBgBase} 0%, #f0f4f5 50%, ${props.$token.colorBgBase} 100%)`};
+          ? 'var(--bg-tertiary)'
+          : 'var(--bg-primary)'};
 
   /* Set text color for dark/primary/transparent modes */
   color: ${(props) =>
@@ -29,7 +28,7 @@ const Section = styled.section<{
     props.$type === 'primary' ||
     props.$type === 'transparent'
       ? '#fff'
-      : 'inherit'};
+      : 'var(--text-primary)'};
 
   padding: ${(props) =>
     props.$type === 'transparent' ? '20px 0' : '50px 20px'};
@@ -76,7 +75,7 @@ const StyledCard = styled(Card)<{
 const SectionTitle = styled.h2<{ $fadeIn: boolean }>`
   opacity: 0;
   text-align: center;
-  color: inherit;
+  color: var(--text-primary);
   margin-bottom: 40px;
   font-weight: bolder;
 
@@ -132,6 +131,7 @@ const ImageWrapper = styled.div`
 
     & > img {
       width: 100%;
+      height: 100%;
       object-fit: cover;
     }
   }
@@ -167,10 +167,9 @@ const CardsSection: React.FC<CardsSectionProps> = ({
   useStaticDataApi = false,
 }) => {
   const { animate, ref } = useAnimateOnScroll();
-  const { token } = theme.useToken();
 
   return (
-    <Section ref={ref} $type={type} $token={token}>
+    <Section ref={ref} $type={type}>
       <SectionTitle $fadeIn={animate}>{title}</SectionTitle>
       <CardContainer>
         {imageContentSections.map((section, index) => (

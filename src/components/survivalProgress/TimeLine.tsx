@@ -9,29 +9,33 @@ import { IImageContent } from '@/types/IImageContent';
 import useScroll from '@/hooks/useScroll.ts';
 import { STATIC_DATA_API } from '@/constants';
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 50px 60px;
-
-  @media (max-width: 768px) {
-    padding: 50px 20px;
-  }
-`;
-
-const BackgroundContainer = styled.div<{ $bgImage: string }>`
+const PageBackground = styled.div<{ $bgImage: string }>`
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url(${(props) => props.$bgImage});
-  background-size: cover;
-  background-position: center;
+  /* Same gradient as page headers for consistent loading appearance */
+  background: var(--gradient-hero);
+  background-size: 200% 200%;
   z-index: -1;
-  transition: background-image 0.5s ease-in-out;
 
+  /* Image layer */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url(${(props) => props.$bgImage});
+    background-size: cover;
+    background-position: center;
+    transition: opacity 0.5s ease-in-out;
+    opacity: ${(props) => (props.$bgImage ? 1 : 0)};
+  }
+
+  /* Dark overlay */
   &::before {
     content: '';
     position: absolute;
@@ -40,12 +44,29 @@ const BackgroundContainer = styled.div<{ $bgImage: string }>`
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: -1;
+    z-index: 1;
+  }
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 50px 60px;
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: 50px 20px;
   }
 `;
 
 const StyledTimeline = styled(Timeline)`
   width: 100%;
+
+  /* Force light-colored timeline line for visibility against dark background */
+  .ant-timeline-item-tail {
+    border-left-color: rgba(255, 255, 255, 0.4) !important;
+  }
 `;
 
 interface TimelineProps {
@@ -101,9 +122,7 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
 
   return (
     <>
-      <BackgroundContainer
-        $bgImage={`${STATIC_DATA_API}/images/${activeBgImage}`}
-      />
+      <PageBackground $bgImage={`${STATIC_DATA_API}/images/${activeBgImage}`} />
       <Container>
         <StyledTimeline
           mode={timelineMode}

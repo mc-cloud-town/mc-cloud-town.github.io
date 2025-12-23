@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import { serverLink } from '@/constants';
@@ -10,105 +10,27 @@ import CTEC_banner from '@/assets/brand/brand.webp';
 import logo from '@/assets/logo/base.webp';
 import { useTranslation } from 'react-i18next';
 
-// Subtle gradient animation
-const gradientShift = keyframes`
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+const FooterContainer = styled.footer`
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
 `;
 
 const TopFooterContainer = styled.div`
   position: relative;
   overflow: hidden;
+  padding: 60px 80px;
 
-  /* Rich layered gradient background */
-  background: radial-gradient(
-      ellipse at 10% 90%,
-      rgba(74, 139, 141, 0.15) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 90% 10%,
-      rgba(150, 219, 230, 0.2) 0%,
-      transparent 50%
-    ),
-    linear-gradient(
-      135deg,
-      #a5d8e6 0%,
-      #b8e4ee 25%,
-      #c5ebf3 50%,
-      #b8e4ee 75%,
-      #a5d8e6 100%
-    );
-  background-size: 200% 200%;
-  animation: ${gradientShift} 20s ease infinite;
-  padding: 50px 80px;
-  text-align: center;
-
-  /* Glassmorphism top accent line */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.6) 20%,
-      rgba(255, 255, 255, 0.8) 50%,
-      rgba(255, 255, 255, 0.6) 80%,
-      transparent 100%
-    );
-  }
-
-  /* Decorative geometric shape */
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -100px;
-    right: -100px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.15) 0%,
-      transparent 60%
-    );
-    pointer-events: none;
-  }
-
-  @media (max-width: 375px) {
-    padding: 40px 20px;
-  }
-
-  @media (max-width: 800px) {
-    padding: 40px 30px;
+  @media (max-width: 768px) {
+    padding: 40px 24px;
   }
 `;
 
 const BottomFooterContainer = styled.div`
   position: relative;
+  background: var(--bg-tertiary);
+  padding: 20px 80px;
 
-  /* Richer gradient with depth */
-  background: linear-gradient(
-    180deg,
-    rgba(142, 212, 230, 0.9) 0%,
-    #8ed4e6 30%,
-    #7dccd8 70%,
-    rgba(109, 192, 206, 0.95) 100%
-  );
-  padding: 24px 80px;
-  text-align: center;
-
-  /* Subtle shine line at top */
+  /* Subtle top border */
   &::before {
     content: '';
     position: absolute;
@@ -118,108 +40,158 @@ const BottomFooterContainer = styled.div`
     height: 1px;
     background: linear-gradient(
       90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 30%,
-      rgba(255, 255, 255, 0.5) 50%,
-      rgba(255, 255, 255, 0.4) 70%,
-      transparent 100%
+      transparent,
+      var(--border-color-strong),
+      transparent
     );
   }
 
-  @media (max-width: 375px) {
-    padding: 20px 20px;
-  }
-
-  @media (max-width: 800px) {
-    padding: 20px 30px;
+  @media (max-width: 768px) {
+    padding: 20px 24px;
   }
 `;
 
 const Copyright = styled.div`
-  color: #5a7a8a;
+  color: var(--text-tertiary);
   user-select: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 `;
 
 const Donate = styled.a`
-  color: #5a7a8a;
-  transition: color 0.3s ease;
+  color: var(--color-primary);
+  font-weight: 500;
+  transition: all var(--transition-base);
 
   &:hover {
-    color: #3d5a6a;
+    color: var(--color-primary-hover);
   }
 `;
 
 const BrandImageWrapper = styled.div`
-  width: 100%;
-  max-width: 300px;
+  max-width: 250px;
 
   & > span > img {
     width: 100%;
+    filter: brightness(0) invert(0.3);
+    transition: filter var(--transition-base);
+  }
+
+  [data-theme='dark'] & > span > img {
+    filter: brightness(0) invert(0.8);
+  }
+
+  &:hover > span > img {
+    filter: brightness(0) invert(0.5);
+  }
+
+  [data-theme='dark'] &:hover > span > img {
+    filter: brightness(0) invert(1);
   }
 `;
 
 const LogoImageWrapper = styled.div`
-  width: 100px;
-  padding-bottom: 10px;
+  width: 70px;
 
   @media (max-width: 768px) {
     display: none;
   }
 
   & > span > img {
-    width: 100px;
+    width: 70px;
   }
 `;
 
-// Animated social icon
 const SocialIcon = styled.a`
-  color: #4a8b8d;
+  color: var(--text-tertiary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
-  padding: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
 
   &:hover {
-    color: #3d7374;
-    transform: translateY(-3px) scale(1.1);
-    background: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 8px 25px rgba(74, 139, 141, 0.25);
+    color: var(--color-primary);
+    transform: translateY(-3px);
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    box-shadow: var(--glow-primary);
   }
 
   .anticon {
-    font-size: 32px !important;
+    font-size: 20px;
   }
 `;
 
 const TopRow = styled(Row)`
-  padding: 10px 0;
   justify-content: space-between;
+  align-items: center;
 
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
 `;
 
 const BottomRow = styled(Row)`
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
 
-  @media (min-width: 497px) {
-    justify-content: space-between;
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
   }
 `;
 
-const CopyRightCol = styled(Col)`
-  @media (max-width: 496px) {
-    margin-bottom: 10px;
+const BrandLink = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  transition: transform var(--transition-base);
+
+  &:hover {
+    transform: scale(1.02);
+  }
+`;
+
+const FooterLinks = styled.div`
+  display: flex;
+  gap: var(--spacing-xl);
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const FooterLinkGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+`;
+
+const FooterLinkTitle = styled.span`
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-xs);
+`;
+
+const FooterLink = styled(Link)`
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  transition: color var(--transition-base);
+
+  &:hover {
+    color: var(--color-primary);
   }
 `;
 
 /**
- * Footer component
- * @constructor Footer - React Function Component
+ * Modern Footer component with theme-aware styling.
  */
 const Footer: React.FC = () => {
   const { t } = useTranslation();
@@ -229,41 +201,46 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer>
+    <FooterContainer>
       <TopFooterContainer>
-        <TopRow align='middle'>
+        <TopRow>
           <Col>
-            <Link to='/' onClick={() => setTimeout(scrollToTop, 500)}>
-              <Row align='middle'>
-                <Col>
-                  <LogoImageWrapper>
-                    <LazyLoadImage
-                      src={logo}
-                      alt='CTEC'
-                      effect='blur'
-                      wrapperClassName='lazy-load-image-wrapper'
-                    />
-                  </LogoImageWrapper>
-                </Col>
-                <Col>
-                  <BrandImageWrapper>
-                    <LazyLoadImage
-                      src={CTEC_banner}
-                      alt='CTEC'
-                      effect='blur'
-                      wrapperClassName='lazy-load-image-wrapper'
-                    />
-                  </BrandImageWrapper>
-                </Col>
-              </Row>
-            </Link>
+            <BrandLink to='/' onClick={() => setTimeout(scrollToTop, 500)}>
+              <LogoImageWrapper>
+                <LazyLoadImage src={logo} alt='CTEC' effect='blur' />
+              </LogoImageWrapper>
+              <BrandImageWrapper>
+                <LazyLoadImage src={CTEC_banner} alt='CTEC' effect='blur' />
+              </BrandImageWrapper>
+            </BrandLink>
           </Col>
+
+          <FooterLinks>
+            <FooterLinkGroup>
+              <FooterLinkTitle>{t('menu.memberAndWork')}</FooterLinkTitle>
+              <FooterLink to='/member/'>{t('menu.member')}</FooterLink>
+              <FooterLink to='/redstoneCollection/'>
+                {t('menu.redstone')}
+              </FooterLink>
+              <FooterLink to='/architectureCollection/'>
+                {t('menu.building')}
+              </FooterLink>
+            </FooterLinkGroup>
+            <FooterLinkGroup>
+              <FooterLinkTitle>Links</FooterLinkTitle>
+              <FooterLink to='/join/'>{t('menu.join')}</FooterLink>
+              <FooterLink to='/openSource/'>{t('menu.openSource')}</FooterLink>
+              <FooterLink to='/partner/'>{t('menu.partner')}</FooterLink>
+            </FooterLinkGroup>
+          </FooterLinks>
+
           <Col>
-            <Space size='large'>
+            <Space size='middle'>
               <SocialIcon
                 href={serverLink.discord}
                 target='_blank'
                 rel='noopener noreferrer'
+                aria-label='Discord'
               >
                 <DiscordOutlined />
               </SocialIcon>
@@ -271,6 +248,7 @@ const Footer: React.FC = () => {
                 href={serverLink.youtube}
                 target='_blank'
                 rel='noopener noreferrer'
+                aria-label='YouTube'
               >
                 <YoutubeOutlined />
               </SocialIcon>
@@ -278,6 +256,7 @@ const Footer: React.FC = () => {
                 href={serverLink.x}
                 target='_blank'
                 rel='noopener noreferrer'
+                aria-label='X'
               >
                 <XOutlined />
               </SocialIcon>
@@ -286,13 +265,13 @@ const Footer: React.FC = () => {
         </TopRow>
       </TopFooterContainer>
       <BottomFooterContainer>
-        <BottomRow align='middle'>
-          <CopyRightCol>
+        <BottomRow>
+          <Col>
             <Copyright>
               © {new Date().getFullYear()} Cloud Town Exquisite Craft. All
               Rights Reserved.
             </Copyright>
-          </CopyRightCol>
+          </Col>
           <Col>
             <Donate
               href={t('footer.donate.link')}
@@ -304,7 +283,7 @@ const Footer: React.FC = () => {
           </Col>
         </BottomRow>
       </BottomFooterContainer>
-    </footer>
+    </FooterContainer>
   );
 };
 

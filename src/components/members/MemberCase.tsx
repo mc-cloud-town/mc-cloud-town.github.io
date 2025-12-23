@@ -1,29 +1,29 @@
-import { Row, Col } from 'antd';
-
+import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 import { IMember } from '@/types/IMember.ts';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import MemberCard from '#/members/MemberCard.tsx';
-import styled from 'styled-components';
-import { useTranslation } from 'react-i18next';
+import { Row, Col } from 'antd';
 
 const SectionTitle = styled.h2`
   text-align: center;
-  color: inherit;
+  color: var(--text-primary);
   margin-bottom: 20px;
-  font-weight: bolder;
+  font-weight: 700;
+  font-size: 1.75rem;
 `;
 
 const SectionSubtitle = styled.h3`
   text-align: center;
-  color: inherit;
+  color: var(--text-secondary);
   margin: 20px 0;
-  font-weight: bolder;
+  font-weight: 600;
 `;
 
 const GroupRow = styled(Row)`
   margin-bottom: 50px;
 
-  &last-child {
+  &:last-child {
     margin-bottom: 0;
   }
 `;
@@ -42,7 +42,7 @@ const MemberCase = ({ memberGroups, searchMode }: MemberCaseProps) => {
 
   return (
     <>
-      {/* Show when all members ar empty */}
+      {/* Show when all members are empty */}
       {Object.values(memberGroups).every((members) => members.length === 0) && (
         <SectionTitle>{t('members.noResult')}</SectionTitle>
       )}

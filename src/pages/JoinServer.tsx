@@ -16,7 +16,6 @@ const JoinServer = () => {
         backgroundComponent={
           <HeaderImage imageUrl={getImageUrl(t('join.imageUrl'))} />
         }
-        maskColor={'#6f9b9c'}
         headerTextArray={[t('join.description')]}
         // eslint-disable-next-line react/jsx-key
         subHeaderContentArray={[<HeaderTimer />]}

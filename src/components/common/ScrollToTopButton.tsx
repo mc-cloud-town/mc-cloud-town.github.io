@@ -1,58 +1,63 @@
 import { useState, useEffect } from 'react';
-import { UpCircleFilled } from '@ant-design/icons';
-import styled from 'styled-components';
+import { ArrowUpOutlined } from '@ant-design/icons';
+import styled, { css } from 'styled-components';
 
 import useScroll from '@/hooks/useScroll.ts';
 
 const StyledButton = styled.button<{ $show: boolean }>`
   position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 25px;
-  height: 25px;
-  border: none;
-  background-color: white;
-  color: #6f9b9c;
+  right: 24px;
+  bottom: 24px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition:
-    opacity 0.3s,
-    visibility 0.3s;
-
-  @media (max-width: 300px) {
-    right: 40px;
-    bottom: 20px;
-  }
+  transform: translateY(20px);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
 
   ${(props) =>
     props.$show &&
-    `
-    opacity: 0.5;
-    visibility: visible;
-
-    &:hover {
+    css`
       opacity: 1;
-    }
-  `}
+      visibility: visible;
+      transform: translateY(0);
+    `}
+
+  &:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    transform: ${(props) =>
+      props.$show ? 'translateY(-4px)' : 'translateY(20px)'};
+    box-shadow: var(--glow-primary);
+  }
+
+  .anticon {
+    font-size: 20px;
+  }
 `;
 
 /**
- * ScrollToTopButton component
- * @constructor ScrollToTopButton - React Function Component
+ * Modern scroll-to-top button with glassmorphism effect.
  */
 const ScrollToTopButton = () => {
   const { y } = useScroll();
   const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    const shouldBeShown = y > 300;
-    setShowButton(shouldBeShown);
+    setShowButton(y > 400);
   }, [y]);
 
   const scrollToTop = () => {
@@ -65,7 +70,7 @@ const ScrollToTopButton = () => {
       $show={showButton}
       aria-label='Scroll to top'
     >
-      <UpCircleFilled style={{ fontSize: '40px' }} />
+      <ArrowUpOutlined />
     </StyledButton>
   );
 };

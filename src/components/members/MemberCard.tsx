@@ -27,7 +27,23 @@ const HeadImage = styled(LazyLoadImage)`
 
 const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   opacity: 0;
-  background-color: transparent;
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: all var(--transition-base) !important;
+
+  &:hover {
+    border-color: var(--color-primary) !important;
+    box-shadow: var(--shadow-md) !important;
+  }
+
+  .ant-card-meta-title {
+    color: var(--text-primary) !important;
+  }
+
+  .ant-card-meta-description {
+    color: var(--text-secondary) !important;
+  }
 
   ${(props) =>
     props.$fadeIn &&
