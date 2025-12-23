@@ -14,9 +14,23 @@ import useAnimateOnScroll from '@/hooks/useAnimateOnScroll.ts';
 
 const StyledCard = styled(Card)<{ $fadeIn: boolean }>`
   margin: 16px;
-  background-color: #f1f1f1;
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
   text-align: center;
   opacity: 0;
+  transition: all var(--transition-base) !important;
+
+  &:hover {
+    border-color: var(--color-primary) !important;
+    box-shadow: var(--shadow-lg) !important;
+    transform: translateY(-4px);
+  }
+
+  .ant-card-body h1 {
+    color: var(--text-primary) !important;
+    margin: 0;
+  }
 
   ${(props) =>
     props.$fadeIn &&
@@ -120,7 +134,7 @@ const PartnerCard = (partnerData: IPartnership) => {
       <StyleModal
         width={720}
         centered={true}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         title={
           <ModalTitle>
             {partnerData.ModalTitle}

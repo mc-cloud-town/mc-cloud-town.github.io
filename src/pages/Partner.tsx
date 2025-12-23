@@ -15,15 +15,19 @@ import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
 
 const PartnershipTitle = styled.h1`
   text-align: center;
-  background: #b1dde6;
-  font-weight: bolder;
-  box-shadow: 0 0 0 20px #b1dde6;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 2rem;
   margin: 20px;
+  padding: 12px 24px;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
 `;
 
 const Container = styled.div`
   padding: 50px 60px;
-  background-color: #b1dde6;
+  background: var(--bg-secondary);
 
   @media (max-width: 400px) {
     padding: 50px 10px;
@@ -61,7 +65,7 @@ const Partner = () => {
       <>
         <PageHeader
           backgroundComponent={<HeaderImage imageUrl={partner} />}
-          maskColor={'#b1dde6'}
+          maskColor={'var(--bg-secondary)'}
           headerTextArray={[t('partner.title')]}
         />{' '}
         <Container>
@@ -81,7 +85,7 @@ const Partner = () => {
     <>
       <PageHeader
         backgroundComponent={<HeaderImage imageUrl={partner} />}
-        maskColor={'#b1dde6'}
+        maskColor={'var(--bg-secondary)'}
         headerTextArray={[t('partner.title')]}
       />
       <Container>

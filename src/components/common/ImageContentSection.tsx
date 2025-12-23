@@ -9,7 +9,7 @@ import { IImageContent } from '@/types/IImageContent.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { fadeIn } from '@/styles/animation.ts';
 
-const SectionContainer = styled.div<{
+const SectionContainer = styled.section<{
   $dark: boolean;
   $right: boolean;
 }>`
@@ -17,102 +17,63 @@ const SectionContainer = styled.div<{
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 80px 60px;
+  padding: 100px 60px;
   position: relative;
   overflow: hidden;
+  background: var(--bg-primary);
 
-  /* Enhanced light mode with layered gradient and subtle texture */
-  background: radial-gradient(
-      ellipse at 20% 80%,
-      rgba(111, 155, 156, 0.08) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 80% 20%,
-      rgba(150, 219, 230, 0.1) 0%,
-      transparent 50%
-    ),
-    linear-gradient(180deg, #f5f7f8 0%, #e8eef0 35%, #dfe6e8 65%, #ecf0f1 100%);
-
-  /* Subtle top/bottom borders for depth */
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-
-  /* Decorative geometric accent */
+  /* Decorative gradient accent */
   &::before {
     content: '';
     position: absolute;
     top: 0;
+    left: 0;
     right: 0;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(
-      circle,
-      rgba(111, 155, 156, 0.06) 0%,
-      transparent 70%
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-color),
+      transparent
     );
-    pointer-events: none;
   }
 
   ${(props) =>
     props.$dark &&
-    `
-    /* Enhanced dark mode with rich layered gradients */
-    background: 
-      radial-gradient(ellipse at 30% 100%, rgba(74, 139, 141, 0.4) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 0%, rgba(150, 219, 230, 0.2) 0%, transparent 50%),
-      linear-gradient(135deg, #5a8586 0%, #6f9b9c 25%, #5d8889 50%, #6f9b9c 75%, #5a8586 100%);
-    color: #fff;
-    
-    /* Glassmorphism inner glow */
-    box-shadow: 
-      inset 0 1px 0 rgba(255, 255, 255, 0.15),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-    
-    /* Ensure links are visible in dark mode */
-    a {
-      color: #b1dde6 !important;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    }
-    a:hover {
-      color: #fff !important;
-    }
-    
-    &::before {
-      background: radial-gradient(circle, rgba(150, 219, 230, 0.15) 0%, transparent 70%);
-    }
-  `};
+    css`
+      background: var(--bg-secondary);
+    `};
 
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
     flex-direction: column;
-    padding: 60px 20px;
+    padding: 80px 40px;
   }
 
-  @media (max-width: 678px) {
-    padding: 50px 30px;
-  }
-
-  @media (max-width: 400px) {
-    padding: 50px 20px;
+  @media (max-width: 600px) {
+    padding: 60px 24px;
   }
 
   ${(props) =>
     props.$right &&
-    `
-    flex-direction: row-reverse;
-  `};
+    css`
+      flex-direction: row-reverse;
+
+      @media (max-width: 900px) {
+        flex-direction: column;
+      }
+    `};
 `;
 
 const Container = styled.div<{ $fadeIn: boolean }>`
   flex: 1;
   padding: 20px;
-  transition: opacity 0.8s ease-out;
+  max-width: 600px;
   opacity: 0;
 
-  @media (max-width: 678px) {
+  @media (max-width: 900px) {
     padding: 0;
-    margin-bottom: 20px;
+    margin-bottom: 32px;
+    max-width: 100%;
 
     &:last-child {
       margin-bottom: 0;
@@ -128,85 +89,121 @@ const Container = styled.div<{ $fadeIn: boolean }>`
 
 const ImageWrapper = styled.div`
   width: 100%;
-  min-width: 320px;
   padding-top: 56.25%;
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
-  box-shadow: 0 0 10px 0 #000000;
-  background-color: white;
+  border-radius: var(--radius-lg);
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-lg);
+  transition:
+    transform var(--transition-slow),
+    box-shadow var(--transition-slow);
 
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* LazyLoadImage wrapper span */
   & > span {
-    position: absolute;
+    position: absolute !important;
     top: 0;
     left: 0;
-    bottom: 0;
-    right: 0;
+    width: 100% !important;
+    height: 100% !important;
+  }
 
-    & > img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  img {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+  }
+
+  &:hover img {
+    transform: scale(1.05);
   }
 `;
 
 const TextButtonContainer = styled.div`
-  max-width: 600px;
+  max-width: 550px;
 `;
 
 const Title = styled.h2`
-  margin-bottom: 20px;
-  font-weight: bolder;
+  margin-bottom: var(--spacing-md);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  color: var(--text-primary);
+  line-height: 1.2;
 `;
 
 const SubTitle = styled.h3`
-  margin-bottom: 20px;
-  font-weight: bold;
+  margin-bottom: var(--spacing-md);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
 `;
 
 const Paragraph = styled.p`
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-secondary);
+  line-height: 1.7;
 `;
 
 const FeatureList = styled.ul`
   list-style: none;
   padding: 0;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 `;
 
-const FeatureItem = styled.li<{ $darkMode: boolean }>`
+const FeatureItem = styled.li`
   position: relative;
-  margin-bottom: 10px;
-  padding-left: 20px;
+  margin-bottom: var(--spacing-md);
+  padding-left: 28px;
   text-align: left;
+  color: var(--text-secondary);
+  line-height: 1.6;
 
-  &:before {
-    content: '•';
+  &::before {
+    content: '';
     position: absolute;
     left: 0;
-    color: #6f9b9c;
+    top: 8px;
+    width: 8px;
+    height: 8px;
+    background: var(--gradient-accent);
+    border-radius: 50%;
+  }
 
-    ${(props) =>
-      props.$darkMode &&
-      `
-      color: #fff;
-    `};
+  &::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 18px;
+    width: 2px;
+    height: calc(100% + 4px);
+    background: var(--border-color);
+  }
+
+  &:last-child::after {
+    display: none;
   }
 `;
 
-const StyledButton = styled(Button)<{ $darkMode: boolean }>`
-  & > span {
-    font-size: 18px;
-    font-weight: bold;
-    text-decoration: underline;
-  }
+const StyledButton = styled(Button)`
+  border-radius: var(--radius-md) !important;
+  font-weight: 600;
+  height: 44px;
+  padding: 0 24px;
+  transition: all var(--transition-base);
 
-  ${(props) =>
-    props.$darkMode &&
-    `
-    color: #fff;
-  `};
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow-primary);
+  }
 `;
 
 interface ImageContentSectionProps {
@@ -216,11 +213,7 @@ interface ImageContentSectionProps {
 }
 
 /**
- * ImageContentSection component
- * @param imageContent - Image content data
- * @param imageOnRight - Image position
- * @param darkMode - Dark mode
- * @constructor ImageContentSection - React Function Component
+ * Modern ImageContentSection component with glass effects and smooth animations.
  */
 const ImageContentSection: React.FC<ImageContentSectionProps> = ({
   imageContent,
@@ -252,9 +245,7 @@ const ImageContentSection: React.FC<ImageContentSectionProps> = ({
           <FeatureList>
             {imageContent.features &&
               imageContent.features.map((feature, index) => (
-                <FeatureItem key={index} $darkMode={darkMode}>
-                  {feature}
-                </FeatureItem>
+                <FeatureItem key={index}>{feature}</FeatureItem>
               ))}
           </FeatureList>
           <Flex wrap='wrap' gap='small'>
@@ -262,26 +253,17 @@ const ImageContentSection: React.FC<ImageContentSectionProps> = ({
               imageContent.buttons.map((button, index) =>
                 button.link ? (
                   <Link key={index} to={button.link}>
-                    <Button
-                      type={button.type || (darkMode ? 'default' : 'primary')}
-                      ghost={darkMode}
-                    >
+                    <StyledButton type={button.type || 'primary'}>
                       {button.text}
-                    </Button>
+                    </StyledButton>
                   </Link>
                 ) : (
                   <StyledButton
                     key={index}
-                    type={button.type || (darkMode ? 'default' : 'primary')}
-                    ghost={
-                      button.type !== 'link' &&
-                      button.type !== 'text' &&
-                      darkMode
-                    }
+                    type={button.type || 'primary'}
                     href={button.href}
                     target={button.href ? '_blank' : ''}
                     onClick={button.action}
-                    $darkMode={darkMode}
                   >
                     {button.text}
                   </StyledButton>

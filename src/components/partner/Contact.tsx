@@ -14,15 +14,27 @@ import { fadeIn } from '@/styles/animation.ts';
 
 const ContactSection = styled.div`
   text-align: center;
-  background-color: #b1dde6;
-  color: black;
-  padding: 0 40px 40px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 60px 40px;
+  border-radius: var(--radius-xl);
+  margin: 40px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+
+  @media (max-width: 600px) {
+    margin: 20px;
+    padding: 40px 20px;
+    border-radius: var(--radius-lg);
+  }
 `;
 
 const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
   font-weight: bolder;
   opacity: 0;
   margin-bottom: 20px;
+  color: var(--color-primary);
+  font-size: clamp(1.5rem, 3vw, 2rem);
 
   ${(props) =>
     props.$fadeIn &&
@@ -32,9 +44,11 @@ const ContactTitle = styled.h1<{ $fadeIn: boolean }>`
 `;
 
 const ContactInfo = styled.h3<{ $fadeIn: boolean }>`
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   opacity: 0;
-  font-size: 24px;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-secondary);
+  font-weight: 500;
 
   ${(props) =>
     props.$fadeIn &&
@@ -73,6 +87,12 @@ const BrandImageWrapper = styled.div`
 
   & > span > img {
     width: 100%;
+    transition: filter var(--transition-base);
+  }
+
+  /* Invert for dark mode visibility */
+  [data-theme='dark'] & > span > img {
+    filter: brightness(0) invert(0.9);
   }
 `;
 

@@ -15,7 +15,7 @@ import { IMembers } from '@/types/IMember.ts';
 
 const Container = styled.div`
   padding: 50px 40px;
-  background-color: #ecf0f1;
+  background: var(--bg-secondary);
 
   @media (max-width: 400px) {
     padding: 50px 10px;
@@ -28,12 +28,12 @@ const StatusContainer = styled.div`
   align-items: center;
 
   svg {
-    color: #6f9b9c !important;
+    color: var(--color-primary) !important;
   }
 
   span {
     margin-left: 10px;
-    color: #6f9b9c;
+    color: var(--text-secondary);
   }
 `;
 
@@ -45,6 +45,17 @@ const SearchContainer = styled.div`
 
 const StyledInput = styled(Input)`
   max-width: 400px;
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-color) !important;
+
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  &:hover,
+  &:focus {
+    border-color: var(--color-primary) !important;
+  }
 `;
 
 const MembersPage = () => {
