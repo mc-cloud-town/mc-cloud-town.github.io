@@ -1,6 +1,7 @@
 import React, { JSX } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { ReactTyped } from 'react-typed';
+import { useTranslation } from 'react-i18next';
 import useScroll from '@/hooks/useScroll.ts';
 
 const gradientShift = keyframes`
@@ -140,6 +141,17 @@ const fadeInUp = keyframes`
   }
 `;
 
+const scrollFadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+`;
+
 const HeaderTextContainer = styled.div`
   padding: 0 20px;
   color: white !important;
@@ -215,7 +227,6 @@ const ScrollIndicator = styled.div`
   position: absolute;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -223,7 +234,8 @@ const ScrollIndicator = styled.div`
   gap: 8px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.85rem;
-  animation: ${fadeInUp} 1s ease-out 1.5s forwards;
+  white-space: nowrap;
+  animation: ${scrollFadeInUp} 1s ease-out 1.5s forwards;
   opacity: 0;
   cursor: pointer;
   transition: color var(--transition-base);
@@ -262,6 +274,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   useTyped = false,
   transparent = false,
 }: PageHeaderProps) => {
+  const { t } = useTranslation();
   const { y } = useScroll();
   const innerHeight = window.innerHeight;
   const maskAOpacity = Math.max(0, 0.4 - (y / innerHeight) * 0.8);
@@ -335,7 +348,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       <BackgroundContainer>{backgroundComponent}</BackgroundContainer>
 
       <ScrollIndicator onClick={handleScrollDown}>
-        <span>Scroll</span>
+        <span>{t('scroll')}</span>
         <ScrollLine />
       </ScrollIndicator>
     </BackgroundHeader>
