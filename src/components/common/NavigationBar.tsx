@@ -228,9 +228,14 @@ const MobileMenu = styled.div<{ $open: boolean; $isDark: boolean }>`
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: var(--spacing-xl);
+  padding-bottom: calc(
+    var(--spacing-xl) + 80px
+  ); /* Extra padding for last item */
   transform: translateX(${(props) => (props.$open ? '0' : '100%')});
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 999;
+  overflow-y: auto; /* Allow scrolling if content exceeds menu height */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 
   @media (max-width: 900px) {
     display: flex;
@@ -285,9 +290,23 @@ const NavigationBar: React.FC = () => {
   }, [y, lastY]);
 
   useEffect(() => {
-    // Close mobile menu on route change
+    // Close mobile menu on route change and scroll to top
     setMobileMenuOpen(false);
-  }, [location]);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   const scrolled = y > 100;
 
