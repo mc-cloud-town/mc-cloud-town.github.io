@@ -33,8 +33,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            .yarn/cache
-            .yarn/unplugged
+            ~/.yarn/berry/cache
+            node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
