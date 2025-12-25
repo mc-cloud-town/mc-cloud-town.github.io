@@ -234,5 +234,53 @@
     "title": "紅石作品集",
     "imageUrl": "redstoneCollection/p30.webp",
     "searchPlaceholder": "搜索标签或名称"
+  },
+  "hardware": {
+    "title": "服务器硬件",
+    "description": "顶级设备驱动我们的创意社区",
+    "imageUrl": "homePage/CTEC_Hardware.webp",
+    "specsTitle": "服务器规格",
+    "featuresTitle": "核心特色",
+    "specs": [
+      {
+        "icon": "processor",
+        "name": "处理器",
+        "value": "Intel Core i9-13900K\n24核心，32线程\n最高 5.8 GHz"
+      },
+      {
+        "icon": "memory",
+        "name": "内存",
+        "value": "128GB DDR5 RAM\n高速性能\n多任务优化"
+      },
+      {
+        "icon": "storage",
+        "name": "存储空间",
+        "value": "6TB NVMe Gen 4 SSD\n超快读写速度\n可靠的数据保护"
+      },
+      {
+        "icon": "power",
+        "name": "电源供应",
+        "value": "UPS 不断电系统\n24/7 运行保证\n防止电力中断"
+      },
+      {
+        "icon": "network",
+        "name": "网络",
+        "value": "全球代理服务器\n低延迟连接\n国际玩家优化"
+      },
+      {
+        "icon": "maintenance",
+        "name": "维护",
+        "value": "专业工程团队\n主动监控\n定期更新与优化"
+      }
+    ],
+    "features": [
+      "支持大量玩家同时在线而不影响性能",
+      "全球分布的低延迟代理服务器，提供最佳游戏体验",
+      "专业级 UPS 系统确保 99.9% 正常运行时间",
+      "专业工程师定期进行硬件维护和软件更新",
+      "先进冷却系统确保持续高性能运作",
+      "自动化备份系统保护玩家数据和世界进度",
+      "针对创意建筑和高强度红石装置进行优化"
+    ]
   }
 }

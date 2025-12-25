@@ -12,6 +12,7 @@ import OpenSourcePage from './pages/OpenSource.tsx';
 import Partner from './pages/Partner.tsx';
 import ArchitectureCollection from './pages/ArchitectureCollection.tsx';
 import RedstoneCollection from './pages/RedstoneCollection.tsx';
+import Hardware from './pages/Hardware.tsx';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 
 import initI18n from './i18n/i18nConfig';
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               path='architectureCollection'
               element={<ArchitectureCollection />}
             />
+            <Route path='hardware' element={<Hardware />} />
             <Route path='*' element={<NotFoundPage />} />
           </Route>
         </Routes>

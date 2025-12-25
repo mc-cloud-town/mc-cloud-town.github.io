@@ -238,5 +238,53 @@
     "title": "Redstone Collection",
     "imageUrl": "redstoneCollection/p30.webp",
     "searchPlaceholder": "Search Tags or Name"
+  },
+  "hardware": {
+    "title": "Server Hardware",
+    "description": "State-of-the-art equipment powering our creative community",
+    "imageUrl": "homePage/CTEC_Hardware.webp",
+    "specsTitle": "Server Specifications",
+    "featuresTitle": "Key Features",
+    "specs": [
+      {
+        "icon": "processor",
+        "name": "Processor",
+        "value": "Intel Core i9-13900K\n24 Cores, 32 Threads\nUp to 5.8 GHz"
+      },
+      {
+        "icon": "memory",
+        "name": "Memory",
+        "value": "128GB DDR5 RAM\nHigh-speed performance\nOptimized for multitasking"
+      },
+      {
+        "icon": "storage",
+        "name": "Storage",
+        "value": "6TB NVMe Gen 4 SSD\nUltra-fast read/write speeds\nReliable data protection"
+      },
+      {
+        "icon": "power",
+        "name": "Power Supply",
+        "value": "UPS Uninterruptible Power System\n24/7 uptime guarantee\nProtection against power outages"
+      },
+      {
+        "icon": "network",
+        "name": "Network",
+        "value": "Global Proxy Servers\nLow-latency connections\nOptimized for international players"
+      },
+      {
+        "icon": "maintenance",
+        "name": "Maintenance",
+        "value": "Dedicated Engineering Team\nProactive monitoring\nRegular updates and optimization"
+      }
+    ],
+    "features": [
+      "Support for large numbers of simultaneous players without performance degradation",
+      "Low-latency proxy servers distributed globally for optimal gaming experience",
+      "Professional-grade UPS system ensuring 99.9% uptime",
+      "Regular hardware maintenance and software updates by dedicated engineers",
+      "Advanced cooling system for sustained high-performance operation",
+      "Automated backup systems to protect player data and world progress",
+      "Optimized for both creative building and intensive redstone contraptions"
+    ]
   }
 }
