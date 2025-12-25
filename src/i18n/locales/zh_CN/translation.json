@@ -187,7 +187,10 @@
   },
   "survivalProgress": {
     "title": "生存服进度",
-    "description": "历史并非毫无意义，而是为了在时光中留下我们走过的痕迹"
+    "description": "历史并非毫无意义，而是为了在时光中留下我们走过的痕迹",
+    "storyMode": "故事模式",
+    "pause": "暂停",
+    "continue": "继续"
   },
   "opensource": {
     "title": "开源列表",

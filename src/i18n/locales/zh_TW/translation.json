@@ -187,7 +187,10 @@
   },
   "survivalProgress": {
     "title": "生存服進度",
-    "description": "歷史並非毫無意義，而是為了在時光中留下我們走過的痕跡"
+    "description": "歷史並非毫無意義，而是為了在時光中留下我們走過的痕跡",
+    "storyMode": "故事模式",
+    "pause": "暫停",
+    "continue": "繼續"
   },
   "opensource": {
     "title": "開源專案",

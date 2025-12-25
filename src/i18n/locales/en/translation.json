@@ -191,7 +191,10 @@
   },
   "survivalProgress": {
     "title": "Survival Server Progress",
-    "description": "History is not meaningless. it's to leave traces of our journey through time."
+    "description": "History is not meaningless. it's to leave traces of our journey through time.",
+    "storyMode": "Story Mode",
+    "pause": "Pause",
+    "continue": "Continue"
   },
   "opensource": {
     "title": "Open Source",
