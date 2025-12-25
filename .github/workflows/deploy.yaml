@@ -30,9 +30,14 @@ jobs:
         run: corepack enable
 
       - name: Install
-        run: |
-          yarn install
-          yarn add sharp --ignore-engines
+        run: yarn install
+        env:
+          YARN_IGNORE_NODE: 1
+
+      - name: Install sharp
+        run: yarn add sharp
+        env:
+          YARN_IGNORE_NODE: 1
 
       - name: Build
         run: yarn build
