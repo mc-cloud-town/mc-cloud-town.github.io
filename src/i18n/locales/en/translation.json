@@ -119,7 +119,7 @@
       "buttons": [
         {
           "text": "Explore the Map",
-          "link": "/frostpursuit"
+          "href": "/frostpursuit"
         }
       ]
     }

@@ -262,7 +262,12 @@ const ImageContentSection: React.FC<ImageContentSectionProps> = ({
                     key={index}
                     type={button.type || 'primary'}
                     href={button.href}
-                    target={button.href ? '_blank' : ''}
+                    target={
+                      button.href?.startsWith('http') ||
+                      button.href?.startsWith('//')
+                        ? '_blank'
+                        : undefined
+                    }
                     onClick={button.action}
                   >
                     {button.text}

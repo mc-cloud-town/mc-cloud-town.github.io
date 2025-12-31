@@ -115,7 +115,7 @@
       "buttons": [
         {
           "text": "探索地圖",
-          "link": "/frostpursuit"
+          "href": "/frostpursuit"
         }
       ]
     }
