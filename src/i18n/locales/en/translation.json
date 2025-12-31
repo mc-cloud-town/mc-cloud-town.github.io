@@ -105,6 +105,23 @@
         "Latest Redstone Creations",
         "Latest Architectural Works"
       ]
+    },
+    "frostPursuit": {
+      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
+      "title": "Frost Pursuit Christmas Special Map",
+      "subTitle": "The Ultimate Ice Boat Racing Map is Now Available!",
+      "features": [
+        "Immersive winter track designs",
+        "Meticulously Designed Redstone and festive atmosphere",
+        "Multiplayer racing mode support",
+        "Carefully crafted lighting and visual effects"
+      ],
+      "buttons": [
+        {
+          "text": "Explore the Map",
+          "link": "/frostpursuit"
+        }
+      ]
     }
   },
   "notFound": {

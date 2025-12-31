@@ -101,6 +101,23 @@
     "carousel": {
       "title": "服务器内容",
       "subtitles": ["最新生存进度", "最新红石作品", "最新建筑作品"]
+    },
+    "frostPursuit": {
+      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
+      "title": "Frost Pursuit 圣诞特别地图",
+      "subTitle": "全新冰船竞速地图正式发布！",
+      "features": [
+        "身临其境的冬季赛道设计",
+        "精心设计红石与节日氛围",
+        "支持多人竞速模式",
+        "精心设计的光影与视觉效果"
+      ],
+      "buttons": [
+        {
+          "text": "探索地图",
+          "link": "/frostpursuit"
+        }
+      ]
     }
   },
   "notFound": {

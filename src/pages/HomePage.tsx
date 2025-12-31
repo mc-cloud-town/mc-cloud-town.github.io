@@ -96,6 +96,11 @@ const HomePage = () => {
       <ImageContentSection
         imageContent={t('home.about', { returnObjects: true })}
       />
+      <ImageContentSection
+        imageContent={t('home.frostPursuit', { returnObjects: true })}
+        imageOnRight={true}
+        darkMode={true}
+      />
       <CardsSection
         title={t('home.feature.title')}
         type={'dark'}
