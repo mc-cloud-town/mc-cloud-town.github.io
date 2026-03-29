@@ -212,7 +212,21 @@
   "opensource": {
     "title": "開源專案",
     "description": "為提供玩家更好的體驗，我們開發了許多開源插件",
-    "imageUrl": "openSource/CTEC_Development.webp"
+    "imageUrl": "openSource/CTEC_Development.webp",
+    "eyebrow": "Open Source Projects",
+    "intro": "把雲鎮工藝在伺服器營運、玩家體驗與社群工具上的成果整理成公開專案，讓每個作品都能更清楚地被閱讀、重用與延伸。",
+    "stats": {
+      "total": "專案總數",
+      "active": "仍在維護",
+      "stars": "總星數"
+    },
+    "noDescription": "目前還沒有補上專案說明。",
+    "unknownLanguage": "未標示語言",
+    "noLicense": "尚未標示授權",
+    "hasWebsite": "有展示頁",
+    "archived": "已封存",
+    "sourceCode": "原始碼",
+    "updatedOn": "更新於 {{date}}"
   },
   "partner": {
     "title": "合作夥伴及團隊",
