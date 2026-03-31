@@ -30,10 +30,11 @@ const CardContainer = styled.a<{ $accent: string; $isVisible: boolean }>`
   /* Scroll Reveal Animation: Smoother, no will-change vram exhaustion */
   opacity: ${(props) => (props.$isVisible ? 1 : 0)};
   transform: translateY(${(props) => (props.$isVisible ? 0 : '20px')});
-  transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              transform 1s cubic-bezier(0.2, 0.8, 0.2, 1),
-              box-shadow 0.3s ease,
-              border-color 0.3s ease;
+  transition:
+    opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 1s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 
   &::before {
     content: '';
@@ -44,22 +45,22 @@ const CardContainer = styled.a<{ $accent: string; $isVisible: boolean }>`
     width: 4px;
     background: ${(props) => props.$accent};
     opacity: 0.7;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, opacity 0.3s ease;
   }
 
   &:hover {
-    transform: translateY(-6px) !important; /* Force override visibility transform */
-    box-shadow: var(--shadow-xl);
+    transform: translateY(-8px) !important;
+    box-shadow: 0 12px 32px color-mix(in srgb, ${(props) => props.$accent} 15%, transparent);
     border-color: ${(props) => props.$accent};
-    
+
     &::before {
       width: 6px;
       opacity: 1;
     }
-    
+
     .external-icon {
       color: ${(props) => props.$accent};
-      transform: translate(2px, -2px);
+      transform: translate(4px, -4px) scale(1.1);
     }
   }
 `;
@@ -69,26 +70,34 @@ const CardTop = styled.div`
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `;
 
 const RepoTitleBlock = styled.div`
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const RepoName = styled.h3`
-  margin: 0 0 6px;
+  margin: 0;
   color: var(--text-primary);
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   line-height: 1.3;
   word-break: break-word;
+  transition: color 0.3s ease;
+  
+  ${CardContainer}:hover & {
+    color: var(--color-primary);
+  }
 `;
 
 const RepoPath = styled.p`
   margin: 0;
   color: var(--text-tertiary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-family: var(--font-body);
 `;
 
@@ -97,17 +106,23 @@ const ExternalBadge = styled.span`
   align-items: center;
   justify-content: center;
   color: var(--text-tertiary);
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
+  font-size: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   flex-shrink: 0;
   width: 32px;
   height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  
+  ${CardContainer}:hover & {
+    background: var(--bg-secondary);
+  }
 `;
 
 const RepoDescription = styled.p`
   margin: 0 0 24px;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -127,12 +142,19 @@ const Topic = styled.span`
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  border: 1px solid var(--border-color);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  ${CardContainer}:hover & {
+    background: var(--bg-elevated);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
 `;
 
 const DetailRow = styled.div`
@@ -147,8 +169,13 @@ const DetailTag = styled.span`
   align-items: center;
   gap: 6px;
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  transition: color 0.3s ease;
+  
+  ${CardContainer}:hover & {
+    color: var(--text-primary);
+  }
 `;
 
 const LanguageDot = styled.span<{ $color: string }>`
@@ -156,7 +183,8 @@ const LanguageDot = styled.span<{ $color: string }>`
   height: 10px;
   border-radius: 50%;
   background: ${(props) => props.$color};
-  box-shadow: 0 0 0 2px color-mix(in srgb, ${(props) => props.$color} 20%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, ${(props) => props.$color} 20%, transparent);
 `;
 
 const Footer = styled.div`
@@ -165,7 +193,8 @@ const Footer = styled.div`
   align-items: center;
   gap: 16px;
   padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px dashed var(--border-color);
+  margin-top: auto; /* Push footer to bottom */
 
   @media (max-width: 480px) {
     flex-direction: column;
@@ -179,13 +208,19 @@ const Stats = styled.div`
   gap: 16px;
   color: var(--text-secondary);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
 `;
 
 const Stat = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    color: var(--text-primary);
+    transform: translateY(-2px);
+  }
 `;
 
 const UpdatedAt = styled.span`
@@ -222,14 +257,17 @@ const RepoCard = ({ repo, index }: RepoCardProps) => {
         entries.forEach((entry) => {
           // When 10% of the card is visible from bottom scroll
           if (entry.isIntersecting) {
-            setTimeout(() => {
-              setIsVisible(true);
-            }, (index % 3) * 100); // 100ms tiny wave for siblings entering at same time
+            setTimeout(
+              () => {
+                setIsVisible(true);
+              },
+              (index % 3) * 100,
+            ); // 100ms tiny wave for siblings entering at same time
             observer.unobserve(entry.target);
           }
         });
       },
-      { rootMargin: '0px', threshold: 0.1 }
+      { rootMargin: '0px', threshold: 0.1 },
     );
 
     if (cardRef.current) {

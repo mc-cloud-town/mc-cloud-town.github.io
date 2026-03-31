@@ -1,16 +1,15 @@
-import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
+import { DatabaseOutlined, FireOutlined, StarOutlined } from '@ant-design/icons';
 
 const HeroCard = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 40px;
+  justify-content: center;
   margin-bottom: 64px;
   padding: 48px;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-color);
-  background: var(--bg-elevated);
+  background: linear-gradient(145deg, var(--bg-elevated), var(--bg-primary));
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
@@ -21,61 +20,30 @@ const HeroCard = styled.div`
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
+    height: 6px;
     background: var(--gradient-accent);
+    opacity: 0.8;
   }
 
   @media (min-width: 900px) {
-    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
   }
 
   @media (max-width: 768px) {
     padding: 32px 24px;
-    gap: 32px;
   }
-`;
-
-const HeroText = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 600px;
-`;
-
-const Eyebrow = styled.span`
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-`;
-
-const Title = styled.h2`
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: clamp(2.5rem, 4vw, 3.5rem);
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--text-primary);
-`;
-
-const Description = styled.p`
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 1.05rem;
-  line-height: 1.7;
 `;
 
 const MetaGrid = styled.div`
   display: flex;
-  gap: 32px;
+  justify-content: center;
+  gap: 48px;
   flex-wrap: wrap;
 
   @media (max-width: 640px) {
     width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     gap: 24px;
   }
 `;
@@ -83,57 +51,59 @@ const MetaGrid = styled.div`
 const MetaCard = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 40px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-color);
+    background: var(--bg-elevated);
+    
+    .anticon {
+      color: var(--color-accent);
+      transform: scale(1.1);
+    }
+  }
+
+  @media (max-width: 640px) {
+    width: 100%;
+    padding: 24px;
+  }
 `;
 
 const MetaLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--text-tertiary);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+
+  .anticon {
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+  }
 `;
 
 const MetaValue = styled.div`
   font-family: var(--font-heading);
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 3.2rem;
+  font-weight: 800;
   color: var(--text-primary);
   line-height: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 `;
 
-// Direct DOM mutation ticker, constant speed (linear)
-const useNumberTicker = (end: number, duration: number = 1000) => {
-  const nodeRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let startTime: number | null = null;
-    let animationFrame: number;
-
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      
-      // Linear progression (勻速)
-      const currentValue = Math.floor(progress * end);
-      
-      if (nodeRef.current) {
-        nodeRef.current.textContent = currentValue.toString();
-      }
-
-      if (progress < 1) {
-        animationFrame = window.requestAnimationFrame(step);
-      }
-    };
-
-    animationFrame = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
-
-  return nodeRef;
-};
-
 interface HeroSectionProps {
+  loading: boolean;
   stats: {
     totalCount: number;
     activeCount: number;
@@ -141,32 +111,44 @@ interface HeroSectionProps {
   };
 }
 
-const HeroSection = ({ stats }: HeroSectionProps) => {
-  const { t } = useTranslation();
-  
-  const totalRef = useNumberTicker(stats.totalCount);
-  const activeRef = useNumberTicker(stats.activeCount);
-  const starsRef = useNumberTicker(stats.totalStars);
+const getNumberLocale = (language: string) => {
+  const normalizedLocale = language.replace('_', '-');
+
+  return Intl.NumberFormat.supportedLocalesOf([normalizedLocale])[0] ?? 'en-US';
+};
+
+const HeroSection = ({ loading, stats }: HeroSectionProps) => {
+  const { t, i18n } = useTranslation();
+  const numberLocale = getNumberLocale(i18n.resolvedLanguage ?? i18n.language);
+
+  const formatValue = (value: number) => {
+    if (loading) {
+      return '--';
+    }
+
+    return value.toLocaleString(numberLocale);
+  };
 
   return (
     <HeroCard>
-      <HeroText>
-        <Eyebrow>{t('opensource.eyebrow')}</Eyebrow>
-        <Title>{t('opensource.title')}</Title>
-        <Description>{t('opensource.intro')}</Description>
-      </HeroText>
       <MetaGrid>
         <MetaCard>
-          <MetaLabel>{t('opensource.stats.total')}</MetaLabel>
-          <MetaValue ref={totalRef}>0</MetaValue>
+          <MetaLabel>
+            <DatabaseOutlined /> {t('opensource.stats.total')}
+          </MetaLabel>
+          <MetaValue>{formatValue(stats.totalCount)}</MetaValue>
         </MetaCard>
         <MetaCard>
-          <MetaLabel>{t('opensource.stats.active')}</MetaLabel>
-          <MetaValue ref={activeRef}>0</MetaValue>
+          <MetaLabel>
+            <FireOutlined /> {t('opensource.stats.active')}
+          </MetaLabel>
+          <MetaValue>{formatValue(stats.activeCount)}</MetaValue>
         </MetaCard>
         <MetaCard>
-          <MetaLabel>{t('opensource.stats.stars')}</MetaLabel>
-          <MetaValue ref={starsRef}>0</MetaValue>
+          <MetaLabel>
+            <StarOutlined /> {t('opensource.stats.stars')}
+          </MetaLabel>
+          <MetaValue>{formatValue(stats.totalStars)}</MetaValue>
         </MetaCard>
       </MetaGrid>
     </HeroCard>

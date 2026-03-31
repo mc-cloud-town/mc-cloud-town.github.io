@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { InboxOutlined } from '@ant-design/icons';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
+import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
 
-import useApi from '@/hooks/useApi';
+import useApi from '@/hooks/useApi.ts';
 import getImageUrl from '@/utils/getImageUrl.ts';
 import { IRepoType } from '@/types/IRepoType.ts';
 import { GITHUB_API } from '@/constants';
@@ -13,11 +15,10 @@ import {
   RepoSection,
   Content,
   Grid,
-  StatusContainer,
+  EmptyState,
 } from '#/openSource/OpenSourceStyles.ts';
 import HeroSection from '#/openSource/HeroSection.tsx';
 import RepoCard from '#/openSource/RepoCard.tsx';
-import RepoCardSkeleton from '#/openSource/RepoCardSkeleton.tsx';
 
 const OpenSourcePage = () => {
   const { t } = useTranslation();
@@ -35,18 +36,18 @@ const OpenSourcePage = () => {
   }, [data]);
 
   const stats = useMemo(() => {
-    // Determine stats during loading by assuming starting points if needed
-    if (loading || !data) {
-      return { totalCount: 0, activeCount: 0, totalStars: 0 };
-    }
     const activeCount = repos.filter((repo) => !repo.archived).length;
-    const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+    const totalStars = repos.reduce(
+      (sum, repo) => sum + repo.stargazers_count,
+      0,
+    );
+
     return {
       totalCount: repos.length,
       activeCount,
       totalStars,
     };
-  }, [repos, data, loading]);
+  }, [repos]);
 
   return (
     <>
@@ -59,20 +60,22 @@ const OpenSourcePage = () => {
       />
       <RepoSection>
         <Content>
-          <HeroSection stats={stats} />
+          <HeroSection loading={loading || !!error} stats={stats} />
+          <StatusShowingGroup error={error} loading={loading} />
 
-          {error && <StatusContainer>{t('error')}</StatusContainer>}
-
-          {!error && (
+          {!loading && !error && repos.length > 0 && (
             <Grid>
-              {loading
-                ? Array.from({ length: 6 }).map((_, index) => (
-                    <RepoCardSkeleton key={`skeleton-${index}`} />
-                  ))
-                : repos.map((repo, index) => (
-                    <RepoCard key={repo.id} repo={repo} index={index} />
-                  ))}
+              {repos.map((repo, index) => (
+                <RepoCard key={repo.id} repo={repo} index={index} />
+              ))}
             </Grid>
+          )}
+
+          {!loading && !error && repos.length === 0 && (
+            <EmptyState>
+              <InboxOutlined style={{ fontSize: '48px', marginBottom: '16px', color: 'var(--text-tertiary)' }} />
+              {t('opensource.noRepositories')}
+            </EmptyState>
           )}
         </Content>
       </RepoSection>

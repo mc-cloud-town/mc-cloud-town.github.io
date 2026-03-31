@@ -8,14 +8,21 @@ const StatusContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 10px;
+  padding: 48px 0;
+  color: var(--text-secondary);
 
-  i {
-    background-color: #feffe6 !important;
+  .anticon {
+    color: var(--color-primary);
   }
 
-  span {
-    margin-left: 10px;
-    color: #feffe6;
+  .ant-spin-dot-item {
+    background-color: var(--color-primary);
+  }
+
+  .ant-typography {
+    color: inherit;
+    margin-bottom: 0;
   }
 `;
 
@@ -34,7 +41,7 @@ export const StatusShowingGroup: React.FC<StatusShowingGroupProps> = ({
     <>
       {error && (
         <StatusContainer>
-          <WarningOutlined style={{ fontSize: '24px', color: '#feffe6' }} />
+          <WarningOutlined style={{ fontSize: '24px' }} />
           <Typography.Text>{t('error')}</Typography.Text>
         </StatusContainer>
       )}

@@ -217,8 +217,6 @@
     "title": "Open Source",
     "description": "To contribute to the community, we have open-sourced some of our projects",
     "imageUrl": "openSource/CTEC_Development.webp",
-    "eyebrow": "Open Source Projects",
-    "intro": "A curated view of the tools, plugins, and community utilities we have built for CloudTown, presented with clearer hierarchy and a more intentional visual style.",
     "stats": {
       "total": "Total Repos",
       "active": "Actively Maintained",
@@ -230,7 +228,8 @@
     "hasWebsite": "Has website",
     "archived": "Archived",
     "sourceCode": "Source",
-    "updatedOn": "Updated {{date}}"
+    "updatedOn": "Updated {{date}}",
+    "noRepositories": "No repositories are available right now."
   },
   "partner": {
     "title": "Partners",

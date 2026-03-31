@@ -2,7 +2,15 @@ import styled from 'styled-components';
 
 export const RepoSection = styled.section`
   background: var(--bg-primary);
+  background-image: radial-gradient(circle at top right, rgba(0, 0, 0, 0.02) 0%, transparent 60%),
+                    radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.02) 0%, transparent 60%);
   padding: 80px 24px 100px;
+  position: relative;
+
+  [data-theme='dark'] & {
+    background-image: radial-gradient(circle at top right, rgba(255, 255, 255, 0.03) 0%, transparent 60%),
+                      radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  }
 
   @media (max-width: 768px) {
     padding: 56px 16px 80px;
@@ -25,12 +33,20 @@ export const Grid = styled.div`
   }
 `;
 
-export const StatusContainer = styled.div`
+export const EmptyState = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  padding: 80px 0;
+  align-items: center;
+  padding: 80px 24px;
   color: var(--text-secondary);
   font-size: 1.1rem;
+  text-align: center;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl);
+  border: 1px dashed var(--border-color);
+  margin-top: 32px;
+  backdrop-filter: blur(8px);
 `;
 
 const languageColors: Record<string, string> = {

@@ -211,8 +211,21 @@
   },
   "opensource": {
     "title": "开源列表",
-    "description": "看起来很赞 不是吗?",
-    "imageUrl": "openSource/CTEC_Development.webp"
+    "description": "为了给玩家带来更好的体验，我们也将部分项目开放为开源作品。",
+    "imageUrl": "openSource/CTEC_Development.webp",
+    "stats": {
+      "total": "项目总数",
+      "active": "仍在维护",
+      "stars": "总星数"
+    },
+    "noDescription": "这个仓库暂时还没有说明。",
+    "unknownLanguage": "未标注语言",
+    "noLicense": "尚未标注许可证",
+    "hasWebsite": "有展示页",
+    "archived": "已归档",
+    "sourceCode": "源码",
+    "updatedOn": "更新于 {{date}}",
+    "noRepositories": "目前没有可显示的开源项目。"
   },
   "partner": {
     "title": "合作伙伴及团队",

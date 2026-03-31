@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import axios, { AxiosError } from 'axios';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 /**
  * useApi hook to fetch data from an API.
@@ -18,37 +18,46 @@ const useApi = <T>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<{ message: string } | null>(null);
 
-  const fetchData = useCallback(() => {
-    let isMounted = true; // 标志组件是否挂载
+  useEffect(() => {
+    const controller = new AbortController();
+    let isActive = true;
 
+    setData(null);
     setLoading(true);
+    setError(null);
+
     axios
-      .get<T>(url)
+      .get<T>(url, { signal: controller.signal })
       .then((response) => {
-        if (isMounted) {
+        if (isActive) {
           setData(response.data);
           setError(null);
         }
       })
-      .catch((err: AxiosError) => {
-        if (isMounted) {
-          setError({ message: err.message });
+      .catch((err: unknown) => {
+        if (!isActive) {
+          return;
         }
+
+        if (axios.isAxiosError(err) && err.code === 'ERR_CANCELED') {
+          return;
+        }
+
+        setError({
+          message: axios.isAxiosError(err) ? err.message : 'Unknown error',
+        });
       })
       .finally(() => {
-        if (isMounted) {
+        if (isActive) {
           setLoading(false);
         }
       });
 
     return () => {
-      isMounted = false;
+      isActive = false;
+      controller.abort();
     };
   }, [url]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   return { data, loading, error };
 };
