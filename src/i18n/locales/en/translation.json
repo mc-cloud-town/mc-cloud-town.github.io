@@ -216,7 +216,20 @@
   "opensource": {
     "title": "Open Source",
     "description": "To contribute to the community, we have open-sourced some of our projects",
-    "imageUrl": "openSource/CTEC_Development.webp"
+    "imageUrl": "openSource/CTEC_Development.webp",
+    "stats": {
+      "total": "Total Repos",
+      "active": "Actively Maintained",
+      "stars": "Total Stars"
+    },
+    "noDescription": "This repository does not have a description yet.",
+    "unknownLanguage": "Unknown",
+    "noLicense": "No license specified",
+    "hasWebsite": "Has website",
+    "archived": "Archived",
+    "sourceCode": "Source",
+    "updatedOn": "Updated {{date}}",
+    "noRepositories": "No repositories are available right now."
   },
   "partner": {
     "title": "Partners",
