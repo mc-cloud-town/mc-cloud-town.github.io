@@ -114,9 +114,10 @@ export const buildChoreography = (
         0,
       );
 
-    // shared reveals
-    const reveals = () => {
-      gsap.utils.toArray<HTMLElement>('[data-say]', root).forEach((el) =>
+    // The text reveals of one section: the statement lights up line by line, the label and the blocks rise.
+    const reveals = (section: HTMLElement | null) => {
+      if (!section) return;
+      gsap.utils.toArray<HTMLElement>('[data-say]', section).forEach((el) =>
         gsap.to(el.querySelectorAll('span'), {
           opacity: 1,
           stagger: 0.5,
@@ -129,7 +130,7 @@ export const buildChoreography = (
           },
         }),
       );
-      gsap.utils.toArray<HTMLElement>('.open .vt', root).forEach((el) =>
+      gsap.utils.toArray<HTMLElement>('.vt', section).forEach((el) =>
         gsap.from(el, {
           yPercent: 12,
           opacity: 0,
@@ -138,7 +139,7 @@ export const buildChoreography = (
           scrollTrigger: { trigger: el, start: 'top 85%' },
         }),
       );
-      gsap.utils.toArray<HTMLElement>('.rise', root).forEach((el) =>
+      gsap.utils.toArray<HTMLElement>('.rise', section).forEach((el) =>
         gsap.from(el, {
           y: 44,
           opacity: 0,
@@ -217,11 +218,13 @@ export const buildChoreography = (
       { xPercent: -1.5, scale: 1.05 },
       { xPercent: 1.5, scale: 1.12 },
     );
+    reveals(q('#overworld'));
     TRANSITIONS.slice(1, 4).forEach(work);
 
     // ── later tasks append here, in page order ──
-
-    reveals();
+    // Rule: one section at a time, top to bottom, and everything a section needs (its scene change, its drift,
+    // its pin, its reveals(section)) is created together. A pin adds scroll length, so a trigger created before
+    // a pin that sits above it on the page is measured wrong.
 
     // ── always last ──
     dims();

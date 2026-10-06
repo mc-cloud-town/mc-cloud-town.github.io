@@ -353,6 +353,74 @@ test.describe('home: overworld', () => {
     await expectTextFits(page, { within: '#overworld' });
   });
 
+  test('switching language keeps the scenes, the statement and the captions working', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="overworld-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w2']);
+    const language = page.locator('.dim-bar select[data-action="language"]');
+    const scenes = async (lang: string) => {
+      for (const [i, scene] of ['w1', 'w2', 'w3'].entries()) {
+        await scrollToSection(page, `[data-work="overworld-${i}"]`, 0.2);
+        expect(await visibleScenes(page), `${lang} build ${i}`).toEqual([
+          scene,
+        ]);
+        // the caption has risen into view
+        await expect(page.locator(`[data-work="overworld-${i}"] h3`)).toHaveCSS(
+          'opacity',
+          '1',
+        );
+        await expect(page.locator(`[data-work="overworld-${i}"] p`)).toHaveCSS(
+          'opacity',
+          '1',
+        );
+      }
+    };
+
+    await language.selectOption('en');
+    await expect(page.locator('[data-work="overworld-1"] h3')).toHaveText(
+      'The new spawn',
+    );
+    await scenes('en');
+    // back at the opening, with the end of the statement a third of the way down: every line is lit by then
+    const sayHeight = await page
+      .locator('#overworld .say')
+      .evaluate((el) => el.getBoundingClientRect().height / innerHeight);
+    await scrollToSection(page, '#overworld .say', sayHeight - 0.33);
+    expect(await visibleScenes(page)).toEqual(['town']);
+    const lines = page.locator('#overworld .say span');
+    expect(await lines.count()).toBe(3);
+    await expect(lines.first()).toHaveText('Redstone is engineering.');
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+
+    await language.selectOption('zh_CN');
+    await expect(page.locator('[data-work="overworld-1"] h3')).toHaveText(
+      '新出生点',
+    );
+    await scenes('zh_CN');
+  });
+
+  test('a two-line build name breaks where the copy says, and reads as one name', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="overworld-0"]', 0.2);
+    const title = page.locator('[data-work="overworld-0"] h3');
+    await expect(title.locator('br')).toHaveCount(1);
+    await expect(title).toHaveAttribute('aria-label', '進撃の巨人 瑪莉亞之牆');
+    await expect(title).not.toContainText('：');
+    // a one-line name has no break
+    const plain = page.locator('[data-work="overworld-1"] h3');
+    await expect(plain).toHaveText('新出生點');
+    await expect(plain.locator('br')).toHaveCount(0);
+    await expect(page.locator('#overworld .tag')).toContainText('OVERWORLD');
+  });
+
   test('reduced motion: the statement is fully shown and scenes still switch', async ({
     page,
   }) => {

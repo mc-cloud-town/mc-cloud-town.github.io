@@ -45,7 +45,7 @@ export const HomePage = () => {
     () => null,
   );
   const [, setLedger] = useState(0);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: members } = useApi<IMembers>(`${STATIC_DATA_API}/member.json`);
   const { data: repos } = useApi<{ name: string }[]>(
     `${GITHUB_API}?per_page=100`,
@@ -106,6 +106,13 @@ export const HomePage = () => {
     };
   }, [ready, reduced, setDim]);
 
+  // Another language reflows the text and moves every section below it: measure the triggers again.
+  // (Runs after the new text is committed; the nodes themselves are kept, see the index keys below.)
+  const language = i18n.language;
+  useEffect(() => {
+    if (ready && language) ScrollTrigger.refresh();
+  }, [ready, language]);
+
   const onDone = useCallback(() => setReady(true), []);
 
   return (
@@ -162,7 +169,8 @@ export const HomePage = () => {
         </DimensionOpening>
         {works.map((w, i) => (
           <WorkSection
-            key={w.name}
+            // keyed by position: the same section carries every language, so its scroll triggers survive a switch
+            key={i}
             group='overworld'
             index={i}
             meta={w.meta}

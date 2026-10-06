@@ -71,3 +71,10 @@ export const TRANSITIONS: TransitionDef[] = [
   { trigger: '#credits', from: 'farm', to: 'end', fx: 'push' },
   { trigger: '#respawn', from: 'end', to: 'day1', fx: 'wake' },
 ];
+
+/** The Latin mark beside each dimension's tag. Untranslated on purpose: a design mark, identical in every language. */
+export const DIMENSION_MARKS = {
+  overworld: 'OVERWORLD',
+  nether: 'THE NETHER',
+  end: 'THE END',
+} as const;

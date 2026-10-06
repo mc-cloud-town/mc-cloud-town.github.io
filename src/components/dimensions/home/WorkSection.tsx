@@ -13,27 +13,34 @@ export const WorkSection = ({
   index: number;
   meta: string;
   name: string;
-}) => (
-  <section
-    className='work-sec'
-    data-work={`${group}-${index}`}
-    data-dim={group}
-  >
-    <article className={`work ${PLACE[index % 3]}`}>
-      <div>
-        <p className='mono acc' data-t='note'>
-          {meta}
-        </p>
-        <h3 className='serif' data-t='title'>
-          {/* a title with a subtitle ("A：B", "A: B") stands on two lines, without the colon */}
-          {name.split(/\s*[：:]\s*/).map((line, i) => (
-            <Fragment key={line}>
-              {i > 0 && <br />}
-              {line}
-            </Fragment>
-          ))}
-        </h3>
-      </div>
-    </article>
-  </section>
-);
+}) => {
+  const lines = name.split('\n');
+  return (
+    <section
+      className='work-sec'
+      data-work={`${group}-${index}`}
+      data-dim={group}
+    >
+      <article className={`work ${PLACE[index % 3]}`}>
+        <div>
+          <p className='mono acc' data-t='note'>
+            {meta}
+          </p>
+          {/* a newline in the copy is a line break; read aloud, the name is one phrase */}
+          <h3
+            className='serif'
+            data-t='title'
+            aria-label={lines.length > 1 ? lines.join(' ') : undefined}
+          >
+            {lines.map((line, i) => (
+              <Fragment key={i}>
+                {i > 0 && <br />}
+                {line}
+              </Fragment>
+            ))}
+          </h3>
+        </div>
+      </article>
+    </section>
+  );
+};

@@ -1,12 +1,6 @@
 import type { ReactNode } from 'react';
 import { VerticalLabel } from '#/dimensions/VerticalLabel';
-
-/** The Latin name beside the tag: the same in every language. */
-const LATIN = {
-  overworld: 'OVERWORLD',
-  nether: 'THE NETHER',
-  end: 'THE END',
-} as const;
+import { DIMENSION_MARKS } from '@/constants/scenes';
 
 /** A dimension opens: tag, statement (one line per span), body, then whatever the dimension adds. */
 export const DimensionOpening = ({
@@ -28,11 +22,12 @@ export const DimensionOpening = ({
     <div>
       <div className='tag mono' data-t='note'>
         <span className='acc'>{tag}</span>
-        <span>{LATIN[id]}</span>
+        <span>{DIMENSION_MARKS[id]}</span>
       </div>
       <p className='say' data-say data-t='title'>
-        {say.map((line) => (
-          <span key={line}>{line}</span>
+        {/* keyed by position: the same nodes carry every language, so their scroll animations survive a switch */}
+        {say.map((line, i) => (
+          <span key={i}>{line}</span>
         ))}
       </p>
       <p className='body rise' data-t='body'>
