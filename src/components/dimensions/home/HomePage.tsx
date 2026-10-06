@@ -7,18 +7,32 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SiteBar } from '#/dimensions/SiteBar';
 import { useDimension } from '#/dimensions/DimensionProvider';
+import { GITHUB_API, STATIC_DATA_API } from '@/constants';
+import useApi from '@/hooks/useApi';
 import { buildChoreography } from '@/lib/dimensions/choreography';
+import { daysSince, SERVER_START_MS } from '@/lib/dimensions/format';
+import type { IMembers } from '@/types/IMember';
 import { World } from './World';
 import { Loader } from './Loader';
 import { Hero } from './Hero';
+import { DimensionOpening } from './DimensionOpening';
+import { WorkSection } from './WorkSection';
+
+/** Shown until the live numbers arrive, and kept if they never do. */
+const MILESTONES = 53;
+const DEFAULT_MEMBERS = 116;
+const DEFAULT_REPOS = 29;
 
 const noSubscription = () => () => {};
 const prefersReducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const daysToday = () => daysSince(SERVER_START_MS, Date.now());
 
 export const HomePage = () => {
   const root = useRef<HTMLDivElement>(null);
@@ -31,6 +45,21 @@ export const HomePage = () => {
     () => null,
   );
   const [, setLedger] = useState(0);
+  const { t } = useTranslation();
+  const { data: members } = useApi<IMembers>(`${STATIC_DATA_API}/member.json`);
+  const { data: repos } = useApi<{ name: string }[]>(
+    `${GITHUB_API}?per_page=100`,
+  );
+  // the static export is rendered at build time: the day count is only known in the browser
+  const days = useSyncExternalStore<number | null>(
+    noSubscription,
+    daysToday,
+    () => null,
+  );
+  const works = t('dimensions.overworld.works', { returnObjects: true }) as {
+    meta: string;
+    name: string;
+  }[];
 
   // Build once the loader is done, so measurements see the final fonts and layout.
   useEffect(() => {
@@ -87,6 +116,59 @@ export const HomePage = () => {
       <SiteBar variant='home' />
       <main>
         <Hero />
+        <DimensionOpening
+          id='overworld'
+          tag={t('dimensions.overworld.tag')}
+          say={
+            t('dimensions.overworld.say', { returnObjects: true }) as string[]
+          }
+          body={t('dimensions.overworld.body')}
+          label={t('dimensions.dim.overworld')}
+        >
+          <div className='stats rise'>
+            <div>
+              <b data-stat='days'>
+                {days === null ? '' : days.toLocaleString('en-US')}
+              </b>
+              <span data-t='note'>{t('dimensions.overworld.stats.days')}</span>
+            </div>
+            <div>
+              <b data-stat='milestones'>{MILESTONES}</b>
+              <span data-t='note'>
+                {t('dimensions.overworld.stats.milestones')}
+              </span>
+            </div>
+            <div>
+              <b data-stat='members'>
+                {members?.member?.length ?? DEFAULT_MEMBERS}
+              </b>
+              <span data-t='note'>
+                {t('dimensions.overworld.stats.members')}
+              </span>
+            </div>
+            <div>
+              <b data-stat='repos'>
+                {repos
+                  ? repos.filter((r) => !r.name.startsWith('.')).length
+                  : DEFAULT_REPOS}
+              </b>
+              <span data-t='note'>{t('dimensions.overworld.stats.repos')}</span>
+            </div>
+          </div>
+          <a className='more rise' href='/survivalProgress/' data-t='control'>
+            {t('dimensions.overworld.more', { count: MILESTONES })}{' '}
+            <span aria-hidden='true'>→</span>
+          </a>
+        </DimensionOpening>
+        {works.map((w, i) => (
+          <WorkSection
+            key={w.name}
+            group='overworld'
+            index={i}
+            meta={w.meta}
+            name={w.name}
+          />
+        ))}
       </main>
     </div>
   );

@@ -28,7 +28,14 @@ export const addTransition = (
   if (def.fx === 'curtain' || def.fx === 'slide') {
     const p = def.fx === 'curtain' ? 'yPercent' : 'xPercent';
     // the layer moves in while its content moves the opposite way by the same amount: the picture stays put and is revealed
-    tl.set(B.el, { autoAlpha: 1 }, 0)
+    // Not a set(): a zero-length step at the very start is not undone when the scroll comes back to it,
+    // which would leave the layer switched on, parked just off screen.
+    tl.fromTo(
+      B.el,
+      { autoAlpha: 0 },
+      { autoAlpha: 1, duration: 0.001, ease: 'none', ...im },
+      0,
+    )
       .fromTo(B.el, { [p]: 100 }, { [p]: 0, duration: 1, ease: io, ...im }, 0)
       .fromTo(
         B.zoom,

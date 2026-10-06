@@ -258,6 +258,137 @@ html.lenis {
     animation: cue 1.8s cubic-bezier(0.7, 0, 0.2, 1) infinite;
   }
 
+  /* ───────── a dimension opens ───────── */
+  .open {
+    position: relative;
+    min-height: 140vh;
+    padding: 28vh var(--gutter) 18vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6vw;
+    align-items: start;
+  }
+  .open > div:first-child {
+    max-width: 44vw;
+  }
+  /* the dimension name: the same weight on the page as the statement beside it */
+  .open .vt {
+    font-size: clamp(40px, 5.2vw, 88px);
+    letter-spacing: 0.12em;
+    position: sticky;
+    top: 22vh;
+  }
+  /* the serif glyph box is a little wider than 1em, so the upright label would scroll inside itself;
+     the negative margin keeps the glyphs where the design puts them */
+  @media (min-width: 861px) {
+    .open .vt {
+      line-height: 1.2;
+      margin-right: -0.1em;
+    }
+  }
+  .open .tag {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .open .tag::after {
+    content: '';
+    width: 80px;
+    height: 1px;
+    background: var(--line);
+  }
+  .say {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(30px, 3.8vw, 64px);
+    line-height: 1.32;
+  }
+  .say span {
+    display: block;
+    opacity: 0.16;
+    text-wrap: balance;
+  }
+  .open p.body {
+    max-width: min(30em, var(--measure));
+    margin-top: 40px;
+    font-size: 17px;
+    color: var(--muted);
+  }
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 56px;
+    margin-top: 64px;
+  }
+  .stats b {
+    display: block;
+    font: 900 clamp(40px, 4.4vw, 68px) / 1 var(--serif);
+    font-variant-numeric: tabular-nums;
+  }
+  .stats span {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  /* the home page is the trailer: each part ends with a way into the full page */
+  .more {
+    display: inline-flex;
+    gap: 10px;
+    margin-top: 40px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    transition:
+      gap 0.3s,
+      border-color 0.3s;
+  }
+  .more:hover {
+    gap: 16px;
+    border-bottom-color: var(--accent);
+  }
+
+  /* works: full-screen builds, each arriving its own way with its caption somewhere else */
+  .work-sec {
+    position: relative;
+    height: 150vh;
+  }
+  .work {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: grid;
+    padding: 110px var(--gutter) 96px;
+  }
+  .work h3 {
+    font-size: clamp(36px, 5.2vw, 88px);
+    margin: 10px 0 0;
+    overflow-wrap: anywhere;
+  }
+  .work--bl {
+    align-content: end;
+    justify-items: start;
+  }
+  .work--tr {
+    align-content: center;
+    justify-items: end;
+    text-align: right;
+  }
+  .work--tr > div {
+    max-width: 36vw;
+  }
+  .work--bc {
+    align-content: end;
+    justify-items: center;
+    text-align: center;
+  }
+
+  @media (max-width: 1024px) {
+    /* 44px tall to tap; the line stays right under the words, as in the design */
+    .more {
+      align-items: flex-end;
+      margin-top: 28px;
+    }
+  }
   @media (max-width: 860px) {
     /* no room for a clear side: the veil runs bottom-up instead */
     .veil--side,
@@ -282,6 +413,25 @@ html.lenis {
     .hero-copy p.lead {
       font-size: 16px;
     }
+    .open {
+      grid-template-columns: 1fr;
+      padding-top: 20vh;
+    }
+    .open > div:first-child,
+    .work--tr > div {
+      max-width: none;
+    }
+    .open .vt {
+      writing-mode: horizontal-tb;
+      position: static;
+      order: -1;
+      font-size: 40px;
+    }
+    .work--tr {
+      align-content: end;
+      justify-items: start;
+      text-align: left;
+    }
   }
   /* short landscape screens: the title would run off the bottom */
   @media (max-height: 480px) {
@@ -302,23 +452,44 @@ html.lenis {
     .cue {
       display: none;
     }
+    .open {
+      min-height: 0;
+      padding-block: 96px 64px;
+    }
+    .work {
+      padding-block: 72px 24px;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     .cue i::after {
       animation: none;
     }
+    .say span {
+      opacity: 1;
+    }
   }
 }
 
-/* day: the paper side is narrower, so more of the photograph stays untouched */
-[data-theme='light']:not([data-dim='end']) .dim .veil--side {
-  background: linear-gradient(
-    90deg,
-    rgba(var(--v), 0.97) 0%,
-    rgba(var(--v), 0.94) 36%,
-    rgba(var(--v), 0.3) 54%,
-    rgba(var(--v), 0) 72%
-  );
+/* day: the paper side is narrower, so more of the photograph stays untouched.
+   Only where there is a side: on narrow screens the text runs the full width, and the bottom-up veil above stays. */
+@media (min-width: 861px) {
+  [data-theme='light']:not([data-dim='end']) .dim .veil--side {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), 0.97) 0%,
+      rgba(var(--v), 0.94) 36%,
+      rgba(var(--v), 0.3) 54%,
+      rgba(var(--v), 0) 72%
+    );
+  }
+}
+/* day: the vertical dimension name stands on the photograph, so it gets its own strip of paper */
+[data-theme='light']:not([data-dim='end']) .dim .open .vt {
+  background: rgba(var(--v), 0.95);
+  padding: 0.4em 0.25em 0.3em;
+  /* the strip has its own padding, so the label never overflows: keep the design's box */
+  line-height: 1;
+  margin-right: 0;
 }
 
 @keyframes cue {

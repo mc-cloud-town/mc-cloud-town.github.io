@@ -113,9 +113,115 @@ export const buildChoreography = (
         { y: -80, opacity: 0, duration: 0.5 },
         0,
       );
-    TRANSITIONS.slice(0, 1).forEach(change);
+
+    // shared reveals
+    const reveals = () => {
+      gsap.utils.toArray<HTMLElement>('[data-say]', root).forEach((el) =>
+        gsap.to(el.querySelectorAll('span'), {
+          opacity: 1,
+          stagger: 0.5,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 72%',
+            end: 'bottom 40%',
+            scrub: true,
+          },
+        }),
+      );
+      gsap.utils.toArray<HTMLElement>('.open .vt', root).forEach((el) =>
+        gsap.from(el, {
+          yPercent: 12,
+          opacity: 0,
+          duration: 1.4,
+          ease: 'expo.out',
+          scrollTrigger: { trigger: el, start: 'top 85%' },
+        }),
+      );
+      gsap.utils.toArray<HTMLElement>('.rise', root).forEach((el) =>
+        gsap.from(el, {
+          y: 44,
+          opacity: 0,
+          duration: 1.1,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 86%' },
+        }),
+      );
+    };
+
+    // each build drifts its own way while it is on screen
+    const CAM = [
+      [{ scale: 1.14 }, { scale: 1.04 }],
+      [
+        { scale: 1.06, xPercent: 2 },
+        { scale: 1.06, xPercent: -2 },
+      ],
+      [
+        { scale: 1.04, yPercent: 1.5 },
+        { scale: 1.1, yPercent: -1.5 },
+      ],
+    ] as const;
+    const work = (def: TransitionDef, i: number) => {
+      if (!has(def)) return;
+      const sec = q(def.trigger)!,
+        cam = q(`.scene[data-scene="${def.to}"] .cam`);
+      change(def);
+      gsap.fromTo(cam, CAM[i % 3][0], {
+        ...CAM[i % 3][1],
+        ease: 'none',
+        immediateRender: false,
+        scrollTrigger: {
+          trigger: sec,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+      gsap.from(sec.querySelectorAll('.work > div > *'), {
+        y: 36,
+        opacity: 0,
+        duration: 0.9,
+        stagger: 0.08,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: sec,
+          start: 'top 30%',
+          toggleActions: 'play none none reverse',
+        },
+      });
+    };
+    const drift = (
+      trigger: string,
+      scene: string,
+      from: gsap.TweenVars,
+      to: gsap.TweenVars,
+    ) => {
+      if (!q(trigger)) return;
+      gsap.fromTo(q(`.scene[data-scene="${scene}"] .cam`), from, {
+        ...to,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: q(trigger),
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+    };
+
+    // ── overworld ──
+    change(TRANSITIONS[0]);
+    drift(
+      '#overworld',
+      'town',
+      { xPercent: -1.5, scale: 1.05 },
+      { xPercent: 1.5, scale: 1.12 },
+    );
+    TRANSITIONS.slice(1, 4).forEach(work);
 
     // ── later tasks append here, in page order ──
+
+    reveals();
 
     // ── always last ──
     dims();
