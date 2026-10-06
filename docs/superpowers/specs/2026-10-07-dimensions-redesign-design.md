@@ -179,7 +179,7 @@ src/app/
 | `ProgressLog`                                                                                    | 進度清單與固定的大年份                            | 進度資料            |
 | `MemberRoster`                                                                                   | 成員名冊與搜尋                                    | 成員資料            |
 
-樣式沿用專案現有的 styled-components，設計變數放在全域 CSS。新元件不使用 antd。
+樣式是純 CSS，放在 `src/styles/dimensions/`，所有規則都包在 `.dim` 範圍內，由設計稿直接移植。這樣新舊頁面的樣式互不影響，也不必把設計稿的樣式改寫成另一種寫法。新元件不使用 antd 與 styled-components。
 
 ### 5.3 場景與換場
 
