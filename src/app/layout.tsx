@@ -84,7 +84,7 @@ export default function RootLayout({
         />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href='https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+TC:wght@200..900&display=swap'
+          href='https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+TC:wght@200..900&family=Chiron+Sung+HK:wght@700;900&family=Chiron+Hei+HK:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap'
           rel='stylesheet'
         />
         <script

@@ -332,5 +332,190 @@
       "Automated backup systems to protect player data and world progress",
       "Optimized for both creative building and intensive redstone contraptions"
     ]
+  },
+  "dimensions": {
+    "nav": {
+      "home": "Cloud Town home",
+      "overworld": "Overworld",
+      "nether": "Nether",
+      "end": "The End",
+      "progress": "Progress",
+      "members": "Members",
+      "join": "Join us",
+      "menu": "Menu",
+      "close": "Close",
+      "theme": "Switch day or night",
+      "language": "Language"
+    },
+    "dim": {
+      "overworld": "OVERWORLD",
+      "nether": "THE NETHER",
+      "end": "THE END",
+      "all": "WORLD LOG"
+    },
+    "hero": {
+      "since": "Since 2022.07.23",
+      "uptime": "Running {{days}} days {{clock}}",
+      "lead": "We study redstone and build in vanilla Minecraft, in one survival world that has never been reset.",
+      "cta": "Join us",
+      "cue": "Scroll through three dimensions",
+      "loading": "Building terrain"
+    },
+    "overworld": {
+      "tag": "Dimension 01 / 03",
+      "say": [
+        "Redstone is engineering.",
+        "Building is the work.",
+        "Survival is one long experiment."
+      ],
+      "body": "CTEC is a technical survival community from Asia. Members come from many fields and work with technical servers worldwide. Everything is built in survival mode.",
+      "stats": {
+        "days": "days, one world",
+        "milestones": "survival milestones",
+        "members": "full members",
+        "repos": "open-source projects"
+      },
+      "more": "The full world log, {{count}} milestones",
+      "works": [
+        {
+          "meta": "Build · 2024.03.22",
+          "name": "Attack on Titan: Wall Maria"
+        },
+        {
+          "meta": "Build · 2023.07",
+          "name": "The new spawn"
+        },
+        {
+          "meta": "Survival · Storage · 2023.08.20",
+          "name": "Fully encoded all-item sorter"
+        }
+      ]
+    },
+    "nether": {
+      "tag": "Dimension 02 / 03",
+      "say": ["Through the portal", "is our factory."],
+      "body": "The nether hub, perimeters, piglin trading, magma cube farms. These machines are not creative-mode showpieces. They run and produce in the survival world.",
+      "ledger": [
+        {
+          "date": "2022.08.08",
+          "name": "Nether hub"
+        },
+        {
+          "date": "2023.01.17",
+          "name": "Y0 portal piglin farm"
+        },
+        {
+          "date": "2023.04.23",
+          "name": "1k nether perimeter"
+        },
+        {
+          "date": "2024.02.13",
+          "name": "Million-rate piglin trading"
+        },
+        {
+          "date": "2024.09.05",
+          "name": "Nether hub main cannon"
+        },
+        {
+          "date": "2025.02.11",
+          "name": "Flower farm (Nether)"
+        }
+      ],
+      "rankLabel": "Farm world records held",
+      "rank": ["6th in the world", "1st in Asia"],
+      "rankBody": "Several farms we designed hold certified world records."
+    },
+    "end": {
+      "tag": "Dimension 03 / 03",
+      "say": ["After the End", "come the credits."],
+      "body": "The end hub, the Moon Palace and the end farms all stand over the void. After these three come the people who built this world.",
+      "works": [
+        {
+          "meta": "Build · 2023.09.29",
+          "name": "Moon Palace"
+        },
+        {
+          "meta": "Survival · 2022.12.03",
+          "name": "End farming district"
+        }
+      ],
+      "credits": {
+        "tools": "OPEN-SOURCE TOOLS",
+        "member": "FULL MEMBERS",
+        "trial": "TRIAL MEMBERS",
+        "roles": {
+          "core": "Game core",
+          "server": "Server management",
+          "infra": "Infrastructure",
+          "community": "Community tools"
+        },
+        "more": "Full member roster",
+        "fin": "Not over yet."
+      }
+    },
+    "respawn": {
+      "label": "Respawn point: Cloud Town",
+      "title": "The next milestone is waiting for you.",
+      "cta": "Join the Discord",
+      "depts": [
+        {
+          "name": "Redstone",
+          "body": "Submit your redstone work. We invite the authors of outstanding builds.",
+          "action": "Submission channel"
+        },
+        {
+          "name": "Building",
+          "body": "We review structure, use of colour and originality.",
+          "action": "Application form"
+        },
+        {
+          "name": "Logistics",
+          "body": "Basic redstone knowledge and enthusiasm for the game are enough to apply.",
+          "action": "Application form"
+        }
+      ]
+    },
+    "footer": {
+      "support": "Support us",
+      "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
+    },
+    "progress": {
+      "crumb": "Survival progress",
+      "title": ["One world,", "from day one until now."],
+      "lead": "The server opened on 23 July 2022 and the world has never been reset. All {{total}} milestones are here. Filter by dimension or year.",
+      "allDims": "All dimensions",
+      "allYears": "All years",
+      "count": "{{n}} / {{total}}",
+      "no": "No. {{n}}",
+      "perYear": "{{n}} milestones",
+      "empty": "No milestones for this combination. Try another dimension or year.",
+      "loading": "Loading",
+      "error": "Could not load the progress data.",
+      "retry": "Reload",
+      "next": "The people who built this world"
+    },
+    "members": {
+      "crumb": "Members",
+      "title": ["The credits,", "in full."],
+      "lead": "Outstanding members from every field, building the server's record together.",
+      "search": "Search members",
+      "count": "{{n}} / {{total}}",
+      "groupCount": "{{n}}",
+      "groups": {
+        "member": {
+          "title": "Full members",
+          "line": "Veterans who have already left their mark on the server"
+        },
+        "trial": {
+          "title": "Trial members",
+          "line": "Fresh hands, waiting to be discovered"
+        }
+      },
+      "empty": "No member found. Try another name.",
+      "loading": "Loading",
+      "error": "Could not load the member data.",
+      "retry": "Reload",
+      "next": "The next name could be yours"
+    }
   }
 }

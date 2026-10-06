@@ -1,0 +1,133 @@
+/* Shell: top bar, menu sheet and footer. Ported from docs/design-demos/inner.css. */
+.dim {
+  .dim-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 18px var(--gutter);
+    background: rgba(var(--v), 0.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .dim-bar .logo {
+    margin-right: auto;
+  }
+  .dim-bar .logo img {
+    height: 28px;
+    filter: var(--logo);
+  }
+  .dim-bar nav {
+    display: flex;
+    gap: 24px;
+    font-size: 14px;
+  }
+  .dim-bar nav a {
+    opacity: 0.7;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+  }
+  .dim-bar nav a:hover,
+  .dim-bar nav a[aria-current] {
+    opacity: 1;
+    border-bottom-color: var(--accent);
+  }
+  .pill {
+    font: 12px var(--mono);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 8px 14px;
+  }
+  .pill:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  .dim-foot {
+    margin-top: 120px;
+    border-top: 1px solid var(--line);
+    padding: 32px var(--gutter) 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dim-foot img {
+    height: 24px;
+    filter: var(--logo);
+    margin-right: auto;
+  }
+  .dim-foot a:hover {
+    color: var(--accent);
+  }
+
+  /* additions not in the design demos */
+  .dim-bar nav a.on {
+    opacity: 1;
+    border-bottom-color: var(--accent);
+  } /* home page: the current dimension */
+  .dim-bar select.pill {
+    appearance: none;
+    text-align: center;
+  }
+  .dim-bar .menu {
+    display: none;
+  }
+  .dim-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    padding: 96px var(--gutter) 40px;
+    background: rgba(var(--v), 0.97);
+    overflow-y: auto;
+  }
+  .dim-sheet[hidden] {
+    display: none;
+  }
+  .dim-sheet nav {
+    display: grid;
+  }
+  .dim-sheet a {
+    font: 900 28px/1.2 var(--serif);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .dim-sheet a[aria-current],
+  .dim-sheet a.on {
+    color: var(--accent);
+  }
+  .dim-foot {
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+
+  @media (max-width: 860px) {
+    .dim-bar {
+      gap: 8px;
+    }
+    .dim-bar nav,
+    .dim-bar .discord {
+      display: none;
+    }
+    .dim-bar .menu {
+      display: inline-flex;
+    }
+    /* own row; contain keeps the logo from stretching to the row width */
+    .dim-foot img {
+      flex-basis: 100%;
+      object-fit: contain;
+      object-position: left;
+    }
+  }
+  @media (min-width: 861px) {
+    .dim-sheet {
+      display: none;
+    }
+  }
+}

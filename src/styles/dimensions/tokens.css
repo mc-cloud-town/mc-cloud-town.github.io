@@ -1,0 +1,160 @@
+/* Tokens for the "three dimensions" pages. Everything lives under .dim so legacy pages are untouched. */
+.dim {
+  --bg: #06080b;
+  --panel: #0e1217;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.18);
+  --accent: #86cdff;
+  --logo: invert(1);
+  /* veil stops: solid where text sits, clear where it does not */
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+  --h1: 0.82;
+  --h2: 0.4;
+  --h3: 0.12;
+  --h4: 0.62;
+  --h5: 0.78;
+  --serif: 'Chiron Sung HK', 'Noto Serif TC', serif;
+  --sans: 'Chiron Hei HK', 'Noto Sans TC', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --gutter: clamp(20px, 6vw, 96px);
+  --measure: 40em;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  transition:
+    background 0.4s,
+    color 0.4s;
+}
+.dim *,
+.dim *::before,
+.dim *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.dim a {
+  color: inherit;
+  text-decoration: none;
+}
+.dim img {
+  display: block;
+  max-width: 100%;
+}
+.dim ul,
+.dim ol {
+  list-style: none;
+}
+.dim button,
+.dim input,
+.dim select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+.dim button,
+.dim select {
+  cursor: pointer;
+}
+.dim :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.dim ::selection {
+  background: var(--accent);
+  color: #000;
+}
+.dim .mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.dim .acc {
+  color: var(--accent);
+  transition: color 0.5s;
+}
+.dim .serif {
+  font-family: var(--serif);
+  font-weight: 900;
+  line-height: 1.14;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+
+[data-theme='light'] .dim {
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --fg: #0f1418;
+  --muted: #414c57;
+  --v: 238, 242, 245;
+  --line: rgba(15, 20, 24, 0.24);
+  --logo: none;
+  --accent: #0b6fb5;
+  --s1: 0.97;
+  --s2: 0.92;
+  --s3: 0.22;
+  --s4: 0;
+  --f1: 0.97;
+  --f2: 0.6;
+  --f3: 0;
+  --h1: 0.96;
+  --h2: 0.74;
+  --h3: 0;
+  --h4: 0.9;
+  --h5: 0.97;
+}
+[data-dim='nether'] .dim {
+  --accent: #ff6a45;
+}
+[data-dim='end'] .dim {
+  --accent: #cdb0ff;
+}
+[data-theme='light'][data-dim='nether'] .dim {
+  --accent: #c2330f;
+}
+[data-theme='light'][data-dim='end'] .dim {
+  --accent: #6234c4;
+}
+/* The End has no daylight: on the home page the interface goes dark for this one dimension. */
+[data-theme='light'][data-dim='end'] .dim.dim--home {
+  --bg: #06080b;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.18);
+  --logo: invert(1);
+  --accent: #cdb0ff;
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+}
+
+/* touch sizes: every control is at least 44 × 44 up to tablet landscape */
+@media (max-width: 1024px) {
+  .dim a,
+  .dim button,
+  .dim select,
+  .dim input {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
