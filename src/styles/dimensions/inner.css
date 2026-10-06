@@ -69,7 +69,7 @@
   /* tools: filters and search stay reachable while the list scrolls */
   .tools {
     position: sticky;
-    top: 65px;
+    top: var(--bar-h);
     z-index: 30;
     display: flex;
     flex-wrap: wrap;
@@ -210,9 +210,6 @@
         rgba(var(--v), 0.6) 100%
       );
     }
-    .tools {
-      top: 61px;
-    }
     .tools .count {
       display: none;
     }
@@ -267,6 +264,18 @@
     .head .vt {
       line-height: 1.2;
       margin-right: -0.1em;
+    }
+  }
+  /* the light panel has its own padding, so it never overflows: keep the demo's box */
+  [data-theme='light'] & .head .vt {
+    line-height: 1;
+    margin-right: 0;
+  }
+  @media (max-width: 1024px) {
+    /* 44px tap height and width, but the visual rhythm stays the demo's */
+    .head .crumb a {
+      justify-content: center;
+      margin-inline: -8px;
     }
   }
 }

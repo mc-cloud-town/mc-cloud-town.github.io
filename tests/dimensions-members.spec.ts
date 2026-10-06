@@ -62,3 +62,37 @@ test.describe('members page', () => {
     await expectTextFits(page);
   });
 });
+
+test.describe('members page: sticky toolbar and retry', () => {
+  for (const [width, height] of [
+    [390, 844],
+    [1440, 900],
+  ]) {
+    test(`toolbar stays below the bar when scrolled: ${width}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/member/');
+      await page.locator('.person').first().waitFor();
+      await page.evaluate(() => window.scrollTo(0, 1500));
+      await page.waitForTimeout(300);
+      const [bar, tools, search] = await Promise.all(
+        ['.dim-bar', '.tools', '.search'].map((s) =>
+          page.locator(s).evaluate((el) => el.getBoundingClientRect().toJSON()),
+        ),
+      );
+      expect(tools.top).toBeGreaterThanOrEqual(bar.bottom - 1);
+      expect(search.top).toBeGreaterThanOrEqual(bar.bottom - 1);
+      expect(search.bottom).toBeLessThanOrEqual(height);
+    });
+  }
+
+  test('retry reloads the roster after a failed request', async ({ page }) => {
+    await page.route(DATA, (r) => r.abort());
+    await openPage(page, '/member/');
+    await expect(page.locator('.empty')).toContainText('成員資料載入失敗');
+    await page.unroute(DATA);
+    await page.locator('.empty button').click();
+    await expect(page.locator('.person').first()).toBeVisible();
+  });
+});

@@ -1,5 +1,10 @@
 /* Shell: top bar, menu sheet and footer. Ported from docs/design-demos/inner.css. */
 .dim {
+  /* the fixed bar's height, for sticky offsets: 18px padding twice + content (44px controls up to 1024px) */
+  --bar-h: 72px;
+  @media (max-width: 1024px) {
+    --bar-h: 81px;
+  }
   .dim-bar {
     position: fixed;
     top: 0;
