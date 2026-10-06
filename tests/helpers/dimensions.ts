@@ -57,28 +57,33 @@ export const expectNoHorizontalScroll = async (page: Page) => {
  * must not overflow its own box, must not overlap another [data-t] block,
  * and must not sit under the fixed bar.
  */
-export const expectTextFits = async (page: Page) => {
-  const problems = await page.evaluate(() => {
+export const expectTextFits = async (
+  page: Page,
+  { within = '' }: { within?: string } = {},
+) => {
+  const problems = await page.evaluate((root) => {
     const out: string[] = [];
     const vw = window.innerWidth,
       vh = window.innerHeight;
     const bar = document.querySelector('.dim-bar')?.getBoundingClientRect();
     const label = (el: Element) =>
       `${el.getAttribute('data-t')}:"${(el.textContent ?? '').trim().slice(0, 24)}"`;
-    const els = [...document.querySelectorAll<HTMLElement>('[data-t]')].filter(
-      (el) => {
-        const r = el.getBoundingClientRect(),
-          s = getComputedStyle(el);
-        return (
-          r.width > 0 &&
-          r.height > 0 &&
-          r.bottom > 0 &&
-          r.top < vh &&
-          s.visibility !== 'hidden' &&
-          +s.opacity > 0.5
-        );
-      },
-    );
+    const els = [
+      ...document.querySelectorAll<HTMLElement>(
+        root ? root + ' [data-t]' : '[data-t]',
+      ),
+    ].filter((el) => {
+      const r = el.getBoundingClientRect(),
+        s = getComputedStyle(el);
+      return (
+        r.width > 0 &&
+        r.height > 0 &&
+        r.bottom > 0 &&
+        r.top < vh &&
+        s.visibility !== 'hidden' &&
+        +s.opacity > 0.5
+      );
+    });
     const rects = els.map((el) => el.getBoundingClientRect());
     els.forEach((el, i) => {
       const r = rects[i];
@@ -104,7 +109,7 @@ export const expectTextFits = async (page: Page) => {
       }
     });
     return out;
-  });
+  }, within);
   expect(problems, problems.join('\n')).toEqual([]);
 };
 

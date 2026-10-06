@@ -332,6 +332,7 @@
   "dimensions": {
     "nav": {
       "home": "雲鎮工藝 首頁",
+      "homeShort": "首頁",
       "overworld": "主世界",
       "nether": "地獄",
       "end": "終界",
@@ -486,6 +487,7 @@
       "retry": "重新整理",
       "next": "把這個世界蓋出來的人"
     },
+    "nextLabel": "接著看",
     "members": {
       "crumb": "成員",
       "title": ["製作名單，", "完整版。"],

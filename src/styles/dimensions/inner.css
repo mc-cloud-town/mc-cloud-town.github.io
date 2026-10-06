@@ -1,0 +1,272 @@
+/* Inner pages. Ported from docs/design-demos/inner.css and members.html. */
+.dim {
+  /* header: half a screen, never a full one */
+  .head {
+    position: relative;
+    min-height: 58vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6vw;
+    align-items: end;
+    padding: 140px var(--gutter) 56px;
+    overflow: hidden;
+  }
+  .head .bg {
+    position: absolute;
+    inset: 0;
+  }
+  .head .bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .head .bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(var(--v), 0.96) 0%,
+        rgba(var(--v), 0.82) 42%,
+        rgba(var(--v), 0.2) 78%,
+        rgba(var(--v), 0.3) 100%
+      ),
+      linear-gradient(0deg, rgba(var(--v), 1) 0%, rgba(var(--v), 0) 40%);
+  }
+  .head > * {
+    position: relative;
+  }
+  .head .crumb {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 22px;
+  }
+  .head .crumb a:hover {
+    color: var(--accent);
+  }
+  .head h1 {
+    font-size: clamp(34px, 4.6vw, 76px);
+  }
+  .head p {
+    margin-top: 18px;
+    max-width: 34em;
+    color: var(--muted);
+  }
+  .head .vt {
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+    font: 900 clamp(40px, 5.2vw, 88px) / 1 var(--serif);
+    letter-spacing: 0.12em;
+    align-self: start;
+  }
+  [data-theme='light'] & .head .vt {
+    background: rgba(var(--v), 0.95);
+    padding: 0.4em 0.25em 0.3em;
+  }
+
+  /* tools: filters and search stay reachable while the list scrolls */
+  .tools {
+    position: sticky;
+    top: 65px;
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    align-items: center;
+    padding: 14px var(--gutter);
+    background: rgba(var(--v), 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chips button {
+    font-size: 14px;
+    padding: 5px 14px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    color: var(--muted);
+  }
+  .chips button:hover {
+    color: var(--fg);
+  }
+  .chips button[aria-pressed='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+  .tools .count {
+    margin-left: auto;
+    color: var(--muted);
+  }
+  .search {
+    flex: 1 1 200px;
+    max-width: 320px;
+    border-bottom: 1px solid var(--line);
+    padding: 6px 2px;
+    font-size: 15px;
+  }
+  .search::placeholder {
+    color: var(--muted);
+  }
+  .search:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+  }
+  .empty {
+    padding: 80px var(--gutter);
+    color: var(--muted);
+  }
+  .next {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    margin: 120px var(--gutter) 0;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .next a {
+    font: 900 clamp(24px, 3vw, 44px) var(--serif);
+  }
+  .next a:hover {
+    color: var(--accent);
+  }
+
+  /* The full credits. A roster, not a card wall: one line per person so 150 names stay scannable. */
+  .group {
+    padding: 64px var(--gutter) 0;
+  }
+  .group[hidden] {
+    display: none;
+  }
+  .group header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .group h2 {
+    font-size: clamp(26px, 3vw, 44px);
+  }
+  .group header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .group header .mono {
+    margin-left: auto;
+    color: var(--muted);
+  }
+  .people {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0 28px;
+  }
+  .person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font: 500 14px var(--mono);
+  }
+  .person[hidden] {
+    display: none;
+  }
+  .person img {
+    width: 28px;
+    height: 28px;
+    image-rendering: pixelated;
+    background: var(--panel);
+    flex: none;
+  }
+  .person:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 860px) {
+    .head {
+      grid-template-columns: 1fr;
+      min-height: 0;
+      padding-top: 120px;
+    }
+    .head .vt {
+      writing-mode: horizontal-tb;
+      order: -1;
+      font-size: 34px;
+    }
+    .head .bg::after {
+      background: linear-gradient(
+        0deg,
+        rgba(var(--v), 1) 0%,
+        rgba(var(--v), 0.82) 60%,
+        rgba(var(--v), 0.6) 100%
+      );
+    }
+    .tools {
+      top: 61px;
+    }
+    .tools .count {
+      display: none;
+    }
+  }
+
+  .head h1 span {
+    display: block;
+  }
+  .head,
+  .tools,
+  .group,
+  .log,
+  .empty {
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+  /* the demo gives .next gutter margins; auto margins would drop them, so cap the width instead */
+  .next {
+    width: min(
+      calc(100% - 2 * var(--gutter)),
+      calc(2200px - 2 * var(--gutter))
+    );
+    margin-inline: auto;
+  }
+  .head p[data-t='body'] {
+    max-width: min(34em, var(--measure));
+  }
+  /* long names wrap instead of pushing the grid wider */
+  .person {
+    min-width: 0;
+  }
+  .person span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .group header p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* English and other rotated labels: letters turn with the line */
+  .vt {
+    text-orientation: mixed;
+  }
+  /* the demo's inner pages use 1.2 for serif headings; the home tokens use 1.14 */
+  .head h1,
+  .group h2 {
+    line-height: 1.2;
+  }
+  /* the serif glyph box is a little taller than 1em; without this the label scrolls inside itself.
+     The negative margin keeps the glyph where the demo puts it. */
+  @media (min-width: 861px) {
+    .head .vt {
+      line-height: 1.2;
+      margin-right: -0.1em;
+    }
+  }
+}

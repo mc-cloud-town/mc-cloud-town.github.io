@@ -336,6 +336,7 @@
   "dimensions": {
     "nav": {
       "home": "Cloud Town home",
+      "homeShort": "Home",
       "overworld": "Overworld",
       "nether": "Nether",
       "end": "The End",
@@ -494,6 +495,7 @@
       "retry": "Reload",
       "next": "The people who built this world"
     },
+    "nextLabel": "Next up",
     "members": {
       "crumb": "Members",
       "title": ["The credits,", "in full."],

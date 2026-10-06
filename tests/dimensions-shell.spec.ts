@@ -87,8 +87,10 @@ test.describe('dimensions shell', () => {
       await openPage(page, '/member/');
       await expectNoHorizontalScroll(page);
       await expectTapTargets(page);
-      await page.locator('.dim-foot').scrollIntoViewIfNeeded();
       await expectTextFits(page);
+      // scrolled down, page text legitimately passes under the fixed bar: check the footer on its own
+      await page.locator('.dim-foot').scrollIntoViewIfNeeded();
+      await expectTextFits(page, { within: '.dim-foot' });
     });
   }
 

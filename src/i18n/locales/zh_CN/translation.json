@@ -332,6 +332,7 @@
   "dimensions": {
     "nav": {
       "home": "云镇工艺 首页",
+      "homeShort": "首页",
       "overworld": "主世界",
       "nether": "地狱",
       "end": "末地",
@@ -486,6 +487,7 @@
       "retry": "重新加载",
       "next": "把这个世界盖出来的人"
     },
+    "nextLabel": "接着看",
     "members": {
       "crumb": "成员",
       "title": ["制作名单，", "完整版。"],
