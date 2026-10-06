@@ -259,7 +259,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({
         </Button>
       )}
       <ShareModal
-        url={`${window.location.host}${import.meta.env.BASE_URL}${pageType}Collection?share=${index}`}
+        url={`${window.location.host}/${pageType}Collection?share=${index}`}
         title={item.title}
       />
     </>

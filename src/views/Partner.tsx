@@ -1,3 +1,5 @@
+'use client';
+
 import { Row } from 'antd';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
@@ -8,7 +10,8 @@ import PartnerCard from '#/partner/PartnerCard.tsx';
 import Contact from '#/partner/Contact.tsx';
 
 import { IPartnership } from '@/types/IPartnership.ts';
-import partner from '@/assets/partner/partner.webp';
+import { IImageContent } from '@/types/IImageContent.ts';
+const partner = '/assets/partner/partner.webp';
 import { STATIC_DATA_API } from '@/constants';
 import useApi from '@/hooks/useApi.ts';
 import { StatusShowingGroup } from '#/common/StatusShowingGroup.tsx';
@@ -102,7 +105,11 @@ const Partner = () => {
           </PartnerBlock>
         ))}
       </Container>
-      <Contact contactInfo={t('partner.contact', { returnObjects: true })} />
+      <Contact
+        contactInfo={
+          t('partner.contact', { returnObjects: true }) as IImageContent
+        }
+      />
     </>
   );
 };

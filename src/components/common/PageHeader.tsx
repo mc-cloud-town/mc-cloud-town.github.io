@@ -276,7 +276,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
 }: PageHeaderProps) => {
   const { t } = useTranslation();
   const { y } = useScroll();
-  const innerHeight = window.innerHeight;
+  // Fall back to 1 when pre-rendering; y is 0 there so the masks are unaffected.
+  const innerHeight = typeof window === 'undefined' ? 1 : window.innerHeight;
   const maskAOpacity = Math.max(0, 0.4 - (y / innerHeight) * 0.8);
   const maskBOpacity =
     y < innerHeight / 2

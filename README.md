@@ -2,7 +2,7 @@
 
 [![Crowdin](https://badges.crowdin.net/ctec-website/localized.svg)](https://crowdin.com/project/ctec-website)
 
-A modern, multilingual website built with React, TypeScript, and Vite.
+A modern, multilingual website built with Next.js, React, and TypeScript.
 
 ## 📋 Prerequisites
 
@@ -31,39 +31,33 @@ corepack enable
 yarn install
 ```
 
-If you encounter engine compatibility issues with the `sharp` package, use:
-
-```bash
-yarn add sharp
-# The YARN_IGNORE_NODE environment variable can be set if needed
-```
-
 ### 3. Run Development Server
 
 ```bash
 yarn dev
 ```
 
-The development server will start at `http://localhost:5173` (or another available port).
+The development server will start at `http://localhost:3000` (or another available port).
 
 ## 📦 Available Scripts
 
 | Command             | Description                                  |
 | ------------------- | -------------------------------------------- |
 | `yarn dev`          | Start development server with HMR            |
-| `yarn build`        | Build for production                         |
-| `yarn preview`      | Preview production build locally             |
+| `yarn build`        | Build the static site into `out/`            |
+| `yarn start`        | Serve the built `out/` folder locally        |
+| `yarn typecheck`    | Run the TypeScript compiler without emitting |
+| `yarn test:e2e`     | Compare the build against mc-ctec.org        |
 | `yarn lint`         | Run ESLint to check code quality             |
 | `yarn format`       | Format code with Prettier                    |
 | `yarn format:check` | Check code formatting without making changes |
 
 ## 🏗️ Tech Stack
 
-- **Framework:** React 18 with TypeScript
-- **Build Tool:** Vite 6
+- **Framework:** Next.js 16 (App Router, static export) with React 19 and TypeScript
 - **Styling:** Styled Components with Ant Design
 - **Internationalization:** i18next
-- **Routing:** React Router v6
+- **Testing:** Playwright visual parity tests
 - **Package Manager:** Yarn 4.12.0 (Berry)
 
 ## 🌐 Internationalization
@@ -88,7 +82,21 @@ The website is automatically deployed to GitHub Pages via GitHub Actions when ch
    yarn build
    ```
 
-2. Deploy the `dist` folder to your hosting service.
+2. Deploy the `out` folder to your hosting service.
+
+## 🧪 Parity Tests
+
+`tests/parity.spec.ts` loads every route on the live site and on the local
+build (light and dark theme, desktop and mobile) and compares the visible text
+and full-page screenshots.
+
+```bash
+yarn build
+npx playwright install chromium
+yarn test:e2e
+```
+
+Set `PARITY_LIVE_URL` to compare against a different deployment.
 
 ## 🔧 CI/CD
 

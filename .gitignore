@@ -23,8 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
-.vite-react-ssg-temp/
-cache-images
+# Next.js
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+
+# Playwright
+test-results
+playwright-report
+tests/__snapshots__
 
 # Yarn
 .yarn

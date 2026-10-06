@@ -21,14 +21,18 @@ const useScroll = (): {
   useEffect(() => {
     // Throttle the scroll event listener to run at most once every 100ms
     // This absolutely obliterates the 173ms forced reflow lag during scroll!
-    const handleScroll = throttle(() => {
-      setScroll((prevState) => ({
-        x: window.scrollX,
-        y: window.scrollY,
-        lastX: prevState.x,
-        lastY: prevState.y,
-      }));
-    }, 100, { leading: true, trailing: true });
+    const handleScroll = throttle(
+      () => {
+        setScroll((prevState) => ({
+          x: window.scrollX,
+          y: window.scrollY,
+          lastX: prevState.x,
+          lastY: prevState.y,
+        }));
+      },
+      100,
+      { leading: true, trailing: true },
+    );
 
     window.addEventListener('scroll', handleScroll, { passive: true });
 

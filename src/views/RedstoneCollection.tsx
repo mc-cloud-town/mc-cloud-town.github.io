@@ -1,3 +1,5 @@
+'use client';
+
 import CollectionPageBase from '#/collection/CollectionPageBase.tsx';
 
 const RedstoneCollection = () => {

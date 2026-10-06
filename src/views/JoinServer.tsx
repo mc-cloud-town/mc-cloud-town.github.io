@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 
 import PageHeader from '#/common/PageHeader.tsx';
@@ -6,6 +8,7 @@ import HeaderTimer from '#/common/HeaderTimer.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
 
 import getImageUrl from '@/utils/getImageUrl.ts';
+import { IImageContent } from '@/types/IImageContent.ts';
 
 const JoinServer = () => {
   const { t } = useTranslation();
@@ -21,15 +24,19 @@ const JoinServer = () => {
         subHeaderContentArray={[<HeaderTimer />]}
       />
       <ImageContentSection
-        imageContent={t('join.redstone', { returnObjects: true })}
+        imageContent={
+          t('join.redstone', { returnObjects: true }) as IImageContent
+        }
         darkMode={true}
       />
       <ImageContentSection
-        imageContent={t('join.build', { returnObjects: true })}
+        imageContent={t('join.build', { returnObjects: true }) as IImageContent}
         imageOnRight={true}
       />
       <ImageContentSection
-        imageContent={t('join.logistics', { returnObjects: true })}
+        imageContent={
+          t('join.logistics', { returnObjects: true }) as IImageContent
+        }
         darkMode={true}
       />
     </>

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Select, SelectProps } from 'antd';
 import styled from 'styled-components';
 
@@ -104,7 +104,7 @@ const CollectionPageBase = ({
     `${STATIC_DATA_API}/${i18n.language}/${pageType}Collection.json`,
   );
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{
@@ -131,14 +131,14 @@ const CollectionPageBase = ({
       if (item) {
         setSelectedItem({ item, index });
         setIsModalOpen(true);
-        navigate(`/${pageType}Collection`);
+        router.replace(`/${pageType}Collection/`);
       }
 
       if (tags !== null && tags !== '') {
         setSelectedTags(tags.split(','));
       }
     }
-  }, [data, navigate, pageType]);
+  }, [data, router, pageType]);
 
   useEffect(() => {
     if (!data) {
@@ -174,10 +174,7 @@ const CollectionPageBase = ({
 
   const handleTagChange = (value: string[]) => {
     setSelectedTags(value);
-    navigate({
-      pathname: `/${pageType}Collection`,
-      search: `?tag=${value.join(',')}`,
-    });
+    router.replace(`/${pageType}Collection/?tag=${value.join(',')}`);
   };
 
   const allTags = useMemo(() => {

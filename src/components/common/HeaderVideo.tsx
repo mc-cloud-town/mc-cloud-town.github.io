@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import YouTubeIframeLoader from 'youtube-iframe';
 
 const BackgroundContainer = styled.div`
   position: relative;
@@ -52,36 +51,39 @@ const HeaderVideo: React.FC<HeaderVideoProps> = ({ youtubeId, start }) => {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const placeholderUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
-  const isPrerendering = /bot|crawl|spider|googlebot/i.test(
-    navigator.userAgent,
-  );
+  const isPrerendering =
+    typeof navigator !== 'undefined' &&
+    /bot|crawl|spider|googlebot/i.test(navigator.userAgent);
 
   useEffect(() => {
-    YouTubeIframeLoader.load((YT) => {
-      new YT.Player('youtube-background', {
-        videoId: youtubeId,
-        events: {
-          onStateChange: ({ data }: { data: number }) => {
-            if (data !== 1) return;
-            setIsVideoReady(true);
+    // youtube-iframe touches window at import time, so load it client-side only.
+    import('youtube-iframe').then(({ default: YouTubeIframeLoader }) =>
+      YouTubeIframeLoader.load((YT) => {
+        new YT.Player('youtube-background', {
+          videoId: youtubeId,
+          events: {
+            onStateChange: ({ data }: { data: number }) => {
+              if (data !== 1) return;
+              setIsVideoReady(true);
+            },
           },
-        },
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          mute: 1,
-          loop: 1,
-          playlist: youtubeId,
-          playsinline: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          start: start,
-        },
-      });
-    });
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            mute: 1,
+            loop: 1,
+            playlist: youtubeId,
+            playsinline: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            start: start,
+          },
+        });
+      }),
+    );
   }, [start, youtubeId]);
 
   return (

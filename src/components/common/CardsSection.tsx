@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Button, Flex } from 'antd';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import styled, { css } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
@@ -204,7 +204,7 @@ const CardsSection: React.FC<CardsSectionProps> = ({
               {section.buttons &&
                 section.buttons.map((button, idx) =>
                   button.link ? (
-                    <Link key={idx} to={button.link}>
+                    <Link key={idx} href={button.link}>
                       <Button
                         type={button.type || 'primary'}
                         ghost={type === 'dark'}

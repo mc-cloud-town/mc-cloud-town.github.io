@@ -14,17 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache Primes
-        id: cache-primes
+      - name: Cache Next.js build
         uses: actions/cache@v4
         with:
-          path: cache-images
-          key: cache-images
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}-
 
-      - name: Setup Node.js v20.x
+      - name: Setup Node.js v22.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Enable Corepack
         run: corepack enable
@@ -44,42 +45,17 @@ jobs:
         env:
           YARN_IGNORE_NODE: 1
 
-      - name: Install sharp
-        run: yarn add sharp
-        env:
-          YARN_IGNORE_NODE: 1
-
       - name: Build
         run: yarn build
-        env:
-          BASE_URL: /
-          HOSTNAME: https://mc-ctec.org/
 
-      - name: deploy
+      - name: Prepare output
         run: |
-          cd dist
-          [ -f 404.html ] || ln -s index.html 404.html
-          if [ "none" !=  "$cname" ]; then echo "$cname" > CNAME; fi
+          cp CNAME out/CNAME
+          touch out/.nojekyll
 
-          dirs=(
-            "home"
-            "join"
-            "survival"
-            "survivalProgress"
-            "member"
-            "openSource"
-            "collaborative"
-            "partner"
-            "redstoneCollection"
-            "architectureCollection"
-          )
-
-          for dir in "${dirs[@]}"; do
-            mkdir -p "$dir" && cp index.html "$dir/index.html"
-          done
       - name: Fix permissions
         run: |
-          chmod -c -R +rX "_site/" | while read line; do
+          chmod -c -R +rX "out/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
 
@@ -90,7 +66,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: './dist'
+          path: './out'
 
       - name: Deploy to GitHub Pages
         id: deployment

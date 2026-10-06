@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Flex } from 'antd';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import styled, { css } from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
@@ -252,7 +252,7 @@ const ImageContentSection: React.FC<ImageContentSectionProps> = ({
             {imageContent.buttons &&
               imageContent.buttons.map((button, index) =>
                 button.link ? (
-                  <Link key={index} to={button.link}>
+                  <Link key={index} href={button.link}>
                     <StyledButton type={button.type || 'primary'}>
                       {button.text}
                     </StyledButton>
