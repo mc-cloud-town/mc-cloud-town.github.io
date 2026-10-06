@@ -123,6 +123,7 @@ export const buildChoreography = (
 
   return () => {
     gsap.ticker.remove(raf);
+    if (lenis) gsap.ticker.lagSmoothing(500, 33); // back to GSAP's default
     lenis?.destroy();
     ctx.revert();
   };

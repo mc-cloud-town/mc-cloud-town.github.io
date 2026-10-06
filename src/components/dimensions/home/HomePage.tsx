@@ -83,7 +83,7 @@ export const HomePage = () => {
     <div className='dim dim--home' ref={root} data-ready={ready}>
       <World />
       <div className='flash' aria-hidden='true' />
-      {reduced !== null && <Loader reduced={reduced} onDone={onDone} />}
+      <Loader reduced={reduced} onDone={onDone} />
       <SiteBar variant='home' />
       <main>
         <Hero />

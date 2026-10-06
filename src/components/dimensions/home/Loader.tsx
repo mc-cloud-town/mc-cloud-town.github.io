@@ -13,6 +13,9 @@ const TONES = [
   '#35607f',
 ];
 
+/** However slow the fonts or the first picture are, the loader lifts after this long. */
+export const LOADER_TIMEOUT_MS = 6000;
+
 const loaded = (img: HTMLImageElement | null) =>
   !img || img.complete
     ? Promise.resolve()
@@ -24,12 +27,13 @@ const loaded = (img: HTMLImageElement | null) =>
 /**
  * Chunks load outward from the centre, like the game's world-load map.
  * Calls onDone once the fonts, the first scene and the map are in, lifts off the page, then removes itself.
+ * It is part of the static markup, so it is the first thing painted; it starts once `reduced` is known.
  */
 export const Loader = ({
   reduced,
   onDone,
 }: {
-  reduced: boolean;
+  reduced: boolean | null;
   onDone: () => void;
 }) => {
   const { t } = useTranslation();
@@ -40,7 +44,7 @@ export const Loader = ({
 
   useEffect(() => {
     const el = box.current;
-    if (!el) return;
+    if (!el || reduced === null) return;
     const cells = [...(grid.current?.children ?? [])] as HTMLElement[];
     const order = cells
       .map((cell, i) => ({
@@ -69,18 +73,23 @@ export const Loader = ({
     });
     let cancelled = false;
     let lift: gsap.core.Timeline | undefined;
-    Promise.all([
-      document.fonts.ready,
-      loaded(
-        el.parentElement?.querySelector<HTMLImageElement>(
-          '.scene.is-first img',
-        ) ?? null,
-      ),
-      fill.then(),
-    ]).then(() => {
+    let giveUp: ReturnType<typeof setTimeout> | undefined;
+    const assets = Promise.race([
+      Promise.all([
+        document.fonts.ready,
+        loaded(
+          el.parentElement?.querySelector<HTMLImageElement>(
+            '.scene.is-first img',
+          ) ?? null,
+        ),
+      ]),
+      new Promise((done) => (giveUp = setTimeout(done, LOADER_TIMEOUT_MS))),
+    ]);
+    Promise.all([assets, fill.then()]).then(() => {
       if (cancelled) return;
       onDone();
       if (reduced) return setGone(true);
+      el.style.pointerEvents = 'none'; // the page underneath is live from here on
       lift = gsap
         .timeline({ onComplete: () => setGone(true) })
         .to(el.querySelector('.loader-in'), {
@@ -93,6 +102,7 @@ export const Loader = ({
     });
     return () => {
       cancelled = true;
+      clearTimeout(giveUp);
       fill.kill();
       lift?.kill();
     };
