@@ -7,7 +7,7 @@ import React, { useEffect, useState, useRef } from 'react';
  */
 const useAnimateOnScroll = (): {
   animate: boolean;
-  ref: React.RefObject<HTMLDivElement>;
+  ref: React.RefObject<HTMLDivElement | null>;
 } => {
   const [animate, setAnimate] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

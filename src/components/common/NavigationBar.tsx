@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Dropdown, MenuProps, Button } from 'antd';
 import {
   GlobalOutlined,
@@ -282,7 +283,7 @@ const NavigationBar: React.FC = () => {
   const { toggleTheme, isDark } = useTheme();
   const [isHidden, setIsHidden] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (y === lastY) return;
@@ -293,7 +294,7 @@ const NavigationBar: React.FC = () => {
     // Close mobile menu on route change and scroll to top
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [location.pathname]);
+  }, [pathname]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -319,8 +320,8 @@ const NavigationBar: React.FC = () => {
   };
 
   const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
+    if (path === '/') return pathname === '/';
+    return pathname.startsWith(path);
   };
 
   const languageItems: MenuProps['items'] = [
@@ -332,15 +333,15 @@ const NavigationBar: React.FC = () => {
   const membersDropdownItems: MenuProps['items'] = [
     {
       key: 'member',
-      label: <Link to='/member/'>{t('menu.member')}</Link>,
+      label: <Link href='/member/'>{t('menu.member')}</Link>,
     },
     {
       key: 'redstoneCollection',
-      label: <Link to='/redstoneCollection/'>{t('menu.redstone')}</Link>,
+      label: <Link href='/redstoneCollection/'>{t('menu.redstone')}</Link>,
     },
     {
       key: 'architectureCollection',
-      label: <Link to='/architectureCollection/'>{t('menu.building')}</Link>,
+      label: <Link href='/architectureCollection/'>{t('menu.building')}</Link>,
     },
   ];
 
@@ -353,7 +354,7 @@ const NavigationBar: React.FC = () => {
       >
         <NavInner>
           <Brand
-            to='/'
+            href='/'
             onClick={scrollToTop}
             $scrolled={scrolled}
             $isDark={isDark}
@@ -362,18 +363,18 @@ const NavigationBar: React.FC = () => {
           </Brand>
 
           <NavLinks>
-            <NavLink to='/' $active={isActive('/')} $scrolled={scrolled}>
+            <NavLink href='/' $active={isActive('/')} $scrolled={scrolled}>
               {t('menu.home')}
             </NavLink>
             <NavLink
-              to='/join/'
+              href='/join/'
               $active={isActive('/join')}
               $scrolled={scrolled}
             >
               {t('menu.join')}
             </NavLink>
             <NavLink
-              to='/survival/'
+              href='/survival/'
               $active={isActive('/survival')}
               $scrolled={scrolled}
             >
@@ -385,14 +386,14 @@ const NavigationBar: React.FC = () => {
               </DropdownTrigger>
             </Dropdown>
             <NavLink
-              to='/openSource/'
+              href='/openSource/'
               $active={isActive('/openSource')}
               $scrolled={scrolled}
             >
               {t('menu.openSource')}
             </NavLink>
             <NavLink
-              to='/partner/'
+              href='/partner/'
               $active={isActive('/partner')}
               $scrolled={scrolled}
             >
@@ -433,34 +434,34 @@ const NavigationBar: React.FC = () => {
       </NavigationBarContainer>
 
       <MobileMenu $open={mobileMenuOpen} $isDark={isDark}>
-        <MobileNavLink to='/' $active={isActive('/')}>
+        <MobileNavLink href='/' $active={isActive('/')}>
           {t('menu.home')}
         </MobileNavLink>
-        <MobileNavLink to='/join/' $active={isActive('/join')}>
+        <MobileNavLink href='/join/' $active={isActive('/join')}>
           {t('menu.join')}
         </MobileNavLink>
-        <MobileNavLink to='/survival/' $active={isActive('/survival')}>
+        <MobileNavLink href='/survival/' $active={isActive('/survival')}>
           {t('menu.survivalProgress')}
         </MobileNavLink>
-        <MobileNavLink to='/member/' $active={isActive('/member')}>
+        <MobileNavLink href='/member/' $active={isActive('/member')}>
           {t('menu.member')}
         </MobileNavLink>
         <MobileNavLink
-          to='/redstoneCollection/'
+          href='/redstoneCollection/'
           $active={isActive('/redstoneCollection')}
         >
           {t('menu.redstone')}
         </MobileNavLink>
         <MobileNavLink
-          to='/architectureCollection/'
+          href='/architectureCollection/'
           $active={isActive('/architectureCollection')}
         >
           {t('menu.building')}
         </MobileNavLink>
-        <MobileNavLink to='/openSource/' $active={isActive('/openSource')}>
+        <MobileNavLink href='/openSource/' $active={isActive('/openSource')}>
           {t('menu.openSource')}
         </MobileNavLink>
-        <MobileNavLink to='/partner/' $active={isActive('/partner')}>
+        <MobileNavLink href='/partner/' $active={isActive('/partner')}>
           {t('menu.partner')}
         </MobileNavLink>
       </MobileMenu>

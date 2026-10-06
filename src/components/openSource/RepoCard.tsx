@@ -45,12 +45,15 @@ const CardContainer = styled.a<{ $accent: string; $isVisible: boolean }>`
     width: 4px;
     background: ${(props) => props.$accent};
     opacity: 0.7;
-    transition: width 0.3s ease, opacity 0.3s ease;
+    transition:
+      width 0.3s ease,
+      opacity 0.3s ease;
   }
 
   &:hover {
     transform: translateY(-8px) !important;
-    box-shadow: 0 12px 32px color-mix(in srgb, ${(props) => props.$accent} 15%, transparent);
+    box-shadow: 0 12px 32px
+      color-mix(in srgb, ${(props) => props.$accent} 15%, transparent);
     border-color: ${(props) => props.$accent};
 
     &::before {
@@ -88,7 +91,7 @@ const RepoName = styled.h3`
   line-height: 1.3;
   word-break: break-word;
   transition: color 0.3s ease;
-  
+
   ${CardContainer}:hover & {
     color: var(--color-primary);
   }
@@ -113,7 +116,7 @@ const ExternalBadge = styled.span`
   height: 32px;
   border-radius: 50%;
   background: transparent;
-  
+
   ${CardContainer}:hover & {
     background: var(--bg-secondary);
   }
@@ -172,7 +175,7 @@ const DetailTag = styled.span`
   font-size: 0.9rem;
   font-weight: 500;
   transition: color 0.3s ease;
-  
+
   ${CardContainer}:hover & {
     color: var(--text-primary);
   }

@@ -1,10 +1,16 @@
+'use client';
+
+import '@ant-design/v5-patch-for-react-19';
+import { useEffect, type ReactNode } from 'react';
 import { ConfigProvider, theme as antdTheme } from 'antd';
-import { Outlet } from 'react-router-dom';
 import styled from 'styled-components';
 import NavigationBar from '#/common/NavigationBar.tsx';
 import Footer from '#/common/Footer.tsx';
 import ScrollToTopButton from '#/common/ScrollToTopButton.tsx';
 import { useTheme } from '@/hooks/useTheme';
+import initI18n, { detectLanguage } from '@/i18n/i18nConfig';
+
+initI18n();
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -12,8 +18,12 @@ const AppContainer = styled.div`
   transition: background var(--transition-theme);
 `;
 
-export const Layout = () => {
+export const Layout = ({ children }: { children: ReactNode }) => {
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    detectLanguage();
+  }, []);
 
   // Light theme tokens
   const lightTokens = {
@@ -98,7 +108,7 @@ export const Layout = () => {
     >
       <AppContainer>
         <NavigationBar />
-        <Outlet />
+        {children}
         <Footer />
         <ScrollToTopButton />
       </AppContainer>

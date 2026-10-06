@@ -1,13 +1,13 @@
 import React from 'react';
 import { Row, Col, Space } from 'antd';
 import { DiscordOutlined, YoutubeOutlined, XOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import styled from 'styled-components';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 
 import { serverLink } from '@/constants';
-import CTEC_banner from '@/assets/brand/brand.webp';
-import logo from '@/assets/logo/base.webp';
+const CTEC_banner = '/assets/brand/brand.webp';
+const logo = '/assets/logo/base.webp';
 import { useTranslation } from 'react-i18next';
 
 const FooterContainer = styled.footer`
@@ -205,7 +205,7 @@ const Footer: React.FC = () => {
       <TopFooterContainer>
         <TopRow>
           <Col>
-            <BrandLink to='/' onClick={() => setTimeout(scrollToTop, 500)}>
+            <BrandLink href='/' onClick={() => setTimeout(scrollToTop, 500)}>
               <LogoImageWrapper>
                 <LazyLoadImage src={logo} alt='CTEC' effect='blur' />
               </LogoImageWrapper>
@@ -218,19 +218,21 @@ const Footer: React.FC = () => {
           <FooterLinks>
             <FooterLinkGroup>
               <FooterLinkTitle>{t('menu.memberAndWork')}</FooterLinkTitle>
-              <FooterLink to='/member/'>{t('menu.member')}</FooterLink>
-              <FooterLink to='/redstoneCollection/'>
+              <FooterLink href='/member/'>{t('menu.member')}</FooterLink>
+              <FooterLink href='/redstoneCollection/'>
                 {t('menu.redstone')}
               </FooterLink>
-              <FooterLink to='/architectureCollection/'>
+              <FooterLink href='/architectureCollection/'>
                 {t('menu.building')}
               </FooterLink>
             </FooterLinkGroup>
             <FooterLinkGroup>
               <FooterLinkTitle>Links</FooterLinkTitle>
-              <FooterLink to='/join/'>{t('menu.join')}</FooterLink>
-              <FooterLink to='/openSource/'>{t('menu.openSource')}</FooterLink>
-              <FooterLink to='/partner/'>{t('menu.partner')}</FooterLink>
+              <FooterLink href='/join/'>{t('menu.join')}</FooterLink>
+              <FooterLink href='/openSource/'>
+                {t('menu.openSource')}
+              </FooterLink>
+              <FooterLink href='/partner/'>{t('menu.partner')}</FooterLink>
             </FooterLinkGroup>
           </FooterLinks>
 

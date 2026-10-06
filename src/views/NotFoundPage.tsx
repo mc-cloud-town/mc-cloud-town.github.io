@@ -1,6 +1,8 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import { Button } from 'antd';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import HeaderImage from '#/common/HeaderImage.tsx';
@@ -20,7 +22,7 @@ const NotFoundPage = () => {
         subHeaderContentArray={[
           t('notFound.description'),
           // eslint-disable-next-line react/jsx-key
-          <Link to='/home/'>
+          <Link href='/home/'>
             <Button color='primary' size='large' ghost={true}>
               {t('notFound.backButton')}
             </Button>

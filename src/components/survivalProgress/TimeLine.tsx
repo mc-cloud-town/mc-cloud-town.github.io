@@ -444,7 +444,11 @@ const TimelineComponent: React.FC<TimelineProps> = ({ items, activeIndex }) => {
           items={items.map((item, index) => ({
             key: index,
             children: (
-              <div ref={(el) => (itemRefs.current[index] = el)}>
+              <div
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+              >
                 <TimelineItemContent {...item} />
               </div>
             ),

@@ -1,6 +1,10 @@
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { DatabaseOutlined, FireOutlined, StarOutlined } from '@ant-design/icons';
+import {
+  DatabaseOutlined,
+  FireOutlined,
+  StarOutlined,
+} from '@ant-design/icons';
 
 const HeroCard = styled.div`
   display: flex;
@@ -64,7 +68,7 @@ const MetaCard = styled.div`
     box-shadow: var(--shadow-md);
     border-color: var(--border-color);
     background: var(--bg-elevated);
-    
+
     .anticon {
       color: var(--color-accent);
       transform: scale(1.1);

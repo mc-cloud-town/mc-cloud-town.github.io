@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import { WarningOutlined } from '@ant-design/icons';
 import { Input, Spin } from 'antd';

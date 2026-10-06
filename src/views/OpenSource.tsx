@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InboxOutlined } from '@ant-design/icons';
@@ -73,7 +75,13 @@ const OpenSourcePage = () => {
 
           {!loading && !error && repos.length === 0 && (
             <EmptyState>
-              <InboxOutlined style={{ fontSize: '48px', marginBottom: '16px', color: 'var(--text-tertiary)' }} />
+              <InboxOutlined
+                style={{
+                  fontSize: '48px',
+                  marginBottom: '16px',
+                  color: 'var(--text-tertiary)',
+                }}
+              />
               {t('opensource.noRepositories')}
             </EmptyState>
           )}

@@ -2,14 +2,30 @@ import styled from 'styled-components';
 
 export const RepoSection = styled.section`
   background: var(--bg-primary);
-  background-image: radial-gradient(circle at top right, rgba(0, 0, 0, 0.02) 0%, transparent 60%),
-                    radial-gradient(circle at bottom left, rgba(0, 0, 0, 0.02) 0%, transparent 60%);
+  background-image: radial-gradient(
+      circle at top right,
+      rgba(0, 0, 0, 0.02) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(0, 0, 0, 0.02) 0%,
+      transparent 60%
+    );
   padding: 80px 24px 100px;
   position: relative;
 
   [data-theme='dark'] & {
-    background-image: radial-gradient(circle at top right, rgba(255, 255, 255, 0.03) 0%, transparent 60%),
-                      radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+    background-image: radial-gradient(
+        circle at top right,
+        rgba(255, 255, 255, 0.03) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        circle at bottom left,
+        rgba(255, 255, 255, 0.03) 0%,
+        transparent 60%
+      );
   }
 
   @media (max-width: 768px) {

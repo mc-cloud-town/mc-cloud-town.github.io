@@ -1,3 +1,5 @@
+import type React from 'react';
+
 export interface ILink {
   youtube?: string;
   bilibili?: string;
@@ -17,7 +19,7 @@ export interface IPartnership {
   Image: string;
   ModalTitle: string;
   LongPartnership?: boolean;
-  Introduce: (string | JSX.Element)[] | string | JSX.Element;
+  Introduce: (string | React.JSX.Element)[] | string | React.JSX.Element;
   ShowVideo?: string;
   Link?: ILink;
 }

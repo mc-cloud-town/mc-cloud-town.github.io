@@ -1,3 +1,5 @@
+'use client';
+
 import { useTranslation } from 'react-i18next';
 import styled, { keyframes } from 'styled-components';
 import { useEffect, useState } from 'react';
@@ -117,8 +119,12 @@ const SurvivalProgress = () => {
   );
   const [showLoadingBg, setShowLoadingBg] = useState(true);
 
-  const params = new URLSearchParams(window.location.search);
-  const shareIndex = parseInt(params.get('index') ?? '-1');
+  const [shareIndex, setShareIndex] = useState(-1);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setShareIndex(parseInt(params.get('index') ?? '-1'));
+  }, []);
 
   // Add transparent class to body while on this page
   useEffect(() => {

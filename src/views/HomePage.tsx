@@ -1,6 +1,9 @@
+'use client';
+
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import PageHeader from '#/common/PageHeader.tsx';
 import ImageContentSection from '#/common/ImageContentSection.tsx';
@@ -25,7 +28,7 @@ const HomePage = () => {
     `${STATIC_DATA_API}/${i18n.language}/architectureCollection.json`,
   );
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const createSections = (data: IImageContent[], route: string) => {
     if (route === 'survivalProgress') {
@@ -35,14 +38,14 @@ const HomePage = () => {
         .reverse()
         .map((item, index) => ({
           ...item,
-          clickEvent: () => navigate(`/${route}?index=${index}`),
+          clickEvent: () => router.push(`/${route}/?index=${index}`),
         }));
     }
 
     const sliceIndex = Math.max(data.length - 3, 0);
     return data.slice(sliceIndex).map((item, index) => ({
       ...item,
-      clickEvent: () => navigate(`/${route}?index=${sliceIndex + index}`),
+      clickEvent: () => router.push(`/${route}/?index=${sliceIndex + index}`),
     }));
   };
 
@@ -71,7 +74,9 @@ const HomePage = () => {
       <PageHeader
         backgroundComponent={
           <HeaderVideo
-            {...t('home.backgroundVideo', { returnObjects: true })}
+            {...(t('home.backgroundVideo', {
+              returnObjects: true,
+            }) as { youtubeId: string; start: number })}
           />
         }
         headerTextArray={[
@@ -85,7 +90,7 @@ const HomePage = () => {
           // eslint-disable-next-line react/jsx-key
           <HeaderTimer />,
           // eslint-disable-next-line react/jsx-key
-          <Link to='/join/'>
+          <Link href='/join/'>
             <Button color='primary' size='large' ghost={true}>
               {t('home.joinButton')}
             </Button>
@@ -94,17 +99,21 @@ const HomePage = () => {
         useTyped={true}
       />
       <ImageContentSection
-        imageContent={t('home.about', { returnObjects: true })}
+        imageContent={t('home.about', { returnObjects: true }) as IImageContent}
       />
       <ImageContentSection
-        imageContent={t('home.frostPursuit', { returnObjects: true })}
+        imageContent={
+          t('home.frostPursuit', { returnObjects: true }) as IImageContent
+        }
         imageOnRight={true}
         darkMode={true}
       />
       <CardsSection
         title={t('home.feature.title')}
         type={'dark'}
-        imageContentSections={t('home.feature.card', { returnObjects: true })}
+        imageContentSections={
+          t('home.feature.card', { returnObjects: true }) as IImageContent[]
+        }
       />
       <CarouselSection
         title={t('home.carousel.title')}
