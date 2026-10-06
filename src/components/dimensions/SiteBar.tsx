@@ -8,6 +8,9 @@ import { serverLink } from '@/constants';
 
 type Current = 'progress' | 'members';
 
+/** Same width as the bar's menu breakpoint in shell.css. */
+const BAR_BREAKPOINT = '(min-width: 1101px)';
+
 const LANGS = [
   { value: 'zh_TW', label: '繁' },
   { value: 'zh_CN', label: '简' },
@@ -61,6 +64,14 @@ export const SiteBar = ({
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  // Leaving the narrow layout while the sheet is open must close it and release the scroll lock.
+  useEffect(() => {
+    const mq = window.matchMedia(BAR_BREAKPOINT);
+    const onChange = (e: MediaQueryListEvent) => e.matches && setOpen(false);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   const items = links.map((l) => (
     <a

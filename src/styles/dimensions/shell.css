@@ -84,7 +84,7 @@
     inset: 0;
     z-index: 49;
     padding: 96px var(--gutter) 40px;
-    background: rgba(var(--v), 0.97);
+    background: var(--bg); /* opaque: nothing behind the menu may be legible */
     overflow-y: auto;
   }
   .dim-sheet[hidden] {
@@ -107,7 +107,10 @@
     margin-inline: auto;
   }
 
-  @media (max-width: 860px) {
+  /* The bar switches to the menu button below 1100px, not at the usual 860px: the six links
+     plus theme, language and Discord pills (longest in English) need about 1050px, and below that
+     the logo gets squeezed. The matching query lives in SiteBar.tsx (BAR_BREAKPOINT). */
+  @media (max-width: 1100px) {
     .dim-bar {
       gap: 8px;
     }
@@ -118,16 +121,18 @@
     .dim-bar .menu {
       display: inline-flex;
     }
+  }
+  @media (min-width: 1101px) {
+    .dim-sheet {
+      display: none;
+    }
+  }
+  @media (max-width: 860px) {
     /* own row; contain keeps the logo from stretching to the row width */
     .dim-foot img {
       flex-basis: 100%;
       object-fit: contain;
       object-position: left;
-    }
-  }
-  @media (min-width: 861px) {
-    .dim-sheet {
-      display: none;
     }
   }
 }
