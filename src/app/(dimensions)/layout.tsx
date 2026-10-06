@@ -6,6 +6,7 @@ import { DimensionProvider } from '#/dimensions/DimensionProvider';
 import '@/styles/dimensions/tokens.css';
 import '@/styles/dimensions/shell.css';
 import '@/styles/dimensions/inner.css';
+import '@/styles/dimensions/home.css';
 
 export default function DimensionsLayout({
   children,

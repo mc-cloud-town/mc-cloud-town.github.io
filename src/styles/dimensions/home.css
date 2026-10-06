@@ -1,0 +1,331 @@
+/* Home page: the fixed world of stacked scenes, the loader and the spawn section.
+   Ported from docs/design-demos/dimensions-v2.html. Scroll-driven motion uses transform and opacity only. */
+
+/* Lenis drives the scroll position itself; the site-wide smooth scrolling in app.css would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto !important;
+}
+
+.dim.dim--home {
+  /* ───────── the world ───────── */
+  .world {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: #000;
+  }
+  .scene {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+    opacity: 0;
+    overflow: hidden;
+  }
+  .scene.is-first {
+    visibility: visible;
+    opacity: 1;
+  }
+  .zoom,
+  .cam {
+    position: absolute;
+    inset: 0;
+  }
+  .cam img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .veil {
+    position: absolute;
+    inset: 0;
+  }
+  .veil--side {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), var(--s1)) 0%,
+      rgba(var(--v), var(--s2)) 40%,
+      rgba(var(--v), var(--s3)) 72%,
+      rgba(var(--v), var(--s4)) 100%
+    );
+  }
+  .veil--wide {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), var(--s1)) 0%,
+      rgba(var(--v), var(--s2)) 56%,
+      rgba(var(--v), var(--s3)) 84%,
+      rgba(var(--v), var(--s4)) 100%
+    );
+  }
+  .veil--flip {
+    transform: scaleX(-1);
+  }
+  .veil--foot {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--v), var(--f1)) 0%,
+      rgba(var(--v), var(--f2)) 34%,
+      rgba(var(--v), var(--f3)) 66%
+    );
+  }
+  .veil--hero {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), var(--h1)) 0%,
+      rgba(var(--v), var(--h2)) 36%,
+      rgba(var(--v), var(--h3)) 56%,
+      rgba(var(--v), var(--h3)) 68%,
+      rgba(var(--v), var(--h4)) 82%,
+      rgba(var(--v), var(--h5)) 100%
+    );
+  }
+  .flash {
+    position: fixed;
+    inset: 0;
+    z-index: 21;
+    opacity: 0;
+    pointer-events: none;
+    background: #fff;
+  }
+
+  /* ───────── loader ───────── */
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #06080b;
+    color: #f2f4f6;
+    display: grid;
+    place-items: center;
+  }
+  .loader-in {
+    display: grid;
+    justify-items: center;
+    gap: 26px;
+  }
+  .chunks {
+    display: grid;
+    grid-template-columns: repeat(7, 16px);
+    gap: 2px;
+  }
+  .chunks i {
+    width: 16px;
+    height: 16px;
+    background: #141a20;
+  }
+  .loader p {
+    font: 12px var(--mono);
+    color: #a3adb8;
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ───────── the bar: clear over the world ───────── */
+  .dim-bar {
+    background: none;
+    backdrop-filter: none;
+    border-bottom: 0;
+  }
+  .dim-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 -28px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(var(--v), 0.92) 35%,
+      rgba(var(--v), 0)
+    );
+  }
+
+  /* ───────── content ───────── */
+  main {
+    position: relative;
+    z-index: 10;
+  }
+  main > * {
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+  /* app.css gives every heading the legacy text colour */
+  :is(h1, h2, h3) {
+    color: inherit;
+  }
+  .vt {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    font-family: var(--serif);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .vt i {
+    display: inline-block;
+    overflow: hidden;
+    font-style: normal;
+  }
+  .vt i b {
+    display: block;
+    font-weight: inherit;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 18px 30px;
+    background: var(--fg);
+    color: var(--bg);
+    border-radius: 100px;
+    transition:
+      background 0.3s,
+      gap 0.3s;
+  }
+  .btn:hover {
+    background: var(--accent);
+    gap: 22px;
+  }
+
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 620px;
+  }
+  .hero .vt {
+    position: absolute;
+    right: var(--gutter);
+    top: 52%;
+    translate: 0 -50%;
+    font-size: clamp(56px, 13vh, 150px);
+  }
+  .hero-meta {
+    position: absolute;
+    left: var(--gutter);
+    /* the demo's 96px, measured from this site's bar instead of the demo's shorter one */
+    top: calc(var(--bar-h) + 24px);
+    display: grid;
+    gap: 4px;
+  }
+  .hero-meta strong {
+    font: 500 14px var(--mono);
+  }
+  .hero-copy {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 96px;
+    max-width: 460px;
+  }
+  .hero-copy .en {
+    font: 500 13px var(--mono);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .hero-copy p.lead {
+    font-size: 19px;
+    font-weight: 500;
+    margin: 14px 0 30px;
+  }
+  .cue {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 34px;
+    font: 11px var(--mono);
+    color: var(--muted);
+  }
+  .cue i {
+    width: 44px;
+    height: 1px;
+    background: var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .cue i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--fg);
+    animation: cue 1.8s cubic-bezier(0.7, 0, 0.2, 1) infinite;
+  }
+
+  @media (max-width: 860px) {
+    /* no room for a clear side: the veil runs bottom-up instead */
+    .veil--side,
+    .veil--wide,
+    .veil--hero {
+      transform: none;
+      background: linear-gradient(
+        0deg,
+        rgba(var(--v), 0.96) 0%,
+        rgba(var(--v), 0.8) 55%,
+        rgba(var(--v), 0.5) 100%
+      );
+    }
+    .hero .vt {
+      font-size: clamp(48px, 10.5vh, 100px);
+      top: 46%;
+    }
+    .hero-copy {
+      right: calc(var(--gutter) + 12vh);
+      bottom: 84px;
+    }
+    .hero-copy p.lead {
+      font-size: 16px;
+    }
+  }
+  /* short landscape screens: the title would run off the bottom */
+  @media (max-height: 480px) {
+    .hero {
+      min-height: 0;
+    }
+    .hero .vt {
+      font-size: 15vh;
+      /* centred in what is left under the bar, so it clears the bar's buttons */
+      top: calc(var(--bar-h) + (100% - var(--bar-h)) / 2);
+    }
+    .hero-copy {
+      bottom: 24px;
+    }
+    .hero-copy p.lead {
+      margin: 6px 0 12px;
+    }
+    .cue {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cue i::after {
+      animation: none;
+    }
+  }
+}
+
+/* day: the paper side is narrower, so more of the photograph stays untouched */
+[data-theme='light']:not([data-dim='end']) .dim .veil--side {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--v), 0.97) 0%,
+    rgba(var(--v), 0.94) 36%,
+    rgba(var(--v), 0.3) 54%,
+    rgba(var(--v), 0) 72%
+  );
+}
+
+@keyframes cue {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: 100% 0;
+  }
+}
