@@ -39,3 +39,7 @@ tests/__snapshots__
 
 # Design demos: extracted game textures are not ours to redistribute
 docs/design-demos/mc/
+
+# Design demos: third-party reference and superseded drafts stay local
+docs/design-demos/new.html
+docs/design-demos/dimensions.html

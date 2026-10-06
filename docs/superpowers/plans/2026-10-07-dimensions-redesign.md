@@ -2425,17 +2425,14 @@ export const buildChoreography = (
 
   const ctx = gsap.context(() => {
     // which dimension the reader is in
-    gsap.utils
-      .toArray<HTMLElement>('[data-dim]', root)
-      .forEach((el) =>
-        ScrollTrigger.create({
-          trigger: el,
-          start: 'top 55%',
-          end: 'bottom 55%',
-          onToggle: (s) =>
-            s.isActive && opts.onDim(el.dataset.dim as Dimension),
-        }),
-      );
+    gsap.utils.toArray<HTMLElement>('[data-dim]', root).forEach((el) =>
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 55%',
+        end: 'bottom 55%',
+        onToggle: (s) => s.isActive && opts.onDim(el.dataset.dim as Dimension),
+      }),
+    );
 
     if (opts.reduced) {
       // no scrubbed motion: the scene simply switches when its section reaches the middle of the screen
@@ -3119,43 +3116,37 @@ const works = t('dimensions.overworld.works', { returnObjects: true }) as {
 ```ts
 // shared reveals
 const reveals = () => {
-  gsap.utils
-    .toArray<HTMLElement>('[data-say]', root)
-    .forEach((el) =>
-      gsap.to(el.querySelectorAll('span'), {
-        opacity: 1,
-        stagger: 0.5,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 72%',
-          end: 'bottom 40%',
-          scrub: true,
-        },
-      }),
-    );
-  gsap.utils
-    .toArray<HTMLElement>('.open .vt', root)
-    .forEach((el) =>
-      gsap.from(el, {
-        yPercent: 12,
-        opacity: 0,
-        duration: 1.4,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: el, start: 'top 85%' },
-      }),
-    );
-  gsap.utils
-    .toArray<HTMLElement>('.rise', root)
-    .forEach((el) =>
-      gsap.from(el, {
-        y: 44,
-        opacity: 0,
-        duration: 1.1,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: el, start: 'top 86%' },
-      }),
-    );
+  gsap.utils.toArray<HTMLElement>('[data-say]', root).forEach((el) =>
+    gsap.to(el.querySelectorAll('span'), {
+      opacity: 1,
+      stagger: 0.5,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 72%',
+        end: 'bottom 40%',
+        scrub: true,
+      },
+    }),
+  );
+  gsap.utils.toArray<HTMLElement>('.open .vt', root).forEach((el) =>
+    gsap.from(el, {
+      yPercent: 12,
+      opacity: 0,
+      duration: 1.4,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: el, start: 'top 85%' },
+    }),
+  );
+  gsap.utils.toArray<HTMLElement>('.rise', root).forEach((el) =>
+    gsap.from(el, {
+      y: 44,
+      opacity: 0,
+      duration: 1.1,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 86%' },
+    }),
+  );
 };
 
 // each build drifts its own way while it is on screen
