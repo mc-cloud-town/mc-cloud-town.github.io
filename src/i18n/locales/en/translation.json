@@ -484,6 +484,7 @@
       "crumb": "Survival progress",
       "title": ["One world,", "from day one until now."],
       "lead": "The server opened on 23 July 2022 and the world has never been reset. All {{total}} milestones are here. Filter by dimension or year.",
+      "leadPlain": "The server opened on 23 July 2022 and the world has never been reset. All milestones are here. Filter by dimension or year.",
       "allDims": "All dimensions",
       "allYears": "All years",
       "count": "{{n}} / {{total}}",

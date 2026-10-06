@@ -2,13 +2,19 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import useApi from '@/hooks/useApi';
+import { STATIC_DATA_API } from '@/constants';
+import type { IImageContent } from '@/types/IImageContent';
 import { SiteBar } from '#/dimensions/SiteBar';
 import { SiteFooter } from '#/dimensions/SiteFooter';
 import { InnerHeader } from '#/dimensions/InnerHeader';
 import { ProgressLog } from '#/dimensions/ProgressLog';
 
 export default function ProgressPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { data, loading, error } = useApi<IImageContent[]>(
+    `${STATIC_DATA_API}/${i18n.language}/survivalProgress.json`,
+  );
   return (
     <div className='dim'>
       <SiteBar variant='inner' current='progress' />
@@ -23,10 +29,14 @@ export default function ProgressPage() {
           title={
             t('dimensions.progress.title', { returnObjects: true }) as string[]
           }
-          lead={t('dimensions.progress.lead', { total: 53 })}
+          lead={
+            data
+              ? t('dimensions.progress.lead', { total: data.length })
+              : t('dimensions.progress.leadPlain')
+          }
           label={t('dimensions.dim.all')}
         />
-        <ProgressLog />
+        <ProgressLog data={data} loading={loading} error={error} />
         <div className='next'>
           <span className='mono' data-t='note'>
             {t('dimensions.nextLabel')}

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import useApi from '@/hooks/useApi';
 import { STATIC_DATA_API } from '@/constants';
 import {
   dimensionOf,
@@ -13,14 +12,22 @@ import type { IImageContent } from '@/types/IImageContent';
 import { useDimension } from './DimensionProvider';
 import { Toolbar } from './Toolbar';
 
+/** A year chip needs a real year; entries with an unreadable date are still listed. */
+const validYear = (y: string) => (/^\d{4}$/.test(y) ? y : '');
+
 const DIMS: ProgressDimension[] = ['overworld', 'nether', 'end'];
 
-export const ProgressLog = () => {
-  const { t, i18n } = useTranslation();
+export const ProgressLog = ({
+  data,
+  loading,
+  error,
+}: {
+  data: IImageContent[] | null;
+  loading: boolean;
+  error: unknown;
+}) => {
+  const { t } = useTranslation();
   const { setDim } = useDimension();
-  const { data, loading, error } = useApi<IImageContent[]>(
-    `${STATIC_DATA_API}/${i18n.language}/survivalProgress.json`,
-  );
   const [dim, setFilterDim] = useState<ProgressDimension | ''>('');
   const [year, setYear] = useState('');
   const [nowYear, setNowYear] = useState('');
@@ -31,7 +38,7 @@ export const ProgressLog = () => {
       (data ?? [])
         .map((x, i) => ({
           no: i + 1,
-          year: yearOf(x.title),
+          year: validYear(yearOf(x.title)),
           date: formatDate(x.title),
           name: x.subTitle ?? '',
           image: `${STATIC_DATA_API}/images/${x.imageUrl}`,
@@ -40,11 +47,13 @@ export const ProgressLog = () => {
         .reverse(),
     [data],
   );
-  const years = useMemo(() => [...new Set(items.map((i) => i.year))], [items]);
+  const years = useMemo(
+    () => [...new Set(items.map((i) => i.year).filter(Boolean))],
+    [items],
+  );
   const shown = items.filter(
     (i) => (!dim || i.dim === dim) && (!year || i.year === year),
   );
-  const perYear = (y: string) => items.filter((i) => i.year === y).length;
 
   // The entry crossing the middle of the screen sets the big year and the accent colour.
   useEffect(() => {
@@ -55,7 +64,7 @@ export const ProgressLog = () => {
         entries.forEach((e) => {
           if (!e.isIntersecting) return;
           const el = e.target as HTMLElement;
-          setNowYear(el.dataset.year ?? '');
+          if (el.dataset.year) setNowYear(el.dataset.year);
           if (el.dataset.dim) setDim(el.dataset.dim as ProgressDimension);
         }),
       { rootMargin: '-45% 0px -50% 0px' },
@@ -64,7 +73,11 @@ export const ProgressLog = () => {
     return () => io.disconnect();
   }, [shown.length, dim, year, setDim]);
 
-  const bigYear = nowYear || shown[0]?.year || '';
+  // Always a year that is in the shown list; the count is over the shown entries only.
+  const bigYear = shown.some((i) => i.year && i.year === nowYear)
+    ? nowYear
+    : shown.find((i) => i.year)?.year ?? '';
+  const bigCount = shown.filter((i) => i.year === bigYear).length;
 
   return (
     <>
@@ -152,12 +165,14 @@ export const ProgressLog = () => {
 
       {shown.length > 0 && (
         <div className='log'>
-          <div className='year' aria-hidden='true'>
-            <b>{bigYear}</b>
-            <small data-t='note'>
-              {t('dimensions.progress.perYear', { n: perYear(bigYear) })}
-            </small>
-          </div>
+          {bigYear && (
+            <div className='year' aria-hidden='true'>
+              <b>{bigYear}</b>
+              <small data-t='note'>
+                {t('dimensions.progress.perYear', { n: bigCount })}
+              </small>
+            </div>
+          )}
           <ol className='entries' ref={list}>
             {shown.map((it) => (
               <li
