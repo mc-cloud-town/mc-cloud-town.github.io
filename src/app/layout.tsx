@@ -74,7 +74,9 @@ export default function RootLayout({
   return (
     <html lang='zh' suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script id='theme-init' strategy='beforeInteractive'>
+          {themeInitScript}
+        </Script>
         <link rel='preconnect' href='https://fonts.googleapis.com' />
         <link
           rel='preconnect'
