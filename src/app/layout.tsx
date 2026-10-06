@@ -4,7 +4,6 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 
 import StyledComponentsRegistry from '@/lib/StyledComponentsRegistry';
 import { ThemeProvider, themeInitScript } from '@/context/ThemeContext';
-import { Layout } from '@/Layout';
 
 import 'antd/dist/reset.css';
 import 'react-lazy-load-image-component/src/effects/blur.css';
@@ -99,9 +98,7 @@ export default function RootLayout({
         <div id='root'>
           <StyledComponentsRegistry>
             <AntdRegistry>
-              <ThemeProvider>
-                <Layout>{children}</Layout>
-              </ThemeProvider>
+              <ThemeProvider>{children}</ThemeProvider>
             </AntdRegistry>
           </StyledComponentsRegistry>
         </div>
