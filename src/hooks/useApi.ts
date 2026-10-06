@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 
 /**
  * useApi hook to fetch data from an API.
  * @template T The expected data type.
  * @param url {string} The URL of the API.
- * @returns {Object} The data, loading state, and error state.
+ * @returns {Object} The data, loading state, error state, and a reload function.
  */
 const useApi = <T>(
   url: string,
@@ -13,10 +13,12 @@ const useApi = <T>(
   data: T | null;
   loading: boolean;
   error: { message: string } | null;
+  reload: () => void;
 } => {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<{ message: string } | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,9 +59,11 @@ const useApi = <T>(
       isActive = false;
       controller.abort();
     };
-  }, [url]);
+  }, [url, reloadKey]);
 
-  return { data, loading, error };
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
+  return { data, loading, error, reload };
 };
 
 export default useApi;
