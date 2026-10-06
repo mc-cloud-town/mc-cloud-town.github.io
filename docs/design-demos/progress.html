@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="dark" data-dim="overworld">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>生存服進度｜雲鎮工藝 CTEC</title>
+    <link rel="icon" href="../../public/favicon-32x32.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:wght@700;900&family=Chiron+Hei+HK:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="inner.css" />
+    <style>
+      /* The full world log. One column of entries beside a year that stays in view; the accent follows the dimension of the entry being read. */
+      .log {
+        display: grid;
+        grid-template-columns: clamp(120px, 16vw, 240px) minmax(0, 1fr);
+        gap: 0 5vw;
+        padding: 56px var(--gutter) 0;
+      }
+      .log[hidden] {
+        display: none;
+      }
+      .year {
+        grid-column: 1;
+        position: sticky;
+        top: 150px;
+        align-self: start;
+        font: 900 clamp(44px, 6vw, 104px) / 1 var(--serif);
+        font-variant-numeric: tabular-nums;
+      }
+      .year small {
+        display: block;
+        margin-top: 12px;
+        font: 12px var(--mono);
+        color: var(--muted);
+        letter-spacing: 0.04em;
+      }
+      .entries {
+        grid-column: 2;
+        padding-bottom: 96px;
+      }
+      .entry {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+        gap: 32px;
+        align-items: center;
+        padding: 26px 0;
+        border-top: 1px solid var(--line);
+      }
+      .entry[hidden] {
+        display: none;
+      }
+      .entry figure {
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: var(--panel);
+      }
+      .entry img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      .entry:hover img {
+        transform: scale(1.04);
+      }
+      .entry .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        align-items: center;
+      }
+      .entry .dim {
+        border: 1px solid currentColor;
+        border-radius: 100px;
+        padding: 0 9px;
+      }
+      .entry .dim.overworld {
+        color: #86cdff;
+      }
+      .entry .dim.nether {
+        color: #ff6a45;
+      }
+      .entry .dim.end {
+        color: #cdb0ff;
+      }
+      [data-theme='light'] .entry .dim.overworld {
+        color: #0b6fb5;
+      }
+      [data-theme='light'] .entry .dim.nether {
+        color: #c2330f;
+      }
+      [data-theme='light'] .entry .dim.end {
+        color: #6234c4;
+      }
+      .entry h2 {
+        font-size: clamp(22px, 2.4vw, 38px);
+        margin-top: 10px;
+      }
+      .entry .no {
+        color: var(--muted);
+      }
+      @media (max-width: 860px) {
+        .log {
+          grid-template-columns: 1fr;
+        }
+        .year,
+        .entries {
+          grid-column: 1;
+        }
+        .year {
+          position: static;
+          margin: 0 0 20px;
+          font-size: 44px;
+        }
+        .entry {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <a class="logo" href="dimensions-v2.html" aria-label="雲鎮工藝 首頁"
+        ><img src="../../public/assets/brand/brand1.webp" alt="雲鎮工藝 CTEC"
+      /></a>
+      <nav>
+        <a href="dimensions-v2.html#overworld">主世界</a
+        ><a href="dimensions-v2.html#nether">地獄</a
+        ><a href="dimensions-v2.html#end">終界</a
+        ><a href="progress.html" aria-current="page">進度</a
+        ><a href="members.html">成員</a
+        ><a href="dimensions-v2.html#respawn">加入我們</a>
+      </nav>
+      <button class="pill" id="theme" type="button" aria-label="切換白天或夜晚">
+        夜
+      </button>
+    </header>
+
+    <main>
+      <div class="head">
+        <div class="bg">
+          <img src="../../public/assets/homePage/CTEC_Building.webp" alt="" />
+        </div>
+        <div>
+          <p class="crumb mono">
+            <a href="dimensions-v2.html">首頁</a><span>/</span
+            ><span class="acc">生存服進度</span>
+          </p>
+          <h1 class="serif">同一個世界，<br />從第一天到現在。</h1>
+          <p>
+            2022 年 7 月 23 日開服，世界沒有重置過。這裡是全部
+            <span id="total">53</span> 個里程碑，可以依維度或年份篩選。
+          </p>
+        </div>
+        <div class="vt" aria-hidden="true">世界紀錄</div>
+      </div>
+
+      <div class="tools">
+        <div class="chips" id="dimChips" role="group" aria-label="依維度篩選">
+          <button type="button" aria-pressed="true" data-v="">全部維度</button
+          ><button type="button" aria-pressed="false" data-v="overworld">
+            主世界</button
+          ><button type="button" aria-pressed="false" data-v="nether">
+            地獄</button
+          ><button type="button" aria-pressed="false" data-v="end">終界</button>
+        </div>
+        <div class="chips" id="yearChips" role="group" aria-label="依年份篩選">
+          <button type="button" aria-pressed="true" data-v="">全部年份</button>
+        </div>
+        <span class="count mono" id="count"></span>
+      </div>
+
+      <div class="log" id="log">
+        <div class="year" aria-hidden="true">
+          <span id="yearNow">2025</span><small id="yearSub"></small>
+        </div>
+        <ol class="entries" id="entries"></ol>
+      </div>
+      <p class="empty" id="empty" hidden>
+        這個組合沒有里程碑，換一個維度或年份。
+      </p>
+
+      <div class="next">
+        <span class="mono">接著看</span
+        ><a href="members.html">把這個世界蓋出來的人 →</a>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <img src="../../public/assets/brand/brand1.webp" alt="雲鎮工藝 CTEC" /><a
+        href="https://discord.gg/H6uHghNq5Z"
+        >Discord</a
+      ><a href="https://www.youtube.com/@CTEC_">YouTube</a
+      ><a href="https://github.com/mc-cloud-town">GitHub</a
+      ><span>© 2022–2026 Cloud Town Exquisite Craft</span>
+    </footer>
+
+    <script src="inner.js"></script>
+    <script>
+      (async () => {
+        const DATA = 'https://mc-ctec.org/static-data/',
+          $ = (s) => document.querySelector(s),
+          root = document.documentElement;
+        const NAME = { overworld: '主世界', nether: '地獄', end: '終界' };
+        // The data has no dimension field yet. Until it does, the dimension is guessed from the title: a placeholder, not a fact.
+        const guess = (t) =>
+          /地獄|豬布林|岩漿立方怪/.test(t)
+            ? 'nether'
+            : /終界|月宮/.test(t)
+              ? 'end'
+              : 'overworld';
+        let list = [];
+        try {
+          list = await (
+            await fetch(DATA + 'zh_TW/survivalProgress.json')
+          ).json();
+        } catch {
+          $('#log').hidden = true;
+          $('#empty').hidden = false;
+          $('#empty').textContent = '進度資料載入失敗，請重新整理。';
+          return;
+        }
+        const items = list
+          .map((x, i) => {
+            const [y, m = '', d = ''] = x.title.split(/[～~-]/)[0].split('/');
+            return {
+              no: i + 1,
+              year: y,
+              date: [y, m && m.padStart(2, '0'), d && d.padStart(2, '0')]
+                .filter(Boolean)
+                .join('.'),
+              name: x.subTitle,
+              img: DATA + 'images/' + x.imageUrl,
+              dim: guess(x.subTitle),
+            };
+          })
+          .reverse();
+        $('#total').textContent = items.length;
+        $('#entries').innerHTML = items
+          .map(
+            (
+              it,
+            ) => `<li class="entry" data-dim="${it.dim}" data-year="${it.year}">
+      <figure><img loading="lazy" src="${it.img}" alt="${it.name}" /></figure>
+      <div><p class="meta mono"><span>${it.date}</span><span class="dim ${it.dim}">${NAME[it.dim]}</span><span class="no">第 ${it.no} 項</span></p><h2 class="serif">${it.name}</h2></div></li>`,
+          )
+          .join('');
+        const years = [...new Set(items.map((i) => i.year))];
+        $('#yearChips').insertAdjacentHTML(
+          'beforeend',
+          years
+            .map(
+              (y) =>
+                `<button type="button" aria-pressed="false" data-v="${y}">${y}</button>`,
+            )
+            .join(''),
+        );
+
+        const state = { dim: '', year: '' },
+          entries = [...document.querySelectorAll('.entry')];
+        const apply = () => {
+          let n = 0;
+          entries.forEach((e) => {
+            e.hidden = Boolean(
+              (state.dim && e.dataset.dim !== state.dim) ||
+                (state.year && e.dataset.year !== state.year),
+            );
+            if (!e.hidden) n++;
+          });
+          $('#count').textContent = `${n} / ${items.length} 項`;
+          $('#empty').hidden = n > 0;
+          $('#log').hidden = n === 0;
+        };
+        const chips = (id, key) => {
+          const bs = [...document.querySelectorAll(id + ' button')];
+          bs.forEach((b) =>
+            b.addEventListener('click', () => {
+              bs.forEach((x) =>
+                x.setAttribute('aria-pressed', String(x === b)),
+              );
+              state[key] = b.dataset.v;
+              apply();
+            }),
+          );
+        };
+        chips('#dimChips', 'dim');
+        chips('#yearChips', 'year');
+        apply();
+
+        // the entry crossing the middle of the screen sets the big year and the accent colour
+        const perYear = (y) => items.filter((i) => i.year === y).length;
+        const io = new IntersectionObserver(
+          (es) =>
+            es.forEach((e) => {
+              if (!e.isIntersecting) return;
+              root.dataset.dim = e.target.dataset.dim;
+              $('#yearNow').textContent = e.target.dataset.year;
+              $('#yearSub').textContent =
+                `${perYear(e.target.dataset.year)} 個里程碑`;
+            }),
+          { rootMargin: '-45% 0px -50% 0px' },
+        );
+        entries.forEach((e) => io.observe(e));
+        $('#yearNow').textContent = items[0].year;
+        $('#yearSub').textContent = `${perYear(items[0].year)} 個里程碑`;
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="dark" data-dim="end">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>成員｜雲鎮工藝 CTEC</title>
+    <link rel="icon" href="../../public/favicon-32x32.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:wght@700;900&family=Chiron+Hei+HK:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="inner.css" />
+    <style>
+      /* The full credits. A roster, not a card wall: one line per person so 150 names stay scannable. */
+      .group {
+        padding: 64px var(--gutter) 0;
+      }
+      .group[hidden] {
+        display: none;
+      }
+      .group header {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .group h2 {
+        font-size: clamp(26px, 3vw, 44px);
+      }
+      .group header p {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .group header .mono {
+        margin-left: auto;
+        color: var(--muted);
+      }
+      .people {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 0 28px;
+      }
+      .person {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        font: 500 14px var(--mono);
+      }
+      .person[hidden] {
+        display: none;
+      }
+      .person img {
+        width: 28px;
+        height: 28px;
+        image-rendering: pixelated;
+        background: var(--panel);
+        flex: none;
+      }
+      .person:hover {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar">
+      <a class="logo" href="dimensions-v2.html" aria-label="雲鎮工藝 首頁"
+        ><img src="../../public/assets/brand/brand1.webp" alt="雲鎮工藝 CTEC"
+      /></a>
+      <nav>
+        <a href="dimensions-v2.html#overworld">主世界</a
+        ><a href="dimensions-v2.html#nether">地獄</a
+        ><a href="dimensions-v2.html#end">終界</a
+        ><a href="progress.html">進度</a
+        ><a href="members.html" aria-current="page">成員</a
+        ><a href="dimensions-v2.html#respawn">加入我們</a>
+      </nav>
+      <button class="pill" id="theme" type="button" aria-label="切換白天或夜晚">
+        夜
+      </button>
+    </header>
+
+    <main>
+      <div class="head">
+        <div class="bg">
+          <img src="../../public/assets/members/CTEC_Members.webp" alt="" />
+        </div>
+        <div>
+          <p class="crumb mono">
+            <a href="dimensions-v2.html">首頁</a><span>/</span
+            ><a href="dimensions-v2.html#end">終界</a><span>/</span
+            ><span class="acc">成員</span>
+          </p>
+          <h1 class="serif">製作名單，<br />完整版。</h1>
+          <p>各領域優秀成員，共創伺服器精彩紀錄。</p>
+        </div>
+        <div class="vt" aria-hidden="true">終界</div>
+      </div>
+
+      <div class="tools">
+        <input
+          class="search"
+          id="q"
+          type="search"
+          placeholder="搜尋成員"
+          aria-label="搜尋成員"
+        />
+        <span class="count mono" id="count"></span>
+      </div>
+
+      <div id="groups"></div>
+      <p class="empty" id="empty" hidden>沒有找到成員，換個名字試試。</p>
+
+      <div class="next">
+        <span class="mono">接著看</span
+        ><a href="dimensions-v2.html#respawn">下一個名字，可以是你 →</a>
+      </div>
+    </main>
+
+    <footer class="foot">
+      <img src="../../public/assets/brand/brand1.webp" alt="雲鎮工藝 CTEC" /><a
+        href="https://discord.gg/H6uHghNq5Z"
+        >Discord</a
+      ><a href="https://www.youtube.com/@CTEC_">YouTube</a
+      ><a href="https://github.com/mc-cloud-town">GitHub</a
+      ><span>© 2022–2026 Cloud Town Exquisite Craft</span>
+    </footer>
+
+    <script src="inner.js"></script>
+    <script>
+      (async () => {
+        const $ = (s) => document.querySelector(s);
+        // group titles and lines are the site's existing copy
+        const GROUPS = [
+          ['member', '正式成員', '這些老江湖們已經在伺服器上留下了自己的痕跡'],
+          ['trial', '新秀成員', '新鮮肝臟，等待你的發掘'],
+        ];
+        let d;
+        try {
+          d = await (
+            await fetch('https://mc-ctec.org/static-data/member.json')
+          ).json();
+        } catch {
+          $('#empty').hidden = false;
+          $('#empty').textContent = '成員資料載入失敗，請重新整理。';
+          return;
+        }
+        $('#groups').innerHTML = GROUPS.filter(([k]) => d[k] && d[k].length)
+          .map(
+            ([
+              k,
+              t,
+              s,
+            ]) => `<section class="group"><header><h2 class="serif">${t}</h2><p>${s}</p><span class="mono">${d[k].length} 位</span></header>
+    <ul class="people">${d[k].map((m) => `<li class="person" data-n="${m.name.toLowerCase()}"><img loading="lazy" src="https://mineskin.eu/helm/${m.uuid}/56.png" alt="" />${m.name}</li>`).join('')}</ul></section>`,
+          )
+          .join('');
+        const people = [...document.querySelectorAll('.person')],
+          total = people.length;
+        const apply = () => {
+          const q = $('#q').value.trim().toLowerCase();
+          let n = 0;
+          people.forEach((p) => {
+            p.hidden = !p.dataset.n.includes(q);
+            if (!p.hidden) n++;
+          });
+          document
+            .querySelectorAll('.group')
+            .forEach(
+              (g) => (g.hidden = !g.querySelector('.person:not([hidden])')),
+            );
+          $('#count').textContent = `${n} / ${total} 位`;
+          $('#empty').hidden = n > 0;
+        };
+        $('#q').addEventListener('input', apply);
+        apply();
+      })();
+    </script>
+  </body>
+</html>

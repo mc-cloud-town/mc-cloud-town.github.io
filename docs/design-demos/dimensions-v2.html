@@ -1,0 +1,2071 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="dark" data-dim="overworld">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>雲鎮工藝 CTEC｜三個維度 v2</title>
+    <meta
+      name="description"
+      content="雲鎮工藝 Cloud Town Exquisite Craft。主世界、地獄、終界：一個從 2022 年運行至今、沒有重置過的技術生存世界。"
+    />
+    <link rel="icon" href="../../public/favicon-32x32.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:wght@700;900&family=Chiron+Hei+HK:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Concept: one trip through the three dimensions of the world.
+   Overworld (what we build) -> Nether (the industry) -> The End (the credits) -> respawn (join).
+   Performance rule for this file: scroll-driven motion uses transform and opacity only. */
+      :root {
+        --bg: #06080b;
+        --fg: #f2f4f6;
+        --muted: #a3adb8;
+        --v: 6, 8, 11;
+        --line: rgba(242, 244, 246, 0.18);
+        --accent: #86cdff;
+        --logo: invert(1);
+        /* veil stops. Photos are never covered evenly: the veil is solid where text sits and clear where it doesn't. */
+        --s1: 0.92;
+        --s2: 0.7;
+        --s3: 0.2;
+        --s4: 0.32; /* side: text on the left */
+        --f1: 0.95;
+        --f2: 0.5;
+        --f3: 0.28; /* foot: text along the bottom */
+        --h1: 0.82;
+        --h2: 0.4;
+        --h3: 0.12;
+        --h4: 0.62;
+        --h5: 0.78; /* hero: copy left, title strip right */
+        --serif: 'Chiron Sung HK', 'Noto Serif TC', serif;
+        --sans: 'Chiron Hei HK', 'Noto Sans TC', system-ui, sans-serif;
+        --mono: 'JetBrains Mono', ui-monospace, monospace;
+        --gutter: clamp(20px, 6vw, 96px);
+      }
+      /* Day: paper where the text is, the photograph at full colour everywhere else. */
+      [data-theme='light'] {
+        --bg: #eef2f5;
+        --fg: #0f1418;
+        --muted: #414c57;
+        --v: 238, 242, 245;
+        --line: rgba(15, 20, 24, 0.24);
+        --logo: none;
+        --accent: #0b6fb5;
+        --s1: 0.97;
+        --s2: 0.92;
+        --s3: 0.22;
+        --s4: 0;
+        --f1: 0.97;
+        --f2: 0.6;
+        --f3: 0;
+        --h1: 0.96;
+        --h2: 0.74;
+        --h3: 0;
+        --h4: 0.9;
+        --h5: 0.97;
+      }
+      [data-dim='nether'] {
+        --accent: #ff6a45;
+      }
+      [data-dim='end'] {
+        --accent: #cdb0ff;
+      }
+      [data-theme='light'][data-dim='nether'] {
+        --accent: #c2330f;
+      }
+      /* The End has no daylight: in the day theme the interface goes dark for this one dimension. */
+      [data-theme='light'][data-dim='end'] {
+        --bg: #06080b;
+        --fg: #f2f4f6;
+        --muted: #a3adb8;
+        --v: 6, 8, 11;
+        --line: rgba(242, 244, 246, 0.18);
+        --logo: invert(1);
+        --accent: #cdb0ff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        background: var(--bg);
+      }
+      html.lenis,
+      html.lenis body {
+        height: auto;
+      }
+      .lenis.lenis-smooth {
+        scroll-behavior: auto !important;
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--sans);
+        line-height: 1.8;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        transition: color 0.5s;
+      }
+      body.is-loading {
+        overflow: hidden;
+        height: 100vh;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+      }
+      ul,
+      ol {
+        list-style: none;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+      ::selection {
+        background: var(--accent);
+        color: #000;
+      }
+      .mono {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+      .acc {
+        color: var(--accent);
+        transition: color 0.5s;
+      }
+
+      /* ───────── the world ───────── */
+      .world {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background: #000;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        visibility: hidden;
+        opacity: 0;
+        overflow: hidden;
+      }
+      .scene.is-first {
+        visibility: visible;
+        opacity: 1;
+      }
+      .zoom,
+      .cam {
+        position: absolute;
+        inset: 0;
+      }
+      .cam img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .veil {
+        position: absolute;
+        inset: 0;
+      }
+      .veil--side {
+        background: linear-gradient(
+          90deg,
+          rgba(var(--v), var(--s1)) 0%,
+          rgba(var(--v), var(--s2)) 40%,
+          rgba(var(--v), var(--s3)) 72%,
+          rgba(var(--v), var(--s4)) 100%
+        );
+      }
+      .veil--wide {
+        background: linear-gradient(
+          90deg,
+          rgba(var(--v), var(--s1)) 0%,
+          rgba(var(--v), var(--s2)) 56%,
+          rgba(var(--v), var(--s3)) 84%,
+          rgba(var(--v), var(--s4)) 100%
+        );
+      }
+      .veil--flip {
+        transform: scaleX(-1);
+      }
+      /* day: the paper side is narrower, so more of the photograph stays untouched */
+      [data-theme='light']:not([data-dim='end']) .veil--side {
+        background: linear-gradient(
+          90deg,
+          rgba(var(--v), 0.97) 0%,
+          rgba(var(--v), 0.94) 36%,
+          rgba(var(--v), 0.3) 54%,
+          rgba(var(--v), 0) 72%
+        );
+      }
+      /* day: the vertical dimension name stands on the photograph, so it gets its own strip of paper */
+      [data-theme='light']:not([data-dim='end']) .open .vt {
+        background: rgba(var(--v), 0.95);
+        padding: 0.4em 0.25em 0.3em;
+      }
+      .veil--foot {
+        background: linear-gradient(
+          0deg,
+          rgba(var(--v), var(--f1)) 0%,
+          rgba(var(--v), var(--f2)) 34%,
+          rgba(var(--v), var(--f3)) 66%
+        );
+      }
+      .veil--hero {
+        background: linear-gradient(
+          90deg,
+          rgba(var(--v), var(--h1)) 0%,
+          rgba(var(--v), var(--h2)) 36%,
+          rgba(var(--v), var(--h3)) 56%,
+          rgba(var(--v), var(--h3)) 68%,
+          rgba(var(--v), var(--h4)) 82%,
+          rgba(var(--v), var(--h5)) 100%
+        );
+      }
+      .starfield {
+        position: absolute;
+        inset: -20%;
+        background-color: #05030a;
+      }
+      .starfield i {
+        position: absolute;
+        inset: 0;
+        background-repeat: repeat;
+      }
+
+      /* nether portal: the game's own animated texture, drawn small and scaled up with hard pixels */
+      .portal {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        image-rendering: pixelated;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .flash {
+        position: fixed;
+        inset: 0;
+        z-index: 21;
+        opacity: 0;
+        pointer-events: none;
+        background: #fff;
+      }
+
+      /* ───────── fixed interface ───────── */
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: #06080b;
+        color: #f2f4f6;
+        display: grid;
+        place-items: center;
+      }
+      .loader-in {
+        display: grid;
+        justify-items: center;
+        gap: 26px;
+      }
+      .chunks {
+        display: grid;
+        grid-template-columns: repeat(7, 16px);
+        gap: 2px;
+      }
+      .chunks i {
+        width: 16px;
+        height: 16px;
+        background: #141a20;
+      }
+      .loader p {
+        font: 12px var(--mono);
+        color: #a3adb8;
+        display: flex;
+        gap: 12px;
+      }
+
+      .bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        padding: 20px var(--gutter);
+      }
+      .bar::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 -28px;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(
+          180deg,
+          rgba(var(--v), 0.92) 35%,
+          rgba(var(--v), 0)
+        );
+      }
+      .bar .logo {
+        margin-right: auto;
+      }
+      .bar .logo img {
+        height: 28px;
+        filter: var(--logo);
+      }
+      .bar nav {
+        display: flex;
+        gap: 26px;
+        font-size: 14px;
+      }
+      .bar nav a {
+        opacity: 0.7;
+        padding: 4px 0;
+        border-bottom: 1px solid transparent;
+        transition:
+          opacity 0.3s,
+          border-color 0.3s;
+      }
+      .bar nav a:hover,
+      .bar nav a.on {
+        opacity: 1;
+        border-bottom-color: var(--accent);
+      }
+      .pill {
+        font: 12px var(--mono);
+        border: 1px solid var(--line);
+        border-radius: 100px;
+        padding: 8px 14px;
+        transition:
+          background 0.3s,
+          color 0.3s;
+      }
+      .pill:hover {
+        background: var(--fg);
+        color: var(--bg);
+      }
+
+      .rail {
+        position: fixed;
+        left: calc(var(--gutter) / 2 - 6px);
+        top: 50%;
+        translate: 0 -50%;
+        z-index: 50;
+        height: 38vh;
+        width: 12px;
+      }
+      .rail::before,
+      .rail b {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--line);
+      }
+      .rail b {
+        background: var(--accent);
+        transform-origin: top;
+        transform: scaleY(0);
+      }
+      .rail a {
+        position: absolute;
+        left: 0;
+        width: 11px;
+        height: 11px;
+        border: 1px solid var(--fg);
+        background: var(--bg);
+        rotate: 45deg;
+      }
+      .rail a.on {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .rail a:nth-child(2) {
+        top: 0;
+      }
+      .rail a:nth-child(3) {
+        top: 50%;
+      }
+      .rail a:nth-child(4) {
+        top: 100%;
+      }
+
+      .f3 {
+        position: fixed;
+        left: var(--gutter);
+        bottom: 18px;
+        z-index: 50;
+        font: 11px/1.7 var(--mono);
+        pointer-events: none;
+      }
+      .cap {
+        position: fixed;
+        right: var(--gutter);
+        bottom: 18px;
+        z-index: 50;
+        text-align: right;
+        font: 11px/1.7 var(--mono);
+        pointer-events: none;
+      }
+      .f3 span,
+      .cap span {
+        display: table;
+        background: rgba(var(--v), 0.8);
+        padding: 0 8px;
+      }
+      .cap span {
+        margin-left: auto;
+      }
+
+      /* ───────── content ───────── */
+      main {
+        position: relative;
+        z-index: 10;
+      }
+      .serif {
+        font-family: var(--serif);
+        font-weight: 900;
+        line-height: 1.14;
+        letter-spacing: 0.02em;
+        text-wrap: balance;
+      }
+      .vt {
+        writing-mode: vertical-rl;
+        white-space: nowrap;
+        font-family: var(--serif);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: 0.04em;
+      }
+      .vt i {
+        display: inline-block;
+        overflow: hidden;
+        font-style: normal;
+      }
+      .vt i b {
+        display: block;
+        font-weight: inherit;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 700;
+        font-size: 17px;
+        padding: 18px 30px;
+        background: var(--fg);
+        color: var(--bg);
+        border-radius: 100px;
+        transition:
+          background 0.3s,
+          gap 0.3s;
+      }
+      .btn:hover {
+        background: var(--accent);
+        gap: 22px;
+      }
+
+      .hero {
+        position: relative;
+        height: 100vh;
+        min-height: 620px;
+      }
+      .hero .vt {
+        position: absolute;
+        right: var(--gutter);
+        top: 52%;
+        translate: 0 -50%;
+        font-size: clamp(56px, 13vh, 150px);
+      }
+      .hero-meta {
+        position: absolute;
+        left: var(--gutter);
+        top: 96px;
+        display: grid;
+        gap: 4px;
+      }
+      .hero-meta strong {
+        font: 500 14px var(--mono);
+      }
+      .hero-copy {
+        position: absolute;
+        left: var(--gutter);
+        bottom: 96px;
+        max-width: 460px;
+      }
+      .hero-copy .en {
+        font: 500 13px var(--mono);
+        letter-spacing: 0.14em;
+        color: var(--accent);
+      }
+      .hero-copy p.lead {
+        font-size: 19px;
+        font-weight: 500;
+        margin: 14px 0 30px;
+      }
+      .cue {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 34px;
+        font: 11px var(--mono);
+        color: var(--muted);
+      }
+      .cue i {
+        width: 44px;
+        height: 1px;
+        background: var(--line);
+        position: relative;
+        overflow: hidden;
+      }
+      .cue i::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--fg);
+        animation: cue 1.8s cubic-bezier(0.7, 0, 0.2, 1) infinite;
+      }
+      @keyframes cue {
+        from {
+          translate: -100% 0;
+        }
+        to {
+          translate: 100% 0;
+        }
+      }
+
+      /* a dimension opens */
+      .open {
+        position: relative;
+        min-height: 140vh;
+        padding: 28vh var(--gutter) 18vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6vw;
+        align-items: start;
+      }
+      .open > div:first-child {
+        max-width: 44vw;
+      }
+      /* the dimension name: a step larger than the statement beside it */
+      .open .vt {
+        font-size: clamp(40px, 5.2vw, 88px);
+        letter-spacing: 0.12em;
+        position: sticky;
+        top: 22vh;
+      }
+      .open .tag {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 40px;
+      }
+      .open .tag::after {
+        content: '';
+        width: 80px;
+        height: 1px;
+        background: var(--line);
+      }
+      .say {
+        font-family: var(--serif);
+        font-weight: 900;
+        font-size: clamp(30px, 3.8vw, 64px);
+        line-height: 1.32;
+      }
+      .say span {
+        display: block;
+        opacity: 0.16;
+        text-wrap: balance;
+      }
+      .open p.body {
+        max-width: 30em;
+        margin-top: 40px;
+        font-size: 17px;
+        color: var(--muted);
+      }
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px 56px;
+        margin-top: 64px;
+      }
+      .stats b {
+        display: block;
+        font: 900 clamp(40px, 4.4vw, 68px) / 1 var(--serif);
+        font-variant-numeric: tabular-nums;
+      }
+      .stats span {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      /* the home page is the trailer: each part ends with a way into the full page */
+      .more {
+        display: inline-flex;
+        gap: 10px;
+        margin-top: 40px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid var(--line);
+        font-size: 15px;
+        transition:
+          gap 0.3s,
+          border-color 0.3s;
+      }
+      .more:hover {
+        gap: 16px;
+        border-bottom-color: var(--accent);
+      }
+
+      /* overworld works: three builds, three different arrivals and three different caption positions */
+      .work-sec {
+        position: relative;
+        height: 150vh;
+      }
+      .work {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: grid;
+        padding: 110px var(--gutter) 96px;
+      }
+      .work h3 {
+        font-size: clamp(36px, 5.2vw, 88px);
+        margin: 10px 0 0;
+      }
+      .work--bl {
+        align-content: end;
+        justify-items: start;
+      }
+      .work--tr {
+        align-content: center;
+        justify-items: end;
+        text-align: right;
+      }
+      .work--tr > div {
+        max-width: 36vw;
+      }
+      .work--bc {
+        align-content: end;
+        justify-items: center;
+        text-align: center;
+      }
+
+      /* nether ledger */
+      .ledger-stage {
+        position: relative;
+        height: 100vh;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(200px, 300px) minmax(0, 1fr);
+        gap: 5vw;
+        align-items: center;
+        padding: 0 var(--gutter);
+      }
+      .ledger-list li {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        padding: 11px 0;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        color: var(--muted);
+        transition: color 0.3s;
+      }
+      .ledger-list li:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+      .ledger-list li.on {
+        color: var(--fg);
+      }
+      .ledger-list li.on .mono {
+        color: var(--accent);
+      }
+      .ledger-now {
+        max-width: 38vw;
+      }
+      .ledger-now h3 {
+        font-size: clamp(32px, 4.4vw, 76px);
+        margin-top: 14px;
+        overflow: hidden;
+        padding-bottom: 0.1em;
+      }
+      .ledger-now h3 span {
+        display: block;
+      }
+      .rank {
+        padding: 26vh var(--gutter);
+      }
+      .rank h2 {
+        font-size: clamp(56px, 9vw, 170px);
+        line-height: 1.05;
+      }
+      .rank h2 em {
+        font-style: normal;
+        color: var(--accent);
+        display: block;
+      }
+      .rank p {
+        max-width: 30em;
+        margin-top: 36px;
+        font-size: 17px;
+        color: var(--muted);
+      }
+
+      /* the end: credits */
+      .fig {
+        margin: 64px 0 0;
+        max-width: 620px;
+      }
+      .fig div {
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+      }
+      .fig img {
+        width: 100%;
+        height: 118%;
+        object-fit: cover;
+      }
+      .fig figcaption {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .credits {
+        padding: 10vh var(--gutter) 30vh;
+        text-align: center;
+      }
+      .credits h2 {
+        font: 500 13px var(--mono);
+        letter-spacing: 0.3em;
+        color: var(--accent);
+        margin: 22vh 0 40px;
+      }
+      .credits h2:first-child {
+        margin-top: 0;
+      }
+      .roles {
+        display: grid;
+        gap: 22px;
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .roles div {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        align-items: start;
+      }
+      .roles dt {
+        text-align: right;
+        color: var(--muted);
+        font-size: 14px;
+        padding-top: 2px;
+      }
+      .roles dd {
+        text-align: left;
+        font: 500 14px/1.9 var(--mono);
+      }
+      .roles dd a:hover {
+        color: var(--accent);
+      }
+      .names {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 28px;
+        max-width: 980px;
+        margin: 0 auto;
+        font: 500 15px/1.9 var(--mono);
+      }
+      .credits .fin {
+        margin-top: 30vh;
+        font-size: clamp(40px, 7vw, 120px);
+      }
+
+      /* respawn */
+      .respawn {
+        position: relative;
+        min-height: 100vh;
+        padding: 20vh var(--gutter) 170px;
+      }
+      .respawn h2 {
+        font-size: clamp(40px, 6vw, 108px);
+        margin: 18px 0 44px;
+        max-width: 54vw;
+      }
+      .depts {
+        margin-top: 64px;
+        max-width: min(720px, 54vw);
+      }
+      .depts li {
+        display: grid;
+        grid-template-columns: 7em 1fr;
+        gap: 24px;
+        padding: 18px 0;
+        border-top: 1px solid var(--line);
+      }
+      .depts li:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+      .depts b {
+        font: 900 22px var(--serif);
+      }
+      .depts span {
+        color: var(--muted);
+      }
+      .pal {
+        position: absolute;
+        right: 4vw;
+        bottom: 150px;
+        width: min(28vw, 400px);
+        filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.45));
+      }
+      .foot {
+        position: absolute;
+        left: var(--gutter);
+        right: var(--gutter);
+        bottom: 64px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 28px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .foot img {
+        height: 24px;
+        filter: var(--logo);
+        margin-right: auto;
+      }
+      .foot a:hover {
+        color: var(--accent);
+      }
+
+      @media (max-width: 860px) {
+        .bar nav,
+        .rail,
+        .cap {
+          display: none;
+        }
+        /* no room for a clear side: the veil runs bottom-up instead */
+        .veil--side,
+        .veil--wide,
+        .veil--hero {
+          transform: none;
+          background: linear-gradient(
+            0deg,
+            rgba(var(--v), 0.96) 0%,
+            rgba(var(--v), 0.8) 55%,
+            rgba(var(--v), 0.5) 100%
+          );
+        }
+        .hero .vt {
+          font-size: clamp(48px, 10.5vh, 100px);
+          top: 46%;
+        }
+        .hero-copy {
+          right: calc(var(--gutter) + 12vh);
+          bottom: 84px;
+        }
+        .hero-copy p.lead {
+          font-size: 16px;
+        }
+        .open {
+          grid-template-columns: 1fr;
+          padding-top: 20vh;
+        }
+        .open > div:first-child,
+        .ledger-now,
+        .work--tr > div {
+          max-width: none;
+        }
+        .open .vt {
+          writing-mode: horizontal-tb;
+          position: static;
+          order: -1;
+          font-size: 40px;
+        }
+        .work--tr {
+          align-content: end;
+          justify-items: start;
+          text-align: left;
+        }
+        .ledger-stage {
+          grid-template-columns: 1fr;
+          align-content: end;
+          padding-bottom: 96px;
+        }
+        .ledger-list {
+          display: none;
+        }
+        .roles div {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+        .roles dt,
+        .roles dd {
+          text-align: center;
+        }
+        .pal {
+          position: static;
+          width: 56vw;
+          margin: 40px 0 0 auto;
+        }
+        .depts li {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+        .respawn h2,
+        .depts {
+          max-width: none;
+        }
+        .respawn {
+          padding-bottom: 220px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .cue i::after {
+          animation: none;
+        }
+        .ledger-stage {
+          height: auto;
+          overflow: visible;
+          padding-block: 20vh;
+        }
+        .say span {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="is-loading">
+    <div class="world" aria-hidden="true">
+      <div
+        class="scene is-first"
+        id="sc-spawn"
+        data-cap="出生點|雲鎮工藝成員合照"
+      >
+        <div class="zoom">
+          <div class="cam">
+            <img src="../../public/assets/members/CTEC_Members.webp" alt="" />
+            <div class="veil veil--hero"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-town" data-cap="主世界|主城全景">
+        <div class="zoom">
+          <div class="cam">
+            <img src="../../public/assets/homePage/CTEC_Building.webp" alt="" />
+            <div class="veil veil--side"></div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="scene"
+        id="sc-w1"
+        data-cap="2024.03.22|進撃の巨人：瑪莉亞之牆"
+      >
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p40" alt="" />
+            <div class="veil veil--foot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-w2" data-cap="2023.07|新出生點">
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p33" alt="" />
+            <div class="veil veil--side veil--flip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-w3" data-cap="2023.08.20|全編碼全物品">
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p17" alt="" />
+            <div class="veil veil--foot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-nether" data-cap="地獄|紅石工業">
+        <div class="zoom">
+          <div class="cam" id="netherCam">
+            <div class="veil veil--wide"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-hall" data-cap="終界 · 2023.09.08|終界大廳">
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p21" alt="" />
+            <div class="veil veil--side"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-moon" data-cap="終界 · 2023.09.29|月宮">
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p14" alt="" />
+            <div class="veil veil--foot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-farm" data-cap="終界 · 2022.12.03|終界農業區">
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p6" alt="" />
+            <div class="veil veil--side veil--flip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scene" id="sc-end" data-cap="終界|製作名單">
+        <div class="zoom">
+          <div class="cam"><div class="starfield" id="stars"></div></div>
+        </div>
+      </div>
+      <div class="scene" id="sc-day1" data-cap="2022.07.23|雲鎮工藝開服">
+        <div class="zoom">
+          <div class="cam">
+            <img data-src="p2" alt="" />
+            <div class="veil veil--side"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <canvas
+      class="portal"
+      id="portal"
+      width="256"
+      height="144"
+      aria-hidden="true"
+    ></canvas>
+    <div class="flash" aria-hidden="true"></div>
+
+    <div class="loader" aria-hidden="true">
+      <div class="loader-in">
+        <div class="chunks" id="chunks"></div>
+        <p><span>正在建置地形</span><span id="pct">0%</span></p>
+      </div>
+    </div>
+
+    <header class="bar">
+      <a class="logo" href="#top" aria-label="雲鎮工藝 首頁"
+        ><img src="../../public/assets/brand/brand1.webp" alt="雲鎮工藝 CTEC"
+      /></a>
+      <nav aria-label="維度">
+        <a href="#overworld" data-d="overworld">主世界</a
+        ><a href="#nether" data-d="nether">地獄</a
+        ><a href="#end" data-d="end">終界</a
+        ><a href="#respawn" data-d="respawn">加入我們</a>
+      </nav>
+      <button class="pill" id="theme" type="button" aria-label="切換白天或夜晚">
+        夜
+      </button>
+      <a
+        class="pill"
+        href="https://discord.gg/H6uHghNq5Z"
+        target="_blank"
+        rel="noopener"
+        >Discord</a
+      >
+    </header>
+    <div class="rail" aria-hidden="true">
+      <b></b><a href="#overworld" data-d="overworld"></a
+      ><a href="#nether" data-d="nether"></a><a href="#end" data-d="end"></a>
+    </div>
+    <!-- 左下座標列與右下圖說：先停用
+<div class="f3" aria-hidden="true"><span id="xyz">XYZ 0 / 72 / 0</span><span id="where">主世界</span></div>
+<div class="cap" aria-hidden="true"><span id="capA">出生點</span><span id="capB">雲鎮工藝成員合照</span></div>
+-->
+
+    <main>
+      <section class="hero" id="top" data-dim="overworld">
+        <div class="hero-meta mono">
+          <span>開服 2022.07.23</span><strong id="uptime">—</strong>
+        </div>
+        <h1 class="vt" aria-label="雲鎮工藝">
+          <i><b>雲</b></i
+          ><i><b>鎮</b></i
+          ><i><b>工</b></i
+          ><i><b>藝</b></i>
+        </h1>
+        <div class="hero-copy">
+          <p class="en up">CLOUD TOWN EXQUISITE CRAFT</p>
+          <p class="lead up">
+            在 Minecraft
+            原版規則裡研究紅石、蓋建築，經營一個開服至今沒有重置過的生存世界。
+          </p>
+          <a class="btn up" href="#respawn">加入我們 <span>→</span></a>
+          <div class="cue up"><i></i>往下捲，走過三個維度</div>
+        </div>
+      </section>
+
+      <!-- DIM 01 -->
+      <section class="open" id="overworld" data-dim="overworld">
+        <div>
+          <div class="tag mono">
+            <span class="acc">維度 01 / 03</span><span>OVERWORLD</span>
+          </div>
+          <p class="say" data-say>
+            <span>紅石是工程。</span><span>建築是作品。</span
+            ><span>生存是一場不重置的長期實驗。</span>
+          </p>
+          <p class="body rise">
+            雲鎮工藝是來自亞洲的技術生存社群。成員來自不同專業，和多個國際技術伺服器往來，所有東西都在生存模式裡完成。
+          </p>
+          <div class="stats rise">
+            <div><b id="sDays">—</b><span>天，同一個世界</span></div>
+            <div><b>53</b><span>個生存服里程碑</span></div>
+            <div><b id="sMembers">116</b><span>位正式成員</span></div>
+            <div><b id="sRepos">29</b><span>個開源專案</span></div>
+          </div>
+          <a class="more rise" href="progress.html"
+            >完整的世界紀錄，53 個里程碑 <span>→</span></a
+          >
+        </div>
+        <div class="vt" aria-hidden="true">主世界</div>
+      </section>
+
+      <section
+        class="work-sec"
+        data-dim="overworld"
+        data-from="town"
+        data-to="w1"
+        data-fx="curtain"
+      >
+        <article class="work work--bl">
+          <div>
+            <p class="mono acc">建築 · 2024.03.22</p>
+            <h3 class="serif">進撃の巨人<br />瑪莉亞之牆</h3>
+          </div>
+        </article>
+      </section>
+      <section
+        class="work-sec"
+        data-dim="overworld"
+        data-from="w1"
+        data-to="w2"
+        data-fx="slide"
+      >
+        <article class="work work--tr">
+          <div>
+            <p class="mono acc">建築 · 2023.07</p>
+            <h3 class="serif">新出生點</h3>
+          </div>
+        </article>
+      </section>
+      <section
+        class="work-sec"
+        data-dim="overworld"
+        data-from="w2"
+        data-to="w3"
+        data-fx="push"
+      >
+        <article class="work work--bc">
+          <div>
+            <p class="mono acc">生存 · 倉儲 · 2023.08.20</p>
+            <h3 class="serif">全編碼全物品</h3>
+          </div>
+        </article>
+      </section>
+
+      <!-- DIM 02 -->
+      <section class="open" id="nether" data-dim="nether">
+        <div>
+          <div class="tag mono">
+            <span class="acc">維度 02 / 03</span><span>THE NETHER</span>
+          </div>
+          <p class="say" data-say>
+            <span>穿過傳送門，</span><span>就是我們的工廠。</span>
+          </p>
+          <p class="body rise">
+            地獄大廳、空置域、豬布林交易、岩漿立方怪農場。這些機器不是擺在創造模式裡看的，它們在生存世界裡實際運轉、實際產出。
+          </p>
+        </div>
+        <div class="vt" aria-hidden="true">地獄</div>
+      </section>
+
+      <section id="ledger" data-dim="nether">
+        <div class="ledger-stage">
+          <ol class="ledger-list" id="ledgerList"></ol>
+          <div class="ledger-now">
+            <p class="mono"><span class="acc" id="ledgerDate"></span></p>
+            <h3 class="serif"><span id="ledgerName"></span></h3>
+          </div>
+        </div>
+      </section>
+
+      <section class="rank" data-dim="nether">
+        <p class="mono acc">農場世界紀錄持有量</p>
+        <h2 class="serif rise">世界第六<em>亞洲第一</em></h2>
+        <p class="rise">我們設計的農場有多項取得世界紀錄認證。</p>
+      </section>
+
+      <!-- DIM 03 -->
+      <section class="open" id="end" data-dim="end">
+        <div>
+          <div class="tag mono">
+            <span class="acc">維度 03 / 03</span><span>THE END</span>
+          </div>
+          <p class="say" data-say>
+            <span>終界之後，</span><span>是製作名單。</span>
+          </p>
+          <p class="body rise">
+            終界大廳、月宮、終界農業區，都蓋在虛空上。看完這三處，就是把這個世界蓋出來的人。
+          </p>
+        </div>
+        <div class="vt" aria-hidden="true">終界</div>
+      </section>
+
+      <section
+        class="work-sec"
+        data-dim="end"
+        data-from="hall"
+        data-to="moon"
+        data-fx="slide"
+      >
+        <article class="work work--bl">
+          <div>
+            <p class="mono acc">建築 · 2023.09.29</p>
+            <h3 class="serif">月宮</h3>
+          </div>
+        </article>
+      </section>
+      <section
+        class="work-sec"
+        data-dim="end"
+        data-from="moon"
+        data-to="farm"
+        data-fx="curtain"
+      >
+        <article class="work work--tr">
+          <div>
+            <p class="mono acc">生存 · 2022.12.03</p>
+            <h3 class="serif">終界農業區</h3>
+          </div>
+        </article>
+      </section>
+
+      <section class="credits" data-dim="end">
+        <h2>開源工具</h2>
+        <dl class="roles" id="roles"></dl>
+        <h2>正式成員</h2>
+        <p class="names" id="nMember"></p>
+        <h2>新秀成員</h2>
+        <p class="names" id="nTrial"></p>
+        <p>
+          <a class="more" href="members.html">完整成員名冊 <span>→</span></a>
+        </p>
+        <p class="serif fin">還沒結束。</p>
+      </section>
+
+      <!-- RESPAWN -->
+      <section class="respawn" id="respawn" data-dim="respawn">
+        <img
+          class="pal"
+          src="../../public/assets/logo/512x512.png"
+          alt="雲鎮工藝看板娘"
+        />
+        <p class="mono acc">重生點：雲鎮</p>
+        <h2 class="serif rise">下一個里程碑，等你一起蓋。</h2>
+        <a
+          class="btn"
+          href="https://discord.gg/H6uHghNq5Z"
+          target="_blank"
+          rel="noopener"
+          >加入 Discord <span>→</span></a
+        >
+        <ul class="depts rise">
+          <li>
+            <b>紅石組</b
+            ><span>投稿你的紅石作品，我們會邀請優秀作品的作者加入。</span>
+          </li>
+          <li>
+            <b>建築組</b><span>審核看結構合理性、色彩運用與原創性。</span>
+          </li>
+          <li>
+            <b>後勤組</b><span>有基礎紅石知識、對遊戲有熱忱就可以申請。</span>
+          </li>
+        </ul>
+        <footer class="foot">
+          <img
+            src="../../public/assets/brand/brand1.webp"
+            alt="雲鎮工藝 CTEC"
+          /><a href="https://www.youtube.com/@CTEC_">YouTube</a
+          ><a href="https://twitter.com/CT_cloudtown">X</a
+          ><a href="https://github.com/mc-cloud-town">GitHub</a
+          ><a href="https://www.paypal.com/paypalme/cloudtownctec">支持我們</a
+          ><span>© 2022–2026 Cloud Town Exquisite Craft</span>
+        </footer>
+      </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+    <script>
+      (() => {
+        'use strict';
+        gsap.registerPlugin(ScrollTrigger);
+        const DATA = 'https://mc-ctec.org/static-data/',
+          IMG = DATA + 'images/survivalProgress/';
+        const START = new Date('2022-07-22T16:00:00.000Z').getTime();
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const $ = (s, r = document) => r.querySelector(s),
+          $$ = (s, r = document) => [...r.querySelectorAll(s)];
+        const pad = (n) => String(n).padStart(2, '0'),
+          root = document.documentElement;
+        const put = (sel, text) => {
+          const el = $(sel);
+          if (el) el.textContent = text;
+        }; // the corner readouts are commented out in the markup
+        $$('img[data-src]').forEach(
+          (i) => (i.src = IMG + i.dataset.src + '.webp'),
+        );
+
+        /* ── data ── */
+        const ledger = [
+          ['2022.08.08', '地獄大廳', 'p4'],
+          ['2023.01.17', 'Y0 切門豬人農場', 'p10'],
+          ['2023.04.23', '地獄 1k 空置域', 'p12'],
+          ['2024.02.13', '雙維度百萬豬布林交易', 'p38'],
+          ['2024.09.05', '地獄大廳主砲', 'p49'],
+          ['2025.02.11', '刷花機（地獄）', 'p51'],
+        ];
+        const roles = [
+          [
+            '遊戲核心',
+            [
+              'Carpet-CTEC-Addition',
+              'carpetmod112',
+              'Carpet-Vastech-Addition',
+              'carpet-shadow-117',
+              'scarpet',
+            ],
+          ],
+          [
+            '伺服器管理',
+            [
+              'ChatBridgeE',
+              'MCDR-LocationMarker',
+              'TimeBackup',
+              'join-reminder',
+              'VelocityCT',
+            ],
+          ],
+          [
+            '基礎設施',
+            ['grafana-docker', 'static-data', 'dashboard-api', 'info-command'],
+          ],
+          [
+            '社群工具',
+            [
+              'cloud-town-discord-bot',
+              'TTS-Discord-Bot',
+              'minecraft-resource-emoji',
+              'mc-cloud-town.github.io',
+            ],
+          ],
+        ];
+        const fallback = {
+          member:
+            'meng_xi,mc_chau,Logic_VY,Eric_Yang,DG2u_,FlandreLed,Nechnaw,kokosuan,MCmoying520,xXOpticNerveXx,steve_es,WenserMC',
+          trial:
+            'Ah_DouZi,chenxingkun2008,Yukkuri_RIM,Gu_Shen,Willy_0920,Setchex,LIKELC,Evangod123,Sharme1457,FixedRecord3131,Yuui_121,romatsai',
+        };
+
+        const cam = $('#netherCam');
+        ledger.forEach(([, n, p], i) => {
+          const im = new Image();
+          im.src = IMG + p + '.webp';
+          im.alt = '';
+          im.style.opacity = i ? 0 : 1;
+          cam.prepend(im);
+          $('#ledgerList').insertAdjacentHTML(
+            'beforeend',
+            `<li><span class="mono">${pad(i + 1)}</span><span>${n}</span></li>`,
+          );
+        });
+        const netherImgs = $$('img', cam).reverse();
+        $('#roles').innerHTML = roles
+          .map(
+            ([r, list]) =>
+              `<div><dt>${r}</dt><dd>${list.map((n) => `<a href="https://github.com/mc-cloud-town/${n}" target="_blank" rel="noopener">${n}</a>`).join('<br>')}</dd></div>`,
+          )
+          .join('');
+        const names = (id, list) =>
+          ($(id).innerHTML = list.map((n) => `<span>${n}</span>`).join(''));
+        names('#nMember', fallback.member.split(','));
+        names('#nTrial', fallback.trial.split(','));
+        fetch(DATA + 'member.json')
+          .then((r) => r.json())
+          .then((d) => {
+            names(
+              '#nMember',
+              d.member.map((m) => m.name),
+            );
+            names(
+              '#nTrial',
+              d.trial.map((m) => m.name),
+            );
+            $('#sMembers').textContent = d.member.length;
+            ScrollTrigger.refresh();
+          })
+          .catch(() => {});
+        fetch('https://api.github.com/orgs/mc-cloud-town/repos?per_page=100')
+          .then((r) => (r.ok ? r.json() : Promise.reject()))
+          .then(
+            (l) =>
+              ($('#sRepos').textContent = l.filter(
+                (r) => !r.name.startsWith('.'),
+              ).length),
+          )
+          .catch(() => {});
+
+        const days = Math.floor((Date.now() - START) / 864e5);
+        $('#sDays').textContent = days.toLocaleString();
+        const tick = () => {
+          const d = Date.now() - START;
+          $('#uptime').textContent =
+            `已運行 ${Math.floor(d / 864e5)} 天 ${pad(Math.floor(d / 36e5) % 24)}:${pad(Math.floor(d / 6e4) % 60)}:${pad(Math.floor(d / 1e3) % 60)}`;
+        };
+        tick();
+        setInterval(tick, 1000);
+
+        /* ── end starfield: one generated tile, three depths ── */
+        (() => {
+          const c = document.createElement('canvas');
+          c.width = c.height = 512;
+          const x = c.getContext('2d'),
+            cols = ['#9fe8d8', '#c9a7ff', '#6fb7ff', '#ffffff', '#58d6b0'];
+          for (let i = 0; i < 150; i++) {
+            x.fillStyle = cols[i % 5];
+            x.globalAlpha = Math.random() * 0.8 + 0.2;
+            const s = Math.random() < 0.12 ? 3 : Math.random() < 0.4 ? 2 : 1;
+            x.fillRect(
+              (Math.random() * 512) | 0,
+              (Math.random() * 512) | 0,
+              s,
+              s,
+            );
+          }
+          const url = c.toDataURL();
+          [
+            [512, 90, 0.9],
+            [820, 60, 0.6],
+            [1300, 40, 0.45],
+          ].forEach(([size, dur, op], i) => {
+            const l = document.createElement('i');
+            l.style.cssText = `background-image:url(${url});background-size:${size}px;opacity:${op}`;
+            $('#stars').appendChild(l);
+            if (!reduce)
+              gsap.to(l, {
+                x: i % 2 ? 160 : -160,
+                y: -220,
+                duration: dur,
+                ease: 'none',
+                repeat: -1,
+                yoyo: true,
+              });
+          });
+        })();
+
+        /* ── nether portal: 32-frame strip from the game, tiled 16 x 9, redrawn only while it is on screen ── */
+        const portal = $('#portal');
+        (() => {
+          const ctx = portal.getContext('2d'),
+            strip = new Image();
+          let frame = 0;
+          strip.src = 'mc/nether_portal.png';
+          setInterval(() => {
+            if (
+              !strip.complete ||
+              !strip.naturalWidth ||
+              +gsap.getProperty(portal, 'opacity') === 0
+            )
+              return;
+            frame = (frame + 1) % 32;
+            for (let y = 0; y < 9; y++)
+              for (let x = 0; x < 16; x++)
+                ctx.drawImage(
+                  strip,
+                  0,
+                  frame * 16,
+                  16,
+                  16,
+                  x * 16,
+                  y * 16,
+                  16,
+                  16,
+                );
+          }, 50);
+        })();
+
+        /* ── theme ── */
+        const setTheme = (l) => {
+          root.dataset.theme = l ? 'light' : 'dark';
+          $('#theme').textContent = l ? '日' : '夜';
+        };
+        try {
+          setTheme(localStorage.getItem('ctec-theme') === 'light');
+        } catch {}
+        $('#theme').addEventListener('click', () => {
+          const l = root.dataset.theme !== 'light';
+          setTheme(l);
+          try {
+            localStorage.setItem('ctec-theme', l ? 'light' : 'dark');
+          } catch {}
+        });
+
+        /* ── smooth scroll: Lenis does the easing, so scrubbed timelines follow it directly (no second layer of lag) ── */
+        let lenis = null;
+        if (!reduce && window.Lenis) {
+          lenis = new Lenis({ lerp: 0.11, smoothWheel: true });
+          lenis.stop();
+          lenis.on('scroll', ScrollTrigger.update);
+          gsap.ticker.add((t) => lenis.raf(t * 1000));
+          gsap.ticker.lagSmoothing(0);
+        }
+        $$('a[href^="#"]').forEach((a) =>
+          a.addEventListener('click', (e) => {
+            const t = $(a.getAttribute('href'));
+            if (!t) return;
+            e.preventDefault();
+            lenis ? lenis.scrollTo(t, { duration: 1.6 }) : t.scrollIntoView();
+          }),
+        );
+
+        /* ── scene engine ── */
+        const SC = {};
+        $$('.scene').forEach(
+          (el) =>
+            (SC[el.id.slice(3)] = {
+              el,
+              zoom: $('.zoom', el),
+              cam: $('.cam', el),
+              cap: el.dataset.cap,
+            }),
+        );
+        let capNow = '';
+        const setCap = (cap) => {
+          if (cap === capNow) return;
+          capNow = cap;
+          const [a, b] = cap.split('|');
+          put('#capA', a);
+          put('#capB', b);
+        };
+
+        /* Scene changes. All of them move whole layers with transform and opacity, nothing else.
+     push     dissolve while pushing in
+     curtain  the next scene rises from the bottom edge; the old one is pushed up and away
+     slide    the next scene comes in from the right like a sliding door
+     portal   the nether portal covers the screen; the dimension swaps behind it
+     fall     the old world spins away and shrinks, the next one turns into place
+     wake     white-out, then the world again */
+        function change(tl, from, to, type) {
+          const A = SC[from],
+            B = SC[to],
+            im = { immediateRender: false },
+            io = 'power2.inOut';
+          if (type === 'curtain' || type === 'slide') {
+            const p = type === 'curtain' ? 'yPercent' : 'xPercent';
+            // the layer moves in while its content moves the opposite way by the same amount, so the picture stays put and is revealed
+            tl.set(B.el, { autoAlpha: 1 }, 0)
+              .fromTo(
+                B.el,
+                { [p]: 100 },
+                { [p]: 0, duration: 1, ease: io, ...im },
+                0,
+              )
+              .fromTo(
+                B.zoom,
+                { [p]: -100 },
+                { [p]: 0, duration: 1, ease: io, ...im },
+                0,
+              )
+              .fromTo(
+                A.zoom,
+                { [p]: 0 },
+                { [p]: -14, duration: 1, ease: io },
+                0,
+              )
+              .set(A.el, { autoAlpha: 0 }, 1);
+          } else if (type === 'portal' || type === 'wake') {
+            const cover = type === 'portal' ? portal : '.flash';
+            tl.fromTo(
+              cover,
+              { autoAlpha: 0, scale: 1 },
+              { autoAlpha: 1, scale: 1.25, duration: 0.5, ease: 'power2.in' },
+              0,
+            )
+              .fromTo(
+                A.zoom,
+                { scale: 1 },
+                { scale: 1.25, duration: 0.5, ease: 'power2.in' },
+                0,
+              )
+              .set(A.el, { autoAlpha: 0 }, 0.5)
+              .set(B.el, { autoAlpha: 1 }, 0.5)
+              .fromTo(
+                B.zoom,
+                { scale: 1.3 },
+                { scale: 1, duration: 0.5, ease: 'power3.out', ...im },
+                0.5,
+              )
+              .to(
+                cover,
+                { autoAlpha: 0, scale: 1.5, duration: 0.5, ease: 'power2.out' },
+                0.5,
+              );
+          } else if (type === 'fall') {
+            tl.fromTo(
+              A.zoom,
+              { scale: 1, rotate: 0 },
+              { scale: 0.55, rotate: 24, duration: 1, ease: 'power2.in' },
+              0,
+            )
+              .to(A.el, { autoAlpha: 0, duration: 0.5, ease: 'power1.in' }, 0.5)
+              .fromTo(
+                B.el,
+                { autoAlpha: 0 },
+                { autoAlpha: 1, duration: 0.6, ease: 'none', ...im },
+                0.2,
+              )
+              .fromTo(
+                B.zoom,
+                { scale: 1.7, rotate: -40 },
+                { scale: 1, rotate: 0, duration: 1, ease: 'power2.out', ...im },
+                0,
+              );
+          } else {
+            tl.fromTo(
+              A.zoom,
+              { scale: 1 },
+              { scale: 1.22, duration: 1, ease: 'power2.in' },
+              0,
+            )
+              .to(A.el, { autoAlpha: 0, duration: 0.6, ease: 'power1.in' }, 0.4)
+              .fromTo(
+                B.el,
+                { autoAlpha: 0 },
+                { autoAlpha: 1, duration: 0.6, ease: 'none', ...im },
+                0.2,
+              )
+              .fromTo(
+                B.zoom,
+                { scale: 1.18 },
+                { scale: 1, duration: 1, ease: 'power2.out', ...im },
+                0,
+              );
+          }
+          return tl;
+        }
+        const changeOn = (trigger, a, b, type) =>
+          change(
+            gsap.timeline({
+              scrollTrigger: {
+                trigger,
+                start: 'top bottom',
+                end: 'top top',
+                scrub: true,
+                onUpdate: (s) => setCap(SC[s.progress > 0.5 ? b : a].cap),
+              },
+            }),
+            a,
+            b,
+            type,
+          );
+        const drift = (trigger, id, from, to) =>
+          gsap.fromTo(SC[id].cam, from, {
+            ...to,
+            ease: 'none',
+            scrollTrigger: {
+              trigger,
+              start: 'top top',
+              end: 'bottom top',
+              scrub: true,
+            },
+          });
+
+        /* ── loader: chunks load outward from the centre ── */
+        const chunks = $('#chunks'),
+          order = [],
+          tones = [
+            '#3f6f3a',
+            '#4f8a45',
+            '#2f5d7a',
+            '#6aa34f',
+            '#7a6a45',
+            '#35607f',
+          ];
+        for (let i = 0; i < 49; i++)
+          chunks.appendChild(document.createElement('i'));
+        $$('i', chunks).forEach((el, i) =>
+          order.push({
+            el,
+            d:
+              Math.max(Math.abs((i % 7) - 3), Math.abs(((i / 7) | 0) - 3)) +
+              Math.random() * 0.6,
+          }),
+        );
+        order.sort((a, b) => a.d - b.d);
+        const titleChars = $$('.hero .vt b'),
+          ready = (i) =>
+            i.complete ? 0 : new Promise((r) => (i.onload = i.onerror = r));
+        const p = { v: 0 };
+        const load = gsap.to(p, {
+          v: 1,
+          duration: reduce ? 0.1 : 1.5,
+          ease: 'power1.inOut',
+          onUpdate() {
+            $('#pct').textContent = Math.round(p.v * 100) + '%';
+            order.forEach((o, i) => {
+              if (i < p.v * 49 && !o.on) {
+                o.on = 1;
+                o.el.style.background =
+                  tones[(Math.random() * tones.length) | 0];
+              }
+            });
+          },
+        });
+        Promise.all([
+          document.fonts ? document.fonts.ready : 0,
+          ready($('#sc-spawn img')),
+          load.then(),
+        ]).then(() => {
+          const tl = gsap.timeline({
+            onComplete: () => {
+              document.body.classList.remove('is-loading');
+              lenis?.start();
+              ScrollTrigger.refresh();
+            },
+          });
+          if (reduce) return tl.set('.loader', { autoAlpha: 0 });
+          tl.to('.loader-in', {
+            opacity: 0,
+            scale: 1.6,
+            duration: 0.6,
+            ease: 'power3.in',
+          })
+            .to(
+              '.loader',
+              { autoAlpha: 0, duration: 0.9, ease: 'power2.out' },
+              '-=.1',
+            )
+            .fromTo(
+              SC.spawn.zoom,
+              { scale: 1.3 },
+              { scale: 1, duration: 2.6, ease: 'expo.out' },
+              '<',
+            )
+            .from(
+              titleChars,
+              { yPercent: 105, duration: 1.3, stagger: 0.12, ease: 'expo.out' },
+              '<.2',
+            )
+            .from(
+              '.hero .up, .hero-meta, .bar, .rail, .f3, .cap',
+              {
+                y: 22,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.06,
+                ease: 'power3.out',
+              },
+              '<.5',
+            );
+        });
+
+        /* ── interface state ── */
+        const WHERE = {
+          overworld: '主世界',
+          nether: '地獄',
+          end: '終界',
+          respawn: '主世界 · 重生點',
+        };
+        let prog = 0;
+        const coords = () => {
+          const k = root.dataset.dim === 'nether' ? 8 : 1,
+            y = { overworld: 72, nether: 120, end: 64, respawn: 72 }[
+              root.dataset.dim
+            ];
+          put(
+            '#xyz',
+            `XYZ ${Math.round((prog * 9600) / k)} / ${y} / ${Math.round((-prog * 4160) / k)}`,
+          );
+        };
+        const setDim = (d) => {
+          if (root.dataset.dim === d) return;
+          root.dataset.dim = d;
+          $$('[data-d]').forEach((a) =>
+            a.classList.toggle('on', a.dataset.d === d),
+          );
+          put('#where', `${WHERE[d]} · 第 ${days} 天`);
+          coords();
+        };
+        put('#where', `主世界 · 第 ${days} 天`);
+        const dims = () =>
+          $$('[data-dim]').forEach((el) =>
+            ScrollTrigger.create({
+              trigger: el,
+              start: 'top 55%',
+              end: 'bottom 55%',
+              onToggle: (s) => s.isActive && setDim(el.dataset.dim),
+            }),
+          );
+        const railFill = gsap.quickSetter('.rail b', 'scaleY');
+        ScrollTrigger.create({
+          start: 0,
+          end: 'max',
+          onUpdate: (s) => {
+            prog = s.progress;
+            coords();
+            railFill(prog);
+          },
+        });
+
+        if (reduce) {
+          const stops = [
+            ['#top', 'spawn'],
+            ['#overworld', 'town'],
+            ...$$('.work-sec').map((s) => [s, s.dataset.to]),
+            ['#nether', 'nether'],
+            ['#end', 'hall'],
+            ['.credits', 'end'],
+            ['#respawn', 'day1'],
+          ];
+          stops.forEach(([t, id]) =>
+            ScrollTrigger.create({
+              trigger: t,
+              start: 'top 50%',
+              end: 'bottom 50%',
+              onToggle: (s) => {
+                if (!s.isActive) return;
+                Object.entries(SC).forEach(([k, v]) =>
+                  gsap.set(v.el, { autoAlpha: k === id ? 1 : 0 }),
+                );
+                setCap(SC[id].cap);
+              },
+            }),
+          );
+          $('#ledgerDate').textContent = ledger[0][0];
+          $('#ledgerName').textContent = ledger[0][1];
+          dims();
+          return;
+        }
+
+        /* ── choreography, in page order ── */
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: '.hero',
+              start: 'top top',
+              end: 'bottom top',
+              scrub: true,
+            },
+          })
+          .to('.hero .vt', { yPercent: -30, opacity: 0, ease: 'power1.in' }, 0)
+          .to(
+            '.hero-copy, .hero-meta',
+            { y: -80, opacity: 0, duration: 0.5 },
+            0,
+          );
+        changeOn('#overworld', 'spawn', 'town', 'push');
+        drift(
+          '#overworld',
+          'town',
+          { xPercent: -1.5, scale: 1.05 },
+          { xPercent: 1.5, scale: 1.12 },
+        );
+
+        $$('[data-say]').forEach((el) =>
+          gsap.to($$('span', el), {
+            opacity: 1,
+            stagger: 0.5,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 72%',
+              end: 'bottom 40%',
+              scrub: true,
+            },
+          }),
+        );
+        $$('.open .vt').forEach((v) =>
+          gsap.from(v, {
+            yPercent: 12,
+            opacity: 0,
+            duration: 1.4,
+            ease: 'expo.out',
+            scrollTrigger: { trigger: v, start: 'top 85%' },
+          }),
+        );
+        $$('.rise').forEach((el) =>
+          gsap.from(el, {
+            y: 44,
+            opacity: 0,
+            duration: 1.1,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: el, start: 'top 86%' },
+          }),
+        );
+
+        // works: plain scrolling sections, no pin. Each build arrives its own way and its caption sits somewhere else.
+        const camMoves = [
+          [{ scale: 1.14 }, { scale: 1.04 }],
+          [
+            { scale: 1.06, xPercent: 2 },
+            { scale: 1.06, xPercent: -2 },
+          ],
+          [
+            { scale: 1.04, yPercent: 1.5 },
+            { scale: 1.1, yPercent: -1.5 },
+          ],
+        ];
+        const workSec = (sec, i) => {
+          changeOn(sec, sec.dataset.from, sec.dataset.to, sec.dataset.fx);
+          gsap.fromTo(SC[sec.dataset.to].cam, camMoves[i % 3][0], {
+            ...camMoves[i % 3][1],
+            ease: 'none',
+            immediateRender: false,
+            scrollTrigger: {
+              trigger: sec,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true,
+            },
+          });
+          gsap.from($$('.work > div > *', sec), {
+            y: 36,
+            opacity: 0,
+            duration: 0.9,
+            stagger: 0.08,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: sec,
+              start: 'top 30%',
+              toggleActions: 'play none none reverse',
+            },
+          });
+        };
+        $$('.work-sec[data-dim="overworld"]').forEach(workSec);
+
+        // nether: through the portal
+        changeOn('#nether', 'w3', 'nether', 'portal');
+        (() => {
+          const items = $$('#ledgerList li'),
+            name = $('#ledgerName'),
+            date = $('#ledgerDate');
+          let cur = 0,
+            inside = false;
+          const cap = (i) => `${ledger[i][0]}|${ledger[i][1]}`;
+          const show = (i) => {
+            if (i === cur) return;
+            cur = i;
+            items.forEach((li, k) => li.classList.toggle('on', k === i));
+            netherImgs.forEach((im, k) =>
+              gsap.to(im, {
+                opacity: k === i ? 1 : 0,
+                scale: k === i ? 1 : 1.06,
+                duration: 0.9,
+                ease: 'power2.out',
+                overwrite: true,
+              }),
+            );
+            date.textContent = ledger[i][0];
+            setCap(cap(i));
+            gsap
+              .timeline()
+              .to(name, { yPercent: -110, duration: 0.2, ease: 'power2.in' })
+              .add(() => (name.textContent = ledger[i][1]))
+              .fromTo(
+                name,
+                { yPercent: 110 },
+                { yPercent: 0, duration: 0.45, ease: 'expo.out' },
+              );
+          };
+          name.textContent = ledger[0][1];
+          date.textContent = ledger[0][0];
+          items[0].classList.add('on');
+          ScrollTrigger.create({
+            trigger: '#ledger',
+            start: 'top top',
+            end: () => '+=' + innerHeight * 3,
+            pin: '.ledger-stage',
+            onToggle: (s) => {
+              inside = s.isActive;
+              if (inside) setCap(cap(cur));
+            },
+            onUpdate: (s) =>
+              show(
+                Math.min(
+                  ledger.length - 1,
+                  Math.floor(s.progress * ledger.length),
+                ),
+              ),
+          });
+        })();
+
+        // the end: the overworld spins away; the credits simply scroll over the stars
+        changeOn('#end', 'nether', 'hall', 'fall');
+        drift(
+          '#end',
+          'hall',
+          { scale: 1.1, yPercent: 2 },
+          { scale: 1.02, yPercent: -2 },
+        );
+        $$('.work-sec[data-dim="end"]').forEach((sec, i) =>
+          workSec(sec, i + 1),
+        );
+        changeOn('.credits', 'farm', 'end', 'push');
+
+        // respawn: wake up on day one
+        changeOn('#respawn', 'end', 'day1', 'wake');
+        gsap.from('.pal', {
+          y: 160,
+          rotate: 8,
+          opacity: 0,
+          duration: 1.5,
+          ease: 'expo.out',
+          scrollTrigger: { trigger: '.respawn h2', start: 'top 80%' },
+        });
+        gsap.to('.pal', {
+          yPercent: -3,
+          rotation: -2,
+          duration: 2.8,
+          ease: 'sine.inOut',
+          yoyo: true,
+          repeat: -1,
+        });
+
+        dims();
+      })();
+    </script>
+  </body>
+</html>

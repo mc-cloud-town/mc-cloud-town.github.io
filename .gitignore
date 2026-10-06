@@ -36,3 +36,6 @@ tests/__snapshots__
 
 # Yarn
 .yarn
+
+# Design demos: extracted game textures are not ours to redistribute
+docs/design-demos/mc/

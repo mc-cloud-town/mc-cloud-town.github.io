@@ -1,0 +1,333 @@
+/* Inner pages. Same world as the home page, but these are reference pages: plain scrolling, searchable, linkable.
+   What carries over: the typefaces, the dimension accent, and the header (statement left, dimension name upright on the right). */
+:root {
+  --bg: #06080b;
+  --panel: #0e1217;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.16);
+  --accent: #86cdff;
+  --logo: invert(1);
+  --serif: 'Chiron Sung HK', 'Noto Serif TC', serif;
+  --sans: 'Chiron Hei HK', 'Noto Sans TC', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --gutter: clamp(20px, 6vw, 96px);
+}
+[data-theme='light'] {
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --fg: #0f1418;
+  --muted: #414c57;
+  --v: 238, 242, 245;
+  --line: rgba(15, 20, 24, 0.2);
+  --logo: none;
+  --accent: #0b6fb5;
+}
+[data-dim='nether'] {
+  --accent: #ff6a45;
+}
+[data-dim='end'] {
+  --accent: #cdb0ff;
+}
+[data-theme='light'][data-dim='nether'] {
+  --accent: #c2330f;
+}
+[data-theme='light'][data-dim='end'] {
+  --accent: #6234c4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition:
+    background 0.4s,
+    color 0.4s;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+img {
+  display: block;
+  max-width: 100%;
+}
+ul,
+ol {
+  list-style: none;
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+button {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.acc {
+  color: var(--accent);
+  transition: color 0.4s;
+}
+.serif {
+  font-family: var(--serif);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+.wrap {
+  padding-inline: var(--gutter);
+}
+
+.bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 18px var(--gutter);
+  background: rgba(var(--v), 0.86);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.bar .logo {
+  margin-right: auto;
+}
+.bar .logo img {
+  height: 28px;
+  filter: var(--logo);
+}
+.bar nav {
+  display: flex;
+  gap: 24px;
+  font-size: 14px;
+}
+.bar nav a {
+  opacity: 0.7;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+}
+.bar nav a:hover,
+.bar nav a[aria-current] {
+  opacity: 1;
+  border-bottom-color: var(--accent);
+}
+.pill {
+  font: 12px var(--mono);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 8px 14px;
+}
+.pill:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* header: half a screen, never a full one */
+.head {
+  position: relative;
+  min-height: 58vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6vw;
+  align-items: end;
+  padding: 140px var(--gutter) 56px;
+  overflow: hidden;
+}
+.head .bg {
+  position: absolute;
+  inset: 0;
+}
+.head .bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.head .bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      90deg,
+      rgba(var(--v), 0.96) 0%,
+      rgba(var(--v), 0.82) 42%,
+      rgba(var(--v), 0.2) 78%,
+      rgba(var(--v), 0.3) 100%
+    ),
+    linear-gradient(0deg, rgba(var(--v), 1) 0%, rgba(var(--v), 0) 40%);
+}
+.head > * {
+  position: relative;
+}
+.head .crumb {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.head .crumb a:hover {
+  color: var(--accent);
+}
+.head h1 {
+  font-size: clamp(34px, 4.6vw, 76px);
+}
+.head p {
+  margin-top: 18px;
+  max-width: 34em;
+  color: var(--muted);
+}
+.head .vt {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font: 900 clamp(40px, 5.2vw, 88px) / 1 var(--serif);
+  letter-spacing: 0.12em;
+  align-self: start;
+}
+[data-theme='light'] .head .vt {
+  background: rgba(var(--v), 0.95);
+  padding: 0.4em 0.25em 0.3em;
+}
+
+/* tools: filters and search stay reachable while the list scrolls */
+.tools {
+  position: sticky;
+  top: 65px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  align-items: center;
+  padding: 14px var(--gutter);
+  background: rgba(var(--v), 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chips button {
+  font-size: 14px;
+  padding: 5px 14px;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  color: var(--muted);
+}
+.chips button:hover {
+  color: var(--fg);
+}
+.chips button[aria-pressed='true'] {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.tools .count {
+  margin-left: auto;
+  color: var(--muted);
+}
+.search {
+  flex: 1 1 200px;
+  max-width: 320px;
+  border-bottom: 1px solid var(--line);
+  padding: 6px 2px;
+  font-size: 15px;
+}
+.search::placeholder {
+  color: var(--muted);
+}
+.search:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+.empty {
+  padding: 80px var(--gutter);
+  color: var(--muted);
+}
+
+.foot {
+  margin-top: 120px;
+  border-top: 1px solid var(--line);
+  padding: 32px var(--gutter) 48px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.foot img {
+  height: 24px;
+  filter: var(--logo);
+  margin-right: auto;
+}
+.foot a:hover {
+  color: var(--accent);
+}
+.next {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  margin: 120px var(--gutter) 0;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.next a {
+  font: 900 clamp(24px, 3vw, 44px) var(--serif);
+}
+.next a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .bar nav {
+    display: none;
+  }
+  .head {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding-top: 120px;
+  }
+  .head .vt {
+    writing-mode: horizontal-tb;
+    order: -1;
+    font-size: 34px;
+  }
+  .head .bg::after {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--v), 1) 0%,
+      rgba(var(--v), 0.82) 60%,
+      rgba(var(--v), 0.6) 100%
+    );
+  }
+  .tools {
+    top: 61px;
+  }
+  .tools .count {
+    display: none;
+  }
+}
