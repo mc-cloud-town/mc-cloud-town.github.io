@@ -92,11 +92,11 @@ html.lenis {
     inset: -20%;
     background-color: #05030a;
   }
-  /* each layer drifts up to 160px sideways and 220px upwards (Starfield.tsx): it reaches that much further,
-     so no edge of the screen is left without stars at the far end of the drift, whatever the screen size */
+  /* each layer drifts sideways and upwards by the distances Starfield.tsx sets here (constants/starfield.ts):
+     it reaches that much further, so no edge of the screen is left without stars at the far end of the drift */
   .starfield i {
     position: absolute;
-    inset: 0 -160px -220px;
+    inset: 0 calc(-1 * var(--drift-x)) calc(-1 * var(--drift-y));
     background-repeat: repeat;
   }
   /* nether portal: a generated swirl, drawn small and scaled up with hard pixels */
@@ -670,6 +670,22 @@ html.lenis {
   }
 }
 
+/* Each section keeps the accent of its own dimension, so the text of the one that is leaving the screen
+   does not change colour when the page (<html data-dim>: bar, veil, theme) moves on to the next.
+   In the day theme the page is dark while it is in the End, and so the night accents apply to everything on it. */
+.dim.dim--home [data-dim='nether'] {
+  --accent: #ff6a45;
+}
+.dim.dim--home [data-dim='end'] {
+  --accent: #cdb0ff;
+}
+[data-theme='light']:not([data-dim='end']) .dim.dim--home [data-dim='nether'] {
+  --accent: #c2330f;
+}
+[data-theme='light']:not([data-dim='end']) .dim.dim--home [data-dim='end'] {
+  --accent: #6234c4;
+}
+
 /* day: the paper side is narrower, so more of the photograph stays untouched.
    Only where there is a side: on narrow screens the text runs the full width, and the bottom-up veil above stays. */
 @media (min-width: 861px) {
@@ -690,6 +706,14 @@ html.lenis {
   /* the strip has its own padding, so the label never overflows: keep the design's box */
   line-height: 1;
   margin-right: 0;
+}
+/* On narrow screens the name lies in the flow of the text, so the strip's padding is part of the height of every
+   opening. It stays when the page goes dark for the End and only the paper goes: without it each opening above
+   lost 28px at that moment, and the page jumped under the reader. */
+@media (max-width: 860px) {
+  [data-theme='light'][data-dim='end'] .dim .open .vt {
+    padding: 0.4em 0.25em 0.3em;
+  }
 }
 
 @keyframes cue {

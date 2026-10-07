@@ -7,6 +7,7 @@ import {
   openPage,
 } from './helpers/dimensions';
 import { ready, scrollToSection, visibleScenes } from './helpers/home';
+import { STAR_DRIFT } from '../src/constants/starfield';
 
 test.describe('home: spawn', () => {
   test('the loader gives way to the title over the spawn scene', async ({
@@ -1207,26 +1208,28 @@ test.describe('home: the end', () => {
       await ready(page);
       await scrollToSection(page, '#credits', 0.3);
       expect(await visibleScenes(page)).toEqual(['end']);
-      // each layer drifts up to 160px sideways and 220px upwards from where the stylesheet puts it
+      // each layer drifts this far sideways and upwards from where the stylesheet puts it
       const gaps = await page
         .locator('.scene[data-scene="end"] .starfield i')
-        .evaluateAll((els) =>
-          els.map((el) => {
-            const m = new DOMMatrix(getComputedStyle(el).transform);
-            const r = el.getBoundingClientRect();
-            const [left, right, top, bottom] = [
-              r.left - m.e,
-              r.right - m.e,
-              r.top - m.f,
-              r.bottom - m.f,
-            ];
-            return {
-              left: left + 160 <= 0,
-              right: right - 160 >= window.innerWidth,
-              top: top <= 0,
-              bottom: bottom - 220 >= window.innerHeight,
-            };
-          }),
+        .evaluateAll(
+          (els, drift) =>
+            els.map((el) => {
+              const m = new DOMMatrix(getComputedStyle(el).transform);
+              const r = el.getBoundingClientRect();
+              const [left, right, top, bottom] = [
+                r.left - m.e,
+                r.right - m.e,
+                r.top - m.f,
+                r.bottom - m.f,
+              ];
+              return {
+                left: left + drift.x <= 0,
+                right: right - drift.x >= window.innerWidth,
+                top: top <= 0,
+                bottom: bottom - drift.y >= window.innerHeight,
+              };
+            }),
+          STAR_DRIFT,
         );
       expect(gaps).toHaveLength(3);
       for (const g of gaps)
@@ -1440,6 +1443,64 @@ test.describe('home: the end', () => {
     expect(await look()).toEqual(LIGHT);
   });
 
+  for (const theme of ['dark', 'light'] as const)
+    test(`the page moves on to the End as its opening takes over, and each section keeps its own accent (${theme})`, async ({
+      page,
+    }) => {
+      const NETHER =
+        theme === 'dark' ? 'rgb(255, 106, 69)' : 'rgb(194, 51, 15)';
+      const VIOLET = 'rgb(205, 176, 255)';
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, '/', { theme });
+      await ready(page);
+      const state = () =>
+        page.evaluate(() => {
+          const h2 = document
+            .querySelector('.rank h2')!
+            .getBoundingClientRect();
+          const tag = document
+            .querySelector('#end .tag')!
+            .getBoundingClientRect();
+          return {
+            // how much of the rank statement is on screen, and how far down the tag line of the End is
+            rank:
+              (Math.min(h2.bottom, innerHeight) - Math.max(h2.top, 0)) /
+              h2.height,
+            tag: tag.top / innerHeight,
+          };
+        });
+      const html = page.locator('html');
+      const em = page.locator('.rank h2 em');
+      const tag = page.locator('#end .tag .acc');
+      const stillNether = async (step: string) => {
+        await scrollToSection(page, '#end', -0.62);
+        // most of the statement is still readable and the tag line of the End has barely come in at the bottom
+        const s = await state();
+        expect(s.rank, step).toBeGreaterThan(0.5);
+        expect(s.tag, step).toBeGreaterThan(0.75);
+        await expect(html, step).toHaveAttribute('data-dim', 'nether');
+        await expect(em, step).toHaveCSS('color', NETHER);
+      };
+      const nowEnd = async (step: string) => {
+        await scrollToSection(page, '#end', -0.4);
+        // the tag line is well inside the screen and the statement is mostly gone
+        const s = await state();
+        expect(s.tag, step).toBeLessThan(0.75);
+        expect(s.rank, step).toBeLessThan(0.5);
+        expect(s.rank, step).toBeGreaterThan(0);
+        await expect(html, step).toHaveAttribute('data-dim', 'end');
+        await expect(tag, step).toHaveCSS('color', VIOLET);
+        // what is left of the nether statement keeps the nether colour (the night one: the page is dark here)
+        await expect(em, step).toHaveCSS('color', 'rgb(255, 106, 69)');
+      };
+      await stillNether('down');
+      await nowEnd('down');
+      await scrollToSection(page, '#end', 0.3);
+      await expect(html).toHaveAttribute('data-dim', 'end');
+      await nowEnd('up');
+      await stillNether('up');
+    });
+
   test('in the night theme the End accent is the pale violet', async ({
     page,
   }) => {
@@ -1458,6 +1519,41 @@ test.describe('home: the end', () => {
       'rgb(205, 176, 255)',
     );
   });
+
+  for (const [name, width, height] of [
+    ['a phone', 390, 844],
+    ['a phone on its side', 844, 390],
+  ] as const)
+    test(`on ${name} in the day theme nothing above changes height when the page goes dark for the End`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/', { theme: 'light' });
+      await ready(page);
+      // the openings carry the dimension name in the flow of the text here, on its strip of paper
+      const heights = () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>('.open')].map(
+            (el) => el.offsetHeight,
+          ),
+        );
+      const before = await heights();
+      expect(before).toHaveLength(3);
+      await scrollToSection(page, '#end', 0.3);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+      expect(await heights()).toEqual(before);
+      // and the page is where it was sent: the opening of the End starts 0.3 screens above the top
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            Math.abs(
+              document.querySelector('#end')!.getBoundingClientRect().top +
+                0.3 * innerHeight,
+            ),
+          ),
+        )
+        .toBeLessThan(1);
+    });
 
   for (const [name, width, height] of [
     ['a phone', 390, 844],
@@ -1578,9 +1674,24 @@ test.describe('home: the end', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/', { reducedMotion: true });
     await ready(page);
+    // Without Lenis the site's own smooth scrolling would carry the page there, and from the top of the page
+    // that long native scroll is sometimes cut short (seen for the nether sections too). Jump instead.
+    const jumpTo = (sel: string, off: number) =>
+      page.evaluate(
+        ([s, o]) => {
+          const el = document.querySelector(s as string)!;
+          window.scrollTo({
+            top:
+              el.getBoundingClientRect().top +
+              window.scrollY +
+              (o as number) * window.innerHeight,
+            behavior: 'instant',
+          });
+        },
+        [sel, off] as const,
+      );
     for (const [sel, off, scene] of STOPS) {
-      await scrollToSection(page, sel, off);
-      // without Lenis the site's own smooth scrolling carries the page there, which takes a while from the top
+      await jumpTo(sel, off);
       await expect
         .poll(() => visibleScenes(page), { message: sel })
         .toEqual([scene]);
@@ -1603,7 +1714,7 @@ test.describe('home: the end', () => {
     for (const line of await lines.all())
       await expect(line).toHaveCSS('opacity', '1');
     // back up, with nothing left turned
-    await scrollToSection(page, '#end', 0.3);
+    await jumpTo('#end', 0.3);
     await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
     expect(Math.abs((await pose(page, 'hall')).rotate)).toBeLessThan(0.01);
   });

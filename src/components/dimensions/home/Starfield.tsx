@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import gsap from 'gsap';
+import { STAR_DRIFT } from '@/constants/starfield';
 
 const LAYERS = [
   { size: 512, dur: 90, opacity: 0.9 },
@@ -41,8 +42,8 @@ export const Starfield = ({ reduced }: { reduced: boolean }) => {
     if (reduced) return;
     const tweens = layers.map((l, i) =>
       gsap.to(l, {
-        x: i % 2 ? 160 : -160,
-        y: -220,
+        x: i % 2 ? STAR_DRIFT.x : -STAR_DRIFT.x,
+        y: -STAR_DRIFT.y,
         duration: LAYERS[i].dur,
         ease: 'none',
         repeat: -1,
@@ -54,8 +55,12 @@ export const Starfield = ({ reduced }: { reduced: boolean }) => {
     // the stylesheet keeps it hidden until then. Three screen-sized layers do not move behind the rest of the page.
     const scene = host.closest<HTMLElement>('.scene');
     const sync = () => {
+      // Not while the scene is still fading in either: the layers hold still through the scene change
+      // (a drift of a few pixels a second cannot be seen there) and that change costs fewer late frames.
       const v = scene?.style.visibility;
-      const on = !scene || (v !== '' && v !== 'hidden');
+      const o = scene?.style.opacity;
+      const on =
+        !scene || (v !== '' && v !== 'hidden' && (o === '' || o === '1'));
       tweens.forEach((t) => t.paused(!on));
     };
     const watch = new MutationObserver(sync);
@@ -69,7 +74,17 @@ export const Starfield = ({ reduced }: { reduced: boolean }) => {
   }, [reduced]);
 
   return (
-    <div className='starfield' ref={ref}>
+    <div
+      className='starfield'
+      ref={ref}
+      // the stylesheet makes each layer this much larger than the screen, so the drift never uncovers an edge
+      style={
+        {
+          '--drift-x': `${STAR_DRIFT.x}px`,
+          '--drift-y': `${STAR_DRIFT.y}px`,
+        } as CSSProperties
+      }
+    >
       {LAYERS.map((l) => (
         <i
           key={l.size}

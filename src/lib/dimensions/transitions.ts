@@ -75,10 +75,18 @@ export const addTransition = (
         0.5,
       );
   } else if (def.fx === 'fall') {
+    // The two turning pictures stay 2D (force3D: false), as the ledger pictures do: lifted onto layers of their own
+    // while they cross-fade, 37% of the frames of the fall were late in the software compositor; as 2D transforms, 14%.
     tl.fromTo(
       A.zoom,
       { scale: 1, rotate: 0 },
-      { scale: 0.55, rotate: 24, duration: 1, ease: 'power2.in' },
+      {
+        scale: 0.55,
+        rotate: 24,
+        duration: 1,
+        ease: 'power2.in',
+        force3D: false,
+      },
       0,
     )
       .to(A.el, { autoAlpha: 0, duration: 0.5, ease: 'power1.in' }, 0.5)
@@ -91,7 +99,14 @@ export const addTransition = (
       .fromTo(
         B.zoom,
         { scale: 1.7, rotate: -40 },
-        { scale: 1, rotate: 0, duration: 1, ease: 'power2.out', ...im },
+        {
+          scale: 1,
+          rotate: 0,
+          duration: 1,
+          ease: 'power2.out',
+          force3D: false,
+          ...im,
+        },
         0,
       );
   } else {
