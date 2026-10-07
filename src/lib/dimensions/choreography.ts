@@ -245,15 +245,18 @@ export const buildChoreography = (
         );
         opts.onLedger(i);
       };
-      // Pinning needs a full screen of height. On short landscape screens the stage scrolls normally instead.
-      const pin = window.innerHeight >= 480;
+      // Pinned at every viewport size, so a rotated phone needs no second code path (home.css trims the stage
+      // to what fits on a short screen). The distance is measured again on every refresh.
+      const step = (s: ScrollTrigger) =>
+        show(Math.min(imgs.length - 1, Math.floor(s.progress * imgs.length)));
       ScrollTrigger.create({
         trigger: q('#ledger'),
         start: 'top top',
         end: () => `+=${window.innerHeight * 3}`,
-        pin: pin ? stage : false,
-        onUpdate: (s) =>
-          show(Math.min(imgs.length - 1, Math.floor(s.progress * imgs.length))),
+        pin: stage,
+        onUpdate: step,
+        // a resize can land on another facility without a scroll in between
+        onRefresh: step,
       });
     }
     // below the pin, so created after it

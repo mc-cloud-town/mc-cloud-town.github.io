@@ -12,13 +12,13 @@ const FRAMES = 32,
 
 /** Dark to light. Every step is a violet: opaque, blue far above green. */
 const PALETTE = [
-  [42, 4, 146],
-  [52, 8, 166],
-  [62, 12, 182],
-  [76, 20, 196],
-  [94, 34, 208],
-  [114, 52, 220],
-  [136, 74, 230],
+  [56, 0, 159],
+  [62, 0, 174],
+  [74, 2, 187],
+  [88, 6, 196],
+  [116, 24, 211],
+  [141, 47, 221],
+  [160, 70, 228],
 ] as const;
 
 /** Signed distance from `c` on a tile that wraps round, so neighbouring tiles join without a seam. */
@@ -82,7 +82,7 @@ const drawStrip = () => {
 
 /**
  * A procedurally generated pixel portal: a swirling violet tile, drawn small and scaled up with hard pixels.
- * No game asset is used. Redraws only while the canvas is on screen.
+ * No game asset is used. The swirl advances only while the portal is switched on.
  */
 export const PortalCanvas = () => {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -111,13 +111,33 @@ export const PortalCanvas = () => {
     };
     // painted once up front, so the first frame the reader sees is never blank
     draw();
-    const id = window.setInterval(() => {
-      // choreography.ts hides the canvas (visibility) whenever the portal is not in use
-      if (getComputedStyle(canvas).visibility === 'hidden') return;
+    let frames = 0;
+    canvas.dataset.frames = '0';
+    let timer: number | undefined;
+    const tick = () => {
       frame = (frame + 1) % FRAMES;
       draw();
-    }, FRAME_MS);
-    return () => window.clearInterval(id);
+      // how many frames the swirl has advanced: the tests read it to see that a hidden portal costs nothing
+      canvas.dataset.frames = String(++frames);
+    };
+    // The portal transition switches the canvas on and off through its inline visibility (GSAP autoAlpha);
+    // the stylesheet keeps it hidden until then. The timer exists only while it is switched on.
+    const sync = () => {
+      const v = canvas.style.visibility;
+      const on = v !== '' && v !== 'hidden';
+      if (on && timer === undefined) timer = window.setInterval(tick, FRAME_MS);
+      else if (!on && timer !== undefined) {
+        window.clearInterval(timer);
+        timer = undefined;
+      }
+    };
+    const watch = new MutationObserver(sync);
+    watch.observe(canvas, { attributes: true, attributeFilter: ['style'] });
+    sync();
+    return () => {
+      watch.disconnect();
+      window.clearInterval(timer);
+    };
   }, []);
 
   return (

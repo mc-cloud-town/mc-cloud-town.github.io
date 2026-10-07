@@ -545,14 +545,16 @@ html.lenis {
     .work {
       padding-block: 72px 24px;
     }
-    /* not pinned here, so the stage is as tall as its content */
+    /* still pinned, with only what fits: the date and the name over the picture, clear of the bar */
     .ledger-stage {
-      height: auto;
-      min-height: 100vh;
-      padding-block: 80px 24px;
+      grid-template-columns: 1fr;
+      padding-top: var(--bar-h);
     }
     .ledger-list {
       display: none;
+    }
+    .ledger-now {
+      max-width: none;
     }
     .rank {
       padding-block: 96px;

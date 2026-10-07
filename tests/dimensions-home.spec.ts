@@ -724,7 +724,79 @@ test.describe('home: nether', () => {
     }
   });
 
-  test('on a short landscape screen the ledger is not pinned and fits', async ({
+  /** Scroll to the middle of facility `i` and wait until the pinned stage shows it: picture, name, date, list row. */
+  const expectLedgerStep = async (page: Page, i: number, note: string) => {
+    await page.evaluate(
+      (f) => {
+        const top =
+          document.querySelector('#ledger')!.getBoundingClientRect().top +
+          window.scrollY;
+        window.scrollTo(0, top + f * 3 * window.innerHeight);
+      },
+      (i + 0.5) / 6,
+    );
+    await expect.poll(() => shownPictures(page), note).toEqual([String(i)]);
+    await expect(page.locator('.ledger-now h3'), note).toHaveText(
+      FACILITIES[i],
+    );
+    await expect(page.locator('.ledger-list li.on'), note).toHaveCount(1);
+    await expect(page.locator('.ledger-list li.on .mono'), note).toHaveText(
+      `0${i + 1}`,
+    );
+    await expect
+      .poll(
+        () =>
+          page
+            .locator('.ledger-stage')
+            .evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+        note,
+      )
+      .toBe(0);
+    expect(await visibleScenes(page), note).toEqual(['nether']);
+  };
+  /** One pin spacer, as tall as the stage plus the pinned distance at the current viewport. */
+  const expectOnePin = async (page: Page, note: string) => {
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const box = (sel: string) =>
+              document.querySelector(sel)!.getBoundingClientRect();
+            return {
+              spacers: document.querySelectorAll('.pin-spacer').length,
+              ledger: Math.round(box('#ledger').height) / window.innerHeight,
+              stage:
+                Math.round(box('.ledger-stage').height) / window.innerHeight,
+              width: Math.round(box('.ledger-stage').width) / window.innerWidth,
+            };
+          }),
+        note,
+      )
+      .toEqual({ spacers: 1, ledger: 4, stage: 1, width: 1 });
+  };
+  /** Whatever facility the stage settles on, its name, list row and picture are the same one. */
+  const expectLedgerConsistent = async (page: Page, note: string) => {
+    await expect
+      .poll(async () => {
+        const shown = await shownPictures(page);
+        const name = await page.locator('.ledger-now h3').textContent();
+        const row = await page
+          .locator('.ledger-list li.on .mono')
+          .allTextContents();
+        const k = FACILITIES.indexOf(name ?? '');
+        // one picture, a known name, and the same number three times
+        return (
+          k >= 0 &&
+          shown.length === 1 &&
+          Number(shown[0]) === k &&
+          row.length === 1 &&
+          row[0] === `0${k + 1}`
+        );
+      }, note)
+      .toBe(true);
+  };
+
+  test('on a short landscape screen the pinned ledger still names all six facilities, clear of the bar', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 844, height: 390 });
@@ -732,25 +804,86 @@ test.describe('home: nether', () => {
     await ready(page);
     await scrollToSection(page, '#nether', -0.5);
     await expectPortalAtFull(page);
-    await scrollToSection(page, '#ledger', 0);
-    expect(await visibleScenes(page)).toEqual(['nether']);
-    await expect(page.locator('.pin-spacer')).toHaveCount(0);
-    await expect(page.locator('.ledger-now h3')).toBeVisible();
-    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[0]);
+    for (let i = 0; i < 6; i++) await expectLedgerStep(page, i, `down ${i}`);
+    for (let i = 4; i >= 0; i--) await expectLedgerStep(page, i, `up ${i}`);
+    await expectOnePin(page, '844×390');
+    // only what fits: the date and the name, under the bar; the side list is put away
+    await expectLedgerStep(page, 3, 'longest name');
     await expect(page.locator('.ledger-list')).toBeHidden();
+    await expect(page.locator('.ledger-now h3')).toBeVisible();
+    const [bar, now] = await Promise.all([
+      page.locator('.dim-bar').boundingBox(),
+      page.locator('.ledger-now').boundingBox(),
+    ]);
+    expect(now!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+    expect(now!.y + now!.height).toBeLessThanOrEqual(390);
     await expectTextFits(page, { within: '#ledger' });
     await expectNoHorizontalScroll(page);
-    // not pinned: the stage scrolls away with the page
-    await scrollToSection(page, '#ledger', 0.5);
-    const top = await page
-      .locator('.ledger-stage')
-      .evaluate((el) => Math.round(el.getBoundingClientRect().top));
-    expect(top).toBe(-195);
     await scrollToSection(page, '.rank', 0);
     expect(await visibleScenes(page)).toEqual(['nether']);
+    expect(await shownPictures(page)).toEqual(['5']);
     await expect(page.locator('.rank h2')).toBeVisible();
     await expectTextFits(page, { within: '.rank' });
     await expectTapTargets(page);
+  });
+
+  const PORTRAIT = { width: 390, height: 844 },
+    LANDSCAPE = { width: 844, height: 390 };
+  for (const [name, first, second] of [
+    ['portrait', PORTRAIT, LANDSCAPE],
+    ['landscape', LANDSCAPE, PORTRAIT],
+  ] as const)
+    test(`rotating a phone inside the ledger keeps it pinned, with name and picture in step (opened in ${name})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(first);
+      await openPage(page, '/');
+      await ready(page);
+      await expectLedgerStep(page, 2, 'as opened');
+      await expectOnePin(page, 'as opened');
+      for (const [size, note] of [
+        [second, 'rotated'],
+        [first, 'rotated back'],
+      ] as const) {
+        await page.setViewportSize(size);
+        // measured again at the new size: one spacer, four screens of this height
+        await expectOnePin(page, note);
+        await expectLedgerConsistent(page, note);
+        // and the steps are where they should be at this size
+        await expectLedgerStep(page, 2, note);
+        await expectLedgerStep(page, 5, note);
+        await expectLedgerStep(page, 2, note);
+        await expectNoHorizontalScroll(page);
+      }
+    });
+
+  test('the portal draws only while it is on screen', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    const frames = () =>
+      page
+        .locator('canvas.portal')
+        .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
+    // at the hero: counted, and not moving
+    expect(await frames()).toBe(0);
+    await page.waitForTimeout(700);
+    expect(await frames()).toBe(0);
+    await scrollToSection(page, '#nether', -0.5);
+    await expect.poll(frames).toBeGreaterThan(3);
+    const mid = await frames();
+    await expect.poll(frames).toBeGreaterThan(mid + 3);
+    // through to the other side: it stops again
+    await scrollToSection(page, '#nether', 0.3);
+    await expect(page.locator('canvas.portal')).toBeHidden();
+    const after = await frames();
+    await page.waitForTimeout(700);
+    expect(await frames()).toBe(after);
+    // and back at the hero
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    const top = await frames();
+    await page.waitForTimeout(700);
+    expect(await frames()).toBe(top);
   });
 
   test('on a phone in the day theme the nether text fits', async ({ page }) => {
