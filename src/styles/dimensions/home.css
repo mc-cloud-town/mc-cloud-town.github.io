@@ -86,6 +86,19 @@ html.lenis {
       rgba(var(--v), var(--h5)) 100%
     );
   }
+  /* nether portal: a generated swirl, drawn small and scaled up with hard pixels */
+  .portal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
   .flash {
     position: fixed;
     inset: 0;
@@ -382,6 +395,70 @@ html.lenis {
     text-align: center;
   }
 
+  /* nether ledger */
+  .ledger-stage {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(200px, 300px) minmax(0, 1fr);
+    gap: 5vw;
+    align-items: center;
+    padding: 0 var(--gutter);
+  }
+  .ledger-list li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  .ledger-list li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .ledger-list li.on {
+    color: var(--fg);
+  }
+  .ledger-list li.on .mono {
+    color: var(--accent);
+  }
+  .ledger-now {
+    max-width: 38vw;
+  }
+  .ledger-now h3 {
+    font-size: clamp(32px, 4.4vw, 76px);
+    margin-top: 14px;
+    overflow: hidden;
+    padding-bottom: 0.1em;
+    overflow-wrap: anywhere;
+  }
+  /* the name of the next facility rises into the heading's own box */
+  .ledger-now h3 span {
+    display: block;
+    animation: ledger-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .rank {
+    padding: 26vh var(--gutter);
+  }
+  .rank h2 {
+    font-size: clamp(56px, 9vw, 170px);
+    line-height: 1.05;
+  }
+  .rank h2 em {
+    font-style: normal;
+    color: var(--accent);
+    display: block;
+  }
+  .rank p {
+    max-width: 30em;
+    margin-top: 36px;
+    font-size: 17px;
+    color: var(--muted);
+  }
+
   @media (max-width: 1024px) {
     /* 44px tall to tap; the line stays right under the words, as in the design */
     .more {
@@ -418,6 +495,7 @@ html.lenis {
       padding-top: 20vh;
     }
     .open > div:first-child,
+    .ledger-now,
     .work--tr > div {
       max-width: none;
     }
@@ -431,6 +509,14 @@ html.lenis {
       align-content: end;
       justify-items: start;
       text-align: left;
+    }
+    .ledger-stage {
+      grid-template-columns: 1fr;
+      align-content: end;
+      padding-bottom: 96px;
+    }
+    .ledger-list {
+      display: none;
     }
   }
   /* short landscape screens: the title would run off the bottom */
@@ -459,9 +545,29 @@ html.lenis {
     .work {
       padding-block: 72px 24px;
     }
+    /* not pinned here, so the stage is as tall as its content */
+    .ledger-stage {
+      height: auto;
+      min-height: 100vh;
+      padding-block: 80px 24px;
+    }
+    .ledger-list {
+      display: none;
+    }
+    .rank {
+      padding-block: 96px;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     .cue i::after {
+      animation: none;
+    }
+    .ledger-stage {
+      height: auto;
+      overflow: visible;
+      padding-block: 20vh;
+    }
+    .ledger-now h3 span {
       animation: none;
     }
     .say span {
@@ -498,5 +604,10 @@ html.lenis {
   }
   to {
     translate: 100% 0;
+  }
+}
+@keyframes ledger-in {
+  from {
+    transform: translateY(110%);
   }
 }

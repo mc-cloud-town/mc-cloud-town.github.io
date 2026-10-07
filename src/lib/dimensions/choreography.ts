@@ -221,6 +221,44 @@ export const buildChoreography = (
     reveals(q('#overworld'));
     TRANSITIONS.slice(1, 4).forEach(work);
 
+    // ── nether ──
+    change(TRANSITIONS[4]);
+    reveals(q('#nether'));
+    const stage = q('.ledger-stage');
+    if (stage) {
+      const imgs = gsap.utils.toArray<HTMLElement>('[data-ledger]', root);
+      let cur = 0;
+      const show = (i: number) => {
+        if (i === cur) return;
+        cur = i;
+        imgs.forEach((im, k) =>
+          gsap.to(im, {
+            opacity: k === i ? 1 : 0,
+            scale: k === i ? 1 : 1.06,
+            duration: 0.9,
+            ease: 'power2.out',
+            overwrite: true,
+            // Stay 2D: by default GSAP lifts every tweened element onto its own layer for the length of the
+            // tween, which here is six full-screen pictures at each step (measured: half the frames late).
+            force3D: false,
+          }),
+        );
+        opts.onLedger(i);
+      };
+      // Pinning needs a full screen of height. On short landscape screens the stage scrolls normally instead.
+      const pin = window.innerHeight >= 480;
+      ScrollTrigger.create({
+        trigger: q('#ledger'),
+        start: 'top top',
+        end: () => `+=${window.innerHeight * 3}`,
+        pin: pin ? stage : false,
+        onUpdate: (s) =>
+          show(Math.min(imgs.length - 1, Math.floor(s.progress * imgs.length))),
+      });
+    }
+    // below the pin, so created after it
+    reveals(q('.rank'));
+
     // ── later tasks append here, in page order ──
     // Rule: one section at a time, top to bottom, and everything a section needs (its scene change, its drift,
     // its pin, its reveals(section)) is created together. A pin adds scroll length, so a trigger created before

@@ -22,6 +22,9 @@ import { Loader } from './Loader';
 import { Hero } from './Hero';
 import { DimensionOpening } from './DimensionOpening';
 import { WorkSection } from './WorkSection';
+import { PortalCanvas } from './PortalCanvas';
+import { NetherLedger } from './NetherLedger';
+import { RankStatement } from './RankStatement';
 
 /** Shown until the live numbers arrive, and kept if they never do. */
 const MILESTONES = 53;
@@ -44,7 +47,7 @@ export const HomePage = () => {
     prefersReducedMotion,
     () => null,
   );
-  const [, setLedger] = useState(0);
+  const [ledger, setLedger] = useState(0);
   const { t, i18n } = useTranslation();
   const { data: members } = useApi<IMembers>(`${STATIC_DATA_API}/member.json`);
   const { data: repos } = useApi<{ name: string }[]>(
@@ -118,6 +121,7 @@ export const HomePage = () => {
   return (
     <div className='dim dim--home' ref={root} data-ready={ready}>
       <World />
+      <PortalCanvas />
       <div className='flash' aria-hidden='true' />
       <Loader reduced={reduced} onDone={onDone} />
       <SiteBar variant='home' />
@@ -177,6 +181,29 @@ export const HomePage = () => {
             name={w.name}
           />
         ))}
+        <DimensionOpening
+          id='nether'
+          tag={t('dimensions.nether.tag')}
+          say={t('dimensions.nether.say', { returnObjects: true }) as string[]}
+          body={t('dimensions.nether.body')}
+          label={t('dimensions.dim.nether')}
+        />
+        <NetherLedger
+          index={ledger}
+          items={
+            t('dimensions.nether.ledger', { returnObjects: true }) as {
+              date: string;
+              name: string;
+            }[]
+          }
+        />
+        <RankStatement
+          label={t('dimensions.nether.rankLabel')}
+          lines={
+            t('dimensions.nether.rank', { returnObjects: true }) as string[]
+          }
+          body={t('dimensions.nether.rankBody')}
+        />
       </main>
     </div>
   );

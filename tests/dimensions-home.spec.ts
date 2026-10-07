@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   expectNoHorizontalScroll,
   expectNoMissingKeys,
@@ -434,5 +434,405 @@ test.describe('home: overworld', () => {
       await expect(line).toHaveCSS('opacity', '1');
     await scrollToSection(page, '[data-work="overworld-1"]', 0.2);
     expect(await visibleScenes(page)).toEqual(['w2']);
+  });
+});
+
+test.describe('home: nether', () => {
+  /** The six facilities of dimensions.nether.ledger (zh_TW), in order. */
+  const FACILITIES = [
+    '地獄大廳',
+    'Y0 切門豬人農場',
+    '地獄 1k 空置域',
+    '雙維度百萬豬布林交易',
+    '地獄大廳主砲',
+    '刷花機（地獄）',
+  ];
+  /** Indices of the ledger pictures that are showing. */
+  const shownPictures = (page: Page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-ledger]')]
+        .filter((i) => +getComputedStyle(i).opacity > 0.5)
+        .map((i) => i.dataset.ledger),
+    );
+  /** Scroll to a fraction of the way through the pinned ledger. */
+  const scrollToLedgerStep = async (page: Page, fraction: number) => {
+    await page.evaluate((f) => {
+      const top =
+        document.querySelector('#ledger')!.getBoundingClientRect().top +
+        window.scrollY;
+      window.scrollTo(0, top + f * 3 * window.innerHeight);
+    }, fraction);
+    await page.waitForTimeout(1800);
+  };
+  /** The middle of the transition is a single scroll position, so "full" allows for a fraction of a pixel. */
+  const expectPortalAtFull = async (page: Page) =>
+    expect((await portalState(page)).opacity).toBeGreaterThan(0.98);
+  const portalState = (page: Page) =>
+    page.locator('canvas.portal').evaluate((c) => {
+      const s = getComputedStyle(c);
+      return { visibility: s.visibility, opacity: +s.opacity };
+    });
+
+  test('the portal covers the screen mid-transition and no game texture is requested', async ({
+    page,
+  }) => {
+    const requested: string[] = [];
+    page.on('request', (r) => requested.push(r.url()));
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    const portal = page.locator('canvas.portal');
+    await expect(portal).toBeVisible();
+    await expectPortalAtFull(page);
+    const box = (await portal.boundingBox())!;
+    const view = page.viewportSize()!;
+    expect(box.x).toBeLessThanOrEqual(0);
+    expect(box.y).toBeLessThanOrEqual(0);
+    expect(box.x + box.width).toBeGreaterThanOrEqual(view.width);
+    expect(box.y + box.height).toBeGreaterThanOrEqual(view.height);
+    const painted = await portal.evaluate((c: HTMLCanvasElement) => {
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      // purple: opaque, blue well above green
+      for (let i = 0; i < d.length; i += 4)
+        if (d[i + 3] === 255 && d[i + 2] > 60 && d[i + 2] > d[i + 1] * 2) n++;
+      return n / (d.length / 4);
+    });
+    expect(painted).toBeGreaterThan(0.9);
+    expect(requested.length).toBeGreaterThan(0);
+    expect(requested.filter((u) => /nether_portal|\/mc\//.test(u))).toEqual([]);
+  });
+
+  test('the portal swirls while it is on screen', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    const sample = () =>
+      page
+        .locator('canvas.portal')
+        .evaluate((c: HTMLCanvasElement) =>
+          Array.from(
+            c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data,
+          ).join(),
+        );
+    const first = await sample();
+    await page.waitForTimeout(600);
+    expect(await sample()).not.toBe(first);
+  });
+
+  test('partway in, the portal is rising over the last build; partway out, it clears over the nether', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.7);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    const rising = await portalState(page);
+    expect(rising.visibility).toBe('visible');
+    expect(rising.opacity).toBeGreaterThan(0.1);
+    expect(rising.opacity).toBeLessThan(0.9);
+    await scrollToSection(page, '#nether', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const clearing = await portalState(page);
+    expect(clearing.visibility).toBe('visible');
+    expect(clearing.opacity).toBeGreaterThan(0.1);
+    expect(clearing.opacity).toBeLessThan(0.9);
+  });
+
+  test('after the portal the reader is in the nether', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator('#nether .tag')).toContainText('THE NETHER');
+    await expect(page.locator('#nether .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(255, 106, 69)',
+    );
+    expect(await shownPictures(page)).toEqual(['0']);
+    await expectNoMissingKeys(page);
+  });
+
+  test('in the day theme the nether accent is the darker red', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator('#nether .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(194, 51, 15)',
+    );
+  });
+
+  test('scrolling back through the portal returns to the overworld', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    // back to the middle of the portal: it covers the screen again
+    await scrollToSection(page, '#nether', -0.5);
+    await expectPortalAtFull(page);
+    // and out the other side
+    await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+    await expect(page.locator('#overworld .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(134, 205, 255)',
+    );
+    const nether = await page
+      .locator('.scene[data-scene="nether"]')
+      .evaluate((el) => getComputedStyle(el).visibility);
+    expect(nether).toBe('hidden');
+    // the last build is back at its own size, not left zoomed by the portal
+    const scale = await page
+      .locator('.scene[data-scene="w3"] .zoom')
+      .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+    expect(scale).toBeCloseTo(1, 2);
+  });
+
+  test('the ledger walks through all six facilities and ends on the last', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#ledger', 0.05);
+    await expect(page.locator('.ledger-now h3')).toHaveText('地獄大廳');
+    await scrollToSection(page, '.rank', -1.05);
+    await expect(page.locator('.ledger-now h3')).toHaveText('刷花機（地獄）');
+    await expect(page.locator('.ledger-list li.on')).toHaveCount(1);
+    expect(await shownPictures(page)).toEqual(['5']);
+  });
+
+  test('the ledger steps through its pictures in order, and back again', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const dates = [
+      '2022.08.08',
+      '2023.01.17',
+      '2023.04.23',
+      '2024.02.13',
+      '2024.09.05',
+      '2025.02.11',
+    ];
+    const check = async (i: number, way: string) => {
+      await scrollToLedgerStep(page, (i + 0.5) / 6);
+      expect(await shownPictures(page), `${way} ${i}`).toEqual([String(i)]);
+      await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[i]);
+      await expect(page.locator('.ledger-now .acc')).toHaveText(dates[i]);
+      await expect(page.locator('.ledger-list li.on')).toHaveText(
+        `0${i + 1}${FACILITIES[i]}`,
+      );
+      expect(await visibleScenes(page), `${way} ${i}`).toEqual(['nether']);
+      // pinned: the stage has not moved
+      const top = await page
+        .locator('.ledger-stage')
+        .evaluate((el) => Math.round(el.getBoundingClientRect().top));
+      expect(top, `${way} ${i}`).toBe(0);
+    };
+    for (let i = 0; i < 6; i++) await check(i, 'down');
+    for (let i = 4; i >= 0; i--) await check(i, 'up');
+  });
+
+  test('the rank statement follows the ledger, still in the nether', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '.rank', -0.3);
+    await expect(page.locator('.rank h2')).toContainText('世界第六');
+    await expect(page.locator('.rank h2 em')).toHaveText('亞洲第一');
+    await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h2 em')).toHaveCSS(
+      'color',
+      'rgb(255, 106, 69)',
+    );
+    // page order: everything below the pin is measured after it
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    expect(await shownPictures(page)).toEqual(['5']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator('canvas.portal')).toBeHidden();
+    // the statement stands clear of the pinned stage
+    const [stage, rank] = await Promise.all([
+      page.locator('.ledger-stage').boundingBox(),
+      page.locator('.rank').boundingBox(),
+    ]);
+    expect(rank!.y).toBeGreaterThanOrEqual(stage!.y + stage!.height - 1);
+  });
+
+  test('resizing while pinned keeps the nether scene and leaves no stuck spacer', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToLedgerStep(page, 0.5);
+    expect(await shownPictures(page)).toEqual(['3']);
+    for (const [width, height] of [
+      [1024, 768],
+      [390, 844],
+    ]) {
+      await page.setViewportSize({ width, height });
+      await page.waitForTimeout(1200);
+      // wherever the resize left the scroll, go back into the pin
+      await scrollToLedgerStep(page, 0.5);
+      const size = `${width}×${height}`;
+      expect(await visibleScenes(page), size).toEqual(['nether']);
+      expect(await shownPictures(page), size).toEqual(['3']);
+      await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
+      const m = await page.evaluate(() => {
+        const stage = document
+          .querySelector('.ledger-stage')!
+          .getBoundingClientRect();
+        const ledger = document
+          .querySelector('#ledger')!
+          .getBoundingClientRect();
+        return {
+          spacers: document.querySelectorAll('.pin-spacer').length,
+          top: Math.round(stage.top),
+          stage: Math.round(stage.height),
+          ledger: Math.round(ledger.height),
+          vh: window.innerHeight,
+          vw: window.innerWidth,
+          width: Math.round(stage.width),
+        };
+      });
+      expect(m.spacers, size).toBe(1);
+      expect(m.top, size).toBe(0);
+      expect(m.stage, size).toBe(m.vh);
+      expect(m.width, size).toBe(m.vw);
+      // the spacer is exactly the stage plus the pinned distance at this size
+      expect(m.ledger, size).toBe(m.vh * 4);
+      await expectNoHorizontalScroll(page);
+      await scrollToSection(page, '.rank', -0.3);
+      expect(await visibleScenes(page), size).toEqual(['nether']);
+      await expect(page.locator('.rank h2')).toBeVisible();
+      await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+      expect(await visibleScenes(page), size).toEqual(['w3']);
+    }
+  });
+
+  test('on a short landscape screen the ledger is not pinned and fits', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    await expectPortalAtFull(page);
+    await scrollToSection(page, '#ledger', 0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    await expect(page.locator('.ledger-now h3')).toBeVisible();
+    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[0]);
+    await expect(page.locator('.ledger-list')).toBeHidden();
+    await expectTextFits(page, { within: '#ledger' });
+    await expectNoHorizontalScroll(page);
+    // not pinned: the stage scrolls away with the page
+    await scrollToSection(page, '#ledger', 0.5);
+    const top = await page
+      .locator('.ledger-stage')
+      .evaluate((el) => Math.round(el.getBoundingClientRect().top));
+    expect(top).toBe(-195);
+    await scrollToSection(page, '.rank', 0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.rank h2')).toBeVisible();
+    await expectTextFits(page, { within: '.rank' });
+    await expectTapTargets(page);
+  });
+
+  test('on a phone in the day theme the nether text fits', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#nether', 0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expectTextFits(page, { within: '#nether' });
+    await scrollToLedgerStep(page, 0.6);
+    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
+    await expect(page.locator('.ledger-list')).toBeHidden();
+    await expectTextFits(page, { within: '#ledger' });
+    await scrollToSection(page, '.rank', 0.1);
+    await expectTextFits(page, { within: '.rank' });
+    await expectNoHorizontalScroll(page);
+    await expectTapTargets(page);
+  });
+
+  test('switching language inside the nether keeps the portal, the ledger and the statement working', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToLedgerStep(page, 0.5);
+    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
+    await page
+      .locator('.dim-bar select[data-action="language"]')
+      .selectOption('en');
+    await expect(page.locator('.ledger-now h3')).toHaveText(
+      'Million-rate piglin trading',
+    );
+    await page.waitForTimeout(800);
+    expect(await shownPictures(page)).toEqual(['3']);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await scrollToLedgerStep(page, 5.5 / 6);
+    expect(await shownPictures(page)).toEqual(['5']);
+    await expect(page.locator('.ledger-list li.on')).toHaveCount(1);
+    await expect(page.locator('.ledger-list li.on .mono')).toHaveText('06');
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h2 em')).not.toHaveText('亞洲第一');
+    await expectTextFits(page, { within: '.rank' });
+    // the statement of the opening lights up in the new language
+    const sayHeight = await page
+      .locator('#nether .say')
+      .evaluate((el) => el.getBoundingClientRect().height / innerHeight);
+    await scrollToSection(page, '#nether .say', sayHeight - 0.33);
+    const lines = page.locator('#nether .say span');
+    expect(await lines.count()).toBe(2);
+    await expect(lines.first()).toHaveText('Through the portal');
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    await expect(page.locator('#nether p.body')).toHaveCSS('opacity', '1');
+    // and the way back out still works
+    await scrollToSection(page, '#nether', -0.5);
+    await expectPortalAtFull(page);
+    await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    await expectNoMissingKeys(page);
+  });
+
+  test('reduced motion: the nether scene shows without the portal, and the ledger reads as a list', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    await expect(page.locator('canvas.portal')).toBeHidden();
+    await scrollToSection(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await scrollToSection(page, '#ledger', 0);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.ledger-list li')).toHaveCount(6);
+    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[0]);
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.rank h2')).toBeVisible();
   });
 });
