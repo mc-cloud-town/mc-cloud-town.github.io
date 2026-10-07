@@ -969,3 +969,642 @@ test.describe('home: nether', () => {
     await expect(page.locator('.rank h2')).toBeVisible();
   });
 });
+
+test.describe('home: the end', () => {
+  /** The picture each End scene must carry (survivalProgress ids). */
+  const PICTURES = { hall: 'p21', moon: 'p14', farm: 'p6' } as const;
+  /** Where each End scene is at rest: selector and offset for scrollToSection. */
+  const STOPS = [
+    ['#end', 0.3, 'hall'],
+    ['[data-work="end-0"]', 0.2, 'moon'],
+    ['[data-work="end-1"]', 0.2, 'farm'],
+    ['#credits', 0.3, 'end'],
+  ] as const;
+  /** Walk the pinned ledger from its first facility to its last, as a reader would. */
+  const walkTheLedger = async (page: Page) => {
+    for (const f of [0.1, 0.5, 0.95]) {
+      await page.evaluate((k) => {
+        const top =
+          document.querySelector('#ledger')!.getBoundingClientRect().top +
+          window.scrollY;
+        window.scrollTo(0, top + k * 3 * window.innerHeight);
+      }, f);
+      await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    }
+    await expect(page.locator('.pin-spacer')).toHaveCount(1);
+  };
+  /** Rotation in degrees, scale and position of a scene's layer or of its .zoom. */
+  const pose = (page: Page, scene: string, part: '' | ' .zoom' = ' .zoom') =>
+    page.evaluate(
+      ([id, sub]) => {
+        const el = document.querySelector<HTMLElement>(
+          `.scene[data-scene="${id}"]${sub}`,
+        )!;
+        const m = new DOMMatrix(getComputedStyle(el).transform);
+        const r = el.getBoundingClientRect();
+        return {
+          rotate: (Math.atan2(m.b, m.a) * 180) / Math.PI,
+          scale: Math.hypot(m.a, m.b),
+          x: Math.round(r.x),
+          y: Math.round(r.y),
+        };
+      },
+      [scene, part],
+    );
+  const picture = (page: Page, scene: string) =>
+    page
+      .locator(`.scene[data-scene="${scene}"] img`)
+      .first()
+      .getAttribute('src');
+  const lit = async (page: Page, selector: string) => {
+    const els = page.locator(selector);
+    expect(await els.count(), selector).toBeGreaterThan(0);
+    for (const el of await els.all())
+      await expect(el).toHaveCSS('opacity', '1');
+  };
+
+  test('three End builds each show their own scene, then the stars', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#end');
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText('月宮');
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    await expect(page.locator('[data-work="end-1"] h3')).toHaveText(
+      '終界農業區',
+    );
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+  });
+
+  test('after the whole pinned ledger, every End scene is its own picture, down and back up', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    for (const [scene, id] of Object.entries(PICTURES))
+      expect(await picture(page, scene), scene).toContain(
+        `/survivalProgress/${id}.webp`,
+      );
+    await walkTheLedger(page);
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `down ${sel}`).toEqual([scene]);
+    }
+    // the caption of a build has risen by the time its scene is at rest
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    await lit(page, '[data-work="end-1"] .work > div > *');
+    for (const [sel, off, scene] of [...STOPS].reverse()) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `up ${sel}`).toEqual([scene]);
+    }
+    await lit(page, '#end p.body');
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+  });
+
+  test('the fall: the nether spins away and shrinks while the hall turns into place, and back', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await walkTheLedger(page);
+    // 60% of the way through the transition
+    await scrollToSection(page, '#end', -0.4);
+    expect(await visibleScenes(page)).toEqual(['nether', 'hall']);
+    const leaving = await pose(page, 'nether');
+    expect(leaving.rotate).toBeGreaterThan(4);
+    expect(leaving.rotate).toBeLessThan(20);
+    expect(leaving.scale).toBeGreaterThan(0.6);
+    expect(leaving.scale).toBeLessThan(0.95);
+    const arriving = await pose(page, 'hall');
+    expect(arriving.rotate).toBeLessThan(-2);
+    expect(arriving.rotate).toBeGreaterThan(-30);
+    expect(arriving.scale).toBeGreaterThan(1.03);
+    expect(arriving.scale).toBeLessThan(1.6);
+    // landed: the hall is square and still
+    await scrollToSection(page, '#end', 0);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    const landed = await pose(page, 'hall');
+    expect(Math.abs(landed.rotate)).toBeLessThan(0.01);
+    expect(landed.scale).toBeCloseTo(1, 3);
+    // and back: the nether is whole again, the hall is off
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const back = await pose(page, 'nether');
+    expect(Math.abs(back.rotate)).toBeLessThan(0.01);
+    expect(back.scale).toBeCloseTo(1, 3);
+    await expect(page.locator('.scene[data-scene="hall"]')).toBeHidden();
+    await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
+  });
+
+  test('the moon slides in from the right and the farm rises from the bottom, and both undo', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="end-0"]', -0.5);
+    expect(await visibleScenes(page)).toEqual(['hall', 'moon']);
+    const moon = await pose(page, 'moon', '');
+    expect(moon.y).toBe(0);
+    expect(moon.x).toBeGreaterThan(300);
+    expect(moon.x).toBeLessThan(1140);
+    await scrollToSection(page, '[data-work="end-1"]', -0.5);
+    expect(await visibleScenes(page)).toEqual(['moon', 'farm']);
+    const farm = await pose(page, 'farm', '');
+    expect(farm.x).toBe(0);
+    expect(farm.y).toBeGreaterThan(200);
+    expect(farm.y).toBeLessThan(700);
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    // back up: each later layer is switched off, not parked off screen
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await expect(page.locator('.scene[data-scene="farm"]')).toBeHidden();
+    await scrollToSection(page, '#end', 0.3);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('.scene[data-scene="moon"]')).toBeHidden();
+    await expect(page.locator('.scene[data-scene="farm"]')).toBeHidden();
+  });
+
+  test('the farm pushes in and dissolves into the stars, and comes back', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', -0.4);
+    expect(await visibleScenes(page)).toEqual(['farm', 'end']);
+    const farm = await pose(page, 'farm');
+    expect(farm.scale).toBeGreaterThan(1.02);
+    expect(farm.scale).toBeLessThan(1.22);
+    expect(Math.abs(farm.rotate)).toBeLessThan(0.01);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('.scene[data-scene="farm"]')).toBeHidden();
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    await expect(page.locator('.scene[data-scene="end"]')).toBeHidden();
+    expect((await pose(page, 'farm')).scale).toBeCloseTo(1, 3);
+  });
+
+  test('the stars are three drifting layers that move only while they are shown', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    const layers = page.locator('.scene[data-scene="end"] .starfield i');
+    await expect(layers).toHaveCount(3);
+    for (const l of await layers.all())
+      await expect(l).toHaveCSS('background-image', /^url\("data:image\/png/);
+    const at = () =>
+      layers.evaluateAll((els) =>
+        els.map((el) => getComputedStyle(el).transform).join('|'),
+      );
+    // at the hero: nothing moves
+    const top = await at();
+    await page.waitForTimeout(700);
+    expect(await at()).toBe(top);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    const shown = await at();
+    await page.waitForTimeout(1500);
+    // every layer has moved, not just one
+    const later = (await at()).split('|');
+    shown
+      .split('|')
+      .forEach((v, i) => expect(later[i], `layer ${i}`).not.toBe(v));
+    // back above the End they stand still again
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const hidden = await at();
+    await page.waitForTimeout(700);
+    expect(await at()).toBe(hidden);
+  });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+    [844, 390],
+  ] as const)
+    test(`the stars cover a ${width}×${height} screen at both ends of their drift`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await scrollToSection(page, '#credits', 0.3);
+      expect(await visibleScenes(page)).toEqual(['end']);
+      // each layer drifts up to 160px sideways and 220px upwards from where the stylesheet puts it
+      const gaps = await page
+        .locator('.scene[data-scene="end"] .starfield i')
+        .evaluateAll((els) =>
+          els.map((el) => {
+            const m = new DOMMatrix(getComputedStyle(el).transform);
+            const r = el.getBoundingClientRect();
+            const [left, right, top, bottom] = [
+              r.left - m.e,
+              r.right - m.e,
+              r.top - m.f,
+              r.bottom - m.f,
+            ];
+            return {
+              left: left + 160 <= 0,
+              right: right - 160 >= window.innerWidth,
+              top: top <= 0,
+              bottom: bottom - 220 >= window.innerHeight,
+            };
+          }),
+        );
+      expect(gaps).toHaveLength(3);
+      for (const g of gaps)
+        expect(g).toEqual({ left: true, right: true, top: true, bottom: true });
+    });
+
+  test('credits list every full and trial member and link to the roster', async ({
+    page,
+    request,
+  }) => {
+    const data = await (
+      await request.get('https://mc-ctec.org/static-data/member.json')
+    ).json();
+    expect(data.member.length).toBeGreaterThan(0);
+    expect(data.trial.length).toBeGreaterThan(0);
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveCount(data.member.length);
+    await expect(
+      page.locator('#credits [data-names="trial"] span'),
+    ).toHaveCount(data.trial.length);
+    await expect(
+      page.locator('#credits [data-names="member"] span').first(),
+    ).toHaveText(data.member[0].name);
+    const roles = page.locator('#credits .roles a');
+    await expect(roles).toHaveCount(18);
+    await expect(roles.first()).toHaveAttribute(
+      'href',
+      'https://github.com/mc-cloud-town/Carpet-CTEC-Addition',
+    );
+    for (const a of await roles.all()) {
+      const name = (await a.textContent())!.trim();
+      await expect(a).toHaveAttribute(
+        'href',
+        `https://github.com/mc-cloud-town/${name}`,
+      );
+      await expect(a).toHaveAttribute('target', '_blank');
+      await expect(a).toHaveAttribute('rel', /noopener/);
+    }
+    await expect(page.locator('#credits .roles dt')).toHaveText([
+      '遊戲核心',
+      '伺服器管理',
+      '基礎設施',
+      '社群工具',
+    ]);
+    await expect(page.locator('#credits a.more')).toHaveAttribute(
+      'href',
+      '/member/',
+    );
+    // the last line of the credits is reachable, still over the stars
+    await page.locator('#credits .fin').scrollIntoViewIfNeeded();
+    await expect(page.locator('#credits .fin')).toHaveText('還沒結束。');
+    await expect.poll(() => visibleScenes(page)).toEqual(['end']);
+  });
+
+  test('duplicate uuids in the member data do not drop or repeat names', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    const same = '00000000-0000-0000-0000-000000000000';
+    await page.route(/member\.json/, (r) =>
+      r.fulfill({
+        json: {
+          member: [
+            { uuid: same, name: 'first_one' },
+            { uuid: same, name: 'second_one' },
+            { uuid: 'a', name: 'third_one' },
+          ],
+          trial: [{ uuid: same, name: 'trial_one' }],
+        },
+        headers: { 'access-control-allow-origin': '*' },
+      }),
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveText(['first_one', 'second_one', 'third_one']);
+    await expect(page.locator('#credits [data-names="trial"] span')).toHaveText(
+      ['trial_one'],
+    );
+    expect(errors.filter((e) => /same key/.test(e))).toEqual([]);
+  });
+
+  test('when the member request fails the tools stay and the member lists are hidden', async ({
+    page,
+  }) => {
+    await page.route(/member\.json/, (r) => r.abort());
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('#credits .roles')).toBeVisible();
+    await expect(page.locator('#credits .roles a')).toHaveCount(18);
+    await expect(page.locator('#credits [data-names]')).toHaveCount(0);
+    // no heading is left behind for a list that is not there
+    await expect(page.locator('#credits h2')).toHaveCount(1);
+    await expect(page.locator('#credits a.more')).toBeVisible();
+    await expect(page.locator('#credits .fin')).toHaveText('還沒結束。');
+  });
+
+  test('a slow member request: the page works meanwhile, and the names arrive without moving the scenes', async ({
+    page,
+  }) => {
+    let release = () => {};
+    const held = new Promise<void>((done) => {
+      release = done;
+    });
+    await page.route(/member\.json/, async (r) => {
+      await held;
+      await r.fulfill({
+        json: {
+          member: Array.from({ length: 120 }, (_, i) => ({
+            uuid: `m${i}`,
+            name: `member_${i}`,
+          })),
+          trial: Array.from({ length: 30 }, (_, i) => ({
+            uuid: `t${i}`,
+            name: `trial_${i}`,
+          })),
+        },
+        headers: { 'access-control-allow-origin': '*' },
+      });
+    });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('#credits .roles')).toBeVisible();
+    await expect(page.locator('#credits [data-names]')).toHaveCount(0);
+    const before = await page.evaluate(
+      () => document.documentElement.scrollHeight,
+    );
+    release();
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveCount(120);
+    await expect(
+      page.locator('#credits [data-names="trial"] span'),
+    ).toHaveCount(30);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight),
+    ).toBeGreaterThan(before);
+    // everything was measured again: each scene is still where its section is
+    for (const [sel, off, scene] of [...STOPS].reverse()) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), sel).toEqual([scene]);
+    }
+    await page.locator('#credits .fin').scrollIntoViewIfNeeded();
+    await expect.poll(() => visibleScenes(page)).toEqual(['end']);
+  });
+
+  test('the day theme turns dark in the End and light again after it', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    const look = () =>
+      page.evaluate(() => {
+        const dim = getComputedStyle(document.querySelector('.dim')!);
+        return {
+          bg: dim.backgroundColor,
+          fg: dim.color,
+          veil: dim.getPropertyValue('--v').trim(),
+          accent: dim.getPropertyValue('--accent').trim(),
+          bar: getComputedStyle(document.querySelector('.dim-bar')!).color,
+        };
+      });
+    const LIGHT = {
+      bg: 'rgb(238, 242, 245)',
+      fg: 'rgb(15, 20, 24)',
+      veil: '238, 242, 245',
+      accent: '#0b6fb5',
+      bar: 'rgb(15, 20, 24)',
+    };
+    const DARK = {
+      bg: 'rgb(6, 8, 11)',
+      fg: 'rgb(242, 244, 246)',
+      veil: '6, 8, 11',
+      accent: '#cdb0ff',
+      bar: 'rgb(242, 244, 246)',
+    };
+    await scrollToSection(page, '#overworld');
+    expect(await look()).toEqual(LIGHT);
+    for (const [sel, off] of STOPS) {
+      await scrollToSection(page, sel, off);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+      expect(await look(), sel).toEqual(DARK);
+    }
+    // the theme itself has not changed
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    // the dimension name stands on the dark photograph without its strip of paper
+    await scrollToSection(page, '#end', 0.1);
+    await expect(page.locator('#end .vt')).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    );
+    // leaving upward: the nether in its day colours, then the overworld
+    await scrollToSection(page, '.rank', -0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    expect(await look()).toEqual({ ...LIGHT, accent: '#c2330f' });
+    await scrollToSection(page, '#overworld');
+    expect(await look()).toEqual(LIGHT);
+  });
+
+  test('in the night theme the End accent is the pale violet', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#end', 0.1);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await expect(page.locator('#end .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(205, 176, 255)',
+    );
+    await expect(page.locator('#end .tag span').nth(1)).toHaveText('THE END');
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(page.locator('#credits h2').first()).toHaveCSS(
+      'color',
+      'rgb(205, 176, 255)',
+    );
+  });
+
+  for (const [name, width, height] of [
+    ['a phone', 390, 844],
+    ['a phone on its side', 844, 390],
+    ['a tablet on its side', 1024, 768],
+  ] as const)
+    test(`on ${name} in the day theme the End and the credits fit`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/', { theme: 'light' });
+      await ready(page);
+      await scrollToSection(page, '#end', 0);
+      expect(await visibleScenes(page)).toEqual(['hall']);
+      await expectTextFits(page, { within: '#end' });
+      for (const i of [0, 1]) {
+        await scrollToSection(page, `[data-work="end-${i}"]`, 0.2);
+        await expect(page.locator(`[data-work="end-${i}"] h3`)).toBeVisible();
+        await expectTextFits(page, { within: `[data-work="end-${i}"]` });
+      }
+      // the credits open a little way down the screen, so nothing of them is passing under the bar yet
+      await scrollToSection(page, '#credits', -0.15);
+      expect(await visibleScenes(page)).toEqual(['end']);
+      await expect(page.locator('#credits .roles a').first()).toBeInViewport();
+      await expectTextFits(page, { within: '#credits' });
+      await expectTapTargets(page);
+      // further down the list scrolls under the bar by design, so only the width is checked:
+      // every repository and every name stays inside the screen
+      await expect(
+        page.locator('#credits [data-names="member"] span').first(),
+      ).toBeAttached();
+      const outside = await page.evaluate(() =>
+        [
+          ...document.querySelectorAll(
+            '#credits .roles a, #credits .roles dt, #credits .names span, #credits .fin',
+          ),
+        ]
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.left < -1 || r.right > window.innerWidth + 1;
+          })
+          .map((el) => el.textContent),
+      );
+      expect(outside).toEqual([]);
+      await page.locator('#credits a.more').scrollIntoViewIfNeeded();
+      await page.waitForTimeout(800);
+      await expect(page.locator('#credits a.more')).toBeInViewport();
+      await expectTapTargets(page);
+      await expectNoHorizontalScroll(page);
+    });
+
+  test('switching language inside the End keeps the fall, the builds and the credits working', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await walkTheLedger(page);
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    const language = page.locator('.dim-bar select[data-action="language"]');
+    await language.selectOption('en');
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText(
+      'Moon Palace',
+    );
+    await page.waitForTimeout(800);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `en ${sel}`).toEqual([scene]);
+      if (sel.startsWith('[data-work'))
+        await lit(page, `${sel} .work > div > *`);
+    }
+    await expect(page.locator('#credits h2').first()).toHaveText(
+      'OPEN-SOURCE TOOLS',
+    );
+    await expect(page.locator('#credits .roles dt').first()).toHaveText(
+      'Game core',
+    );
+    await expect(page.locator('#credits a.more')).toContainText(
+      'Full member roster',
+    );
+    await expect(page.locator('#credits .fin')).toHaveText('Not over yet.');
+    await scrollToSection(page, '#credits', -0.15);
+    await expectTextFits(page, { within: '#credits' });
+    // the statement of the opening lights up in the new language
+    const sayHeight = await page
+      .locator('#end .say')
+      .evaluate((el) => el.getBoundingClientRect().height / innerHeight);
+    await scrollToSection(page, '#end .say', sayHeight - 0.33);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    const lines = page.locator('#end .say span');
+    expect(await lines.count()).toBe(2);
+    await expect(lines.first()).toHaveText('After the End');
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    await expect(page.locator('#end p.body')).toHaveCSS('opacity', '1');
+    await expect(page.locator('#end .vt')).toHaveText('THE END');
+    // the fall still runs, and the way back out still works
+    await scrollToSection(page, '#end', -0.4);
+    expect(await visibleScenes(page)).toEqual(['nether', 'hall']);
+    expect((await pose(page, 'nether')).rotate).toBeGreaterThan(4);
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    // a second switch, from above the End
+    await language.selectOption('zh_CN');
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText('月宫');
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `zh_CN ${sel}`).toEqual([scene]);
+    }
+    await expectNoMissingKeys(page);
+  });
+
+  test('reduced motion: the End scenes switch without the fall and the stars stand still', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      // without Lenis the site's own smooth scrolling carries the page there, which takes a while from the top
+      await expect
+        .poll(() => visibleScenes(page), { message: sel })
+        .toEqual([scene]);
+    }
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    const layers = page.locator('.scene[data-scene="end"] .starfield i');
+    await expect(layers).toHaveCount(3);
+    for (const l of await layers.all())
+      await expect(l).toHaveCSS('background-image', /^url\("data:image\/png/);
+    const at = () =>
+      layers.evaluateAll((els) =>
+        els.map((el) => getComputedStyle(el).transform).join('|'),
+      );
+    const still = await at();
+    await page.waitForTimeout(700);
+    expect(await at()).toBe(still);
+    await expect(page.locator('#credits .roles')).toBeVisible();
+    const lines = page.locator('#end .say span');
+    expect(await lines.count()).toBe(2);
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    // back up, with nothing left turned
+    await scrollToSection(page, '#end', 0.3);
+    await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
+    expect(Math.abs((await pose(page, 'hall')).rotate)).toBeLessThan(0.01);
+  });
+});

@@ -86,6 +86,19 @@ html.lenis {
       rgba(var(--v), var(--h5)) 100%
     );
   }
+  /* the end: one generated tile of specks at three depths, on a ground that reaches past the screen */
+  .starfield {
+    position: absolute;
+    inset: -20%;
+    background-color: #05030a;
+  }
+  /* each layer drifts up to 160px sideways and 220px upwards (Starfield.tsx): it reaches that much further,
+     so no edge of the screen is left without stars at the far end of the drift, whatever the screen size */
+  .starfield i {
+    position: absolute;
+    inset: 0 -160px -220px;
+    background-repeat: repeat;
+  }
   /* nether portal: a generated swirl, drawn small and scaled up with hard pixels */
   .portal {
     position: fixed;
@@ -459,7 +472,72 @@ html.lenis {
     color: var(--muted);
   }
 
+  /* the end: credits */
+  .credits {
+    padding: 10vh var(--gutter) 30vh;
+    text-align: center;
+  }
+  .credits h2 {
+    font: 500 13px var(--mono);
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin: 22vh 0 40px;
+  }
+  /* only the heading that opens the credits: the headings of the name lists are first in their own block */
+  .credits > h2:first-child {
+    margin-top: 0;
+  }
+  .roles {
+    display: grid;
+    gap: 22px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .roles div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .roles dt {
+    text-align: right;
+    color: var(--muted);
+    font-size: 14px;
+    padding-top: 2px;
+  }
+  .roles dd {
+    text-align: left;
+    font: 500 14px/1.9 var(--mono);
+    /* one repository per line */
+    display: grid;
+    justify-items: start;
+  }
+  .roles dd a:hover {
+    color: var(--accent);
+  }
+  .names {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 28px;
+    max-width: 980px;
+    margin: 0 auto;
+    font: 500 15px/1.9 var(--mono);
+  }
+  .names span {
+    overflow-wrap: anywhere;
+  }
+  .credits .fin {
+    margin-top: 30vh;
+    font-size: clamp(40px, 7vw, 120px);
+  }
+
   @media (max-width: 1024px) {
+    /* each repository is 44px tall to tap: the role stands level with the first of them */
+    .roles dt {
+      padding-top: 0;
+      line-height: 44px;
+    }
     /* 44px tall to tap; the line stays right under the words, as in the design */
     .more {
       align-items: flex-end;
@@ -517,6 +595,20 @@ html.lenis {
     }
     .ledger-list {
       display: none;
+    }
+    .roles div {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    .roles dt,
+    .roles dd {
+      text-align: center;
+    }
+    .roles dd {
+      justify-items: center;
+    }
+    .roles dt {
+      line-height: inherit;
     }
   }
   /* short landscape screens: the title would run off the bottom */

@@ -262,6 +262,20 @@ export const buildChoreography = (
     // below the pin, so created after it
     reveals(q('.rank'));
 
+    // ── the end ── (created after the pinned ledger, see the note at the top of this file)
+    change(TRANSITIONS[5]);
+    drift(
+      '#end',
+      'hall',
+      { scale: 1.1, yPercent: 2 },
+      { scale: 1.02, yPercent: -2 },
+    );
+    reveals(q('#end'));
+    // the second and third camera moves: the first one belongs to the build before them on the page
+    TRANSITIONS.slice(6, 8).forEach((def, i) => work(def, i + 1));
+    // the credits simply scroll over the stars
+    change(TRANSITIONS[8]);
+
     // ── later tasks append here, in page order ──
     // Rule: one section at a time, top to bottom, and everything a section needs (its scene change, its drift,
     // its pin, its reveals(section)) is created together. A pin adds scroll length, so a trigger created before

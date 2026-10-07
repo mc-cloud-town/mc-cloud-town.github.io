@@ -25,6 +25,8 @@ import { WorkSection } from './WorkSection';
 import { PortalCanvas } from './PortalCanvas';
 import { NetherLedger } from './NetherLedger';
 import { RankStatement } from './RankStatement';
+import { Starfield } from './Starfield';
+import { Credits } from './Credits';
 
 /** Shown until the live numbers arrive, and kept if they never do. */
 const MILESTONES = 53;
@@ -60,6 +62,10 @@ export const HomePage = () => {
     () => null,
   );
   const works = t('dimensions.overworld.works', { returnObjects: true }) as {
+    meta: string;
+    name: string;
+  }[];
+  const endWorks = t('dimensions.end.works', { returnObjects: true }) as {
     meta: string;
     name: string;
   }[];
@@ -116,11 +122,16 @@ export const HomePage = () => {
     if (ready && language) ScrollTrigger.refresh();
   }, [ready, language]);
 
+  // The credits grow when the names arrive, which moves everything measured below them.
+  useEffect(() => {
+    if (ready && members) ScrollTrigger.refresh();
+  }, [ready, members]);
+
   const onDone = useCallback(() => setReady(true), []);
 
   return (
     <div className='dim dim--home' ref={root} data-ready={ready}>
-      <World />
+      <World>{reduced !== null && <Starfield reduced={reduced} />}</World>
       <PortalCanvas />
       <div className='flash' aria-hidden='true' />
       <Loader reduced={reduced} onDone={onDone} />
@@ -204,6 +215,24 @@ export const HomePage = () => {
           }
           body={t('dimensions.nether.rankBody')}
         />
+        <DimensionOpening
+          id='end'
+          tag={t('dimensions.end.tag')}
+          say={t('dimensions.end.say', { returnObjects: true }) as string[]}
+          body={t('dimensions.end.body')}
+          label={t('dimensions.dim.end')}
+        />
+        {endWorks.map((w, i) => (
+          <WorkSection
+            // keyed by position, like the overworld builds
+            key={i}
+            group='end'
+            index={i}
+            meta={w.meta}
+            name={w.name}
+          />
+        ))}
+        <Credits members={members} />
       </main>
     </div>
   );
