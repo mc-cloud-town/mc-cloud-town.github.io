@@ -43,7 +43,18 @@ export const buildChoreography = (
   const ctx = gsap.context(() => {
     // Which dimension the reader is in. These triggers cover every section of the page, so they
     // are created last: by then each pin above a section has already added its scroll length.
-    const dims = () =>
+    const dims = () => {
+      // the rail fills with the progress through the whole page (the reader's own position, so also with reduced motion)
+      const fill = q('.rail b');
+      if (fill) {
+        const set = gsap.quickSetter(fill, 'scaleY');
+        ScrollTrigger.create({
+          start: 0,
+          end: 'max',
+          onUpdate: (s) => set(s.progress),
+          onRefresh: (s) => set(s.progress),
+        });
+      }
       gsap.utils.toArray<HTMLElement>('[data-dim]', root).forEach((el) =>
         ScrollTrigger.create({
           trigger: el,
@@ -53,6 +64,7 @@ export const buildChoreography = (
             s.isActive && opts.onDim(el.dataset.dim as Dimension),
         }),
       );
+    };
 
     if (opts.reduced) {
       // no scrubbed motion: the scene simply switches when its section reaches the middle of the screen

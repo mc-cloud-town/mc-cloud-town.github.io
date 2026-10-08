@@ -1727,3 +1727,86 @@ test.describe('home: the end', () => {
     expect(Math.abs((await pose(page, 'hall')).rotate)).toBeLessThan(0.01);
   });
 });
+
+test.describe('home: the rail', () => {
+  test('the rail and the bar say which dimension the reader is in, and the line fills with the page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const rail = page.locator('.rail');
+    await expect(rail).toBeVisible();
+    expect(
+      await rail
+        .locator('a')
+        .evaluateAll((els) => els.map((a) => a.getAttribute('href'))),
+    ).toEqual(['#overworld', '#nether', '#end']);
+    const fill = () =>
+      rail
+        .locator('b')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).d);
+    expect(await fill()).toBeLessThan(0.02);
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'overworld');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'overworld',
+    );
+    await scrollToSection(page, '#nether');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'nether',
+    );
+    await expect(page.locator('.dim-bar nav a.on')).toHaveCount(1);
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'nether');
+    await expect(rail.locator('a.on')).toHaveCount(1);
+    // the mark of the current stop is filled with the accent of its dimension
+    await expect
+      .poll(() =>
+        rail
+          .locator('a.on')
+          .evaluate((el) => getComputedStyle(el, '::before').backgroundColor),
+      )
+      .toBe('rgb(255, 106, 69)');
+    const mid = await fill();
+    expect(mid).toBeGreaterThan(0.15);
+    expect(mid).toBeLessThan(0.8);
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'end');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'end',
+    );
+    expect(await fill()).toBeGreaterThan(mid);
+    // and back
+    await scrollToSection(page, '#overworld');
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'overworld');
+    expect(await fill()).toBeLessThan(mid);
+  });
+
+  for (const [width, height] of [
+    [390, 844],
+    [844, 390],
+    [1024, 768],
+  ] as const)
+    test(`at ${width}×${height} the rail is ${width > 860 && height > 480 ? 'there, with stops big enough to tap' : 'put away'}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      const rail = page.locator('.rail');
+      await expect(rail).toHaveCount(1);
+      if (width > 860 && height > 480) {
+        await expect(rail).toBeVisible();
+        await expectTapTargets(page);
+        const stops = await rail
+          .locator('a')
+          .evaluateAll((els) =>
+            els.map((a) => a.getBoundingClientRect().width),
+          );
+        expect(stops).toEqual([44, 44, 44]);
+      } else await expect(rail).toBeHidden();
+      await expectNoHorizontalScroll(page);
+    });
+});

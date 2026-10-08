@@ -343,6 +343,7 @@
       "close": "關閉",
       "theme": "切換白天或夜晚",
       "language": "語言",
+      "rail": "維度",
       "languageNow": "語言：{{language}}"
     },
     "dim": {

@@ -347,6 +347,7 @@
       "close": "Close",
       "theme": "Switch day or night",
       "language": "Language",
+      "rail": "Dimensions",
       "languageNow": "Language: {{language}}"
     },
     "dim": {

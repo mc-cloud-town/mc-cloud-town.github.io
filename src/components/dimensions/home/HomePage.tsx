@@ -27,6 +27,7 @@ import { NetherLedger } from './NetherLedger';
 import { RankStatement } from './RankStatement';
 import { Starfield } from './Starfield';
 import { Credits } from './Credits';
+import { DimensionRail } from './DimensionRail';
 
 /** Shown until the live numbers arrive, and kept if they never do. */
 const MILESTONES = 53;
@@ -96,6 +97,12 @@ export const HomePage = () => {
             { yPercent: 105, duration: 1.3, stagger: 0.12, ease: 'expo.out' },
             0.7,
           )
+          // the rail comes with the bar, a step behind it (its place on the page is `translate`, so y is free)
+          .from(
+            el.querySelector('.rail'),
+            { y: 22, opacity: 0, duration: 1, ease: 'power3.out' },
+            1.26,
+          )
           .from(
             // .hero-meta itself belongs to the scroll-driven exit, so its two lines rise instead, as one
             el.querySelectorAll('.dim-bar, .hero-meta > *, .hero .up'),
@@ -136,6 +143,7 @@ export const HomePage = () => {
       <div className='flash' aria-hidden='true' />
       <Loader reduced={reduced} onDone={onDone} />
       <SiteBar variant='home' />
+      <DimensionRail />
       <main>
         <Hero />
         <DimensionOpening
