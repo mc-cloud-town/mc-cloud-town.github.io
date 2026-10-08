@@ -270,28 +270,40 @@
     position: fixed;
     inset: 0 0 -16px;
     z-index: 49;
-    padding: 96px var(--gutter) 56px;
+    /* Under the bar, and no more room taken than the screen has to give: the gaps above and below the links
+       shrink with the height of the screen (the last 16px are the part that reaches past the bottom), and so
+       do the links (below). Six of them fit on any screen 380px tall or more, so the sheet has nothing to
+       scroll there and shows no scrollbar beside the page's. */
+    padding: calc(var(--bar-h) + clamp(6px, 3vh, 24px)) var(--gutter)
+      calc(16px + clamp(6px, 4vh, 40px));
     background: var(--bg); /* opaque: nothing behind the menu may be legible */
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* on a screen too short for six links it does scroll: a thin bar in the line colour, not the system's */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
     visibility: hidden;
     opacity: 0;
     transform: translateY(-16px);
     pointer-events: none;
-    /* leaving: quicker than arriving, and gone from sight only when the fade is over */
+    /* Leaving mirrors arriving, and is quicker: the links go first (80ms), and only then the panel thins,
+       so the page never shows through the words. Gone from sight when the fade is over: 240ms in all
+       (SHEET_OUT_MS in SiteBar.tsx waits a little longer than that). */
     transition:
-      opacity var(--t-out) var(--ease-rise),
-      transform var(--t-out) var(--ease-rise),
-      visibility 0s linear var(--t-out),
+      opacity 0.16s var(--ease-rise) 0.08s,
+      transform 0.16s var(--ease-rise) 0.08s,
+      visibility 0s linear 0.24s,
       background-color var(--t-theme);
   }
+  /* Arriving: the panel first. It is whole within 120ms, and no link shows before 100ms, when it is all but
+     opaque: at no point is the page legible through the words of the menu. */
   .dim-sheet[data-open='true'] {
     visibility: visible;
     opacity: 1;
     transform: none;
     pointer-events: auto;
     transition:
-      opacity 0.24s var(--ease-rise),
+      opacity 0.12s var(--ease-rise),
       transform 0.32s var(--ease-out),
       visibility 0s,
       background-color var(--t-theme);
@@ -300,24 +312,24 @@
     display: grid;
   }
   .dim-sheet a {
-    font: 900 28px/1.2 var(--serif);
-    padding: 14px 0;
+    font: 900 clamp(20px, 4.6vh, 28px) / 1.2 var(--serif);
+    padding: clamp(4px, 1.8vh, 14px) 0;
     border-bottom: 1px solid var(--line);
     opacity: 0;
     transform: translateY(16px);
     transition:
-      opacity var(--t-out) var(--ease-rise),
-      transform var(--t-out) var(--ease-rise),
+      opacity 0.08s linear,
+      transform 0.08s linear,
       color var(--t-state),
       border-color var(--t-theme);
   }
-  /* the links rise one after another, 40ms apart: 440ms from the tap to the last one in place */
+  /* once the panel is there the links rise one after another, 26ms apart: 450ms from the tap to the last one in place */
   .dim-sheet[data-open='true'] a {
     opacity: 1;
     transform: none;
     transition:
-      opacity 0.24s var(--ease-rise) calc(var(--i, 0) * 40ms),
-      transform 0.24s var(--ease-out) calc(var(--i, 0) * 40ms),
+      opacity 0.22s var(--ease-rise) calc(0.1s + var(--i, 0) * 26ms),
+      transform 0.22s var(--ease-out) calc(0.1s + var(--i, 0) * 26ms),
       color var(--t-state),
       border-color var(--t-theme);
   }
@@ -363,17 +375,6 @@
       object-position: left;
     }
   }
-  /* short landscape screens: six links are taller than the screen, so they stand closer and the sheet scrolls */
-  @media (max-height: 480px) {
-    .dim-sheet {
-      padding-top: calc(var(--bar-h) + 8px);
-    }
-    .dim-sheet a {
-      font-size: 22px;
-      padding: 8px 0;
-    }
-  }
-
   /* Less motion: the same end states, reached by a brief fade. No travel, no turning, no one-after-another. */
   @media (prefers-reduced-motion: reduce) {
     .dim-sheet,

@@ -138,24 +138,30 @@ test.describe('members page: state changes are transitions', () => {
     await expect(page.locator('.empty')).toHaveCSS('opacity', '1');
   });
 
-  test('hover and focus states ease', async ({ page }) => {
+  test('hover and focus states ease over the state time, on their own properties', async ({
+    page,
+  }) => {
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
-    for (const [sel, prop] of [
-      ['.person', 'color'],
-      ['.search', 'border-color'],
-      ['.next a', 'color'],
-      ['.head .crumb a', 'color'],
+    // --t-state and --t-theme in tokens.css
+    const tokens = await page
+      .locator('.dim')
+      .evaluate((el) => [
+        getComputedStyle(el).getPropertyValue('--t-state').trim(),
+        getComputedStyle(el).getPropertyValue('--t-theme').trim(),
+      ]);
+    expect(tokens.map(parseFloat)).toEqual([0.3, 0.4]);
+    // Exactly these lists: the legacy stylesheet gives every element `background-color, border-color, color`
+    // at 0.3s, so a looser check passes without the rule it is meant to cover.
+    for (const [sel, properties, durations] of [
+      ['.person', 'color, border-color', '0.3s, 0.4s'],
+      ['.search', 'border-color', '0.3s'],
+      ['.next a', 'color', '0.3s'],
+      ['.head .crumb a', 'color', '0.3s'],
     ]) {
-      const t = await page
-        .locator(sel)
-        .first()
-        .evaluate((el) => {
-          const cs = getComputedStyle(el);
-          return [cs.transitionProperty, parseFloat(cs.transitionDuration)];
-        });
-      expect(t[0], sel).toContain(prop);
-      expect(t[1], sel).toBeGreaterThan(0);
+      const el = page.locator(sel).first();
+      await expect(el).toHaveCSS('transition-property', properties);
+      await expect(el).toHaveCSS('transition-duration', durations);
     }
   });
 });

@@ -81,31 +81,6 @@ test.describe('shell: the menu is an overlay on the page', () => {
       .poll(() => page.evaluate(() => window.scrollY))
       .toBeGreaterThan(before.y);
   });
-
-  test('on a short landscape screen the sheet scrolls inside itself, not the page', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 844, height: 390 });
-    await openPage(page, '/member/');
-    await page.locator('.person').first().waitFor();
-    await page.evaluate(() => window.scrollTo(0, 400));
-    await openSheet(page);
-    const sheet = page.locator('.dim-sheet');
-    expect(
-      await sheet.evaluate((el) => el.scrollHeight - el.clientHeight),
-    ).toBeGreaterThan(0);
-    await page.mouse.move(400, 250);
-    await page.mouse.wheel(0, 2000);
-    await expect
-      .poll(() => sheet.evaluate((el) => el.scrollTop))
-      .toBeGreaterThan(0);
-    // at its end the wheel does not carry on into the page
-    await page.mouse.wheel(0, 2000);
-    await page.waitForTimeout(400);
-    expect(await page.evaluate(() => window.scrollY)).toBe(400);
-    // the last link is reachable
-    await expect(sheet.locator('a').last()).toBeInViewport();
-  });
 });
 
 test.describe('home: the menu over the film', () => {
@@ -167,6 +142,83 @@ test.describe('home: the menu over the film', () => {
     await expect
       .poll(() => page.evaluate(() => Math.round(window.scrollY)))
       .toBeGreaterThan(pinned.y);
+  });
+});
+
+test.describe('shell: the open menu has no scrollbar of its own unless it must', () => {
+  const box = (page: Page) =>
+    page.locator('.dim-sheet').evaluate((el) => {
+      const s = el as HTMLElement;
+      const last = s.querySelector('a:last-child')!.getBoundingClientRect();
+      return {
+        overflow: s.scrollHeight - s.clientHeight,
+        scrollbar: s.offsetWidth - s.clientWidth,
+        lastBottom: Math.round(last.bottom),
+        screen: window.innerHeight,
+      };
+    });
+
+  for (const [width, height] of [
+    [950, 630],
+    // six links only just fit: the size at which a second scrollbar stood beside the page's
+    [950, 500],
+    [1024, 768],
+    [390, 844],
+    [844, 390],
+  ] as const)
+    test(`at ${width}×${height} the six links fit and the sheet shows no scrollbar`, async ({
+      page,
+      isMobile,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/member/');
+      await page.locator('.person').first().waitFor();
+      await page.evaluate(() => window.scrollTo(0, 400));
+      const pageBar = () =>
+        page.evaluate(
+          () => window.innerWidth - document.documentElement.clientWidth,
+        );
+      const before = await pageBar();
+      if (!isMobile) expect(before).toBeGreaterThan(0);
+      await openSheet(page);
+      const m = await box(page);
+      expect(m.overflow).toBeLessThanOrEqual(0);
+      expect(m.scrollbar).toBe(0);
+      // every link is on the screen without scrolling
+      expect(m.lastBottom).toBeLessThanOrEqual(m.screen);
+      await expect(page.locator('.dim-sheet a')).toHaveCount(6);
+      for (const a of await page.locator('.dim-sheet a').all())
+        await expect(a).toBeInViewport({ ratio: 1 });
+      // the page keeps its own scrollbar, and stays where it is
+      expect(await pageBar()).toBe(before);
+      expect(await page.evaluate(() => window.scrollY)).toBe(400);
+    });
+
+  test('on a screen too short for six links the sheet scrolls, with a thin scrollbar in the design, and the page does not move', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 640, height: 280 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await openSheet(page);
+    const sheet = page.locator('.dim-sheet');
+    expect((await box(page)).overflow).toBeGreaterThan(0);
+    await expect(sheet).toHaveCSS('overflow-y', 'auto');
+    await expect(sheet).toHaveCSS('scrollbar-width', 'thin');
+    // the line colour of the design on a clear track, not the system's bar
+    expect(
+      await sheet.evaluate((el) => getComputedStyle(el).scrollbarColor),
+    ).toBe('rgba(242, 244, 246, 0.18) rgba(0, 0, 0, 0)');
+    await page.mouse.move(300, 200);
+    await page.mouse.wheel(0, 2000);
+    await expect
+      .poll(() => sheet.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0);
+    await page.mouse.wheel(0, 2000);
+    await page.waitForTimeout(400);
+    await expect(sheet.locator('a').last()).toBeInViewport({ ratio: 1 });
+    expect(await page.evaluate(() => window.scrollY)).toBe(400);
   });
 });
 

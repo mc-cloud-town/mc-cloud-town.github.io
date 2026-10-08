@@ -422,6 +422,234 @@ test.describe('dimensions shell: the menu is a designed transition', () => {
     await expect(page.locator('.dim-sheet')).toHaveCSS('visibility', 'hidden');
   });
 
+  test('opening, the panel is whole before a link shows; closing, the links are gone before the panel thins', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await page.locator('.dim-sheet').waitFor({ state: 'attached' });
+    const sample = () =>
+      page.evaluate(async () => {
+        const sheet = document.querySelector<HTMLElement>('.dim-sheet')!;
+        const links = [...sheet.querySelectorAll('a')];
+        const opacity = (el: Element) => +getComputedStyle(el).opacity;
+        document
+          .querySelector<HTMLElement>('.dim-bar [data-action="menu"]')!
+          .click();
+        const frames: { sheet: number; links: number }[] = [];
+        const t0 = performance.now();
+        while (performance.now() - t0 < 800) {
+          await new Promise((r) => requestAnimationFrame(r));
+          frames.push({
+            sheet: opacity(sheet),
+            links: Math.max(...links.map(opacity)),
+          });
+        }
+        return frames;
+      });
+    const opening = await sample();
+    expect(opening.length).toBeGreaterThan(10);
+    // both are seen on their way, so the order below is really observed
+    expect(opening.some((f) => f.links > 0.02 && f.links < 0.98)).toBe(true);
+    for (const [i, f] of opening.entries())
+      if (f.links > 0.02)
+        expect(f.sheet, `opening frame ${i}`).toBeGreaterThanOrEqual(0.9);
+    expect(opening.at(-1)).toEqual({ sheet: 1, links: 1 });
+    const closing = await sample();
+    expect(closing.some((f) => f.sheet > 0.02 && f.sheet < 0.9)).toBe(true);
+    for (const [i, f] of closing.entries())
+      if (f.sheet < 0.9)
+        expect(f.links, `closing frame ${i}`).toBeLessThanOrEqual(0.1);
+    expect(closing.at(-1)).toEqual({ sheet: 0, links: 0 });
+  });
+
+  test('while the sheet is open Tab stays in the bar and the sheet, and the page is in reach again when it closes', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    const outside = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('.dim > *')]
+          .filter((el) => !el.matches('.dim-bar, .dim-sheet'))
+          .map((el) => (el as HTMLElement).inert),
+      );
+    expect(await outside()).toEqual([false, false]);
+    await openSheet(page);
+    expect(await outside()).toEqual([true, true]);
+    const where = () =>
+      page.evaluate(() => {
+        const el = document.activeElement;
+        return el?.closest('.dim-sheet')
+          ? 'sheet'
+          : el?.closest('.dim-bar')
+            ? 'bar'
+            : el === document.body
+              ? 'body'
+              : 'page';
+      });
+    const stops: string[] = [];
+    for (let i = 0; i < 24; i++) {
+      await page.keyboard.press('Tab');
+      stops.push(await where());
+    }
+    expect(stops).toContain('sheet');
+    expect(stops).toContain('bar');
+    expect(stops).not.toContain('page');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.dim-sheet')).toHaveCSS('visibility', 'hidden');
+    expect(await outside()).toEqual([false, false]);
+    const after: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('Tab');
+      after.push(await where());
+    }
+    expect(after).toContain('page');
+    expect(after).not.toContain('sheet');
+  });
+
+  test('opened with the pointer the first link shows no focus ring; opened with the keyboard it does', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    const button = page.locator('.dim-bar [data-action="menu"]');
+    const first = page.locator('.dim-sheet a').first();
+    const ring = () => first.evaluate((el) => el.matches(':focus-visible'));
+    const box = (await button.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(first).toBeFocused();
+    expect(await ring()).toBe(false);
+    await expect(first).toHaveCSS('outline-style', 'none');
+    await page.keyboard.press('Escape');
+    await expect(button).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(first).toBeFocused();
+    expect(await ring()).toBe(true);
+    await expect(first).toHaveCSS('outline-style', 'solid');
+  });
+
+  test('with the sheet open the scroll keys are held, but not with Ctrl, Meta or Alt', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await openSheet(page);
+    const prevented = (init: {
+      key: string;
+      ctrlKey?: boolean;
+      metaKey?: boolean;
+      altKey?: boolean;
+      shiftKey?: boolean;
+    }) =>
+      page.evaluate((o) => {
+        const e = new KeyboardEvent('keydown', {
+          ...o,
+          bubbles: true,
+          cancelable: true,
+        });
+        document.querySelector('.dim-sheet a')!.dispatchEvent(e);
+        return e.defaultPrevented;
+      }, init);
+    for (const key of ['ArrowDown', 'PageDown', 'End', 'Home', ' ']) {
+      expect(await prevented({ key }), key).toBe(true);
+      expect(await prevented({ key, ctrlKey: true }), `Ctrl+${key}`).toBe(
+        false,
+      );
+      expect(await prevented({ key, metaKey: true }), `Meta+${key}`).toBe(
+        false,
+      );
+      expect(await prevented({ key, altKey: true }), `Alt+${key}`).toBe(false);
+    }
+    // Shift is not a shortcut: Shift+Space scrolls back
+    expect(await prevented({ key: ' ', shiftKey: true })).toBe(true);
+  });
+
+  test('a link in the sheet closes it and goes to its page', async ({
+    page,
+  }) => {
+    await openPage(page, '/survivalProgress/');
+    await openSheet(page);
+    await page.locator('.dim-sheet a[href="/member/"]').click();
+    await expect(page).toHaveURL(/\/member\/$/);
+    await expect(page.locator('.head h1')).toBeVisible();
+    await expect(page.locator('.dim-sheet')).toHaveCSS('visibility', 'hidden');
+    await expect(page.locator('.dim-bar [data-action="menu"]')).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    // nothing is left holding the page
+    expect(
+      await page.evaluate(() => document.querySelector('main')!.inert),
+    ).toBe(false);
+    await page.mouse.move(195, 500);
+    await page.mouse.wheel(0, 300);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+  });
+
+  test('switching language with the sheet open keeps it open, in the new language, with the page still held', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await page.evaluate(() => window.scrollTo(0, 300));
+    await openSheet(page);
+    const sheet = page.locator('.dim-sheet');
+    const button = page.locator('.dim-bar [data-action="menu"]');
+    await setLanguage(page, 'en');
+    await expect(sheet.locator('a')).toHaveText([
+      'Overworld',
+      'Nether',
+      'The End',
+      'Progress',
+      'Members',
+      'Join us',
+    ]);
+    await expect(button).toHaveAccessibleName('Close');
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
+    await expect(sheet).toHaveCSS('opacity', '1');
+    await expect(sheet).toHaveCSS('visibility', 'visible');
+    for (const a of await sheet.locator('a').all())
+      await expect(a).toHaveCSS('opacity', '1');
+    expect(await sheet.evaluate((el) => (el as HTMLElement).inert)).toBe(false);
+    expect(
+      await page.evaluate(() => document.querySelector('main')!.inert),
+    ).toBe(true);
+    await page.mouse.move(195, 500);
+    await page.mouse.wheel(0, 400);
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(() => window.scrollY)).toBe(300);
+    await page.keyboard.press('Escape');
+    await expect(sheet).toHaveCSS('visibility', 'hidden');
+    await expect(button).toHaveAccessibleName('Menu');
+    expect(
+      await page.evaluate(() => document.querySelector('main')!.inert),
+    ).toBe(false);
+  });
+
+  test('when the sheet closes because the screen grew, focus is on the same link in the bar, not on the hidden button', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await openSheet(page);
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    const focused = await page.evaluate(() =>
+      document.activeElement?.closest('.dim-sheet')
+        ? document.activeElement.getAttribute('href')
+        : null,
+    );
+    expect(focused).toBeTruthy();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(page.locator('.dim-sheet')).toBeHidden();
+    await expect(page.locator('.dim-bar [data-action="menu"]')).toBeHidden();
+    const link = page.locator(`.dim-bar nav a[href="${focused}"]`);
+    await expect(link).toBeVisible();
+    await expect(link).toBeFocused();
+    expect(
+      await page.evaluate(() => document.querySelector('main')!.inert),
+    ).toBe(false);
+  });
+
   test('the menu button swaps its icon and fills while the sheet is open', async ({
     page,
   }) => {
