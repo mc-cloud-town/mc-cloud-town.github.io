@@ -14,7 +14,7 @@ import {
   wait,
   type Leave,
 } from './navigation';
-import { onPageScrollHold } from './pageScroll';
+import { holdPage, onPageScrollHold, type PageHold } from './pageScroll';
 import { addTransition } from './transitions';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -371,6 +371,8 @@ export const buildChoreography = (
     }
     // not `scrollTo(0, y)`: without Lenis the site's own smooth scrolling would carry the page there
     else window.scrollTo({ top: y, behavior: 'instant' });
+    // a cut keeps the page where it is, and this is where it is now
+    hold?.moved();
     ScrollTrigger.update();
   };
   /** The dimension a place belongs to: its own section's, never the document's (`<html data-dim>` is where the reader is). */
@@ -403,6 +405,24 @@ export const buildChoreography = (
   let disposed = false;
   /** The cover is up, or on its way: until it is gone, any further jump is a cut under the same cover. */
   let covered = false;
+  /**
+   * A cut keeps the page where it is from the click until its cover has gone: while a cover can be seen through,
+   * only the cut itself may move the page, under the whole cover. One hold for all the cuts that are under way
+   * (a later one overtakes an earlier one, and each lets go once): the page is free when the last has ended.
+   */
+  let hold: PageHold | null = null;
+  let cuts = 0;
+  const keep = () => {
+    if (cuts++ === 0) hold = holdPage();
+    let mine = true;
+    return () => {
+      if (!mine) return;
+      mine = false;
+      if (--cuts > 0) return;
+      hold?.release();
+      hold = null;
+    };
+  };
   /** Where the cut that is under way leads, and whether the page has been put there: until its cover has gone. */
   let cutting: { el: HTMLElement; landed: boolean } | null = null;
   const arrive = (el: HTMLElement, id: string) => {
@@ -443,6 +463,7 @@ export const buildChoreography = (
     const mine = ++jumps;
     const stale = () => disposed || mine !== jumps;
     covered = true;
+    const letGo = keep();
     const me: NonNullable<typeof cutting> = { el, landed: false };
     cutting = me;
     // the reader is leaving the place they were kept on: a re-measure during the cut must not take them back
@@ -490,12 +511,17 @@ export const buildChoreography = (
         // what the reader came from (the sheet) goes in any case, and the cover lifts only when it has
         if (!left && !stale()) await go();
       } finally {
-        if (!stale()) {
-          await coverOut();
+        try {
           if (!stale()) {
-            covered = false;
-            cutting = null;
+            await coverOut();
+            if (!stale()) {
+              covered = false;
+              cutting = null;
+            }
           }
+        } finally {
+          // with the cover, or without it for a cut that was overtaken: the page is held by the later one then
+          letGo();
         }
       }
     }
@@ -539,8 +565,10 @@ export const buildChoreography = (
 
   return () => {
     disposed = true;
-    // leaving in the middle of a cut: the cover must not stay up over the next page
+    // leaving in the middle of a cut: the cover must not stay up over the next page, nor the page be held
     if (covered) clearCover();
+    hold?.release();
+    hold = null;
     unjump();
     window.removeEventListener('scroll', onScroll);
     ScrollTrigger.removeEventListener('refresh', onRefresh);

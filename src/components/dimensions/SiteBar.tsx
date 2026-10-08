@@ -19,7 +19,7 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { serverLink } from '@/constants';
 import { followSectionLink, wait } from '@/lib/dimensions/navigation';
-import { holdPageScroll } from '@/lib/dimensions/pageScroll';
+import { holdPage } from '@/lib/dimensions/pageScroll';
 import { useDimension } from './DimensionProvider';
 import { LanguageMenu } from './LanguageMenu';
 
@@ -38,85 +38,6 @@ const sheetGone = async (sheet: HTMLElement | null) => {
     if (!sheet || getComputedStyle(sheet).visibility === 'hidden') return;
     await wait(40);
   }
-};
-
-/** Keys that scroll a page, as a fraction of the sheet's height (±Infinity: to the very end). */
-const SCROLL_KEYS: Record<string, number> = {
-  ' ': 0.9,
-  PageDown: 0.9,
-  PageUp: -0.9,
-  ArrowDown: 0.12,
-  ArrowUp: -0.12,
-  End: Infinity,
-  Home: -Infinity,
-};
-
-/** Something that uses the scroll keys itself: a field, or the language list (its arrows move in the list). */
-const isField = (el: EventTarget | null) =>
-  el instanceof HTMLSelectElement ||
-  el instanceof HTMLInputElement ||
-  el instanceof HTMLTextAreaElement ||
-  (el instanceof Element && Boolean(el.closest('.lang')));
-
-/**
- * While the sheet is open the page behind it must not move, and nothing about its layout may change:
- * the scrollbar stays, so `overflow` on the document is never touched. Instead the wheel, touch and
- * scroll keys go to the sheet (if it has anything to scroll) or nowhere. Returns the release.
- */
-const holdPage = (sheet: HTMLElement) => {
-  const y = window.scrollY;
-  const room = (dy: number) =>
-    dy < 0
-      ? sheet.scrollTop > 0
-      : sheet.scrollTop + sheet.clientHeight < sheet.scrollHeight - 1;
-  const inSheet = (e: Event) =>
-    e.target instanceof Node && sheet.contains(e.target);
-
-  const onWheel = (e: WheelEvent) => {
-    if (!(inSheet(e) && room(e.deltaY))) e.preventDefault();
-  };
-  let touchY = 0;
-  const onTouchStart = (e: TouchEvent) => {
-    touchY = e.touches[0]?.clientY ?? 0;
-  };
-  const onTouchMove = (e: TouchEvent) => {
-    const dy = touchY - (e.touches[0]?.clientY ?? touchY);
-    if (!(inSheet(e) && room(dy)) && e.cancelable) e.preventDefault();
-  };
-  const onKey = (e: KeyboardEvent) => {
-    const step = SCROLL_KEYS[e.key];
-    if (step === undefined || isField(e.target)) return;
-    // with Ctrl, Meta or Alt these are the browser's own shortcuts (history, tabs, zoom): not ours to take
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    // on a button the space bar presses it; it never scrolls
-    if (e.key === ' ' && e.target instanceof HTMLButtonElement) return;
-    e.preventDefault();
-    sheet.scrollBy({
-      top: Number.isFinite(step)
-        ? (e.shiftKey && e.key === ' ' ? -step : step) * sheet.clientHeight
-        : Math.sign(step) * sheet.scrollHeight,
-    });
-  };
-  // whatever still gets through (dragging the scrollbar, auto-scroll): put the page back
-  const onScroll = () => {
-    if (window.scrollY !== y)
-      window.scrollTo({ top: y, behavior: 'instant' as ScrollBehavior });
-  };
-
-  holdPageScroll(true);
-  document.addEventListener('wheel', onWheel, { passive: false });
-  document.addEventListener('touchstart', onTouchStart, { passive: true });
-  document.addEventListener('touchmove', onTouchMove, { passive: false });
-  document.addEventListener('keydown', onKey);
-  window.addEventListener('scroll', onScroll);
-  return () => {
-    document.removeEventListener('wheel', onWheel);
-    document.removeEventListener('touchstart', onTouchStart);
-    document.removeEventListener('touchmove', onTouchMove);
-    document.removeEventListener('keydown', onKey);
-    window.removeEventListener('scroll', onScroll);
-    holdPageScroll(false);
-  };
 };
 
 /**
@@ -188,10 +109,11 @@ export const SiteBar = ({
       !(e.target instanceof Element && e.target.closest('.lang-list')) &&
       setOpen(false);
     document.addEventListener('keydown', onKey);
-    const unhold = holdPage(sheet.current);
+    // the page behind stays where it is; the wheel, touch and scroll keys go to the sheet, if it has anything to scroll
+    const hold = holdPage(sheet.current);
     const rejoin = isolate(bar.current, sheet.current);
     release.current = () => {
-      unhold();
+      hold.release();
       rejoin();
     };
     return () => {

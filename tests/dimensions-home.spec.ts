@@ -3322,6 +3322,11 @@ test.describe('home: a jump that is interrupted', () => {
     });
     await sheet.locator('a[data-d="end"]').click();
     await landedOn(page, '#end');
+    await expect(page.locator('html')).not.toHaveClass(/lenis-stopped/);
+    // one more frame, so that the last one recorded is from after the release
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => done(null))),
+    );
     const frames = await page.evaluate(() => {
       const w = window as unknown as {
         __held: {
@@ -3347,13 +3352,16 @@ test.describe('home: a jump that is interrupted', () => {
         [true, true, 0],
       ),
     );
-    // then it is let go, under the cover
+    // then the sheet lets it go, under the cover: it is not inert any more
     const after = frames.slice(whole);
-    const released = after.findIndex((f) => !f.inert && !f.stopped);
+    const released = after.findIndex((f) => !f.inert);
     expect(released).toBeGreaterThanOrEqual(0);
     after
       .slice(0, released + 1)
       .forEach((f) => expect(f.cover, 'let go under the cover').toBe(1));
+    // but the cut holds it where it is for as long as there is any cover: one hold hands over to the other
+    for (const f of frames.filter((f) => f.cover > 0.01))
+      expect(f.stopped, `cover ${f.cover}`).toBe(true);
     expect(frames.at(-1)).toMatchObject({ inert: false, stopped: false });
     // the page is only ever at the top or on the End: the wheel moved nothing
     expect(new Set(frames.map((f) => f.y)).size).toBe(2);
@@ -3372,6 +3380,209 @@ test.describe('home: a jump that is interrupted', () => {
   });
 });
 
+test.describe('home: a cut holds the page', () => {
+  /**
+   * From the click until the cover has begun to lift, the reader keeps turning the wheel and pressing Page Down
+   * (real input, as fast as it can be sent). Resolves when the cut has landed.
+   */
+  const insist = async (page: Page, target: string) => {
+    // watched in the page, frame by frame: from here the whole cover could be missed between two looks
+    await page.evaluate(() => {
+      const w = window as unknown as { __lifting?: boolean };
+      let whole = false;
+      const tick = () => {
+        const c = getComputedStyle(document.querySelector('.dim-cover')!);
+        const cover = c.visibility === 'hidden' ? 0 : +c.opacity;
+        if (cover === 1) whole = true;
+        if (whole && cover < 0.6) w.__lifting = true;
+        else requestAnimationFrame(tick);
+      };
+      tick();
+    });
+    const lifting = () =>
+      page.evaluate(() =>
+        Boolean((window as unknown as { __lifting?: boolean }).__lifting),
+      );
+    let sent = 0;
+    while (!(await lifting())) {
+      await page.mouse.wheel(0, 240);
+      await page.keyboard.press('PageDown');
+      expect(++sent, 'the cover never lifted').toBeLessThan(400);
+    }
+    expect(sent).toBeGreaterThan(3);
+    await landedOn(page, target);
+    await expect(page.locator('html')).not.toHaveClass(/lenis-stopped/);
+  };
+  /** The page moved once, under a whole cover, and stands on the target. */
+  const heldThroughout = async (page: Page, frames: Frame[]) => {
+    // there were frames in which the cover could be seen through
+    const coming = frames.findIndex((f) => f.cover === 1);
+    expect(coming).toBeGreaterThan(3);
+    frames.forEach((f, i) => {
+      if (i > 0 && f.y !== frames[i - 1].y)
+        expect(f.cover, `frame ${i}: ${frames[i - 1].y} → ${f.y}`).toBe(1);
+    });
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    expect((await coverAtMoves(page)).map((m) => m.cover)).toEqual([1]);
+  };
+  const scrollsAgain = async (page: Page, by = 300) => {
+    const y = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, by);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).not.toBe(y);
+  };
+  const start = async (page: Page, reducedMotion = false) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion });
+    await ready(page);
+    await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    // the pointer over the page, clear of the bar and the rail
+    await page.mouse.move(720, 500);
+  };
+
+  for (const [from, link, target, scene] of [
+    ['the bar', '.dim-bar nav a[data-d="respawn"]', '#respawn', 'day1'],
+    ['the rail', '.rail a[data-d="end"]', '#end', 'hall'],
+  ] as const)
+    test(`a far jump from ${from}: the wheel and Page Down move nothing while the cover can be seen through`, async ({
+      page,
+    }) => {
+      await start(page);
+      await record(page);
+      // clicked in the page, so that the pointer stays where the wheel is turned
+      await page.locator(link).evaluate((el: HTMLElement) => el.click());
+      await insist(page, target);
+      const frames = await recorded(page);
+      await heldThroughout(page, frames);
+      expect(frames[0].y).toBe(0);
+      expect(await visibleScenes(page)).toEqual([scene]);
+      await expect(page.locator(`${target} [data-heading]`)).toBeFocused();
+      // nothing about the layout changed for it
+      expect(
+        await page.evaluate(() => [
+          getComputedStyle(document.body).overflowY,
+          getComputedStyle(document.documentElement).overflowY,
+        ]),
+      ).toEqual(['visible', 'visible']);
+      // and now the page is the reader's again: the wheel, and the key
+      await scrollsAgain(page, -300);
+      await page.waitForTimeout(1500);
+      const y = await page.evaluate(() => window.scrollY);
+      await page.keyboard.press('PageUp');
+      await expect
+        .poll(() => page.evaluate(() => window.scrollY))
+        .toBeLessThan(y);
+    });
+
+  test('with reduced motion, where the page scrolls natively, a cut holds it too', async ({
+    page,
+  }) => {
+    await start(page, true);
+    await record(page);
+    await page
+      .locator('.dim-bar nav a[data-d="respawn"]')
+      .evaluate((el: HTMLElement) => el.click());
+    // the fade is 100ms: the input is sent in the page, in every frame that has any cover
+    await page.evaluate(() => {
+      const w = window as unknown as { __let?: number; __sent?: number };
+      const tick = () => {
+        const c = getComputedStyle(document.querySelector('.dim-cover')!);
+        if (c.visibility === 'hidden') return;
+        const at = document.elementFromPoint(720, 500)!;
+        for (const e of [
+          new WheelEvent('wheel', {
+            deltaY: 240,
+            bubbles: true,
+            cancelable: true,
+          }),
+          new KeyboardEvent('keydown', {
+            key: 'PageDown',
+            bubbles: true,
+            cancelable: true,
+          }),
+        ]) {
+          at.dispatchEvent(e);
+          w.__sent = (w.__sent ?? 0) + 1;
+          // what is not prevented, the browser would act on
+          if (!e.defaultPrevented) w.__let = (w.__let ?? 0) + 1;
+        }
+        requestAnimationFrame(tick);
+      };
+      tick();
+    });
+    await landedOn(page, '#respawn');
+    const frames = await recorded(page);
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    const sent = await page.evaluate(() => {
+      const w = window as unknown as { __let?: number; __sent?: number };
+      return [w.__sent ?? 0, w.__let ?? 0];
+    });
+    expect(sent[0]).toBeGreaterThan(6);
+    expect(sent[1]).toBe(0);
+    await scrollsAgain(page, -300);
+  });
+
+  test('on a touch screen a finger moves nothing while the cover can be seen through', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'touch input is driven on the mobile project only');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', y?: number) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: y === undefined ? [] : [{ x: 195, y }],
+      });
+    // a finger does scroll this page, when nothing holds it
+    await touch('touchStart', 700);
+    for (let y = 680; y >= 400; y -= 20) await touch('touchMove', y);
+    await touch('touchEnd');
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(100);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(1200);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    // the hero's button → the respawn, and the finger drags up the screen until the cover is whole
+    await record(page);
+    await page.locator('.hero a.btn').evaluate((el: HTMLElement) => el.click());
+    const whole = () =>
+      page.evaluate(() => {
+        const c = getComputedStyle(document.querySelector('.dim-cover')!);
+        return c.visibility !== 'hidden' && +c.opacity === 1;
+      });
+    let moves = 0;
+    await touch('touchStart', 700);
+    for (let y = 680; !(await whole()); y = y > 300 ? y - 20 : 680) {
+      await touch('touchMove', y);
+      expect(++moves, 'the cover never came').toBeLessThan(400);
+    }
+    await touch('touchEnd');
+    expect(moves).toBeGreaterThan(3);
+    await landedOn(page, '#respawn');
+    await expect(page.locator('html')).not.toHaveClass(/lenis-stopped/);
+    const frames = await recorded(page);
+    frames.forEach((f, i) => {
+      if (i > 0 && f.y !== frames[i - 1].y)
+        expect(f.cover, `frame ${i}: ${frames[i - 1].y} → ${f.y}`).toBe(1);
+    });
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    // and afterwards the finger scrolls the page again
+    const y0 = await page.evaluate(() => window.scrollY);
+    await touch('touchStart', 300);
+    for (let y = 320; y <= 600; y += 20) await touch('touchMove', y);
+    await touch('touchEnd');
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeLessThan(y0 - 100);
+  });
+});
+
 test.describe('home: a cover is never left stuck', () => {
   /** No cover, nothing inert, and the wheel moves the page. */
   const free = async (page: Page) => {
@@ -3380,6 +3591,8 @@ test.describe('home: a cover is never left stuck', () => {
     await expect(cover).toHaveCSS('opacity', '0');
     await expect(cover).toHaveCSS('visibility', 'hidden');
     await expect(cover).toHaveCSS('pointer-events', 'none');
+    // the cut holds the page no longer
+    await expect(page.locator('html')).not.toHaveClass(/lenis-stopped/);
     // nothing of the page is inert: only what is closed (the sheet, the language list)
     expect(
       await page.evaluate(() =>
