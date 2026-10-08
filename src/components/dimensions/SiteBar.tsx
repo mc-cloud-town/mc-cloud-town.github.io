@@ -174,7 +174,7 @@ export const SiteBar = ({
     { href: anchor('respawn'), label: t('dimensions.nav.join'), d: 'respawn' },
   ];
 
-  /** Let the page go at once: a link in the sheet jumps to its section in the same click. */
+  /** Let the page go, before the sheet has closed: a jump moves the page while the sheet is still on its way out. */
   const letGo = () => {
     release.current?.();
     release.current = null;
@@ -245,7 +245,9 @@ export const SiteBar = ({
 
   /**
    * A link was followed. On the home page a link to a section is a jump (navigation.ts): the sheet closes
-   * as part of it, at once for a travel, under the cover for a cut. Anything else: the sheet closes and the link is followed.
+   * as part of it, at once for a travel, under the cover for a cut. Until then the page behind the sheet stays as
+   * the sheet keeps it, held and inert: a cover that is still coming in can be seen through.
+   * Anything else: the sheet closes and the link is followed.
    */
   const follow = (e: ReactMouseEvent<HTMLAnchorElement>) => {
     /** the section of the home page this link leads to (`data-section`), if it is one and this is the home page */
@@ -254,12 +256,12 @@ export const SiteBar = ({
       if (open) closedBy.current = 'link';
       setOpen(false);
     };
-    letGo();
     if (
       section &&
       followSectionLink(e, {
         id: section,
         leave: () => {
+          letGo();
           close();
           // a cover that came down over the open sheet lifts only when the sheet is gone
           if (open) return sheetGone(sheet.current);
@@ -267,6 +269,7 @@ export const SiteBar = ({
       })
     )
       return;
+    letGo();
     close();
   };
 

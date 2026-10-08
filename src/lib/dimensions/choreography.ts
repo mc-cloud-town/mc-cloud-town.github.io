@@ -403,6 +403,8 @@ export const buildChoreography = (
   let disposed = false;
   /** The cover is up, or on its way: until it is gone, any further jump is a cut under the same cover. */
   let covered = false;
+  /** Where the cut that is under way leads, and whether the page has been put there: until its cover has gone. */
+  let cutting: { el: HTMLElement; landed: boolean } | null = null;
   const arrive = (el: HTMLElement, id: string) => {
     anchor = { el, y: window.scrollY };
     // one entry in the history, however many sections the reader visits
@@ -430,6 +432,9 @@ export const buildChoreography = (
       duration: Math.min(TRAVEL.max, TRAVEL.min + screens * TRAVEL.perScreen),
       easing: travelEase,
       force: true,
+      // Lenis keeps this for as long as the travel is the scroll that is running: it drops it when the travel
+      // ends, and when the reader takes over
+      userData: { travel: el },
       // not called when the reader takes over with the wheel or a finger: then the page is theirs
       onComplete: () => arrive(el, id),
     });
@@ -438,6 +443,8 @@ export const buildChoreography = (
     const mine = ++jumps;
     const stale = () => disposed || mine !== jumps;
     covered = true;
+    const me: NonNullable<typeof cutting> = { el, landed: false };
+    cutting = me;
     // the reader is leaving the place they were kept on: a re-measure during the cut must not take them back
     anchor = null;
     let left = false;
@@ -463,6 +470,7 @@ export const buildChoreography = (
       moveTo(top(el));
       settle();
       arrive(el, id);
+      me.landed = true;
       // the opening of the target plays again as the cover lifts
       ScrollTrigger.getAll().forEach((st) => {
         if (
@@ -484,7 +492,10 @@ export const buildChoreography = (
       } finally {
         if (!stale()) {
           await coverOut();
-          if (!stale()) covered = false;
+          if (!stale()) {
+            covered = false;
+            cutting = null;
+          }
         }
       }
     }
@@ -492,9 +503,18 @@ export const buildChoreography = (
   const unjump = setSectionJumper((id, leave) => {
     const el = place(id);
     if (!el) return false;
+    // Asked for again while the page is already being taken there: the jump that is under way is the answer.
+    // A cut: until its cover has gone, unless the reader has arrived and scrolled on since.
+    if (cutting?.el === el && (!cutting.landed || anchor?.el === el))
+      return true;
     const to = ORDER.indexOf(dimOf(el) ?? here);
     const y = top(el);
     if (lenis && !covered && Math.abs(to - ORDER.indexOf(here)) <= 1) {
+      // a travel: for as long as it is the one that moves the page
+      if (lenis.userData.travel === el) {
+        void leave?.();
+        return true;
+      }
       jumps++;
       void leave?.();
       if (Math.abs(y - window.scrollY) <= 1) arrive(el, id);

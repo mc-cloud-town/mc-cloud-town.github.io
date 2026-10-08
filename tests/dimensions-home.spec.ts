@@ -3036,6 +3036,342 @@ test.describe('home: a jump that interrupts a jump', () => {
   });
 });
 
+test.describe('home: a jump that is interrupted', () => {
+  const bar = (page: Page, d: string) =>
+    page.locator(`.dim-bar nav a[data-d="${d}"]`);
+  /** Every address the page gives itself from now on. */
+  const watchAddress = (page: Page) =>
+    page.evaluate(() => {
+      const w = window as unknown as { __urls?: string[] };
+      const watched = Boolean(w.__urls);
+      w.__urls = [];
+      if (watched) return;
+      const replace = window.history.replaceState.bind(window.history);
+      window.history.replaceState = (state, unused, url) => {
+        w.__urls!.push(String(url));
+        replace(state, unused, url);
+      };
+    });
+  const addresses = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __urls: string[] }).__urls);
+  const start = async (page: Page, width = 1440, height = 900) => {
+    await page.setViewportSize({ width, height });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await watchAddress(page);
+  };
+  const coverGone = async (page: Page) => {
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveAttribute('data-on', 'false');
+    await expect(cover).toHaveCSS('opacity', '0');
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+  };
+
+  test('another section clicked while the cover comes in: only the second is gone to', async ({
+    page,
+  }) => {
+    await start(page);
+    await record(page);
+    // hero → respawn; before the cover is whole, → the End
+    await clickAt(page, '.dim-bar nav a[data-d="end"]', 'coming');
+    await bar(page, 'respawn').click();
+    const clicked = await clickedAt(page);
+    expect(clicked.cover).toBeGreaterThan(0.3);
+    expect(clicked.cover).toBeLessThan(0.9);
+    expect(clicked.y).toBe(0);
+    await landedOn(page, '#end');
+    const frames = await recorded(page);
+    // one cover, one move, under the whole cover; the respawn is never seen, arrived at or named
+    expect(await coverRuns(page)).toEqual(['opacity:280', 'opacity:520']);
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    const moves = await coverAtMoves(page);
+    expect(moves.map((m) => m.cover)).toEqual([1]);
+    expect(await addresses(page)).toEqual(['#end']);
+    for (const f of frames) expect(f.scenes).not.toContain('day1');
+    expect(frames.map((f) => f.dim)).not.toContain('respawn');
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'end',
+    );
+    await expect(page.locator('#end [data-heading]')).toBeFocused();
+    await coverGone(page);
+  });
+
+  for (const moment of ['coming', 'whole', 'lifting'] as const)
+    test(`the same far section clicked again while the cover is ${moment}: one cut, and the cover comes once`, async ({
+      page,
+    }) => {
+      await start(page);
+      await record(page);
+      await clickAt(page, '.dim-bar nav a[data-d="respawn"]', moment, 0.6);
+      await bar(page, 'respawn').click();
+      const clicked = await clickedAt(page);
+      if (moment === 'lifting') expect(clicked.cover).toBeLessThan(0.6);
+      await landedOn(page, '#respawn');
+      await coverGone(page);
+      const frames = await recorded(page);
+      // one fade in and one out: the cover does not come back for the second click
+      expect(await coverRuns(page)).toEqual(['opacity:280', 'opacity:520']);
+      const from = frames.findIndex((f) => f.cover === 1);
+      expect(from).toBeGreaterThan(0);
+      frames
+        .slice(from + 1)
+        .forEach((f, i) =>
+          expect(f.cover, `frame ${i} of the lift`).toBeLessThanOrEqual(
+            frames[from + i].cover,
+          ),
+        );
+      // one move, under the whole cover, and arrived once
+      expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+      expect((await coverAtMoves(page)).map((m) => m.cover)).toEqual([1]);
+      expect(await addresses(page)).toEqual(['#respawn']);
+      await expect(page.locator('#respawn h2')).toBeFocused();
+      await expect(page.locator('#respawn h2')).toHaveCSS('opacity', '1');
+      expect(await visibleScenes(page)).toEqual(['day1']);
+    });
+
+  test('the same near section clicked again on the way: the travel goes on as it was', async ({
+    page,
+  }) => {
+    await start(page);
+    await scrollToSection(page, '#overworld', 0);
+    await watchAddress(page);
+    await record(page);
+    // the overworld → the nether; a second later, the same link once more
+    await page.evaluate(() => {
+      const link = document.querySelector<HTMLElement>(
+        '.dim-bar nav a[data-d="nether"]',
+      )!;
+      link.addEventListener(
+        'click',
+        () =>
+          setTimeout(() => {
+            (window as unknown as { __again: number }).__again =
+              performance.now();
+            link.click();
+          }, 1000),
+        { once: true },
+      );
+    });
+    await bar(page, 'nether').click();
+    await landedOn(page, '#nether');
+    const again = await page.evaluate(
+      () => (window as unknown as { __again: number }).__again,
+    );
+    expect(again).toBeGreaterThan(0);
+    const frames = await recorded(page);
+    frames.forEach((f, i) =>
+      expect(f.y, `frame ${i}`).toBeGreaterThanOrEqual(frames[i - 1]?.y ?? 0),
+    );
+    // the page was well on its way at the second click, and does not start again from a standstill:
+    // in the 150ms after it, it covers at least half of what it covered in the 150ms before
+    const span = (from: number, to: number) => {
+      const inside = frames.filter((f) => f.t >= from && f.t <= to);
+      expect(inside.length).toBeGreaterThan(3);
+      return inside.at(-1)!.y - inside[0].y;
+    };
+    const before = span(again - 150, again);
+    const after = span(again, again + 150);
+    expect(before).toBeGreaterThan(100);
+    expect(after).toBeGreaterThan(before * 0.5);
+    // one travel: within its 2.2 seconds, and arrived once
+    const moving = frames.filter((f, i) => i > 0 && f.y !== frames[i - 1].y);
+    expect(moving.at(-1)!.t - moving[0].t).toBeLessThan(2350);
+    expect(await addresses(page)).toEqual(['#nether']);
+    expect(Math.max(...frames.map((f) => f.cover))).toBe(0);
+    await expect(page.locator('#nether [data-heading]')).toBeFocused();
+    expect(await visibleScenes(page)).toEqual(['nether']);
+  });
+
+  test('the wheel takes over a travel that began in the sheet: the travel yields, and the page is the reader’s', async ({
+    page,
+  }) => {
+    await start(page, 390, 844);
+    await scrollToSection(page, '#overworld', 0);
+    const y0 = await page.evaluate(() => window.scrollY);
+    await watchAddress(page);
+    const menu = page.locator('.dim-bar [data-action="menu"]');
+    const sheet = page.locator('.dim-sheet');
+    await menu.click();
+    await expect(sheet).toHaveCSS('opacity', '1');
+    await expect(sheet.locator('a').last()).toHaveCSS('opacity', '1');
+    await record(page);
+    await sheet.locator('a[data-d="nether"]').click();
+    // on its way
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(y0 + 600);
+    // the reader turns the wheel the other way
+    await page.mouse.move(195, 500);
+    await page.mouse.wheel(0, -500);
+    // the page comes to rest, and stays: the travel does not pick up again
+    let last = -1;
+    await expect
+      .poll(
+        async () => {
+          const y = await page.evaluate(() => window.scrollY);
+          const still = y === last;
+          last = y;
+          return still;
+        },
+        { intervals: [400] },
+      )
+      .toBe(true);
+    await page.waitForTimeout(2400);
+    const rest = await page.evaluate(() => window.scrollY);
+    expect(rest).toBe(last);
+    const nether = rest + (await topOf(page, '#nether'));
+    expect(rest).toBeLessThan(nether - 400);
+    expect(rest).toBeGreaterThan(y0);
+    const frames = await recorded(page);
+    // it never got to the nether, and no cover came
+    for (const f of frames) {
+      expect(f.y).toBeGreaterThanOrEqual(y0);
+      expect(f.y).toBeLessThan(nether - 400);
+    }
+    expect(Math.max(...frames.map((f) => f.cover))).toBe(0);
+    // the address is not that of the place that was given up, and nothing was arrived at
+    expect(new URL(page.url()).hash).toBe('');
+    expect(await addresses(page)).toEqual([]);
+    // the sheet is closed and the page is not inert
+    await expect(sheet).toHaveCSS('visibility', 'hidden');
+    await expect(menu).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[inert]')].map(
+          (el) => el.className,
+        ),
+      ),
+    ).toEqual(['lang-list', 'dim-sheet']);
+    // the focus is not left in the closed sheet, nor put on the heading of the place given up
+    expect(
+      await page.evaluate(() => {
+        const at = document.activeElement;
+        return [
+          Boolean(at && document.querySelector('.dim-sheet')!.contains(at)),
+          Boolean(at && document.querySelector('#nether')!.contains(at)),
+        ];
+      }),
+    ).toEqual([false, false]);
+    // and the page still scrolls, and a jump still works
+    await page.mouse.wheel(0, 300);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(rest);
+    await page.waitForTimeout(1500);
+    await menu.click();
+    await expect(sheet.locator('a').last()).toHaveCSS('opacity', '1');
+    await sheet.locator('a[data-d="nether"]').click();
+    await landedOn(page, '#nether');
+    await expect(page.locator('#nether [data-heading]')).toBeFocused();
+    expect(new URL(page.url()).hash).toBe('#nether');
+  });
+
+  test('a far jump from the sheet: the page behind stays held and inert until the cover is whole', async ({
+    page,
+  }) => {
+    await start(page, 390, 844);
+    const menu = page.locator('.dim-bar [data-action="menu"]');
+    const sheet = page.locator('.dim-sheet');
+    await menu.click();
+    await expect(sheet).toHaveCSS('opacity', '1');
+    await expect(sheet.locator('a').last()).toHaveCSS('opacity', '1');
+    // every frame: the cover, the page, and whether the page is held; and while the cover comes in, a turn of the wheel
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __held: {
+          cover: number;
+          y: number;
+          inert: boolean;
+          stopped: boolean;
+          wheel: boolean;
+        }[];
+        __heldRaf: number;
+      };
+      w.__held = [];
+      let wheeled = false;
+      const tick = () => {
+        const el = document.querySelector('.dim-cover')!;
+        const c = getComputedStyle(el);
+        const cover = c.visibility === 'hidden' ? 0 : +c.opacity;
+        let wheel = false;
+        if (!wheeled && cover > 0.3 && cover < 0.9) {
+          wheeled = wheel = true;
+          document.elementFromPoint(195, 500)!.dispatchEvent(
+            new WheelEvent('wheel', {
+              deltaY: 400,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        }
+        w.__held.push({
+          cover,
+          y: Math.round(window.scrollY),
+          inert: document.querySelector('main')!.inert,
+          stopped: document.documentElement.classList.contains('lenis-stopped'),
+          wheel,
+        });
+        w.__heldRaf = requestAnimationFrame(tick);
+      };
+      w.__heldRaf = requestAnimationFrame(tick);
+    });
+    await sheet.locator('a[data-d="end"]').click();
+    await landedOn(page, '#end');
+    const frames = await page.evaluate(() => {
+      const w = window as unknown as {
+        __held: {
+          cover: number;
+          y: number;
+          inert: boolean;
+          stopped: boolean;
+          wheel: boolean;
+        }[];
+        __heldRaf: number;
+      };
+      cancelAnimationFrame(w.__heldRaf);
+      return w.__held;
+    });
+    const whole = frames.findIndex((f) => f.cover === 1);
+    expect(whole).toBeGreaterThan(5);
+    const coming = frames.slice(0, whole);
+    // the wheel was turned while the cover could be seen through
+    expect(coming.filter((f) => f.wheel).length).toBe(1);
+    // until the cover is whole the page is held, inert, and where it was
+    coming.forEach((f, i) =>
+      expect([f.inert, f.stopped, f.y], `frame ${i}, cover ${f.cover}`).toEqual(
+        [true, true, 0],
+      ),
+    );
+    // then it is let go, under the cover
+    const after = frames.slice(whole);
+    const released = after.findIndex((f) => !f.inert && !f.stopped);
+    expect(released).toBeGreaterThanOrEqual(0);
+    after
+      .slice(0, released + 1)
+      .forEach((f) => expect(f.cover, 'let go under the cover').toBe(1));
+    expect(frames.at(-1)).toMatchObject({ inert: false, stopped: false });
+    // the page is only ever at the top or on the End: the wheel moved nothing
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    await expect(sheet).toHaveCSS('visibility', 'hidden');
+    await expect(menu).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#end [data-heading]')).toBeFocused();
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await coverGone(page);
+    // free again
+    const y = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(195, 500);
+    await page.mouse.wheel(0, 240);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(y);
+  });
+});
+
 test.describe('home: a cover is never left stuck', () => {
   /** No cover, nothing inert, and the wheel moves the page. */
   const free = async (page: Page) => {

@@ -73,10 +73,30 @@ export const record = (page: Page) =>
       __jumps: [to: number, cover: number, at: number][];
       __runs: string[];
       __scrollTo?: typeof window.scrollTo;
+      // the same moves, with where the page was last drawn and whether the next frame drew it there: `coverAtMoves`
+      __moves: {
+        to: number;
+        cover: number;
+        at: number;
+        from: number;
+        painted?: boolean;
+      }[];
+      __drawn: number;
     };
     log.__jumps = [];
     log.__runs = [];
+    log.__moves = [];
     if (!log.__scrollTo) {
+      log.__drawn = window.scrollY;
+      const frame = () => {
+        for (const m of log.__moves)
+          m.painted ??=
+            Math.abs(window.scrollY - m.to) <= 2 &&
+            Math.abs(m.from - m.to) > window.innerHeight;
+        log.__drawn = window.scrollY;
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
       const scrollTo = window.scrollTo.bind(window) as (
         ...args: unknown[]
       ) => void;
@@ -89,8 +109,12 @@ export const record = (page: Page) =>
         if (
           typeof to === 'number' &&
           Math.abs(to - window.scrollY) > window.innerHeight
-        )
-          log.__jumps.push([to, shown('.dim-cover'), performance.now()]);
+        ) {
+          const cover = shown('.dim-cover');
+          const at = performance.now();
+          log.__jumps.push([to, cover, at]);
+          log.__moves.push({ to, cover, at, from: log.__drawn });
+        }
         scrollTo(...args);
       }) as typeof window.scrollTo;
       const el = document.querySelector<HTMLElement>('.dim-cover');
@@ -165,24 +189,30 @@ export interface Move {
 }
 
 /**
- * Every move of the page by more than a screen since `record`, in order. Moves that come in pairs are left out,
- * as in `coverAtLanding`: a re-measure goes to the top and straight back within one task, and is never painted.
+ * Every move of the page by more than a screen that was painted, since `record`, in order: the page was drawn
+ * somewhere else in the frame before, and is drawn at the new place in the frame after. A re-measure is not one:
+ * it takes the page to the top and back within one task, however long that task is, and no frame shows it.
  */
 export const coverAtMoves = (page: Page): Promise<Move[]> =>
-  page.evaluate(() => {
-    const jumps = (
-      window as unknown as {
-        __jumps: [to: number, cover: number, at: number][];
-      }
-    ).__jumps;
-    return jumps
-      .filter(
-        ([, , at], i) =>
-          !(jumps[i - 1] && at - jumps[i - 1][2] < 4) &&
-          !(jumps[i + 1] && jumps[i + 1][2] - at < 4),
-      )
-      .map(([to, cover, at]) => ({ to, cover, at }));
-  });
+  page.evaluate(
+    () =>
+      new Promise<Move[]>((done) =>
+        // the frame after the last move has to have come
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            done(
+              (
+                window as unknown as {
+                  __moves: (Move & { painted?: boolean })[];
+                }
+              ).__moves
+                .filter((m) => m.painted)
+                .map(({ to, cover, at }) => ({ to, cover, at })),
+            ),
+          ),
+        ),
+      ),
+  );
 
 /**
  * A moment of a cut, as the cover shows it:
