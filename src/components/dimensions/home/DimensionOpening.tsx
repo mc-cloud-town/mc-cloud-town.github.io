@@ -24,7 +24,8 @@ export const DimensionOpening = ({
         <span className='acc'>{tag}</span>
         <span>{DIMENSION_MARKS[id]}</span>
       </div>
-      <p className='say' data-say data-t='title'>
+      {/* the statement is the section's heading: a jump to the section puts the focus here */}
+      <p className='say' data-say data-t='title' data-heading tabIndex={-1}>
         {/* keyed by position: the same nodes carry every language, so their scroll animations survive a switch */}
         {say.map((line, i) => (
           <span key={i}>{line}</span>

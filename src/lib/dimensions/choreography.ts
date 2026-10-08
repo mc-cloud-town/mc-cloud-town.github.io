@@ -3,6 +3,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { TRANSITIONS, type TransitionDef } from '@/constants/scenes';
 import type { Dimension } from '#/dimensions/DimensionProvider';
+import {
+  COVER_HOLD_MS,
+  clearCover,
+  coverIn,
+  coverOut,
+  nextFrame,
+  setSectionJumper,
+  wait,
+  type Leave,
+} from './navigation';
 import { onPageScrollHold } from './pageScroll';
 import { addTransition } from './transitions';
 
@@ -13,6 +23,22 @@ export interface ChoreographyOptions {
   onDim: (d: Dimension) => void;
   onLedger: (index: number) => void;
 }
+
+/** The dimensions in page order: a jump to the next or the previous one travels, a jump further away cuts. */
+const ORDER: Dimension[] = ['overworld', 'nether', 'end', 'respawn'];
+/** A travel takes between these many seconds, longer the further it goes (in screens). */
+const TRAVEL = { min: 1.2, max: 2.2, perScreen: 0.125 };
+/**
+ * The pace of a travel: it gathers speed over the first fifth of its time and spends the rest slowing down
+ * (the curve of power3.out, as `.rise`). The last screen before the target is the transition of that boundary,
+ * and so the reader gets about half of the travel's time to watch it.
+ */
+const RAMP = 0.2;
+const RAMP_SHARE = (3 * RAMP) / (2 + RAMP); // where the two halves meet at the same speed
+const travelEase = (t: number) =>
+  t < RAMP
+    ? RAMP_SHARE * (t / RAMP) ** 2
+    : RAMP_SHARE + (1 - RAMP_SHARE) * (1 - (1 - (t - RAMP) / (1 - RAMP)) ** 3);
 
 /**
  * Every scroll-driven animation on the home page is created here, top to bottom.
@@ -40,6 +66,11 @@ export const buildChoreography = (
     held ? lenis?.stop() : lenis?.start(),
   );
 
+  /** The dimension the reader is in, as last reported. */
+  let here: Dimension = 'overworld';
+  /** Bring whatever eases after a scroll to its end at once: under a cover nothing should still be on its way. */
+  let settle = () => {};
+
   const ctx = gsap.context(() => {
     // Which dimension the reader is in. These triggers cover every section of the page, so they
     // are created last: by then each pin above a section has already added its scroll length.
@@ -60,8 +91,11 @@ export const buildChoreography = (
           trigger: el,
           start: 'top 55%',
           end: 'bottom 55%',
-          onToggle: (s) =>
-            s.isActive && opts.onDim(el.dataset.dim as Dimension),
+          onToggle: (s) => {
+            if (!s.isActive) return;
+            here = el.dataset.dim as Dimension;
+            opts.onDim(here);
+          },
         }),
       );
     };
@@ -275,6 +309,7 @@ export const buildChoreography = (
         // a resize can land on another facility without a scroll in between
         onRefresh: step,
       });
+      settle = () => gsap.getTweensOf(imgs).forEach((t) => t.progress(1));
     }
     // below the pin, so created after it
     reveals(q('.rank'));
@@ -317,11 +352,163 @@ export const buildChoreography = (
     dims();
   }, root);
 
+  // ── going to a section ──
+  // A film moves between scenes in two ways: it travels, or it cuts. To the next or the previous dimension the page
+  // travels, so the reader rides the transition of that boundary. Further away it cuts under the cover: the page
+  // jumps while it is covered, and the cover lifts on the target, whose opening plays again.
+  const top = (el: HTMLElement) =>
+    Math.min(
+      Math.max(0, Math.round(el.getBoundingClientRect().top + window.scrollY)),
+      ScrollTrigger.maxScroll(window),
+    );
+  const moveTo = (y: number) => {
+    if (lenis) {
+      // Lenis learns the page's length from an observer, a moment late: right after the pin has added its
+      // four screens it would still stop the jump at the old end of the page
+      lenis.resize();
+      lenis.scrollTo(y, { immediate: true, force: true });
+    }
+    // not `scrollTo(0, y)`: without Lenis the site's own smooth scrolling would carry the page there
+    else window.scrollTo({ top: y, behavior: 'instant' });
+    ScrollTrigger.update();
+  };
+  /** The dimension a place belongs to: its own section's, never the document's (`<html data-dim>` is where the reader is). */
+  const dimOf = (el: HTMLElement) =>
+    el.closest<HTMLElement>('main [data-dim]')?.dataset.dim as
+      | Dimension
+      | undefined;
+  const place = (id: string) =>
+    id === 'top'
+      ? q('.hero')
+      : root.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) ?? null;
+
+  // Whoever was taken to a section and has not scrolled since stays on it when the page is measured again
+  // (the names of the credits arrive, the language changes, the window is resized).
+  let anchor: { el: HTMLElement; y: number } | null = null;
+  const onScroll = () => {
+    if (anchor && Math.abs(window.scrollY - anchor.y) > 2) anchor = null;
+  };
+  const onRefresh = () => {
+    if (!anchor) return;
+    const y = top(anchor.el);
+    anchor.y = y;
+    if (Math.abs(window.scrollY - y) > 1) moveTo(y);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  ScrollTrigger.addEventListener('refresh', onRefresh);
+
+  /** Each jump has a number: one that was overtaken by a later one stops where it is. */
+  let jumps = 0;
+  let disposed = false;
+  /** The cover is up, or on its way: until it is gone, any further jump is a cut under the same cover. */
+  let covered = false;
+  const arrive = (el: HTMLElement, id: string) => {
+    anchor = { el, y: window.scrollY };
+    // one entry in the history, however many sections the reader visits
+    window.history.replaceState(
+      window.history.state,
+      '',
+      id === 'top'
+        ? window.location.pathname + window.location.search
+        : `#${id}`,
+    );
+    (el.matches('[data-heading]')
+      ? el
+      : el.querySelector<HTMLElement>('[data-heading]')
+    )?.focus({ preventScroll: true });
+  };
+  const travel = (el: HTMLElement, id: string, y: number) => {
+    const screens = Math.abs(y - window.scrollY) / window.innerHeight;
+    anchor = null;
+    lenis!.resize();
+    lenis!.scrollTo(y, {
+      duration: Math.min(TRAVEL.max, TRAVEL.min + screens * TRAVEL.perScreen),
+      easing: travelEase,
+      force: true,
+      // not called when the reader takes over with the wheel or a finger: then the page is theirs
+      onComplete: () => arrive(el, id),
+    });
+  };
+  const cut = async (el: HTMLElement, id: string, leave?: Leave) => {
+    const mine = ++jumps;
+    const stale = () => disposed || mine !== jumps;
+    covered = true;
+    // the reader is leaving the place they were kept on: a re-measure during the cut must not take them back
+    anchor = null;
+    // the ground of where it leads: the End is dark whatever the theme
+    await coverIn({ tone: dimOf(el) === 'end' ? 'night' : 'theme' });
+    if (stale()) return;
+    const left = leave?.();
+    moveTo(top(el));
+    settle();
+    await Promise.all([left, wait(COVER_HOLD_MS)]);
+    await nextFrame();
+    if (stale()) return;
+    // the dimension has changed under the cover, and with it possibly the layout: measured once more
+    moveTo(top(el));
+    settle();
+    arrive(el, id);
+    // the opening of the target plays again as the cover lifts
+    ScrollTrigger.getAll().forEach((st) => {
+      if (
+        st.animation &&
+        !st.vars.scrub &&
+        st.progress > 0 &&
+        st.trigger &&
+        el.contains(st.trigger)
+      )
+        st.animation.restart();
+    });
+    await coverOut();
+    if (!stale()) covered = false;
+  };
+  const unjump = setSectionJumper((id, leave) => {
+    const el = place(id);
+    if (!el) return false;
+    const to = ORDER.indexOf(dimOf(el) ?? here);
+    const y = top(el);
+    if (lenis && !covered && Math.abs(to - ORDER.indexOf(here)) <= 1) {
+      jumps++;
+      void leave?.();
+      if (Math.abs(y - window.scrollY) <= 1) arrive(el, id);
+      else travel(el, id, y);
+    } else {
+      // with reduced motion there is no travel: every jump is a cut, behind a brief fade
+      void cut(el, id, leave);
+    }
+    return true;
+  });
+
+  // Arriving with a hash: the loader is the cover. It is still whole now, so the page goes there at once,
+  // measured with the pin in place.
+  const landing =
+    window.location.hash &&
+    place(decodeURIComponent(window.location.hash.slice(1)));
+  if (landing) {
+    ScrollTrigger.refresh();
+    moveTo(top(landing));
+    settle();
+    anchor = { el: landing, y: window.scrollY };
+  }
+
   return () => {
+    disposed = true;
+    // leaving in the middle of a cut: the cover must not stay up over the next page
+    if (covered) clearCover();
+    unjump();
+    window.removeEventListener('scroll', onScroll);
+    ScrollTrigger.removeEventListener('refresh', onRefresh);
     unhold();
     gsap.ticker.remove(raf);
     if (lenis) gsap.ticker.lagSmoothing(500, 33); // back to GSAP's default
     lenis?.destroy();
     ctx.revert();
+    // whatever Lenis left on the document: the next page scrolls natively
+    document.documentElement.classList.remove(
+      'lenis',
+      'lenis-smooth',
+      'lenis-stopped',
+      'lenis-scrolling',
+    );
   };
 };

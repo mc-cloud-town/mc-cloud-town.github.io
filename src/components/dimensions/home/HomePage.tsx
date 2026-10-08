@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -125,13 +126,15 @@ export const HomePage = () => {
 
   // Another language reflows the text and moves every section below it: measure the triggers again.
   // (Runs after the new text is committed; the nodes themselves are kept, see the index keys below.)
+  // Before the next paint: whoever was taken to a section and has not moved since is put back on it by the
+  // choreography when the triggers are measured again, and must never see the frame in between.
   const language = i18n.language;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (ready && language) ScrollTrigger.refresh();
   }, [ready, language]);
 
   // The credits grow when the names arrive, which moves everything measured below them.
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (ready && members) ScrollTrigger.refresh();
   }, [ready, members]);
 

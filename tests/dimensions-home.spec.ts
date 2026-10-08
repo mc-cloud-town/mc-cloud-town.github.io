@@ -7,7 +7,18 @@ import {
   openPage,
   setLanguage,
 } from './helpers/dimensions';
-import { ready, scrollToSection, visibleScenes } from './helpers/home';
+import {
+  type Frame,
+  coverAtLanding,
+  coverRuns,
+  landedOn,
+  ready,
+  record,
+  recorded,
+  scrollToSection,
+  topOf,
+  visibleScenes,
+} from './helpers/home';
 import { STAR_DRIFT } from '../src/constants/starfield';
 import { readFileSync } from 'node:fs';
 
@@ -1823,6 +1834,22 @@ const flashState = (page: Page) =>
     const s = getComputedStyle(el);
     return s.visibility === 'hidden' ? 0 : +s.opacity;
   });
+/** Without smooth scrolling the site's own `scroll-behavior` would carry the page there: jump instead. */
+const jumpTo = (page: Page, sel: string, off = 0) =>
+  page.evaluate(
+    ([s, o]) => {
+      const el = document.querySelector(s as string)!;
+      window.scrollTo({
+        top:
+          el.getBoundingClientRect().top +
+          window.scrollY +
+          (o as number) * window.innerHeight,
+        behavior: 'instant',
+      });
+    },
+    [sel, off] as const,
+  );
+
 test.describe('home: respawn', () => {
   test('the page ends on day one with the join call', async ({ page }) => {
     await openPage(page, '/');
@@ -2223,5 +2250,645 @@ test.describe('home: respawn', () => {
     expect(await visibleScenes(page)).toEqual(['day1']);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
     await expectNoMissingKeys(page);
+  });
+});
+
+test.describe('home: the language list over the film', () => {
+  test('by day it is paper over the overworld and dark inside the End, and choosing from it re-measures the page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    const trigger = page.locator('.dim-bar [data-action="language"]');
+    const list = page.locator('.dim-bar .lang-list');
+    await scrollToSection(page, '#overworld', 0);
+    await trigger.click();
+    await expect(list).toHaveCSS('opacity', '1');
+    await expect(list).toHaveCSS('background-color', 'rgb(238, 242, 245)');
+    await expect(list.locator('[aria-selected="true"]')).toHaveCSS(
+      'color',
+      'rgb(11, 111, 181)',
+    );
+    await page.keyboard.press('Escape');
+    await expect(list).toHaveCSS('visibility', 'hidden');
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    const y = await page.evaluate(() => Math.round(window.scrollY));
+    await trigger.click();
+    await expect(list).toHaveCSS('opacity', '1');
+    await expect(list).toHaveCSS('background-color', 'rgb(6, 8, 11)');
+    await expect(list.locator('[aria-selected="true"]')).toHaveCSS(
+      'color',
+      'rgb(205, 176, 255)',
+    );
+    await expect(list.locator('[aria-selected="false"]').first()).toHaveCSS(
+      'color',
+      'rgb(242, 244, 246)',
+    );
+    // open, it has moved neither the page nor the scene
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(y);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await list.locator('[data-value="en"]').click();
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText(
+      'Moon Palace',
+    );
+    await expect(list).toHaveCSS('visibility', 'hidden');
+    // measured again in the new language: every scene is where its section is
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    await scrollToSection(page, '#respawn', 0);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+  });
+});
+
+test.describe('home: jumping to a section', () => {
+  /** Pictures of the nether ledger that are on screen. */
+  const shownPictures = (page: Page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-ledger]')]
+        .filter((i) => +getComputedStyle(i).opacity > 0.5)
+        .map((i) => i.dataset.ledger),
+    );
+  const historyLength = (page: Page) =>
+    page.evaluate(() => window.history.length);
+
+  test('to the next dimension: the page travels there through the portal, with no cover', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld', 0);
+    const entries = await historyLength(page);
+    await record(page);
+    await page.locator('.dim-bar nav a[data-d="nether"]').click();
+    await landedOn(page, '#nether');
+    const frames = await recorded(page);
+    // it moved over many frames, always forwards, for between 1.2 and 2.2 seconds
+    const moving = frames.filter((f, i) => i > 0 && f.y !== frames[i - 1].y);
+    expect(moving.length).toBeGreaterThan(20);
+    frames.forEach((f, i) =>
+      expect(f.y, `frame ${i}`).toBeGreaterThanOrEqual(frames[i - 1]?.y ?? 0),
+    );
+    const took = moving.at(-1)!.t - moving[0].t;
+    expect(took).toBeGreaterThan(1000);
+    expect(took).toBeLessThan(2500);
+    // never covered: the reader rides the transition of this boundary, the portal
+    expect(Math.max(...frames.map((f) => f.cover))).toBe(0);
+    expect(Math.max(...frames.map((f) => f.portal))).toBeGreaterThan(0.5);
+    const seen = frames.map((f) => f.scenes.join('+'));
+    expect(seen).toContain('w3');
+    expect(seen.at(-1)).toBe('nether');
+    // arrived
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'nether',
+    );
+    await expect(page.locator('#nether [data-heading]')).toBeFocused();
+    expect(new URL(page.url()).hash).toBe('#nether');
+    expect(await historyLength(page)).toBe(entries);
+    expect(await shownPictures(page)).toEqual(['0']);
+    // and the way back is a travel too
+    await record(page);
+    await page.locator('.rail a[data-d="overworld"]').click();
+    await landedOn(page, '#overworld');
+    const back = await recorded(page);
+    expect(
+      back.filter((f, i) => i > 0 && f.y !== back[i - 1].y).length,
+    ).toBeGreaterThan(20);
+    expect(Math.max(...back.map((f) => f.cover))).toBe(0);
+    expect(await visibleScenes(page)).toEqual(['town']);
+    expect(new URL(page.url()).hash).toBe('#overworld');
+    expect(await historyLength(page)).toBe(entries);
+  });
+
+  test('farther away: the page cuts under a cover, and lands with everything in place', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const entries = await historyLength(page);
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+    await expect(cover).toHaveCSS('opacity', '0');
+
+    // hero → respawn, from the button in the hero
+    await record(page);
+    await page.locator('.hero a.btn').click();
+    await landedOn(page, '#respawn');
+    let frames = await recorded(page);
+    // opacity only: 280ms in, 520ms out
+    expect(await coverRuns(page)).toEqual(['opacity:280', 'opacity:520']);
+    const start = frames[0].y;
+    expect(start).toBe(0);
+    // the cover is whole before the page moves, and before the dimension changes
+    const moved = frames.findIndex((f) => f.y !== start);
+    expect(moved).toBeGreaterThan(0);
+    expect(await coverAtLanding(page)).toBe(1);
+    expect(frames[moved].cover).toBe(1);
+    const changed = frames.findIndex((f) => f.dim !== 'overworld');
+    expect(changed).toBeGreaterThan(0);
+    expect(frames[changed].cover).toBe(1);
+    // one cut: the page is only ever at the start or at the target
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    // no transition of the page in between is ever seen: neither the portal nor the white-out
+    expect(Math.max(...frames.map((f) => f.portal * (1 - f.cover)))).toBe(0);
+    expect(Math.max(...frames.map((f) => f.flash * (1 - f.cover)))).toBe(0);
+    // it lifts over about half a second, onto day one
+    const lifting = frames.filter((f) => f.cover > 0 && f.cover < 1 && f.y);
+    expect(lifting.length).toBeGreaterThan(5);
+    for (const f of lifting) expect(f.scenes).toEqual(['day1']);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'respawn',
+    );
+    await expect(page.locator('#respawn h2')).toBeFocused();
+    await expect(page.locator('#respawn h2')).toHaveCSS('opacity', '1');
+    expect(new URL(page.url()).hash).toBe('#respawn');
+
+    // respawn → nether: over the End and the whole pinned ledger, onto the opening
+    await record(page);
+    await page.locator('.dim-bar nav a[data-d="nether"]').click();
+    await landedOn(page, '#nether');
+    frames = await recorded(page);
+    expect(await coverAtLanding(page)).toBe(1);
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator('#nether [data-heading]')).toBeFocused();
+    // not inside the pin: the stage is still below, on its first facility
+    expect(await topOf(page, '.ledger-stage')).toBeGreaterThan(900);
+    expect(await shownPictures(page)).toEqual(['0']);
+    await expect(page.locator('.ledger-now h3')).toHaveText('地獄大廳');
+    await expect(page.locator('#nether p.body')).toHaveCSS('opacity', '1');
+
+    // nether → respawn again, then all the way back to the overworld
+    await page.locator('.dim-bar nav a[data-d="respawn"]').click();
+    await landedOn(page, '#respawn');
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await record(page);
+    await page.locator('.dim-bar nav a[data-d="overworld"]').click();
+    await landedOn(page, '#overworld');
+    frames = await recorded(page);
+    expect(await coverRuns(page)).toEqual(['opacity:280', 'opacity:520']);
+    expect(await coverAtLanding(page)).toBe(1);
+    expect(new Set(frames.map((f) => f.y)).size).toBe(2);
+    expect(await visibleScenes(page)).toEqual(['town']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'overworld',
+    );
+    await expect(page.locator('#overworld [data-heading]')).toBeFocused();
+    expect(new URL(page.url()).hash).toBe('#overworld');
+    // one entry, however many sections were visited
+    expect(await historyLength(page)).toBe(entries);
+    // the page is the reader's again
+    await page.mouse.move(720, 450);
+    const y = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 300);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(y);
+  });
+
+  test('the cover takes the tone of where it leads: night for the End, even by day', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    const tones = (frames: Frame[]) => [
+      ...new Set(frames.filter((f) => f.cover > 0).map((f) => f.tone)),
+    ];
+    // hero → the End: two dimensions away
+    await record(page);
+    await page.locator('.dim-bar nav a[data-d="end"]').click();
+    await landedOn(page, '#end');
+    let frames = await recorded(page);
+    expect(await coverAtLanding(page)).toBe(1);
+    expect(tones(frames)).toEqual(['rgb(6, 8, 11)']);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    // the End → the top of the page, by the logo: the paper of the day theme
+    await record(page);
+    await page.locator('.dim-bar .logo').click();
+    await landedOn(page, '.hero');
+    frames = await recorded(page);
+    expect(await coverAtLanding(page)).toBe(1);
+    expect(tones(frames)).toEqual(['rgb(238, 242, 245)']);
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+    await expect(page.locator('.hero h1')).toBeFocused();
+    expect(new URL(page.url()).hash).toBe('');
+    expect(new URL(page.url()).pathname).toBe('/');
+  });
+
+  test('from the sheet on a phone: it closes into the cover or into the travel, and the page is free again', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    const menu = page.locator('.dim-bar [data-action="menu"]');
+    const sheet = page.locator('.dim-sheet');
+    const sheetOpacity = () =>
+      sheet.evaluate((el) => +getComputedStyle(el).opacity);
+    const open = async () => {
+      await menu.click();
+      await expect(sheet).toHaveCSS('opacity', '1');
+      await expect(sheet.locator('a').last()).toHaveCSS('opacity', '1');
+    };
+    const free = async () => {
+      await expect(sheet).toHaveCSS('visibility', 'hidden');
+      await expect(menu).toHaveAttribute('aria-expanded', 'false');
+      expect(
+        await page.evaluate(() => [
+          getComputedStyle(document.body).overflowY,
+          getComputedStyle(document.documentElement).overflowY,
+          document.querySelector('main')!.inert,
+        ]),
+      ).toEqual(['visible', 'visible', false]);
+      const y = await page.evaluate(() => window.scrollY);
+      await page.mouse.move(195, 500);
+      await page.mouse.wheel(0, 240);
+      await expect
+        .poll(() => page.evaluate(() => window.scrollY))
+        .toBeGreaterThan(y);
+      // let the smooth scroll run out before the test moves the page itself
+      await page.waitForTimeout(1500);
+    };
+
+    // far: hero → the End. The sheet stays whole until the cover is over it, and is gone before the cover lifts.
+    await open();
+    await record(page);
+    await sheet.locator('a[data-d="end"]').click();
+    await landedOn(page, '#end');
+    const cut = await recorded(page);
+    const moved = cut.findIndex((f) => f.y !== cut[0].y);
+    expect(moved).toBeGreaterThan(0);
+    expect(await coverAtLanding(page)).toBe(1);
+    cut
+      .slice(0, moved)
+      .forEach((f, i) =>
+        expect(
+          f.sheet === 1 || f.cover === 1,
+          `before the cut, frame ${i}`,
+        ).toBe(true),
+      );
+    const lifting = cut.slice(moved).filter((f) => f.cover < 1);
+    expect(lifting.length).toBeGreaterThan(5);
+    for (const f of lifting) {
+      expect(f.sheet).toBe(0);
+      expect(f.scenes).toEqual(['hall']);
+    }
+    expect(new Set(cut.map((f) => f.y)).size).toBe(2);
+    expect(await sheetOpacity()).toBe(0);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await expect(page.locator('#end [data-heading]')).toBeFocused();
+    await free();
+
+    // near: back at the top, to the overworld. The sheet closes while the page is already on its way.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+    await open();
+    await record(page);
+    await sheet.locator('a[data-d="overworld"]').click();
+    await landedOn(page, '#overworld');
+    const frames = await recorded(page);
+    expect(Math.max(...frames.map((f) => f.cover))).toBe(0);
+    expect(
+      frames.filter((f, i) => i > 0 && f.y !== frames[i - 1].y).length,
+    ).toBeGreaterThan(20);
+    expect(await visibleScenes(page)).toEqual(['town']);
+    await expect(page.locator('#overworld [data-heading]')).toBeFocused();
+    await free();
+  });
+
+  test('reduced motion: no travel, an instant jump behind a fade of at most 120ms', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await jumpTo(page, '#overworld');
+    await expect.poll(() => visibleScenes(page)).toEqual(['town']);
+    for (const [d, scene, sel] of [
+      ['nether', 'nether', '#nether'], // the next dimension
+      ['respawn', 'day1', '#respawn'], // two away
+      ['overworld', 'town', '#overworld'], // three away
+    ] as const) {
+      await record(page);
+      await page.locator(`.dim-bar nav a[data-d="${d}"]`).click();
+      await landedOn(page, sel);
+      const frames = await recorded(page);
+      // every fade of the cover is short
+      const fades = (await coverRuns(page)).map((r) => Number(r.split(':')[1]));
+      expect(fades.length, d).toBeGreaterThan(0);
+      expect(
+        (await coverRuns(page)).every((r) => r.startsWith('opacity:')),
+        d,
+      ).toBe(true);
+      expect(Math.max(...fades), d).toBeLessThanOrEqual(120);
+      // covered, and the page is only ever at the start or at the target
+      expect(await coverAtLanding(page), d).toBe(1);
+      expect(new Set(frames.map((f) => f.y)).size, d).toBe(2);
+      await expect.poll(() => visibleScenes(page), d).toEqual([scene]);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', d);
+      await expect(page.locator(`${sel} [data-heading]`)).toBeFocused();
+      expect(new URL(page.url()).hash).toBe(sel);
+    }
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.classList.contains('lenis'),
+      ),
+    ).toBe(false);
+  });
+});
+
+test.describe('home: arriving, leaving and robustness', () => {
+  for (const [hash, scene, dim] of [
+    ['#nether', 'nether', 'nether'],
+    ['#end', 'hall', 'end'],
+    ['#respawn', 'day1', 'respawn'],
+  ] as const)
+    test(`arriving with ${hash}: when the loader lifts the page is already there`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      // every frame from the first: is the loader still whole, and where is the target?
+      await page.addInitScript((id) => {
+        const w = window as unknown as {
+          __seen: { loader: number; top: number; scenes: string }[];
+        };
+        w.__seen = [];
+        const tick = () => {
+          const loader = document.querySelector('.loader');
+          const target = document.querySelector(id);
+          if (document.querySelector('.dim--home') && target) {
+            const s = loader && getComputedStyle(loader);
+            w.__seen.push({
+              loader: !s || s.visibility === 'hidden' ? 0 : +s.opacity,
+              top: Math.round(target.getBoundingClientRect().top),
+              scenes: [...document.querySelectorAll<HTMLElement>('.scene')]
+                .filter((el) => {
+                  const c = getComputedStyle(el);
+                  return c.visibility !== 'hidden' && +c.opacity > 0.5;
+                })
+                .map((el) => el.dataset.scene)
+                .join('+'),
+            });
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }, hash);
+      await openPage(page, `/${hash}`);
+      await ready(page);
+      await expect(page.locator('.loader')).toBeHidden();
+      await landedOn(page, hash);
+      const seen = await page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __seen: { loader: number; top: number; scenes: string }[];
+            }
+          ).__seen,
+      );
+      const lifting = seen.filter((f) => f.loader < 0.99);
+      expect(lifting.length).toBeGreaterThan(5);
+      expect(seen.length - lifting.length).toBeGreaterThan(5);
+      for (const f of lifting) {
+        expect(Math.abs(f.top)).toBeLessThanOrEqual(1);
+        expect(f.scenes).toBe(scene);
+      }
+      await expect(page.locator('html')).toHaveAttribute('data-dim', dim);
+      expect(await visibleScenes(page)).toEqual([scene]);
+      // the pin was measured before the landing
+      await expect(page.locator('.pin-spacer')).toHaveCount(1);
+      if (hash === '#nether')
+        expect(await topOf(page, '.ledger-stage')).toBeGreaterThan(900);
+      expect(new URL(page.url()).hash).toBe(hash);
+    });
+
+  test('arriving with #respawn stays on the respawn when the names arrive late and the credits grow', async ({
+    page,
+  }) => {
+    let release = () => {};
+    const held = new Promise<void>((done) => {
+      release = done;
+    });
+    await page.route(/member\.json/, async (r) => {
+      await held;
+      await r.fulfill({
+        json: {
+          member: Array.from({ length: 160 }, (_, i) => ({
+            uuid: `m${i}`,
+            name: `member_${i}`,
+          })),
+          trial: Array.from({ length: 40 }, (_, i) => ({
+            uuid: `t${i}`,
+            name: `trial_${i}`,
+          })),
+        },
+        headers: { 'access-control-allow-origin': '*' },
+      });
+    });
+    await openPage(page, '/#respawn');
+    await ready(page);
+    await landedOn(page, '#respawn');
+    const before = await page.evaluate(
+      () => document.documentElement.scrollHeight,
+    );
+    release();
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveCount(160);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight),
+    ).toBeGreaterThan(before);
+    await landedOn(page, '#respawn');
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
+  });
+
+  test('arriving with a hash under reduced motion lands there too', async ({
+    page,
+  }) => {
+    await openPage(page, '/#end', { reducedMotion: true });
+    await ready(page);
+    await landedOn(page, '#end');
+    await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+  });
+
+  test('resizing mid-scroll keeps the scene in step with the section', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(1200);
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(1200);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await scrollToSection(page, '#respawn', 0);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(1200);
+    await scrollToSection(page, '#respawn', 0);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await expect(page.locator('.pin-spacer')).toHaveCount(1);
+  });
+
+  test('leaving for a legacy page cleans up, and coming back rebuilds', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.classList.contains('lenis'),
+      ),
+    ).toBe(true);
+    await page.goto('/join/');
+    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.hasAttribute('data-dim'),
+      ),
+    ).toBe(false);
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.classList.contains('lenis'),
+      ),
+    ).toBe(false);
+    await expect(page.locator('.dim-cover')).toHaveCount(0);
+    await page.goBack();
+    await ready(page);
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await scrollToSection(page, '#overworld');
+    expect(await visibleScenes(page)).toEqual(['town']);
+  });
+
+  test('leaving for an inner page without a reload takes the smooth scroll and the pin away, and coming back rebuilds them', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    const state = () =>
+      page.evaluate(() => ({
+        lenis: [...document.documentElement.classList].filter((c) =>
+          c.startsWith('lenis'),
+        ),
+        spacers: document.querySelectorAll('.pin-spacer').length,
+        covers: document.querySelectorAll('.dim-cover').length,
+      }));
+    expect(await state()).toEqual({ lenis: [], spacers: 0, covers: 1 });
+    await page.evaluate(() => {
+      (window as unknown as { __same: boolean }).__same = true;
+    });
+    // in-app links: the document is never reloaded
+    const sameDocument = () =>
+      page.evaluate(() =>
+        Boolean((window as unknown as { __same?: boolean }).__same),
+      );
+    await page.locator('.head .crumb a').nth(1).click();
+    await ready(page);
+    await landedOn(page, '#end');
+    expect(await sameDocument()).toBe(true);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    const home = await state();
+    expect(home.lenis).toContain('lenis');
+    expect(home.spacers).toBe(1);
+    await page.goBack();
+    await page.locator('.person').first().waitFor();
+    expect(await sameDocument()).toBe(true);
+    await expect.poll(state).toEqual({ lenis: [], spacers: 0, covers: 1 });
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    // the inner page scrolls natively again
+    await page.mouse.move(720, 450);
+    await page.mouse.wheel(0, 400);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+    await page.goForward();
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    expect(await visibleScenes(page)).toEqual(['town']);
+    expect((await state()).spacers).toBe(1);
+  });
+
+  test('with reduced motion nothing is scrubbed, every section is readable and scenes still change', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.classList.contains('lenis'),
+      ),
+    ).toBe(false);
+    for (const [sel, scene] of [
+      ['#overworld', 'town'],
+      ['[data-work="overworld-1"]', 'w2'],
+      ['#nether', 'nether'],
+      ['[data-work="end-0"]', 'moon'],
+      ['#respawn', 'day1'],
+    ] as const) {
+      await jumpTo(page, sel, 0.1);
+      await expect
+        .poll(() => visibleScenes(page), { message: sel })
+        .toEqual([scene]);
+    }
+    // the respawn: nothing waits for an animation, the white-out never shows, the mascot stands still
+    for (const sel of ['#respawn h2', '#respawn .depts', '#respawn .pal'])
+      await expect(page.locator(sel)).toHaveCSS('opacity', '1');
+    expect(await flashState(page)).toBe(0);
+    const pal = page.locator('#respawn .pal');
+    const at = () =>
+      pal.evaluate((el) => {
+        // the floating is on these two properties; the transform belongs to the rise
+        const c = getComputedStyle(el);
+        return `${c.translate} ${c.rotate}`;
+      });
+    const still = await at();
+    await page.waitForTimeout(600);
+    expect(await at()).toBe(still);
+    await jumpTo(page, '#respawn', -0.5);
+    await page.waitForTimeout(300);
+    expect(await flashState(page)).toBe(0);
+    await jumpTo(page, '#overworld', 0.1);
+    await expect.poll(() => visibleScenes(page)).toEqual(['town']);
+    const lines = page.locator('#overworld .say span');
+    expect(await lines.count()).toBe(3);
+    for (const span of await lines.all())
+      await expect(span).toHaveCSS('opacity', '1');
+    await expect(page.locator('.ledger-stage')).not.toHaveCSS(
+      'position',
+      'fixed',
+    );
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    // the rail still says where the reader is
+    await jumpTo(page, '#nether', 0.1);
+    await expect(page.locator('.rail a.on')).toHaveAttribute(
+      'data-d',
+      'nether',
+    );
   });
 });

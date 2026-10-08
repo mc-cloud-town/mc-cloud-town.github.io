@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { daysSince, SERVER_START_MS } from '@/lib/dimensions/format';
+import { followSectionLink } from '@/lib/dimensions/navigation';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -37,7 +38,13 @@ export const Hero = () => {
         </strong>
       </div>
       {/* The brand name is the same in every language. */}
-      <h1 className='vt' aria-label='雲鎮工藝' data-t='title'>
+      <h1
+        className='vt'
+        aria-label='雲鎮工藝'
+        data-t='title'
+        data-heading
+        tabIndex={-1}
+      >
         {[...'雲鎮工藝'].map((ch) => (
           <i key={ch}>
             <b>{ch}</b>
@@ -51,7 +58,12 @@ export const Hero = () => {
         <p className='lead up' data-t='body'>
           {t('dimensions.hero.lead')}
         </p>
-        <a className='btn up' href='#respawn' data-t='control'>
+        <a
+          className='btn up'
+          href='#respawn'
+          data-t='control'
+          onClick={(e) => followSectionLink(e)}
+        >
           {t('dimensions.hero.cta')} <span aria-hidden='true'>→</span>
         </a>
         <div className='cue up' data-t='note'>

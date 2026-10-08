@@ -1,6 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openPage } from './helpers/dimensions';
-import { ready, scrollToSection, visibleScenes } from './helpers/home';
+import {
+  landedOn,
+  ready,
+  scrollToSection,
+  visibleScenes,
+} from './helpers/home';
 
 // A classic scrollbar that takes room in the layout, as on a Windows desktop. Headless Chromium hides it by
 // default, and a launch option cannot be set for a single group of tests: hence a file of its own.
@@ -142,6 +147,78 @@ test.describe('home: the menu over the film', () => {
     await expect
       .poll(() => page.evaluate(() => Math.round(window.scrollY)))
       .toBeGreaterThan(pinned.y);
+  });
+});
+
+test.describe('home: the cover of a jump is an overlay too', () => {
+  test('a cut to a far section changes nothing about the layout while the cover is up', async ({
+    page,
+    isMobile,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 768 });
+    await openPage(page, '/');
+    await ready(page);
+    const measure = () =>
+      page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scrollbar: window.innerWidth - document.documentElement.clientWidth,
+        logo: document.querySelector('.dim-bar .logo')!.getBoundingClientRect()
+          .x,
+        body: getComputedStyle(document.body).overflowY,
+        html: getComputedStyle(document.documentElement).overflowY,
+      }));
+    const before = await measure();
+    if (!isMobile) expect(before.scrollbar).toBeGreaterThan(0);
+    // every frame while the cover is there: the same measurements
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __m: { cover: number; at: unknown }[];
+        __stop: boolean;
+      };
+      w.__m = [];
+      w.__stop = false;
+      const tick = () => {
+        const cover = document.querySelector('.dim-cover')!;
+        const s = getComputedStyle(cover);
+        w.__m.push({
+          cover: s.visibility === 'hidden' ? 0 : +s.opacity,
+          at: {
+            client: document.documentElement.clientWidth,
+            scrollbar: window.innerWidth - document.documentElement.clientWidth,
+            logo: document
+              .querySelector('.dim-bar .logo')!
+              .getBoundingClientRect().x,
+            body: getComputedStyle(document.body).overflowY,
+            html: getComputedStyle(document.documentElement).overflowY,
+          },
+        });
+        if (!w.__stop) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.locator('.hero a.btn').click();
+    await landedOn(page, '#respawn');
+    const seen = await page.evaluate(() => {
+      const w = window as unknown as {
+        __m: { cover: number; at: unknown }[];
+        __stop: boolean;
+      };
+      w.__stop = true;
+      return w.__m;
+    });
+    const covered = seen.filter((f) => f.cover > 0);
+    expect(covered.length).toBeGreaterThan(10);
+    expect(covered.some((f) => f.cover === 1)).toBe(true);
+    for (const f of covered) expect(f.at).toEqual(before);
+    expect(await measure()).toEqual(before);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    // the cover is out of the way of the pointer: the wheel moves the page again
+    const y = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(600, 300);
+    await page.mouse.wheel(0, -300);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeLessThan(y);
   });
 });
 
