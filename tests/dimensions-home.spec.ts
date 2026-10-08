@@ -9,7 +9,10 @@ import {
 } from './helpers/dimensions';
 import {
   type Frame,
+  clickAt,
+  clickedAt,
   coverAtLanding,
+  coverAtMoves,
   coverRuns,
   landedOn,
   ready,
@@ -2907,6 +2910,129 @@ test.describe('home: jumping to a section', () => {
         document.documentElement.classList.contains('lenis'),
       ),
     ).toBe(false);
+  });
+});
+
+test.describe('home: a jump that interrupts a jump', () => {
+  /** The link of the first jump, hero → respawn: in the fixed bar, so that clicking it never scrolls the page. */
+  const far = (page: Page) => page.locator('.dim-bar nav a[data-d="respawn"]');
+  /** The arrival has played out: the bar stands still, and the page is at the top. */
+  const arrived = async (page: Page) => {
+    await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  };
+  /** Where the page stands, everything a landing changes, and that no cover is left. */
+  const arrivedAt = async (
+    page: Page,
+    d: 'overworld' | 'nether' | 'end' | 'respawn',
+    scene: string,
+  ) => {
+    await landedOn(page, `#${d}`);
+    await expect.poll(() => visibleScenes(page)).toEqual([scene]);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', d);
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      d,
+    );
+    await expect(page.locator(`#${d} [data-heading]`)).toBeFocused();
+    expect(new URL(page.url()).hash).toBe(`#${d}`);
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveAttribute('data-on', 'false');
+    await expect(cover).toHaveCSS('opacity', '0');
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+  };
+  /** The page never moved in a frame in which the cover could be seen through. */
+  const neverMovedUncovered = async (page: Page, frames: Frame[]) => {
+    const moved = frames.filter((f, i) => i > 0 && f.y !== frames[i - 1].y);
+    expect(moved.length).toBeGreaterThan(0);
+    for (const f of moved)
+      expect(f.cover, `moved to ${f.y}`).toBeGreaterThanOrEqual(0.99);
+    const moves = await coverAtMoves(page);
+    expect(moves.length).toBeGreaterThan(0);
+    for (const m of moves)
+      expect(m.cover, `moved to ${m.to}`).toBeGreaterThanOrEqual(0.99);
+    return moves;
+  };
+
+  for (const [name, below] of [
+    ['as soon as the cover begins to lift', 0.99],
+    ['when the cover has half lifted', 0.5],
+    ['when the cover has nearly gone', 0.25],
+  ] as const)
+    test(`a second far jump ${name}: the page waits for the cover to be whole again`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, '/');
+      await ready(page);
+      await arrived(page);
+      await record(page);
+      // hero → respawn; and in the lift of that cut, respawn → overworld
+      await clickAt(
+        page,
+        '.dim-bar nav a[data-d="overworld"]',
+        'lifting',
+        below,
+      );
+      await far(page).click();
+      const clicked = await clickedAt(page);
+      await arrivedAt(page, 'overworld', 'town');
+      const frames = await recorded(page);
+      // the second jump was asked for in the lift, on the first target
+      expect(clicked.cover).toBeLessThan(below);
+      expect(clicked.cover).toBeGreaterThan(0);
+      const stops = [...new Set(frames.map((f) => f.y))];
+      expect(stops.length).toBe(3);
+      expect(stops[0]).toBe(0);
+      expect(clicked.y).toBe(stops[1]);
+      const moves = await neverMovedUncovered(page, frames);
+      expect(moves.length).toBe(2);
+      // and the cover was seen through in between: this was an interruption of the lift, not a second cut after it
+      const between = frames.filter((f) => f.y === stops[1]);
+      expect(Math.min(...between.map((f) => f.cover))).toBeLessThan(below);
+      // no transition of the page is seen on the way
+      expect(Math.max(...frames.map((f) => f.portal * (1 - f.cover)))).toBe(0);
+    });
+
+  test('a second far jump while the cover is whole goes at once, and only the second target is landed on', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await arrived(page);
+    await page.evaluate(() => {
+      const w = window as unknown as { __urls: string[] };
+      w.__urls = [];
+      const replace = window.history.replaceState.bind(window.history);
+      window.history.replaceState = (state, unused, url) => {
+        w.__urls.push(String(url));
+        replace(state, unused, url);
+      };
+    });
+    await record(page);
+    // hero → respawn; under the whole cover, with the page already there, → the End
+    await clickAt(page, '.dim-bar nav a[data-d="end"]', 'whole');
+    await far(page).click();
+    const clicked = await clickedAt(page);
+    await arrivedAt(page, 'end', 'hall');
+    const frames = await recorded(page);
+    expect(clicked.cover).toBe(1);
+    const moves = await neverMovedUncovered(page, frames);
+    expect(moves.length).toBe(2);
+    // the cover was whole already: nothing to wait for
+    expect(moves[1].at - clicked.t).toBeLessThan(300);
+    // one cover for both: in once, out once
+    expect(await coverRuns(page)).toEqual(['opacity:280', 'opacity:520']);
+    // the first target was never arrived at
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __urls: string[] }).__urls,
+      ),
+    ).toEqual(['#end']);
+    // the cover never showed the first target
+    for (const f of frames.filter((f) => f.cover < 0.99 && f.y !== 0))
+      expect(f.scenes).toEqual(['hall']);
   });
 });
 

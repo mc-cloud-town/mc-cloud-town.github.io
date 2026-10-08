@@ -157,6 +157,91 @@ export const coverAtLanding = (page: Page) =>
     return here ? here[1] : null;
   });
 
+/** One move of the page by more than a screen: where to, the cover's opacity at that very moment, and when. */
+export interface Move {
+  to: number;
+  cover: number;
+  at: number;
+}
+
+/**
+ * Every move of the page by more than a screen since `record`, in order. Moves that come in pairs are left out,
+ * as in `coverAtLanding`: a re-measure goes to the top and straight back within one task, and is never painted.
+ */
+export const coverAtMoves = (page: Page): Promise<Move[]> =>
+  page.evaluate(() => {
+    const jumps = (
+      window as unknown as {
+        __jumps: [to: number, cover: number, at: number][];
+      }
+    ).__jumps;
+    return jumps
+      .filter(
+        ([, , at], i) =>
+          !(jumps[i - 1] && at - jumps[i - 1][2] < 4) &&
+          !(jumps[i + 1] && jumps[i + 1][2] - at < 4),
+      )
+      .map(([to, cover, at]) => ({ to, cover, at }));
+  });
+
+/**
+ * A moment of a cut, as the cover shows it:
+ * `coming`: the cover is on its way in (between 0.3 and 0.9, not yet whole);
+ * `whole`: the cover is whole and the page has been moved under it;
+ * `lifting`: the cover has been whole and has fallen below `below`.
+ */
+export type Moment = 'coming' | 'whole' | 'lifting';
+
+/** What the page was like when `clickAt` clicked. */
+export interface Clicked {
+  cover: number;
+  y: number;
+  t: number;
+}
+
+/**
+ * Arm a click on `selector` for the first frame in which the cut that follows is at `moment`. The click is made
+ * inside the page, in that frame: from outside, the moment would have passed. Read the result with `clickedAt`.
+ */
+export const clickAt = (
+  page: Page,
+  selector: string,
+  moment: Moment,
+  below = 0.99,
+) =>
+  page.evaluate(
+    ([sel, when, under]) => {
+      const w = window as unknown as { __clicked?: Clicked };
+      delete w.__clicked;
+      const y0 = window.scrollY;
+      let wasWhole = false;
+      const tick = () => {
+        const el = document.querySelector('.dim-cover');
+        const c = el && getComputedStyle(el);
+        const cover = !c || c.visibility === 'hidden' ? 0 : +c.opacity;
+        const now =
+          when === 'coming'
+            ? !wasWhole && cover > 0.3 && cover < 0.9
+            : when === 'whole'
+              ? cover === 1 && Math.abs(window.scrollY - y0) > 2
+              : wasWhole && cover < under;
+        if (cover === 1) wasWhole = true;
+        if (!now) return requestAnimationFrame(tick);
+        w.__clicked = { cover, y: window.scrollY, t: performance.now() };
+        document.querySelector<HTMLElement>(sel)!.click();
+      };
+      requestAnimationFrame(tick);
+    },
+    [selector, moment, below] as const,
+  );
+
+export const clickedAt = async (page: Page): Promise<Clicked> =>
+  (
+    await page.waitForFunction(
+      () => (window as unknown as { __clicked?: Clicked }).__clicked,
+    )
+  ).jsonValue() as Promise<Clicked>;
+
 /** Every fade the cover started since `record`, in order, as `property:milliseconds`. */
 export const coverRuns = (page: Page) =>
   page.evaluate(() => (window as unknown as { __runs: string[] }).__runs);

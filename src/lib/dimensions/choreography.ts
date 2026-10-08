@@ -436,7 +436,12 @@ export const buildChoreography = (
     // the reader is leaving the place they were kept on: a re-measure during the cut must not take them back
     anchor = null;
     // the ground of where it leads: the End is dark whatever the theme
-    await coverIn({ tone: dimOf(el) === 'end' ? 'night' : 'theme' });
+    // Only under a whole cover does the page move: a cover that is still lifting from the jump before turns round
+    // first. One that was taken away meanwhile (the page was restored from the cache) covers nothing: no jump.
+    if (!(await coverIn({ tone: dimOf(el) === 'end' ? 'night' : 'theme' }))) {
+      if (!stale()) covered = false;
+      return;
+    }
     if (stale()) return;
     const left = leave?.();
     moveTo(top(el));

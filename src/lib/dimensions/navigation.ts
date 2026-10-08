@@ -31,7 +31,13 @@ export const wait = (ms: number) =>
 export const nextFrame = () =>
   new Promise<void>((done) => requestAnimationFrame(() => done()));
 
-/** The fade of `el` that is under way has ended, or `ms` have passed (a fade that never ran sends no event). */
+/** The cover as the reader sees it right now. */
+const opacityOf = (el: HTMLElement) => {
+  const c = getComputedStyle(el);
+  return c.visibility === 'hidden' ? 0 : Number(c.opacity);
+};
+
+/** The fade of `el` that is under way has ended or was turned round, or `ms` have passed (a fade that never ran sends no event). */
 const faded = (el: HTMLElement, ms: number) =>
   new Promise<void>((done) => {
     const end = (e?: TransitionEvent) => {
@@ -46,6 +52,35 @@ const faded = (el: HTMLElement, ms: number) =>
     el.addEventListener('transitioncancel', end);
   });
 
+/**
+ * The cover is whole: its fade in has run to its own end. True then; false if it was sent away meanwhile
+ * (`coverOut`, `clearCover`). A fade that is cancelled is not an end: turning a lifting cover round cancels the lift,
+ * and at that moment the cover can still be seen through. If no end comes within `ms`, the cover is made whole at once.
+ */
+const whole = (el: HTMLElement, ms: number) =>
+  new Promise<boolean>((done) => {
+    const finish = (ok: boolean) => {
+      el.removeEventListener('transitionend', look);
+      el.removeEventListener('transitioncancel', look);
+      clearTimeout(timer);
+      done(ok);
+    };
+    const look = (e: TransitionEvent) => {
+      if (e.target !== el || e.propertyName !== 'opacity') return;
+      if (el.dataset.on !== 'true') finish(false);
+      else if (e.type === 'transitionend' && opacityOf(el) === 1) finish(true);
+    };
+    const timer = setTimeout(() => {
+      if (el.dataset.on !== 'true') return finish(false);
+      // no fade ran, or it never ended (a tab in the background): whole without one
+      el.style.transition = 'none';
+      void el.offsetWidth;
+      finish(true);
+    }, ms);
+    el.addEventListener('transitionend', look);
+    el.addEventListener('transitioncancel', look);
+  });
+
 let cover: HTMLElement | null = null;
 /** Each fade has a number: a fade that was overtaken by a later one does nothing when its time is up. */
 let fade = 0;
@@ -58,38 +93,49 @@ export const registerCover = (el: HTMLElement) => {
   };
 };
 
+/** The length of the fade that starts now. (The shorthand is cleared first: a cover that was made whole without a fade has it set.) */
+const pace = (el: HTMLElement, ms: number) => {
+  el.style.transition = '';
+  el.style.transitionDuration = `${ms}ms`;
+};
+
 /**
- * Fade the cover in. Resolves once it is whole and that frame has been painted,
- * so the caller may change anything behind it.
+ * Fade the cover in. Resolves once it is whole and that frame has been painted, so the caller may change anything
+ * behind it: true then, and also when there is no cover at all. False if the cover was sent away before it was whole;
+ * the caller must then leave the page as it is. A cover that is whole already resolves at once; one that is lifting
+ * turns round, and resolves only when it is whole again.
  */
 export const coverIn = async ({
   tone = 'theme',
   ms = prefersReducedMotion() ? COVER_REDUCED_IN_MS : COVER_IN_MS,
 }: { tone?: CoverTone; ms?: number } = {}) => {
   const el = cover;
-  if (!el) return;
+  if (!el) return true;
   fade++;
   el.dataset.tone = tone;
-  el.style.transitionDuration = `${ms}ms`;
+  if (el.dataset.on === 'true' && opacityOf(el) === 1) return true;
+  pace(el, ms);
   el.style.visibility = 'visible';
   // the starting state has to be computed once, or there is nothing to fade from
   void el.offsetWidth;
   el.dataset.on = 'true';
   // the fade starts with the next frame, not with this line: its own end is what counts, the clock is the fallback
-  await faded(el, ms + 400);
+  if (!(await whole(el, ms + 400))) return false;
   await nextFrame();
+  return el.dataset.on === 'true';
 };
 
-/** Fade the cover out. Resolves when it is gone. */
+/** Fade the cover out. Resolves when it is gone, or when a later fade has taken over. */
 export const coverOut = async ({
   ms = prefersReducedMotion() ? COVER_REDUCED_OUT_MS : COVER_OUT_MS,
 }: { ms?: number } = {}) => {
   const el = cover;
   if (!el) return;
   const mine = ++fade;
-  el.style.transitionDuration = `${ms}ms`;
+  pace(el, ms);
   el.dataset.on = 'false';
-  await faded(el, ms + 400);
+  // nothing to fade if it never came in
+  if (opacityOf(el) > 0) await faded(el, ms + 400);
   if (mine === fade) el.style.visibility = 'hidden';
 };
 
@@ -98,7 +144,7 @@ export const clearCover = () => {
   const el = cover;
   if (!el) return;
   fade++;
-  el.style.transitionDuration = '0ms';
+  el.style.transition = 'none';
   el.dataset.on = 'false';
   el.style.visibility = 'hidden';
 };
