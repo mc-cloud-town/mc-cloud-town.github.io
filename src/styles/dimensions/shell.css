@@ -1,6 +1,16 @@
 /* Shell: top bar, menu sheet and footer. Ported from docs/design-demos/inner.css.
    Every change of state here is a transition in the motion language of tokens.css; none uses `all`,
    and none touches a property that a scroll-driven tween owns (the home arrival moves the bar's y and opacity). */
+
+/* Within the shell the page is never carried anywhere by the site-wide smooth scrolling of app.css: the browser
+   would use it to put a page back where it was on a step back or forward, so an inner page reached from deep in
+   the home page was drawn scrolled down, glided to its top, and swallowed the wheel on the way. Where the page
+   goes is decided by the page (the home page's choreography) or happens at once. <html data-dim> is there for as
+   long as the shell is (DimensionProvider), and gone on a legacy page. */
+html[data-dim] {
+  scroll-behavior: auto;
+}
+
 .dim {
   /* the fixed bar's height, for sticky offsets: 18px padding twice + content (44px controls up to 1024px) */
   --bar-h: 72px;

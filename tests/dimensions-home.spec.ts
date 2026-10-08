@@ -4036,6 +4036,64 @@ test.describe('home: arriving, leaving and robustness', () => {
     expect((await state()).spacers).toBe(1);
   });
 
+  test('coming back to an inner page from deep in the home page: it is at its top at once, and the wheel is the reader’s straight away', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await page.locator('.head .crumb a').nth(1).click();
+    await ready(page);
+    await landedOn(page, '#end');
+    // far further down than the inner page is long
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(5000);
+    // every frame drawn after the step back: where the page is
+    await page.evaluate(() => {
+      const w = window as unknown as { __back?: number[] };
+      window.addEventListener(
+        'popstate',
+        () => {
+          const drawn: number[] = [];
+          w.__back = drawn;
+          const tick = () => {
+            drawn.push(Math.round(window.scrollY));
+            if (drawn.length < 30) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        },
+        { once: true },
+      );
+    });
+    await page.goBack();
+    const drawn = await (
+      await page.waitForFunction(() => {
+        const frames = (window as unknown as { __back?: number[] }).__back;
+        return frames && frames.length >= 30 ? frames : null;
+      })
+    ).jsonValue();
+    // never where the home page was, and never on its way up from there
+    expect(drawn).toEqual(Array(30).fill(0));
+    await expect(page.locator('.person').first()).toBeVisible();
+
+    // and again, with the wheel turned the moment the page is there: nothing is still moving it
+    await page.goForward();
+    await ready(page);
+    await landedOn(page, '#end');
+    await page.mouse.move(720, 450);
+    await page.goBack();
+    await page.mouse.wheel(0, 400);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+    expect(
+      await page.evaluate(() => [
+        ...document.documentElement.classList,
+        document.querySelectorAll('.pin-spacer').length,
+      ]),
+    ).toEqual([0]);
+  });
+
   test('with reduced motion nothing is scrubbed, every section is readable and scenes still change', async ({
     page,
   }) => {
