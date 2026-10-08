@@ -362,7 +362,8 @@
       "lead": "We study redstone and build in vanilla Minecraft, in one survival world that has never been reset.",
       "cta": "Join us",
       "cue": "Scroll through three dimensions",
-      "loading": "Building terrain"
+      "loading": "Building terrain",
+      "entering": "Entering the world"
     },
     "overworld": {
       "tag": "Dimension 01 / 03",

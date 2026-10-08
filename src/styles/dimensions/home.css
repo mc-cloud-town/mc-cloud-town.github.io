@@ -131,26 +131,29 @@ html.lenis {
     display: grid;
     place-items: center;
   }
+  /* a map of the world being generated: the percentage, the map (Loader.tsx draws it), the stage */
   .loader-in {
     display: grid;
     justify-items: center;
-    gap: 26px;
+    gap: 22px;
   }
-  .chunks {
-    display: grid;
-    grid-template-columns: repeat(7, 16px);
-    gap: 2px;
+  .loader .pct {
+    font: 500 15px var(--mono);
+    letter-spacing: 0.08em;
+    min-width: 4ch;
+    text-align: center;
   }
-  .chunks i {
-    width: 16px;
-    height: 16px;
-    background: #141a20;
+  /* 21 × 21 pixels, one per chunk, shown large with hard edges */
+  .loader canvas {
+    display: block;
+    width: min(46vmin, 300px);
+    aspect-ratio: 1;
+    image-rendering: pixelated;
   }
-  .loader p {
+  .loader .stage {
     font: 12px var(--mono);
+    letter-spacing: 0.14em;
     color: #a3adb8;
-    display: flex;
-    gap: 12px;
   }
 
   /* ───────── the bar: clear over the world ───────── */

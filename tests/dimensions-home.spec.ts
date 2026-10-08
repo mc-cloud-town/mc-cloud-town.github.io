@@ -203,6 +203,248 @@ test.describe('home: loader', () => {
   });
 });
 
+test.describe('home: the loader is a map of the world being generated', () => {
+  /** The colours of the map, as in src/lib/dimensions/loaderMap.ts. */
+  const GROUND = '6,8,11';
+  const FIRST_GREY = '57,66,76';
+  const FRONTIER = '134,205,255';
+  const DONE = '242,244,246';
+
+  interface Seen {
+    pct: string;
+    label: string;
+    /** opacity of the block that holds the map: below 1 once the lift has begun */
+    block: number;
+    ready: boolean;
+    colours: number;
+    /** every colour on the map */
+    palette: string[];
+    centre: string;
+    ring: string;
+    inner: string;
+    border: string;
+    corner: string;
+  }
+  /** Record the loader on every frame from the very first one. */
+  const watch = (page: Page) =>
+    page.addInitScript(() => {
+      const w = window as unknown as { __loader: unknown[] };
+      w.__loader = [];
+      const tick = () => {
+        const map = document.querySelector<HTMLCanvasElement>('.loader canvas');
+        const block = document.querySelector('.loader-in');
+        if (map && block) {
+          const d = map
+            .getContext('2d')!
+            .getImageData(0, 0, map.width, map.height).data;
+          const at = (x: number, y: number) => {
+            const i = (y * map.width + x) * 4;
+            // nothing drawn yet: the loader's own ground shows through
+            return d[i + 3] === 0
+              ? '6,8,11'
+              : `${d[i]},${d[i + 1]},${d[i + 2]}`;
+          };
+          const all = new Set<string>();
+          for (let y = 0; y < map.height; y++)
+            for (let x = 0; x < map.width; x++) all.add(at(x, y));
+          w.__loader.push({
+            pct: document.querySelector('.loader .pct')?.textContent ?? '',
+            label: document.querySelector('.loader .stage')?.textContent ?? '',
+            block: +getComputedStyle(block).opacity,
+            ready:
+              document.querySelector<HTMLElement>('.dim--home')?.dataset
+                .ready === 'true',
+            colours: all.size,
+            palette: [...all],
+            centre: at(10, 10),
+            inner: at(13, 10),
+            ring: at(18, 10),
+            border: at(19, 10),
+            corner: at(0, 0),
+          });
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  const seen = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __loader: Seen[] }).__loader);
+  const number = (f: Seen) => Number(f.pct.replace('%', ''));
+
+  test('the served HTML has the map as a 21×21 pixel canvas, drawn large with hard pixels', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    await page.goto('/', { waitUntil: 'load' });
+    const map = page.locator('.loader canvas');
+    await expect(map).toHaveCount(1);
+    await expect(map).toHaveAttribute('width', '21');
+    await expect(map).toHaveAttribute('height', '21');
+    await expect(map).toHaveCSS('image-rendering', 'pixelated');
+    const box = (await map.boundingBox())!;
+    expect(box.width).toBe(300);
+    expect(box.height).toBe(300);
+    // the percentage above the map, the stage below it
+    const [pct, stage] = await Promise.all([
+      page.locator('.loader .pct').boundingBox(),
+      page.locator('.loader .stage').boundingBox(),
+    ]);
+    expect(pct!.y + pct!.height).toBeLessThanOrEqual(box.y);
+    expect(stage!.y).toBeGreaterThanOrEqual(box.y + box.height);
+    await expect(page.locator('.loader .pct')).toHaveText('0%');
+    await expect(page.locator('.loader .stage')).toHaveText('正在建置地形');
+    await expect(page.locator('.loader .pct')).toHaveCSS(
+      'font-family',
+      /JetBrains Mono/,
+    );
+    // no picture of any kind in the loader
+    await expect(page.locator('.loader img')).toHaveCount(0);
+    await context.close();
+  });
+
+  test('chunks pass through their stages from the centre outward and settle into a finished square with a blue ring', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await watch(page);
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.loader')).toBeHidden();
+    const frames = await seen(page);
+    expect(frames.length).toBeGreaterThan(40);
+    // before anything is drawn: one colour
+    expect(frames[0].colours).toBe(1);
+    expect(number(frames[0])).toBe(0);
+    // partway: several stages are on the map at once, the centre ahead of the rim
+    const mid = frames.filter((f) => number(f) >= 30 && number(f) <= 70);
+    expect(mid.length).toBeGreaterThan(5);
+    for (const f of mid) expect(f.colours).toBeGreaterThan(frames[0].colours);
+    expect(Math.max(...mid.map((f) => f.colours))).toBeGreaterThanOrEqual(5);
+    expect(mid.some((f) => f.centre === DONE && f.ring !== FRONTIER)).toBe(
+      true,
+    );
+    // the percentage only ever grows
+    frames.forEach((f, i) =>
+      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
+        number(frames[i - 1] ?? f),
+      ),
+    );
+    // finished: done inside, the frontier colour on the ring, the first grey on the border, to the very corner
+    const full = frames.filter((f) => f.pct === '100%');
+    expect(full.length).toBeGreaterThan(5);
+    for (const f of full) {
+      expect(f.centre).toBe(DONE);
+      expect(f.inner).toBe(DONE);
+      expect(f.ring).toBe(FRONTIER);
+      expect(f.border).toBe(FIRST_GREY);
+      expect(f.corner).toBe(FIRST_GREY);
+      expect(f.colours).toBe(3);
+    }
+    // the site's own greys and the overworld's blue, at every moment: no green, no other colour
+    const allowed = [
+      GROUND,
+      '13,18,23',
+      FIRST_GREY,
+      '111,121,132',
+      '154,163,173',
+      FRONTIER,
+      DONE,
+    ];
+    const used = new Set(frames.flatMap((f) => f.palette));
+    for (const colour of used) expect(allowed).toContain(colour);
+    expect(used.has(FRONTIER)).toBe(true);
+    // 100% is reached before the lift begins, and before the page is handed over
+    const lifting = frames.filter((f) => f.block < 1);
+    expect(lifting.length).toBeGreaterThan(5);
+    for (const f of lifting) expect(f.pct).toBe('100%');
+    for (const f of frames.filter((f) => f.ready)) expect(f.pct).toBe('100%');
+    const held = frames.filter((f) => f.pct === '100%' && f.block === 1);
+    expect(held.length).toBeGreaterThan(2);
+    // it starts by building; whether it also has to wait depends on the network of the moment
+    expect(frames[0].label).toBe('正在建置地形');
+  });
+
+  test('with the first scene stalled the map creeps, the label says the world is being entered, and it still lifts at the timeout', async ({
+    page,
+  }) => {
+    await page.route('**/CTEC_Members.webp', () => {
+      // never answered
+    });
+    await watch(page);
+    await openPage(page, '/');
+    await page
+      .locator('.dim[data-ready="true"]')
+      .waitFor({ timeout: LOADER_TIMEOUT_MS + 5000 });
+    await expect(page.locator('.loader')).toBeHidden();
+    await expect(page.locator('.hero h1')).toBeVisible();
+    const frames = await seen(page);
+    const labels = [...new Set(frames.map((f) => f.label))];
+    expect(labels).toEqual(['正在建置地形', '正在進入世界']);
+    // while it waits it never claims to be done, and it never stands still for long
+    const waiting = frames.filter(
+      (f) => f.label === '正在進入世界' && !f.ready,
+    );
+    expect(waiting.length).toBeGreaterThan(30);
+    const values = waiting.map(number);
+    expect(values[0]).toBeGreaterThanOrEqual(82);
+    expect(new Set(values.filter((v) => v < 100)).size).toBeGreaterThan(4);
+    // it creeps up to 95% and stays there; only the last third of a second, once the wait is over, goes beyond
+    const creeping = values.filter((v) => v <= 95);
+    const finishing = values.filter((v) => v > 95 && v < 100);
+    expect(creeping.length).toBeGreaterThan(100);
+    expect(finishing.length).toBeLessThan(creeping.length / 4);
+    // and it does finish: 100% before the lift
+    for (const f of frames.filter((f) => f.block < 1))
+      expect(f.pct).toBe('100%');
+    expect(frames.at(-1)!.pct).toBe('100%');
+  });
+
+  test('in English the two stages are named in English', async ({ page }) => {
+    await page.route('**/CTEC_Members.webp', () => {
+      // never answered
+    });
+    await watch(page);
+    await openPage(page, '/', { locale: 'en' });
+    await page
+      .locator('.dim[data-ready="true"]')
+      .waitFor({ timeout: LOADER_TIMEOUT_MS + 5000 });
+    const labels = [...new Set((await seen(page)).map((f) => f.label))];
+    // (the served HTML is in the default language until the reader's own is known)
+    expect(labels.slice(-2)).toEqual([
+      'Building terrain',
+      'Entering the world',
+    ]);
+    await expectNoMissingKeys(page);
+  });
+
+  test('reduced motion: the finished map at once, no build-up, and the loader goes', async ({
+    page,
+  }) => {
+    await watch(page);
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const frames = await seen(page);
+    expect(frames.length).toBeGreaterThan(3);
+    // the static markup says 0% until the page starts; after that only the finished map
+    const values = new Set(frames.map((f) => f.pct));
+    for (const v of values) expect(['0%', '100%']).toContain(v);
+    expect(values.has('100%')).toBe(true);
+    const drawn = frames.filter((f) => f.pct === '100%');
+    expect(drawn.length).toBeGreaterThan(1);
+    for (const f of drawn) {
+      expect(f.centre).toBe(DONE);
+      expect(f.ring).toBe(FRONTIER);
+      expect(f.border).toBe(FIRST_GREY);
+    }
+    await expect(page.locator('.hero h1')).toBeVisible();
+  });
+});
+
 test.describe('home: overworld', () => {
   test('the town scene shows behind the statement, with the label upright on the right', async ({
     page,
