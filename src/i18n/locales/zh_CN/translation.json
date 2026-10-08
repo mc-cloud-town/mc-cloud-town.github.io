@@ -342,7 +342,8 @@
       "menu": "菜单",
       "close": "关闭",
       "theme": "切换白天或夜晚",
-      "language": "语言"
+      "language": "语言",
+      "languageNow": "语言：{{language}}"
     },
     "dim": {
       "overworld": "主世界",

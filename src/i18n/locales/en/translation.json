@@ -346,7 +346,8 @@
       "menu": "Menu",
       "close": "Close",
       "theme": "Switch day or night",
-      "language": "Language"
+      "language": "Language",
+      "languageNow": "Language: {{language}}"
     },
     "dim": {
       "overworld": "OVERWORLD",

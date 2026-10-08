@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import {
   CloseOutlined,
   DiscordFilled,
-  GlobalOutlined,
   MenuOutlined,
   MoonOutlined,
   SunOutlined,
@@ -14,20 +13,12 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { serverLink } from '@/constants';
 import { holdPageScroll } from '@/lib/dimensions/pageScroll';
+import { LanguageMenu } from './LanguageMenu';
 
 type Current = 'progress' | 'members';
 
 /** Same width as the bar's menu breakpoint in shell.css. */
 const BAR_BREAKPOINT = '(min-width: 1101px)';
-
-const LANGS = [
-  { value: 'zh_TW', label: '繁' },
-  { value: 'zh_CN', label: '简' },
-  { value: 'en', label: 'EN' },
-];
-
-/** `zh` is the build-time default and is the same content as zh_TW. */
-const normalise = (lng: string) => (lng === 'zh' ? 'zh_TW' : lng);
 
 /** Keys that scroll a page, as a fraction of the sheet's height (±Infinity: to the very end). */
 const SCROLL_KEYS: Record<string, number> = {
@@ -40,10 +31,12 @@ const SCROLL_KEYS: Record<string, number> = {
   Home: -Infinity,
 };
 
+/** Something that uses the scroll keys itself: a field, or the language list (its arrows move in the list). */
 const isField = (el: EventTarget | null) =>
   el instanceof HTMLSelectElement ||
   el instanceof HTMLInputElement ||
-  el instanceof HTMLTextAreaElement;
+  el instanceof HTMLTextAreaElement ||
+  (el instanceof Element && Boolean(el.closest('.lang')));
 
 /**
  * While the sheet is open the page behind it must not move, and nothing about its layout may change:
@@ -111,7 +104,7 @@ export const SiteBar = ({
   variant: 'home' | 'inner';
   current?: Current;
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const sheet = useRef<HTMLDivElement>(null);
@@ -150,7 +143,11 @@ export const SiteBar = ({
 
   useEffect(() => {
     if (!open || !sheet.current) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    // Escape closes the sheet, unless it is the language list that is being closed with it
+    const onKey = (e: KeyboardEvent) =>
+      e.key === 'Escape' &&
+      !(e.target instanceof Element && e.target.closest('.lang-list')) &&
+      setOpen(false);
     document.addEventListener('keydown', onKey);
     release.current = holdPage(sheet.current);
     return () => {
@@ -215,24 +212,7 @@ export const SiteBar = ({
             <MoonOutlined />
           </span>
         </button>
-        <span className='lang'>
-          <span className='mark' aria-hidden='true'>
-            <GlobalOutlined />
-          </span>
-          <select
-            className='pill'
-            data-action='language'
-            aria-label={t('dimensions.nav.language')}
-            value={normalise(i18n.language)}
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
-          >
-            {LANGS.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </span>
+        <LanguageMenu />
         <a
           className='pill discord'
           href={serverLink.discord}

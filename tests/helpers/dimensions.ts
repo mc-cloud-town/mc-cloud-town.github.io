@@ -44,6 +44,21 @@ export const openPage = async (
   await page.evaluate(() => document.fonts.ready);
 };
 
+/** Choose a language from the bar's own list (the pill with the globe), and wait until the list has closed. */
+export const setLanguage = async (page: Page, code: Locale) => {
+  const trigger = page.locator('.dim-bar [data-action="language"]');
+  await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await page
+    .locator(`.dim-bar .lang-list [role="option"][data-value="${code}"]`)
+    .click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.dim-bar .lang-list')).toHaveCSS(
+    'visibility',
+    'hidden',
+  );
+};
+
 export const expectNoHorizontalScroll = async (page: Page) => {
   const [scroll, inner] = await page.evaluate(() => [
     document.documentElement.scrollWidth,

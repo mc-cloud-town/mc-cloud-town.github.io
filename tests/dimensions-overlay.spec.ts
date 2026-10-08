@@ -169,3 +169,43 @@ test.describe('home: the menu over the film', () => {
       .toBeGreaterThan(pinned.y);
   });
 });
+
+test.describe('shell: the language list is an overlay too', () => {
+  test('opening it changes nothing about the page: width, scrollbar, positions, scroll', async ({
+    page,
+    isMobile,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 768 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await page.evaluate(() => window.scrollTo(0, 500));
+    const measure = () =>
+      page.evaluate(() => {
+        const x = (sel: string) =>
+          document.querySelector(sel)!.getBoundingClientRect().x;
+        return {
+          client: document.documentElement.clientWidth,
+          scrollbar: window.innerWidth - document.documentElement.clientWidth,
+          width: document.documentElement.scrollWidth,
+          height: document.documentElement.scrollHeight,
+          logo: x('.dim-bar .logo'),
+          pill: x('.dim-bar [data-action="language"]'),
+          discord: x('.dim-bar .discord'),
+          title: x('.head h1'),
+          body: getComputedStyle(document.body).overflowY,
+          html: getComputedStyle(document.documentElement).overflowY,
+          y: window.scrollY,
+        };
+      });
+    const before = await measure();
+    if (!isMobile) expect(before.scrollbar).toBeGreaterThan(0);
+    await page.locator('.dim-bar [data-action="language"]').click();
+    const list = page.locator('.dim-bar .lang-list');
+    await expect(list).toHaveCSS('opacity', '1');
+    expect(await measure()).toEqual(before);
+    // the wheel still moves the page under it: the list holds nothing
+    await page.keyboard.press('Escape');
+    await expect(list).toHaveCSS('visibility', 'hidden');
+    expect(await measure()).toEqual(before);
+  });
+});

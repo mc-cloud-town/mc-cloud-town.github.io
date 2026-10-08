@@ -28,6 +28,7 @@ import {
   expectTextFits,
   LOCALES,
   openPage,
+  setLanguage,
   VIEWPORTS,
 } from './helpers/dimensions';
 
@@ -60,9 +61,7 @@ test.describe('dimensions shell', () => {
   test('language select changes the nav copy', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/member/');
-    await page
-      .locator('.dim-bar select[data-action="language"]')
-      .selectOption('en');
+    await setLanguage(page, 'en');
     await expect(page.locator('.dim-bar nav')).toContainText('Overworld');
     await expectNoMissingKeys(page);
   });
@@ -501,9 +500,10 @@ test.describe('dimensions shell: icons and state changes', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/member/');
     await expect(page.locator('.dim-bar .lang svg')).toHaveCount(1);
+    // the pill says what it is for and what is chosen
     await expect(
-      page.locator('.dim-bar select[data-action="language"]'),
-    ).toHaveAccessibleName('語言');
+      page.locator('.dim-bar [data-action="language"]'),
+    ).toHaveAccessibleName('語言：繁體中文');
     await expect(page.locator('.dim-bar .discord svg')).toHaveCount(1);
     await expect(page.locator('.dim-bar .discord')).toContainText('Discord');
     // the decorative icons say nothing to a screen reader
@@ -565,5 +565,327 @@ test.describe('dimensions shell: icons and state changes', () => {
     });
     expect(moving).toBeGreaterThan(0);
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  });
+});
+
+test.describe('dimensions shell: the language menu', () => {
+  const trigger = (page: Page) =>
+    page.locator('.dim-bar [data-action="language"]');
+  const list = (page: Page) => page.locator('.dim-bar .lang-list');
+  const options = (page: Page) => list(page).locator('[role="option"]');
+  /** The option the keyboard is on. */
+  const active = (page: Page) =>
+    list(page).locator('[role="option"][data-active="true"]');
+
+  test('the pill opens a list in the design, with the current language marked', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    // no system control any more
+    await expect(page.locator('.dim-bar select')).toHaveCount(0);
+    await expect(trigger(page)).toHaveAttribute('aria-haspopup', 'listbox');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(trigger(page)).toContainText('繁');
+    await expect(list(page)).toHaveCSS('visibility', 'hidden');
+    await trigger(page).click();
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'true');
+    await expect(list(page)).toHaveAttribute('role', 'listbox');
+    await expect(list(page)).toHaveCSS('opacity', '1');
+    // endonyms, the same in every language
+    await expect(options(page)).toHaveText(['繁體中文', '简体中文', 'English']);
+    await expect(options(page).nth(0)).toHaveAttribute('aria-selected', 'true');
+    await expect(options(page).nth(1)).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+    // the current one in the accent colour of the page (the End, on the members page)
+    await expect(options(page).nth(0)).toHaveCSS('color', 'rgb(205, 176, 255)');
+    await expect(options(page).nth(2)).toHaveCSS('color', 'rgb(242, 244, 246)');
+    // a surface of the bar's family: the page's ground, a hairline, rounded; under the pill, flush with its right edge
+    await expect(list(page)).toHaveCSS('background-color', 'rgb(6, 8, 11)');
+    await expect(list(page)).toHaveCSS('border-top-width', '1px');
+    await expect(list(page)).not.toHaveCSS('border-top-left-radius', '0px');
+    const [pill, panel] = await Promise.all([
+      trigger(page).boundingBox(),
+      list(page).boundingBox(),
+    ]);
+    expect(panel!.y).toBeGreaterThanOrEqual(pill!.y + pill!.height);
+    expect(panel!.y - (pill!.y + pill!.height)).toBeLessThan(16);
+    expect(
+      Math.abs(panel!.x + panel!.width - (pill!.x + pill!.width)),
+    ).toBeLessThan(1.5);
+    // choosing switches, closes, and is remembered
+    await options(page).nth(2).click();
+    await expect(page.locator('.dim-bar nav')).toContainText('Overworld');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(list(page)).toHaveCSS('visibility', 'hidden');
+    await expect(trigger(page)).toContainText('EN');
+    await expect(trigger(page)).toBeFocused();
+    await page.reload();
+    await expect(page.locator('.dim-bar nav')).toContainText('Overworld');
+    await trigger(page).click();
+    await expect(options(page).nth(2)).toHaveAttribute('aria-selected', 'true');
+    await expect(options(page)).toHaveText(['繁體中文', '简体中文', 'English']);
+    await expectNoMissingKeys(page);
+  });
+
+  test('it is operated from the keyboard: arrows move, Enter chooses, Escape and Tab close', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await trigger(page).focus();
+    await page.keyboard.press('Enter');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'true');
+    // it opens on the current language
+    await expect(active(page)).toHaveText('繁體中文');
+    await expect(list(page)).toBeFocused();
+    expect(await list(page).getAttribute('aria-activedescendant')).toBe(
+      await active(page).getAttribute('id'),
+    );
+    await page.keyboard.press('ArrowDown');
+    await expect(active(page)).toHaveText('简体中文');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect(active(page)).toHaveText('English');
+    await page.keyboard.press('Home');
+    await expect(active(page)).toHaveText('繁體中文');
+    await page.keyboard.press('End');
+    await expect(active(page)).toHaveText('English');
+    await page.keyboard.press('ArrowUp');
+    await expect(active(page)).toHaveText('简体中文');
+    // Escape: closed, nothing chosen, focus back on the pill
+    await page.keyboard.press('Escape');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(trigger(page)).toBeFocused();
+    await expect(page.locator('.dim-bar nav')).toContainText('主世界');
+    // Space opens too; Enter chooses
+    await page.keyboard.press('Space');
+    await expect(list(page)).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.dim-bar nav')).toContainText('地狱');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(trigger(page)).toBeFocused();
+    await expect(trigger(page)).toContainText('简');
+    // the arrow keys open it as well; Space chooses
+    await page.keyboard.press('ArrowDown');
+    await expect(active(page)).toHaveText('简体中文');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Space');
+    await expect(page.locator('.dim-bar nav')).toContainText('地獄');
+    // Tab closes and moves on
+    await page.keyboard.press('Enter');
+    await expect(list(page)).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(list(page)).toHaveCSS('visibility', 'hidden');
+    expect(
+      await page.evaluate(
+        () => !!document.activeElement?.closest('.dim-bar .lang'),
+      ),
+    ).toBe(false);
+    await expect(page.locator('.dim-bar nav')).toContainText('地獄');
+  });
+
+  test('a click outside closes it, and so does the pill itself', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await trigger(page).click();
+    await expect(list(page)).toHaveCSS('opacity', '1');
+    await page.mouse.click(400, 500);
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(list(page)).toHaveCSS('visibility', 'hidden');
+    await trigger(page).click();
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'true');
+    await trigger(page).click();
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('.dim-bar nav')).toContainText('主世界');
+    // closed, it is out of reach of the pointer and of Tab
+    expect(
+      await list(page).evaluate((el) => [
+        (el as HTMLElement).inert,
+        getComputedStyle(el).pointerEvents,
+      ]),
+    ).toEqual([true, 'none']);
+  });
+
+  test('it opens and closes as a transition: fading in while it comes down from the pill', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    const run = () =>
+      page.evaluate(async () => {
+        const el = document.querySelector<HTMLElement>('.dim-bar .lang-list')!;
+        document
+          .querySelector<HTMLElement>('.dim-bar [data-action="language"]')!
+          .click();
+        await new Promise((r) => setTimeout(r, 0));
+        const timing = el.getAnimations().map((a) => {
+          const t = a.effect!.getComputedTiming();
+          return [
+            (a as CSSTransition).transitionProperty,
+            Number(t.delay ?? 0) + Number(t.duration ?? 0),
+          ] as [string, number];
+        });
+        const frames: { opacity: number; y: number; visible: boolean }[] = [];
+        const t0 = performance.now();
+        while (performance.now() - t0 < 700) {
+          await new Promise((r) => requestAnimationFrame(r));
+          const c = getComputedStyle(el);
+          frames.push({
+            opacity: +c.opacity,
+            y: new DOMMatrix(c.transform).f,
+            visible: c.visibility === 'visible',
+          });
+        }
+        return { timing, frames };
+      });
+    const opening = await run();
+    const fade = opening.timing.find(([p]) => p === 'opacity');
+    const move = opening.timing.find(([p]) => p === 'transform');
+    expect(fade?.[1]).toBeGreaterThanOrEqual(150);
+    expect(fade?.[1]).toBeLessThanOrEqual(450);
+    expect(move?.[1]).toBeGreaterThanOrEqual(150);
+    expect(move?.[1]).toBeLessThanOrEqual(450);
+    const o = opening.frames.map((f) => f.opacity);
+    // seen on its way, rising and never falling back, and it arrives in place
+    expect(o.some((v) => v > 0.02 && v < 0.98)).toBe(true);
+    o.forEach((v, i) =>
+      expect(v, `frame ${i}`).toBeGreaterThanOrEqual((o[i - 1] ?? 0) - 0.001),
+    );
+    expect(opening.frames[0].y).toBeLessThan(0);
+    expect(opening.frames.at(-1)).toEqual({ opacity: 1, y: 0, visible: true });
+    const closing = await run();
+    const out = closing.frames.map((f) => f.opacity);
+    expect(out.some((v) => v > 0.02 && v < 0.98)).toBe(true);
+    // still to be seen while it fades, gone from sight only at the end
+    expect(closing.frames[0].visible).toBe(true);
+    expect(closing.frames.at(-1)!.opacity).toBe(0);
+    expect(closing.frames.at(-1)!.visible).toBe(false);
+    const leave = closing.timing.find(([p]) => p === 'opacity');
+    expect(leave?.[1]).toBeGreaterThanOrEqual(100);
+    expect(leave?.[1]).toBeLessThan(fade![1]);
+  });
+
+  test('reduced motion: a brief fade, no travel', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/', { reducedMotion: true });
+    const run = await page.evaluate(async () => {
+      const el = document.querySelector<HTMLElement>('.dim-bar .lang-list')!;
+      const before = getComputedStyle(el).transform;
+      document
+        .querySelector<HTMLElement>('.dim-bar [data-action="language"]')!
+        .click();
+      await new Promise((r) => setTimeout(r, 0));
+      return {
+        before,
+        during: getComputedStyle(el).transform,
+        longest: Math.max(
+          0,
+          ...el.getAnimations().map((a) => {
+            const t = a.effect!.getComputedTiming();
+            return Number(t.delay ?? 0) + Number(t.duration ?? 0);
+          }),
+        ),
+      };
+    });
+    expect(run.before).toBe('none');
+    expect(run.during).toBe('none');
+    expect(run.longest).toBeGreaterThan(0);
+    expect(run.longest).toBeLessThanOrEqual(120);
+    await expect(list(page)).toHaveCSS('opacity', '1');
+    await options(page).nth(2).click();
+    await expect(page.locator('.dim-bar nav')).toContainText('Overworld');
+  });
+
+  for (const [width, height, theme] of [
+    [390, 844, 'light'],
+    [844, 390, 'dark'],
+    [1024, 768, 'dark'],
+  ] as const)
+    test(`at ${width}×${height} the list is on screen and every row is big enough to tap (${theme})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/member/', { theme });
+      await trigger(page).click();
+      await expect(list(page)).toHaveCSS('opacity', '1');
+      const rows = await options(page).evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect();
+          return {
+            w: r.width,
+            h: r.height,
+            inside:
+              r.left >= 0 &&
+              r.top >= 0 &&
+              r.right <= window.innerWidth &&
+              r.bottom <= window.innerHeight,
+            size: parseFloat(getComputedStyle(el).fontSize),
+          };
+        }),
+      );
+      expect(rows).toHaveLength(3);
+      for (const r of rows) {
+        expect(r.w).toBeGreaterThanOrEqual(44);
+        expect(r.h).toBeGreaterThanOrEqual(44);
+        expect(r.inside).toBe(true);
+        expect(r.size).toBeGreaterThanOrEqual(14);
+      }
+      await expectNoHorizontalScroll(page);
+      await expectTapTargets(page);
+      if (theme === 'light')
+        await expect(list(page)).toHaveCSS(
+          'background-color',
+          'rgb(238, 242, 245)',
+        );
+    });
+
+  test('next to the open menu sheet: it opens above the sheet, and neither closes the other', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await page.evaluate(() => window.scrollTo(0, 300));
+    await openSheet(page);
+    const sheet = page.locator('.dim-sheet');
+    await trigger(page).click();
+    await expect(list(page)).toHaveCSS('opacity', '1');
+    await expect(sheet).toHaveCSS('opacity', '1');
+    // the list is what is on top where it stands
+    const onTop = await options(page)
+      .nth(1)
+      .evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return !!document
+          .elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+          ?.closest('.lang-list');
+      });
+    expect(onTop).toBe(true);
+    // the arrows move in the list; they do not scroll anything
+    await page.keyboard.press('ArrowDown');
+    await expect(active(page)).toHaveText('简体中文');
+    // Escape closes the list only
+    await page.keyboard.press('Escape');
+    await expect(trigger(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(sheet).toHaveCSS('opacity', '1');
+    await expect(page.locator('.dim-bar [data-action="menu"]')).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    // choose one: the sheet stays, in the new language, with the page still held
+    await setLanguage(page, 'en');
+    await expect(sheet.locator('a').first()).toHaveText('Overworld');
+    await expect(sheet).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => window.scrollY)).toBe(300);
+    await page.keyboard.press('Escape');
+    await expect(sheet).toHaveCSS('visibility', 'hidden');
   });
 });

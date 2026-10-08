@@ -5,6 +5,7 @@ import {
   expectTapTargets,
   expectTextFits,
   openPage,
+  setLanguage,
 } from './helpers/dimensions';
 import { ready, scrollToSection, visibleScenes } from './helpers/home';
 import { STAR_DRIFT } from '../src/constants/starfield';
@@ -362,7 +363,6 @@ test.describe('home: overworld', () => {
     await ready(page);
     await scrollToSection(page, '[data-work="overworld-1"]', 0.2);
     expect(await visibleScenes(page)).toEqual(['w2']);
-    const language = page.locator('.dim-bar select[data-action="language"]');
     const scenes = async (lang: string) => {
       for (const [i, scene] of ['w1', 'w2', 'w3'].entries()) {
         await scrollToSection(page, `[data-work="overworld-${i}"]`, 0.2);
@@ -381,7 +381,7 @@ test.describe('home: overworld', () => {
       }
     };
 
-    await language.selectOption('en');
+    await setLanguage(page, 'en');
     await expect(page.locator('[data-work="overworld-1"] h3')).toHaveText(
       'The new spawn',
     );
@@ -398,7 +398,7 @@ test.describe('home: overworld', () => {
     for (const line of await lines.all())
       await expect(line).toHaveCSS('opacity', '1');
 
-    await language.selectOption('zh_CN');
+    await setLanguage(page, 'zh_CN');
     await expect(page.locator('[data-work="overworld-1"] h3')).toHaveText(
       '新出生点',
     );
@@ -923,9 +923,7 @@ test.describe('home: nether', () => {
     await ready(page);
     await scrollToLedgerStep(page, 0.5);
     await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
-    await page
-      .locator('.dim-bar select[data-action="language"]')
-      .selectOption('en');
+    await setLanguage(page, 'en');
     await expect(page.locator('.ledger-now h3')).toHaveText(
       'Million-rate piglin trading',
     );
@@ -1625,8 +1623,7 @@ test.describe('home: the end', () => {
     await walkTheLedger(page);
     await scrollToSection(page, '[data-work="end-0"]', 0.2);
     expect(await visibleScenes(page)).toEqual(['moon']);
-    const language = page.locator('.dim-bar select[data-action="language"]');
-    await language.selectOption('en');
+    await setLanguage(page, 'en');
     await expect(page.locator('[data-work="end-0"] h3')).toHaveText(
       'Moon Palace',
     );
@@ -1670,7 +1667,7 @@ test.describe('home: the end', () => {
     await scrollToSection(page, '.rank', -0.3);
     expect(await visibleScenes(page)).toEqual(['nether']);
     // a second switch, from above the End
-    await language.selectOption('zh_CN');
+    await setLanguage(page, 'zh_CN');
     await expect(page.locator('[data-work="end-0"] h3')).toHaveText('月宫');
     for (const [sel, off, scene] of STOPS) {
       await scrollToSection(page, sel, off);
