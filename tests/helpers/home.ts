@@ -293,3 +293,194 @@ export const landedOn = async (page: Page, selector: string) => {
     .toBeLessThanOrEqual(1);
   await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
 };
+
+/** Opacity of the white-out, 0 while it is hidden. */
+export const flashState = (page: Page) =>
+  page.locator('.flash').evaluate((el) => {
+    const s = getComputedStyle(el);
+    return s.visibility === 'hidden' ? 0 : +s.opacity;
+  });
+/** Without smooth scrolling the site's own `scroll-behavior` would carry the page there: jump instead. */
+export const jumpTo = (page: Page, sel: string, off = 0) =>
+  page.evaluate(
+    ([s, o]) => {
+      const el = document.querySelector(s as string)!;
+      window.scrollTo({
+        top:
+          el.getBoundingClientRect().top +
+          window.scrollY +
+          (o as number) * window.innerHeight,
+        behavior: 'instant',
+      });
+    },
+    [sel, off] as const,
+  );
+
+/** Pictures of the nether ledger that are showing (their indices). */
+export const shownPictures = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('[data-ledger]')]
+      .filter((i) => +getComputedStyle(i).opacity > 0.5)
+      .map((i) => i.dataset.ledger),
+  );
+
+/** One frame of the loader, as `watchLoader` records it. */
+export interface LoaderFrame {
+  pct: string;
+  label: string;
+  /** opacity of the block that holds the map: below 1 once the lift has begun */
+  block: number;
+  ready: boolean;
+  colours: number;
+  /** every colour on the map */
+  palette: string[];
+  centre: string;
+  ring: string;
+  inner: string;
+  border: string;
+  corner: string;
+}
+/** Record the loader on every frame from the very first one. */
+export const watchLoader = (page: Page) =>
+  page.addInitScript(() => {
+    const w = window as unknown as { __loader: unknown[] };
+    w.__loader = [];
+    const tick = () => {
+      const map = document.querySelector<HTMLCanvasElement>('.loader canvas');
+      const block = document.querySelector('.loader-in');
+      if (map && block) {
+        const d = map
+          .getContext('2d')!
+          .getImageData(0, 0, map.width, map.height).data;
+        const at = (x: number, y: number) => {
+          const i = (y * map.width + x) * 4;
+          // nothing drawn yet: the loader's own ground shows through
+          return d[i + 3] === 0 ? '6,8,11' : `${d[i]},${d[i + 1]},${d[i + 2]}`;
+        };
+        const all = new Set<string>();
+        for (let y = 0; y < map.height; y++)
+          for (let x = 0; x < map.width; x++) all.add(at(x, y));
+        w.__loader.push({
+          pct: document.querySelector('.loader .pct')?.textContent ?? '',
+          label: document.querySelector('.loader .stage')?.textContent ?? '',
+          block: +getComputedStyle(block).opacity,
+          ready:
+            document.querySelector<HTMLElement>('.dim--home')?.dataset.ready ===
+            'true',
+          colours: all.size,
+          palette: [...all],
+          centre: at(10, 10),
+          inner: at(13, 10),
+          ring: at(18, 10),
+          border: at(19, 10),
+          corner: at(0, 0),
+        });
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+export const loaderFrames = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { __loader: LoaderFrame[] }).__loader,
+  );
+
+/** One frame of `recordHeld`. */
+export interface HeldFrame {
+  cover: number;
+  y: number;
+  inert: boolean;
+  stopped: boolean;
+  wheel: boolean;
+}
+
+/**
+ * Record on every frame from now on: the cover, the page, and whether the page is held (inert, smooth scroll stopped);
+ * and once, while the cover comes in, a turn of the wheel. Read the frames with `heldFrames`.
+ */
+export const recordHeld = (page: Page) =>
+  page.evaluate(() => {
+    const w = window as unknown as {
+      __held: {
+        cover: number;
+        y: number;
+        inert: boolean;
+        stopped: boolean;
+        wheel: boolean;
+      }[];
+      __heldRaf: number;
+    };
+    w.__held = [];
+    let wheeled = false;
+    const tick = () => {
+      const el = document.querySelector('.dim-cover')!;
+      const c = getComputedStyle(el);
+      const cover = c.visibility === 'hidden' ? 0 : +c.opacity;
+      let wheel = false;
+      if (!wheeled && cover > 0.3 && cover < 0.9) {
+        wheeled = wheel = true;
+        document.elementFromPoint(195, 500)!.dispatchEvent(
+          new WheelEvent('wheel', {
+            deltaY: 400,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+      w.__held.push({
+        cover,
+        y: Math.round(window.scrollY),
+        inert: document.querySelector('main')!.inert,
+        stopped: document.documentElement.classList.contains('lenis-stopped'),
+        wheel,
+      });
+      w.__heldRaf = requestAnimationFrame(tick);
+    };
+    w.__heldRaf = requestAnimationFrame(tick);
+  });
+
+export const heldFrames = (page: Page): Promise<HeldFrame[]> =>
+  page.evaluate(() => {
+    const w = window as unknown as { __held: HeldFrame[]; __heldRaf: number };
+    cancelAnimationFrame(w.__heldRaf);
+    return w.__held;
+  });
+
+/** One frame of `watchLanding`. */
+export interface LandingFrame {
+  loader: number;
+  top: number;
+  scenes: string;
+}
+
+/** From the first frame of the next page: is the loader still whole, where is the target (`id`: a selector), which scenes show? */
+export const watchLanding = (page: Page, id: string) =>
+  page.addInitScript((id) => {
+    const w = window as unknown as {
+      __seen: { loader: number; top: number; scenes: string }[];
+    };
+    w.__seen = [];
+    const tick = () => {
+      const loader = document.querySelector('.loader');
+      const target = document.querySelector(id);
+      if (document.querySelector('.dim--home') && target) {
+        const s = loader && getComputedStyle(loader);
+        w.__seen.push({
+          loader: !s || s.visibility === 'hidden' ? 0 : +s.opacity,
+          top: Math.round(target.getBoundingClientRect().top),
+          scenes: [...document.querySelectorAll<HTMLElement>('.scene')]
+            .filter((el) => {
+              const c = getComputedStyle(el);
+              return c.visibility !== 'hidden' && +c.opacity > 0.5;
+            })
+            .map((el) => el.dataset.scene)
+            .join('+'),
+        });
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, id);
+
+export const landingFrames = (page: Page): Promise<LandingFrame[]> =>
+  page.evaluate(() => (window as unknown as { __seen: LandingFrame[] }).__seen);
