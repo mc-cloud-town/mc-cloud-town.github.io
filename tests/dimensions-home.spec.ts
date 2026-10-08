@@ -8,6 +8,7 @@ import {
 } from './helpers/dimensions';
 import { ready, scrollToSection, visibleScenes } from './helpers/home';
 import { STAR_DRIFT } from '../src/constants/starfield';
+import { readFileSync } from 'node:fs';
 
 test.describe('home: spawn', () => {
   test('the loader gives way to the title over the spawn scene', async ({
@@ -653,8 +654,18 @@ test.describe('home: nether', () => {
     await openPage(page, '/');
     await ready(page);
     await scrollToSection(page, '.rank', -0.3);
-    await expect(page.locator('.rank h2')).toContainText('世界第六');
+    // one line only, and it is the accent-coloured one
+    await expect(page.locator('.rank h2')).toHaveText('亞洲第一');
     await expect(page.locator('.rank h2 em')).toHaveText('亞洲第一');
+    await expect(page.locator('.rank h2 em')).toHaveCount(1);
+    // no locale claims a world ranking any more
+    for (const locale of ['zh_TW', 'zh_CN', 'en']) {
+      const rank: string[] = JSON.parse(
+        readFileSync(`src/i18n/locales/${locale}/translation.json`, 'utf8'),
+      ).dimensions.nether.rank;
+      expect(rank, locale).toHaveLength(1);
+      expect(rank.join(' '), locale).not.toMatch(/第六|6th|sixth/i);
+    }
     await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
     await expect(page.locator('.rank h2 em')).toHaveCSS(
       'color',
