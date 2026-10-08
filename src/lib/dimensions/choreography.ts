@@ -8,6 +8,7 @@ import {
   clearCover,
   coverIn,
   coverOut,
+  hashId,
   nextFrame,
   setSectionJumper,
   wait,
@@ -405,13 +406,17 @@ export const buildChoreography = (
   const arrive = (el: HTMLElement, id: string) => {
     anchor = { el, y: window.scrollY };
     // one entry in the history, however many sections the reader visits
-    window.history.replaceState(
-      window.history.state,
-      '',
-      id === 'top'
-        ? window.location.pathname + window.location.search
-        : `#${id}`,
-    );
+    try {
+      window.history.replaceState(
+        window.history.state,
+        '',
+        id === 'top'
+          ? window.location.pathname + window.location.search
+          : `#${id}`,
+      );
+    } catch {
+      // a browser may refuse (the address was replaced too often): the reader has arrived all the same
+    }
     (el.matches('[data-heading]')
       ? el
       : el.querySelector<HTMLElement>('[data-heading]')
@@ -435,37 +440,54 @@ export const buildChoreography = (
     covered = true;
     // the reader is leaving the place they were kept on: a re-measure during the cut must not take them back
     anchor = null;
-    // the ground of where it leads: the End is dark whatever the theme
-    // Only under a whole cover does the page move: a cover that is still lifting from the jump before turns round
-    // first. One that was taken away meanwhile (the page was restored from the cache) covers nothing: no jump.
-    if (!(await coverIn({ tone: dimOf(el) === 'end' ? 'night' : 'theme' }))) {
-      if (!stale()) covered = false;
-      return;
+    let left = false;
+    const go = () => {
+      left = true;
+      return leave?.();
+    };
+    try {
+      // Only under a whole cover does the page move: a cover that is still lifting from the jump before turns round
+      // first. One that was taken away meanwhile (the page was restored from the cache) covers nothing: no jump.
+      // The ground of where it leads: the End is dark whatever the theme.
+      if (!(await coverIn({ tone: dimOf(el) === 'end' ? 'night' : 'theme' })))
+        return;
+      // overtaken by a later jump, or the place itself has gone from the page: nowhere to take the reader
+      if (stale() || !el.isConnected) return;
+      const gone = go();
+      moveTo(top(el));
+      settle();
+      await Promise.all([gone, wait(COVER_HOLD_MS)]);
+      await nextFrame();
+      if (stale() || !el.isConnected) return;
+      // the dimension has changed under the cover, and with it possibly the layout: measured once more
+      moveTo(top(el));
+      settle();
+      arrive(el, id);
+      // the opening of the target plays again as the cover lifts
+      ScrollTrigger.getAll().forEach((st) => {
+        if (
+          st.animation &&
+          !st.vars.scrub &&
+          st.progress > 0 &&
+          st.trigger &&
+          el.contains(st.trigger)
+        )
+          st.animation.restart();
+      });
+    } finally {
+      // However the cut ended (landed, nowhere to go, something threw), the cover it brought is taken away again
+      // and the page is the reader's. Not by a cut that was overtaken: the cover then belongs to the later jump,
+      // which lifts it itself. And not after the page has gone: its cleanup has cleared the cover already.
+      try {
+        // what the reader came from (the sheet) goes in any case, and the cover lifts only when it has
+        if (!left && !stale()) await go();
+      } finally {
+        if (!stale()) {
+          await coverOut();
+          if (!stale()) covered = false;
+        }
+      }
     }
-    if (stale()) return;
-    const left = leave?.();
-    moveTo(top(el));
-    settle();
-    await Promise.all([left, wait(COVER_HOLD_MS)]);
-    await nextFrame();
-    if (stale()) return;
-    // the dimension has changed under the cover, and with it possibly the layout: measured once more
-    moveTo(top(el));
-    settle();
-    arrive(el, id);
-    // the opening of the target plays again as the cover lifts
-    ScrollTrigger.getAll().forEach((st) => {
-      if (
-        st.animation &&
-        !st.vars.scrub &&
-        st.progress > 0 &&
-        st.trigger &&
-        el.contains(st.trigger)
-      )
-        st.animation.restart();
-    });
-    await coverOut();
-    if (!stale()) covered = false;
   };
   const unjump = setSectionJumper((id, leave) => {
     const el = place(id);
@@ -486,9 +508,8 @@ export const buildChoreography = (
 
   // Arriving with a hash: the loader is the cover. It is still whole now, so the page goes there at once,
   // measured with the pin in place.
-  const landing =
-    window.location.hash &&
-    place(decodeURIComponent(window.location.hash.slice(1)));
+  const hash = hashId(window.location.hash);
+  const landing = hash && place(hash);
   if (landing) {
     ScrollTrigger.refresh();
     moveTo(top(landing));

@@ -3036,6 +3036,236 @@ test.describe('home: a jump that interrupts a jump', () => {
   });
 });
 
+test.describe('home: a cover is never left stuck', () => {
+  /** No cover, nothing inert, and the wheel moves the page. */
+  const free = async (page: Page) => {
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveAttribute('data-on', 'false');
+    await expect(cover).toHaveCSS('opacity', '0');
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+    await expect(cover).toHaveCSS('pointer-events', 'none');
+    // nothing of the page is inert: only what is closed (the sheet, the language list)
+    expect(
+      await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[inert]')].map(
+          (el) => el.className,
+        ),
+      ),
+    ).toEqual(['lang-list', 'dim-sheet']);
+    const y = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(720, 450);
+    await page.mouse.wheel(0, y > 2000 ? -300 : 300);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).not.toBe(y);
+    // let the smooth scroll run out
+    await page.waitForTimeout(1500);
+  };
+  const bar = (page: Page, d: string) =>
+    page.locator(`.dim-bar nav a[data-d="${d}"]`);
+  const start = async (page: Page, reducedMotion = false) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion });
+    await ready(page);
+    await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    return errors;
+  };
+
+  for (const reducedMotion of [false, true])
+    test(`a cut that fails under the cover lets the page go${reducedMotion ? ', with reduced motion too' : ''}`, async ({
+      page,
+    }) => {
+      const errors = await start(page, reducedMotion);
+      // the landing on the respawn fails, once: its heading cannot take the focus
+      await page.evaluate(() => {
+        const h = document.querySelector<HTMLElement>(
+          '#respawn [data-heading]',
+        )!;
+        h.focus = () => {
+          delete (h as { focus?: unknown }).focus;
+          (window as unknown as { __failed: boolean }).__failed = true;
+          throw new Error('the landing failed');
+        };
+      });
+      await record(page);
+      await bar(page, 'respawn').click();
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => (window as unknown as { __failed?: boolean }).__failed,
+          ),
+        )
+        .toBe(true);
+      // it failed under a whole cover, and the cover lifts all the same
+      await free(page);
+      const frames = await recorded(page);
+      expect(Math.max(...frames.map((f) => f.cover))).toBe(1);
+      // not swallowed: the failure is reported, once
+      expect(errors).toEqual(['the landing failed']);
+      // and the next jumps are ordinary ones: a far one cuts and lands
+      await record(page);
+      await bar(page, 'overworld').click();
+      await landedOn(page, '#overworld');
+      expect(await coverAtLanding(page)).toBe(1);
+      await expect(page.locator('#overworld [data-heading]')).toBeFocused();
+      if (!reducedMotion) {
+        // a near one travels, with no cover: nothing still believes that a cover is up
+        await record(page);
+        await bar(page, 'nether').click();
+        await landedOn(page, '#nether');
+        expect(Math.max(...(await recorded(page)).map((f) => f.cover))).toBe(0);
+      }
+      await free(page);
+      expect(errors).toEqual(['the landing failed']);
+    });
+
+  test('a history that refuses another entry does not stop a jump', async ({
+    page,
+  }) => {
+    const errors = await start(page);
+    // as a browser does when the address is replaced too often
+    await page.evaluate(() => {
+      window.history.replaceState = () => {
+        (window as unknown as { __refused: boolean }).__refused = true;
+        throw new DOMException('too many calls', 'SecurityError');
+      };
+    });
+    await bar(page, 'respawn').click();
+    await landedOn(page, '#respawn');
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __refused?: boolean }).__refused,
+      ),
+    ).toBe(true);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await expect(page.locator('#respawn h2')).toBeFocused();
+    // a travel ends the same way
+    await bar(page, 'end').click();
+    await landedOn(page, '#end');
+    await expect(page.locator('#end [data-heading]')).toBeFocused();
+    await free(page);
+    expect(errors).toEqual([]);
+  });
+
+  test('a target that goes away during the cut: the page stays where it is, and is let go', async ({
+    page,
+  }) => {
+    const errors = await start(page);
+    await record(page);
+    // while the cover is coming in, the respawn is taken out of the page
+    await page.evaluate(() => {
+      const tick = () => {
+        const c = getComputedStyle(document.querySelector('.dim-cover')!);
+        if (c.visibility === 'hidden' || +c.opacity < 0.3)
+          return requestAnimationFrame(tick);
+        document.querySelector('#respawn')!.remove();
+      };
+      requestAnimationFrame(tick);
+    });
+    await bar(page, 'respawn').click();
+    await expect(page.locator('#respawn')).toHaveCount(0);
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+    const frames = await recorded(page);
+    // the cover did come, and the page never moved under it
+    expect(Math.max(...frames.map((f) => f.cover))).toBe(1);
+    expect([...new Set(frames.map((f) => f.y))]).toEqual([0]);
+    // nothing claims that the reader is on a section that is not there
+    expect(new URL(page.url()).hash).toBe('');
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+    await free(page);
+    // the next jump is an ordinary travel
+    await record(page);
+    await bar(page, 'overworld').click();
+    await landedOn(page, '#overworld');
+    expect(Math.max(...(await recorded(page)).map((f) => f.cover))).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('leaving the page under a whole cover takes the cover away', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    // to the home page without a reload, so that going back unmounts it without one
+    await page.locator('.head .crumb a').nth(1).click();
+    await ready(page);
+    await landedOn(page, '#end');
+    await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+    // the End → the overworld; under the whole cover, back to the roster
+    await page.evaluate(() => {
+      const y0 = window.scrollY;
+      const tick = () => {
+        const c = getComputedStyle(document.querySelector('.dim-cover')!);
+        if (
+          !(c.visibility !== 'hidden' && +c.opacity === 1) ||
+          Math.abs(window.scrollY - y0) < 2
+        )
+          return requestAnimationFrame(tick);
+        (window as unknown as { __left: boolean }).__left = true;
+        window.history.back();
+      };
+      requestAnimationFrame(tick);
+    });
+    await bar(page, 'overworld').click();
+    await page.locator('.person').first().waitFor();
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __left?: boolean }).__left,
+      ),
+    ).toBe(true);
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveCount(1);
+    await expect(cover).toHaveAttribute('data-on', 'false');
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+    await expect(cover).toHaveCSS('opacity', '0');
+    // and it stays away: the cut that was under way does nothing more
+    await page.waitForTimeout(1200);
+    await expect(cover).toHaveCSS('visibility', 'hidden');
+    await expect(cover).toHaveAttribute('data-on', 'false');
+    // the roster can be used
+    await page.locator('.dim-bar [data-action="theme"]').click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    expect(errors).toEqual([]);
+  });
+
+  for (const hash of ['#%', '#%E0%A4%A'])
+    test(`arriving with the malformed hash ${hash} is arriving at the top`, async ({
+      page,
+    }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, `/${hash}`);
+      await ready(page);
+      await expect(page.locator('.loader')).toBeHidden();
+      expect(new URL(page.url()).hash).toBe(hash);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+      await expect(page.locator('.hero h1')).toBeVisible();
+      await expect(page.locator('.hero h1')).toHaveText(/雲鎮工藝/);
+      await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+      // the choreography was built: the smooth scroll is there, and so is the pin
+      expect(
+        await page.evaluate(() =>
+          document.documentElement.classList.contains('lenis'),
+        ),
+      ).toBe(true);
+      await expect(page.locator('.pin-spacer')).toHaveCount(1);
+      // the hero's button works
+      await page.locator('.hero a.btn').click();
+      await landedOn(page, '#respawn');
+      await expect(page.locator('#respawn h2')).toBeFocused();
+      await free(page);
+      expect(errors).toEqual([]);
+    });
+});
+
 test.describe('home: arriving, leaving and robustness', () => {
   for (const [hash, scene, dim] of [
     ['#nether', 'nether', 'nether'],

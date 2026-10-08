@@ -171,6 +171,15 @@ export const setSectionJumper = (fn: SectionJumper) => {
 export const jumpToSection = (id: string, leave?: Leave) =>
   jumper ? jumper(id, leave) : false;
 
+/** The id a hash names. None if the hash is not well formed (`#%`): that names no place, and is no reason to fail. */
+export const hashId = (hash: string) => {
+  try {
+    return decodeURIComponent(hash.replace(/^#/, ''));
+  } catch {
+    return '';
+  }
+};
+
 /** A click that the browser should handle itself: a new tab, a new window, a download. */
 export const isPlainClick = (e: ReactMouseEvent) =>
   !e.defaultPrevented &&
@@ -187,7 +196,7 @@ export const followSectionLink = (
   { id, leave }: { id?: string; leave?: Leave } = {},
 ) => {
   if (!isPlainClick(e)) return false;
-  const target = id ?? decodeURIComponent(e.currentTarget.hash.slice(1));
+  const target = id ?? hashId(e.currentTarget.hash);
   if (!target || !jumpToSection(target, leave)) return false;
   e.preventDefault();
   return true;
