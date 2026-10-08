@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import useApi from '@/hooks/useApi';
 import { STATIC_DATA_API } from '@/constants';
 import type { IMembers } from '@/types/IMember';
+import { afterEntrance } from '@/lib/dimensions/entrance';
 import { Toolbar } from './Toolbar';
 
 const GROUPS = ['member', 'trial'] as const;
@@ -57,7 +58,12 @@ export const MemberRoster = () => {
         </p>
       )}
       {error && (
-        <p className='empty' data-state='error' data-t='body'>
+        <p
+          className='empty'
+          data-state='error'
+          data-t='body'
+          ref={afterEntrance}
+        >
           {t('dimensions.members.error')}{' '}
           <button
             type='button'
@@ -73,7 +79,7 @@ export const MemberRoster = () => {
         groups
           .filter((g) => g.people.length > 0)
           .map((g) => (
-            <section className='group' key={g.key}>
+            <section className='group' key={g.key} ref={afterEntrance}>
               <header>
                 <h2 className='serif' data-t='title'>
                   {t(`dimensions.members.groups.${g.key}.title`)}
@@ -108,7 +114,12 @@ export const MemberRoster = () => {
           ))}
 
       {data && shown === 0 && (
-        <p className='empty' data-state='empty' data-t='body'>
+        <p
+          className='empty'
+          data-state='empty'
+          data-t='body'
+          ref={afterEntrance}
+        >
           {t('dimensions.members.empty')}
         </p>
       )}

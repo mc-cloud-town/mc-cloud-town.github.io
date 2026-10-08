@@ -13,6 +13,7 @@ import {
   dimensionOf,
   type ProgressDimension,
 } from '@/constants/progressDimensions';
+import { afterEntrance } from '@/lib/dimensions/entrance';
 import { formatDate, yearOf } from '@/lib/dimensions/format';
 import type { IImageContent } from '@/types/IImageContent';
 import { useDimension } from './DimensionProvider';
@@ -164,7 +165,12 @@ export const ProgressLog = ({
         </p>
       )}
       {error && (
-        <p className='empty' data-state='error' data-t='body'>
+        <p
+          className='empty'
+          data-state='error'
+          data-t='body'
+          ref={afterEntrance}
+        >
           {t('dimensions.progress.error')}{' '}
           <button
             type='button'
@@ -177,7 +183,7 @@ export const ProgressLog = ({
       )}
 
       {shown.length > 0 && (
-        <div className='log'>
+        <div className='log' ref={afterEntrance}>
           {bigYear && (
             <div className='year' aria-hidden='true'>
               {/* a new node for a new year or a new filter: it rises into place instead of swapping */}
@@ -224,7 +230,12 @@ export const ProgressLog = ({
       )}
 
       {data && shown.length === 0 && (
-        <p className='empty' data-state='empty' data-t='body'>
+        <p
+          className='empty'
+          data-state='empty'
+          data-t='body'
+          ref={afterEntrance}
+        >
           {t('dimensions.progress.empty')}
         </p>
       )}

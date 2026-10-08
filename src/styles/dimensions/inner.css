@@ -444,7 +444,8 @@
      a list that changes plays its entrance again. The lists are not rebuilt for that: the component flips
      data-run between 0 and 1, and each value names its own copy of the keyframes, which restarts them. */
   .entry {
-    animation: var(--t-list) var(--ease-rise) calc(var(--i, 0) * 50ms) backwards;
+    animation: var(--t-list) var(--ease-rise)
+      calc(var(--wait, 0ms) + var(--i, 0) * 50ms) backwards;
   }
   .entries[data-run='0'] .entry {
     animation-name: dim-rise-0;
@@ -454,7 +455,7 @@
   }
   /* the roster changes with every letter typed: it settles, it does not start over */
   .people {
-    animation: 0.35s var(--ease-rise) backwards;
+    animation: 0.35s var(--ease-rise) var(--wait, 0ms) backwards;
   }
   .people[data-run='0'] {
     animation-name: dim-settle-0;
@@ -463,31 +464,83 @@
     animation-name: dim-settle-1;
   }
   .group header {
-    animation: dim-rise-0 var(--t-in) var(--ease-rise) backwards;
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
   }
   /* nothing found, or the request failed */
   .empty {
-    animation: dim-rise-0 var(--t-in) var(--ease-rise) backwards;
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
   }
-  /* still loading: said only if it takes a moment, so a quick answer does not flash a line of text */
+  /* still loading: said only if it takes a moment, so a quick answer does not flash a line of text;
+     and in its turn in the entrance, after the toolbar */
   .empty[data-state='loading'] {
-    animation: dim-fade-0 0.4s var(--ease-rise) 0.3s backwards;
+    animation: dim-fade-0 0.4s var(--ease-rise) 0.68s backwards;
   }
   .empty .pill {
     margin-left: 8px;
   }
   /* the big year rises into its place when the reader crosses into another year */
   .year b {
-    animation: dim-up var(--t-in) var(--ease-out) backwards;
+    animation: dim-up var(--t-in) var(--ease-out) var(--wait, 0ms) backwards;
   }
   .year small,
   .tools .count span {
-    animation: dim-fade-0 var(--t-state) var(--ease-rise) backwards;
+    animation: dim-fade-0 var(--t-state) var(--ease-rise) var(--wait, 0ms)
+      backwards;
   }
   .tools .count {
     font-variant-numeric: tabular-nums;
   }
+
+  /* ───────── the entrance ─────────
+     An inner page opens the way the home page does: the picture settles like the hero's camera, the title rises
+     line by line (expo.out, a tenth of a second apart, as the hero's title), the upright label follows as the
+     dimension names do, then the lede (power3.out, as the hero's captions), then the toolbar, then the list.
+     It is CSS on purpose: it plays in the served page before any script, and with scripts off, and `backwards`
+     keeps each part out of sight until its turn, so nothing is seen at rest and then taken away.
+     What arrives with the data (the list, the groups) is told how long its turn is still away: --wait, set by
+     entrance.ts on its container and added to the delays above. */
+  .head .bg img {
+    animation: dim-enter-cam 2.2s var(--ease-out) backwards;
+  }
+  .head .crumb {
+    animation: dim-enter-rise 1s var(--ease-rise) backwards;
+  }
+  .head h1 span {
+    animation: dim-enter-line 1.3s var(--ease-out)
+      calc(80ms + var(--i, 0) * 120ms) backwards;
+  }
+  .head .vt {
+    animation: dim-enter-label 1.4s var(--ease-out) 320ms backwards;
+  }
+  .head p[data-t='body'] {
+    animation: dim-enter-rise 1s var(--ease-rise) 440ms backwards;
+  }
+  /* a fixture of the page (it is sticky): it fades in where it stands */
+  .tools {
+    animation: dim-fade-0 0.8s var(--ease-rise) 560ms backwards;
+  }
+  /* in the served page it stands right under the toolbar, until the list is there: it comes with the list */
+  .next {
+    animation: dim-fade-0 0.8s var(--ease-rise) 680ms backwards;
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .head .bg img {
+      animation: none;
+    }
+    .head .crumb,
+    .head h1 span,
+    .head .vt,
+    .head p[data-t='body'],
+    .tools,
+    .next {
+      animation-name: dim-fade-0;
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
     .entry,
     .people,
     .group header,
@@ -556,5 +609,28 @@
   from {
     opacity: 0;
     transform: translateY(0.25em);
+  }
+}
+@keyframes dim-enter-line {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em);
+  }
+}
+@keyframes dim-enter-label {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+  }
+}
+@keyframes dim-enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+@keyframes dim-enter-cam {
+  from {
+    transform: scale(1.08);
   }
 }

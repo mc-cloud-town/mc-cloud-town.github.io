@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { useDimension, type Dimension } from './DimensionProvider';
 import { VerticalLabel } from './VerticalLabel';
@@ -48,8 +48,12 @@ export const InnerHeader = ({
           ))}
         </p>
         <h1 className='serif' data-t='title'>
-          {title.map((line) => (
-            <span key={line}>{line}</span>
+          {title.map((line, i) => (
+            // By its place, not by its words: another language at boot changes the text of the line that is
+            // rising, it does not put a new line in its place (which would start the entrance again).
+            <span key={i} style={{ '--i': i } as CSSProperties}>
+              {line}
+            </span>
           ))}
         </h1>
         <p data-t='body'>{lead}</p>
