@@ -1,10 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import {
+  CloseOutlined,
+  DiscordFilled,
+  GlobalOutlined,
+  MenuOutlined,
+  MoonOutlined,
+  SunOutlined,
+} from '@ant-design/icons';
 import { useTheme } from '@/hooks/useTheme';
 import { serverLink } from '@/constants';
+import { holdPageScroll } from '@/lib/dimensions/pageScroll';
 
 type Current = 'progress' | 'members';
 
@@ -20,6 +29,81 @@ const LANGS = [
 /** `zh` is the build-time default and is the same content as zh_TW. */
 const normalise = (lng: string) => (lng === 'zh' ? 'zh_TW' : lng);
 
+/** Keys that scroll a page, as a fraction of the sheet's height (±Infinity: to the very end). */
+const SCROLL_KEYS: Record<string, number> = {
+  ' ': 0.9,
+  PageDown: 0.9,
+  PageUp: -0.9,
+  ArrowDown: 0.12,
+  ArrowUp: -0.12,
+  End: Infinity,
+  Home: -Infinity,
+};
+
+const isField = (el: EventTarget | null) =>
+  el instanceof HTMLSelectElement ||
+  el instanceof HTMLInputElement ||
+  el instanceof HTMLTextAreaElement;
+
+/**
+ * While the sheet is open the page behind it must not move, and nothing about its layout may change:
+ * the scrollbar stays, so `overflow` on the document is never touched. Instead the wheel, touch and
+ * scroll keys go to the sheet (if it has anything to scroll) or nowhere. Returns the release.
+ */
+const holdPage = (sheet: HTMLElement) => {
+  const y = window.scrollY;
+  const room = (dy: number) =>
+    dy < 0
+      ? sheet.scrollTop > 0
+      : sheet.scrollTop + sheet.clientHeight < sheet.scrollHeight - 1;
+  const inSheet = (e: Event) =>
+    e.target instanceof Node && sheet.contains(e.target);
+
+  const onWheel = (e: WheelEvent) => {
+    if (!(inSheet(e) && room(e.deltaY))) e.preventDefault();
+  };
+  let touchY = 0;
+  const onTouchStart = (e: TouchEvent) => {
+    touchY = e.touches[0]?.clientY ?? 0;
+  };
+  const onTouchMove = (e: TouchEvent) => {
+    const dy = touchY - (e.touches[0]?.clientY ?? touchY);
+    if (!(inSheet(e) && room(dy)) && e.cancelable) e.preventDefault();
+  };
+  const onKey = (e: KeyboardEvent) => {
+    const step = SCROLL_KEYS[e.key];
+    if (step === undefined || isField(e.target)) return;
+    // on a button the space bar presses it; it never scrolls
+    if (e.key === ' ' && e.target instanceof HTMLButtonElement) return;
+    e.preventDefault();
+    sheet.scrollBy({
+      top: Number.isFinite(step)
+        ? (e.shiftKey && e.key === ' ' ? -step : step) * sheet.clientHeight
+        : Math.sign(step) * sheet.scrollHeight,
+    });
+  };
+  // whatever still gets through (dragging the scrollbar, auto-scroll): put the page back
+  const onScroll = () => {
+    if (window.scrollY !== y)
+      window.scrollTo({ top: y, behavior: 'instant' as ScrollBehavior });
+  };
+
+  holdPageScroll(true);
+  document.addEventListener('wheel', onWheel, { passive: false });
+  document.addEventListener('touchstart', onTouchStart, { passive: true });
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('keydown', onKey);
+  window.addEventListener('scroll', onScroll);
+  return () => {
+    document.removeEventListener('wheel', onWheel);
+    document.removeEventListener('touchstart', onTouchStart);
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('keydown', onKey);
+    window.removeEventListener('scroll', onScroll);
+    holdPageScroll(false);
+  };
+};
+
 export const SiteBar = ({
   variant,
   current,
@@ -28,8 +112,12 @@ export const SiteBar = ({
   current?: Current;
 }) => {
   const { t, i18n } = useTranslation();
-  const { isDark, toggleTheme } = useTheme();
+  const { toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  const sheet = useRef<HTMLDivElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  const release = useRef<(() => void) | null>(null);
 
   // On the home page the dimension links are in-page anchors; elsewhere they lead back to it.
   const anchor = (id: string) => (variant === 'home' ? `#${id}` : `/#${id}`);
@@ -54,18 +142,33 @@ export const SiteBar = ({
     { href: anchor('respawn'), label: t('dimensions.nav.join'), d: 'respawn' },
   ];
 
+  /** Let the page go at once: a link in the sheet jumps to its section in the same click. */
+  const letGo = () => {
+    release.current?.();
+    release.current = null;
+  };
+
   useEffect(() => {
-    if (!open) return;
+    if (!open || !sheet.current) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
+    release.current = holdPage(sheet.current);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      release.current?.();
+      release.current = null;
     };
   }, [open]);
 
-  // Leaving the narrow layout while the sheet is open must close it and release the scroll lock.
+  // Focus follows the sheet: to its first link when it opens, back to the button when it closes.
+  useEffect(() => {
+    if (open) sheet.current?.querySelector('a')?.focus({ preventScroll: true });
+    else if (wasOpen.current)
+      menuButton.current?.focus({ preventScroll: true });
+    wasOpen.current = open;
+  }, [open]);
+
+  // Leaving the narrow layout while the sheet is open must close it and let the page scroll again.
   useEffect(() => {
     const mq = window.matchMedia(BAR_BREAKPOINT);
     const onChange = (e: MediaQueryListEvent) => e.matches && setOpen(false);
@@ -73,14 +176,19 @@ export const SiteBar = ({
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  const items = links.map((l) => (
+  const items = links.map((l, i) => (
     <a
       key={l.href}
       href={l.href}
       data-d={l.d}
       aria-current={l.key && l.key === current ? 'page' : undefined}
       data-t='control'
-      onClick={() => setOpen(false)}
+      // the place in the row: the sheet's links arrive one after another
+      style={{ '--i': i } as CSSProperties}
+      onClick={() => {
+        letGo();
+        setOpen(false);
+      }}
     >
       {l.label}
     </a>
@@ -101,41 +209,68 @@ export const SiteBar = ({
           aria-label={t('dimensions.nav.theme')}
           onClick={toggleTheme}
         >
-          {isDark ? '夜' : '日'}
+          {/* both marks are always there; shell.css shows the one of the current theme */}
+          <span className='swap' aria-hidden='true'>
+            <SunOutlined />
+            <MoonOutlined />
+          </span>
         </button>
-        <select
-          className='pill'
-          data-action='language'
-          aria-label={t('dimensions.nav.language')}
-          value={normalise(i18n.language)}
-          onChange={(e) => i18n.changeLanguage(e.target.value)}
-        >
-          {LANGS.map((l) => (
-            <option key={l.value} value={l.value}>
-              {l.label}
-            </option>
-          ))}
-        </select>
+        <span className='lang'>
+          <span className='mark' aria-hidden='true'>
+            <GlobalOutlined />
+          </span>
+          <select
+            className='pill'
+            data-action='language'
+            aria-label={t('dimensions.nav.language')}
+            value={normalise(i18n.language)}
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+          >
+            {LANGS.map((l) => (
+              <option key={l.value} value={l.value}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </span>
         <a
           className='pill discord'
           href={serverLink.discord}
           target='_blank'
           rel='noopener noreferrer'
         >
+          <span className='mark' aria-hidden='true'>
+            <DiscordFilled />
+          </span>
           Discord
         </a>
         <button
           className='pill menu'
           type='button'
           data-action='menu'
+          ref={menuButton}
+          aria-label={
+            open ? t('dimensions.nav.close') : t('dimensions.nav.menu')
+          }
           aria-expanded={open}
           aria-controls='dim-sheet'
           onClick={() => setOpen((v) => !v)}
         >
-          {open ? t('dimensions.nav.close') : t('dimensions.nav.menu')}
+          <span className='swap' aria-hidden='true'>
+            <MenuOutlined />
+            <CloseOutlined />
+          </span>
         </button>
       </header>
-      <div className='dim-sheet' id='dim-sheet' hidden={!open}>
+      {/* Always in the page, so it can ease out: closed, it is inert, invisible and lets every pointer through. */}
+      <div
+        className='dim-sheet'
+        id='dim-sheet'
+        ref={sheet}
+        data-open={open}
+        inert={!open}
+        data-lenis-prevent
+      >
         <nav aria-label={t('dimensions.nav.menu')}>{items}</nav>
       </div>
     </>

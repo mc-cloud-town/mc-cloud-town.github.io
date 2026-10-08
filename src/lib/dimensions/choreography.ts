@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { TRANSITIONS, type TransitionDef } from '@/constants/scenes';
 import type { Dimension } from '#/dimensions/DimensionProvider';
+import { onPageScrollHold } from './pageScroll';
 import { addTransition } from './transitions';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -34,6 +35,10 @@ export const buildChoreography = (
 
   let lenis = null as Lenis | null;
   const raf = (t: number) => lenis?.raf(t * 1000);
+  // an open overlay (the menu sheet) holds the page: the smooth scroll waits, and picks up where it was
+  const unhold = onPageScrollHold((held) =>
+    held ? lenis?.stop() : lenis?.start(),
+  );
 
   const ctx = gsap.context(() => {
     // Which dimension the reader is in. These triggers cover every section of the page, so they
@@ -286,6 +291,7 @@ export const buildChoreography = (
   }, root);
 
   return () => {
+    unhold();
     gsap.ticker.remove(raf);
     if (lenis) gsap.ticker.lagSmoothing(500, 33); // back to GSAP's default
     lenis?.destroy();

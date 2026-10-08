@@ -26,6 +26,19 @@
   --mono: 'JetBrains Mono', ui-monospace, monospace;
   --gutter: clamp(20px, 6vw, 96px);
   --measure: 40em;
+  /* Motion: one language for the whole site, taken from the home page's choreography.
+     --ease-out is GSAP's expo.out (the title, the dimension names, the ledger heading),
+     --ease-rise its power3.out (.rise and the captions). */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-rise: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --t-state: 0.3s; /* hover, pressed, current: as .btn and .more */
+  --t-theme: 0.4s; /* day and night */
+  --t-in: 0.45s; /* something arrives: as the ledger heading */
+  --t-out: 0.22s; /* something leaves: about half of that */
+  --t-list: 0.6s; /* a list settles after a change */
+  /* the two veil colours, for layers that cross-fade between day and night */
+  --v-night: 6, 8, 11;
+  --v-day: 238, 242, 245;
 
   min-height: 100vh;
   background: var(--bg);

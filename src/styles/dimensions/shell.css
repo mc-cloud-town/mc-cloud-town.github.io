@@ -1,4 +1,6 @@
-/* Shell: top bar, menu sheet and footer. Ported from docs/design-demos/inner.css. */
+/* Shell: top bar, menu sheet and footer. Ported from docs/design-demos/inner.css.
+   Every change of state here is a transition in the motion language of tokens.css; none uses `all`,
+   and none touches a property that a scroll-driven tween owns (the home arrival moves the bar's y and opacity). */
 .dim {
   /* the fixed bar's height, for sticky offsets: 18px padding twice + content (44px controls up to 1024px) */
   --bar-h: 72px;
@@ -18,6 +20,9 @@
     background: rgba(var(--v), 0.86);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
+    transition:
+      background-color var(--t-theme),
+      border-color var(--t-theme);
   }
   .dim-bar .logo {
     margin-right: auto;
@@ -25,6 +30,7 @@
   .dim-bar .logo img {
     height: 28px;
     filter: var(--logo);
+    transition: filter var(--t-theme);
   }
   .dim-bar nav {
     display: flex;
@@ -35,6 +41,9 @@
     opacity: 0.7;
     padding: 4px 0;
     border-bottom: 1px solid transparent;
+    transition:
+      opacity var(--t-state),
+      border-color var(--t-state);
   }
   .dim-bar nav a:hover,
   .dim-bar nav a[aria-current] {
@@ -46,10 +55,21 @@
     border: 1px solid var(--line);
     border-radius: 100px;
     padding: 8px 14px;
+    transition:
+      background-color var(--t-state),
+      color var(--t-state),
+      border-color var(--t-state),
+      transform var(--t-state) var(--ease-out);
   }
-  .pill:hover {
-    background: var(--fg);
-    color: var(--bg);
+  /* only where a pointer can hover: after a tap the fill would stay on */
+  @media (hover: hover) {
+    .pill:hover {
+      background: var(--fg);
+      color: var(--bg);
+    }
+  }
+  .pill:active {
+    transform: scale(0.95);
   }
 
   .dim-foot {
@@ -62,11 +82,20 @@
     align-items: center;
     font-size: 13px;
     color: var(--muted);
+    transition:
+      color var(--t-theme),
+      border-color var(--t-theme);
   }
   .dim-foot img {
     height: 24px;
     filter: var(--logo);
     margin-right: auto;
+    transition: filter var(--t-theme);
+  }
+  /* its own colour, so the hover eases from a fixed value instead of trailing the footer's */
+  .dim-foot a {
+    color: var(--muted);
+    transition: color var(--t-state);
   }
   .dim-foot a:hover {
     color: var(--accent);
@@ -77,23 +106,119 @@
     opacity: 1;
     border-bottom-color: var(--accent);
   } /* home page: the current dimension */
+
+  /* controls carry a mark instead of a glyph: one line weight, the text's own colour */
+  .anticon {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  /* as tall as a line of the pill's type, so a pill with only a mark is as tall as one with a word */
+  .pill .mark,
+  .pill .swap {
+    display: inline-grid;
+    place-items: center;
+    height: 16px;
+    font-size: 14px;
+  }
+  /* two marks in one place: the one that is not current is turned away and faded out */
+  .swap > .anticon {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--t-state) var(--ease-rise),
+      transform var(--t-in) var(--ease-out);
+  }
+  .dim-bar [data-action='theme'] .anticon-sun,
+  .dim-bar .menu .anticon-close {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+  [data-theme='light'] & .dim-bar [data-action='theme'] .anticon-sun,
+  .dim-bar .menu[aria-expanded='true'] .anticon-close {
+    opacity: 1;
+    transform: none;
+  }
+  [data-theme='light'] & .dim-bar [data-action='theme'] .anticon-moon,
+  .dim-bar .menu[aria-expanded='true'] .anticon-menu {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+  }
+  /* language: the select is the pill, the globe lies on it */
+  .dim-bar .lang {
+    position: relative;
+    display: inline-flex;
+  }
+  .dim-bar .lang .mark {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    translate: 0 -50%;
+    font-size: 14px;
+    line-height: 0;
+    pointer-events: none;
+    transition: color var(--t-state);
+  }
   .dim-bar select.pill {
     appearance: none;
     text-align: center;
+    padding-left: 34px;
+    /* a select is laid out by the browser, not by its line of text: as tall as the pills beside it */
+    height: 34px;
+  }
+  @media (hover: hover) {
+    .dim-bar .lang:hover .mark {
+      color: var(--bg);
+    }
   }
   .dim-bar .menu {
     display: none;
   }
+  /* open: the button stays filled for as long as the sheet is there */
+  .dim-bar .menu[aria-expanded='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+
+  /* The menu is an overlay: a fixed layer over the page, under the bar. Opening it changes nothing in the
+     page's layout (no overflow lock, so the scrollbar stays). It is always in the page so that it can ease
+     out; closed, it is invisible, inert (SiteBar.tsx) and lets every pointer through. It reaches 16px past
+     the bottom so that its short way down never uncovers the page there. */
   .dim-sheet {
     position: fixed;
-    inset: 0;
+    inset: 0 0 -16px;
     z-index: 49;
-    padding: 96px var(--gutter) 40px;
+    padding: 96px var(--gutter) 56px;
     background: var(--bg); /* opaque: nothing behind the menu may be legible */
     overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-16px);
+    pointer-events: none;
+    /* leaving: quicker than arriving, and gone from sight only when the fade is over */
+    transition:
+      opacity var(--t-out) var(--ease-rise),
+      transform var(--t-out) var(--ease-rise),
+      visibility 0s linear var(--t-out),
+      background-color var(--t-theme);
   }
-  .dim-sheet[hidden] {
-    display: none;
+  .dim-sheet[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      opacity 0.24s var(--ease-rise),
+      transform 0.32s var(--ease-out),
+      visibility 0s,
+      background-color var(--t-theme);
   }
   .dim-sheet nav {
     display: grid;
@@ -102,10 +227,32 @@
     font: 900 28px/1.2 var(--serif);
     padding: 14px 0;
     border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity var(--t-out) var(--ease-rise),
+      transform var(--t-out) var(--ease-rise),
+      color var(--t-state),
+      border-color var(--t-theme);
+  }
+  /* the links rise one after another, 40ms apart: 440ms from the tap to the last one in place */
+  .dim-sheet[data-open='true'] a {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.24s var(--ease-rise) calc(var(--i, 0) * 40ms),
+      transform 0.24s var(--ease-out) calc(var(--i, 0) * 40ms),
+      color var(--t-state),
+      border-color var(--t-theme);
   }
   .dim-sheet a[aria-current],
   .dim-sheet a.on {
     color: var(--accent);
+  }
+  @media (hover: hover) {
+    .dim-sheet a:hover {
+      color: var(--accent);
+    }
   }
   .dim-foot {
     max-width: 2200px;
@@ -138,6 +285,47 @@
       flex-basis: 100%;
       object-fit: contain;
       object-position: left;
+    }
+  }
+  /* short landscape screens: six links are taller than the screen, so they stand closer and the sheet scrolls */
+  @media (max-height: 480px) {
+    .dim-sheet {
+      padding-top: calc(var(--bar-h) + 8px);
+    }
+    .dim-sheet a {
+      font-size: 22px;
+      padding: 8px 0;
+    }
+  }
+
+  /* Less motion: the same end states, reached by a brief fade. No travel, no turning, no one-after-another. */
+  @media (prefers-reduced-motion: reduce) {
+    .dim-sheet,
+    .dim-sheet[data-open='true'] {
+      transform: none;
+    }
+    .dim-sheet {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s linear 0.12s;
+    }
+    .dim-sheet[data-open='true'] {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s;
+    }
+    .dim-sheet a,
+    .dim-sheet[data-open='true'] a {
+      opacity: 1;
+      transform: none;
+      transition: color 0.12s linear;
+    }
+    .swap > .anticon {
+      transform: none !important;
+      transition: opacity 0.12s linear;
+    }
+    .pill:active {
+      transform: none;
     }
   }
 }

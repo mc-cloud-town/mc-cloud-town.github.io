@@ -149,7 +149,8 @@ export const HomePage = () => {
         >
           <div className='stats rise'>
             <div>
-              <b data-stat='days'>
+              {/* a new node for a new number: a figure that arrives late fades in (home.css) */}
+              <b data-stat='days' key={days ?? 'none'}>
                 {days === null ? '' : days.toLocaleString('en-US')}
               </b>
               <span data-t='note'>{t('dimensions.overworld.stats.days')}</span>
@@ -161,7 +162,10 @@ export const HomePage = () => {
               </span>
             </div>
             <div>
-              <b data-stat='members'>
+              <b
+                data-stat='members'
+                key={members?.member?.length ?? DEFAULT_MEMBERS}
+              >
                 {members?.member?.length ?? DEFAULT_MEMBERS}
               </b>
               <span data-t='note'>
@@ -169,7 +173,7 @@ export const HomePage = () => {
               </span>
             </div>
             <div>
-              <b data-stat='repos'>
+              <b data-stat='repos' key={repos ? 'live' : 'default'}>
                 {repos
                   ? repos.filter((r) => !r.name.startsWith('.')).length
                   : DEFAULT_REPOS}

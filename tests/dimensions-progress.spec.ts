@@ -1,8 +1,30 @@
 // tests/dimensions-progress.spec.ts
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { expectNoMissingKeys, openPage } from './helpers/dimensions';
 
 const DATA = /static-data\/[^/]+\/survivalProgress\.json/;
+
+/** Click, let React commit, and report what is moving on `watch` before a frame is painted. */
+const clickAndWatch = (page: Page, click: string, watch: string) =>
+  page.evaluate(
+    async ([c, w]) => {
+      document.querySelector<HTMLElement>(c)!.click();
+      await new Promise((r) => setTimeout(r, 0));
+      const el = document.querySelector<HTMLElement>(w);
+      if (!el) return null;
+      return {
+        opacity: +getComputedStyle(el).opacity,
+        longest: Math.max(
+          0,
+          ...el.getAnimations().map((a) => {
+            const t = a.effect!.getComputedTiming();
+            return Number(t.delay ?? 0) + Number(t.duration ?? 0);
+          }),
+        ),
+      };
+    },
+    [click, watch],
+  );
 
 test.describe('progress page', () => {
   test('lists every milestone, newest first', async ({ page, request }) => {
@@ -206,4 +228,70 @@ test.describe('progress page: data-driven numbers', () => {
       await expectNoMissingKeys(page);
     });
   }
+});
+
+test.describe('progress page: state changes are transitions', () => {
+  const END = '[data-filter="dim"] button[data-v="end"]';
+  const Y2025 = '[data-filter="year"] button[data-v="2025"]';
+
+  test('chips ease between states, the list rises in after a filter, and so does the empty state', async ({
+    page,
+  }) => {
+    await openPage(page, '/survivalProgress/');
+    const first = page.locator('.entry').first();
+    await first.waitFor();
+    await expect(first).toHaveCSS('opacity', '1');
+    const chip = await page.locator(END).evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return [cs.transitionProperty, parseFloat(cs.transitionDuration)];
+    });
+    expect(chip[0]).toContain('background-color');
+    expect(chip[1]).toBeGreaterThan(0);
+
+    const list = await clickAndWatch(page, END, '.entry');
+    expect(list!.longest).toBeGreaterThan(200);
+    expect(list!.opacity).toBeLessThan(1);
+    await expect(first).toHaveCSS('opacity', '1');
+    await expect(first).toHaveCSS('transform', 'none');
+    // the big year changes with a move of its own
+    const year = await clickAndWatch(
+      page,
+      '[data-filter="year"] button[data-v="2023"]',
+      '.year b',
+    );
+    expect(year!.longest).toBeGreaterThan(0);
+    await expect(page.locator('.year b')).toHaveText('2023');
+
+    const empty = await clickAndWatch(page, Y2025, '.empty');
+    expect(empty!.longest).toBeGreaterThan(200);
+    expect(empty!.opacity).toBeLessThan(1);
+    await expect(page.locator('.empty')).toHaveCSS('opacity', '1');
+  });
+
+  test('a failed request eases its explanation in', async ({ page }) => {
+    await page.route(DATA, (r) => r.abort());
+    await openPage(page, '/survivalProgress/');
+    const block = page.locator('.empty[data-state="error"]');
+    await expect(block).toContainText('進度資料載入失敗');
+    expect(
+      await block.evaluate((el) => getComputedStyle(el).animationName),
+    ).not.toBe('none');
+    await expect(block).toHaveCSS('opacity', '1');
+  });
+
+  test('reduced motion: the list change is a brief fade without travel', async ({
+    page,
+  }) => {
+    await openPage(page, '/survivalProgress/', { reducedMotion: true });
+    const first = page.locator('.entry').first();
+    await first.waitFor();
+    await expect(first).toHaveCSS('opacity', '1');
+    const list = await clickAndWatch(page, END, '.entry');
+    expect(list!.longest).toBeGreaterThan(0);
+    expect(list!.longest).toBeLessThanOrEqual(120);
+    expect(await first.evaluate((el) => getComputedStyle(el).transform)).toBe(
+      'none',
+    );
+    await expect(first).toHaveCSS('opacity', '1');
+  });
 });

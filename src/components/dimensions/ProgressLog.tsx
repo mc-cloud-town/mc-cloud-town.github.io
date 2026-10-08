@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { STATIC_DATA_API } from '@/constants';
 import {
@@ -31,6 +37,13 @@ export const ProgressLog = ({
   const [dim, setFilterDim] = useState<ProgressDimension | ''>('');
   const [year, setYear] = useState('');
   const [nowYear, setNowYear] = useState('');
+  // flips with every change of filter: the list plays its entrance again without being rebuilt (inner.css)
+  const [run, setRun] = useState(0);
+  const pick = (changes: boolean, set: () => void) => () => {
+    if (!changes) return;
+    set();
+    setRun((r) => 1 - r);
+  };
   const list = useRef<HTMLOListElement>(null);
 
   const items = useMemo(
@@ -101,7 +114,7 @@ export const ProgressLog = ({
             type='button'
             data-v=''
             aria-pressed={dim === ''}
-            onClick={() => setFilterDim('')}
+            onClick={pick(dim !== '', () => setFilterDim(''))}
           >
             {t('dimensions.progress.allDims')}
           </button>
@@ -111,7 +124,7 @@ export const ProgressLog = ({
               type='button'
               data-v={d}
               aria-pressed={dim === d}
-              onClick={() => setFilterDim(d)}
+              onClick={pick(dim !== d, () => setFilterDim(d))}
             >
               {t(`dimensions.nav.${d}`)}
             </button>
@@ -127,7 +140,7 @@ export const ProgressLog = ({
             type='button'
             data-v=''
             aria-pressed={year === ''}
-            onClick={() => setYear('')}
+            onClick={pick(year !== '', () => setYear(''))}
           >
             {t('dimensions.progress.allYears')}
           </button>
@@ -137,7 +150,7 @@ export const ProgressLog = ({
               type='button'
               data-v={y}
               aria-pressed={year === y}
-              onClick={() => setYear(y)}
+              onClick={pick(year !== y, () => setYear(y))}
             >
               {y}
             </button>
@@ -146,12 +159,12 @@ export const ProgressLog = ({
       </Toolbar>
 
       {loading && (
-        <p className='empty' data-t='body'>
+        <p className='empty' data-state='loading' data-t='body'>
           {t('dimensions.progress.loading')}
         </p>
       )}
       {error && (
-        <p className='empty' data-t='body'>
+        <p className='empty' data-state='error' data-t='body'>
           {t('dimensions.progress.error')}{' '}
           <button
             type='button'
@@ -167,19 +180,22 @@ export const ProgressLog = ({
         <div className='log'>
           {bigYear && (
             <div className='year' aria-hidden='true'>
-              <b>{bigYear}</b>
-              <small data-t='note'>
+              {/* a new node for a new year or a new filter: it rises into place instead of swapping */}
+              <b key={`year:${bigYear}:${run}`}>{bigYear}</b>
+              <small key={`count:${bigYear}:${run}`} data-t='note'>
                 {t('dimensions.progress.perYear', { n: bigCount })}
               </small>
             </div>
           )}
-          <ol className='entries' ref={list}>
-            {shown.map((it) => (
+          <ol className='entries' ref={list} data-run={run}>
+            {shown.map((it, i) => (
               <li
                 className='entry'
                 key={it.no}
                 data-dim={it.dim}
                 data-year={it.year}
+                // the first few arrive one after another, the rest with the last of them
+                style={{ '--i': Math.min(i, 6) } as CSSProperties}
               >
                 <figure>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -208,7 +224,7 @@ export const ProgressLog = ({
       )}
 
       {data && shown.length === 0 && (
-        <p className='empty' data-t='body'>
+        <p className='empty' data-state='empty' data-t='body'>
           {t('dimensions.progress.empty')}
         </p>
       )}

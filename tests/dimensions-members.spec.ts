@@ -96,3 +96,66 @@ test.describe('members page: sticky toolbar and retry', () => {
     await expect(page.locator('.person').first()).toBeVisible();
   });
 });
+
+test.describe('members page: state changes are transitions', () => {
+  test('a search settles the roster in and eases the empty state in', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.people').first()).toHaveCSS('opacity', '1');
+    const type = (text: string, watch: string) =>
+      page.evaluate(
+        async ([value, w]) => {
+          const input = document.querySelector<HTMLInputElement>('.search')!;
+          Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            'value',
+          )!.set!.call(input, value);
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          await new Promise((r) => setTimeout(r, 0));
+          const el = document.querySelector<HTMLElement>(w)!;
+          return {
+            opacity: +getComputedStyle(el).opacity,
+            longest: Math.max(
+              0,
+              ...el.getAnimations().map((a) => {
+                const t = a.effect!.getComputedTiming();
+                return Number(t.delay ?? 0) + Number(t.duration ?? 0);
+              }),
+            ),
+          };
+        },
+        [text, watch],
+      );
+    const list = await type('a', '.people');
+    expect(list.longest).toBeGreaterThan(100);
+    expect(list.opacity).toBeLessThan(1);
+    await expect(page.locator('.people').first()).toHaveCSS('opacity', '1');
+    const empty = await type('zzzzzz', '.empty');
+    expect(empty.longest).toBeGreaterThan(200);
+    expect(empty.opacity).toBeLessThan(1);
+    await expect(page.locator('.empty')).toHaveCSS('opacity', '1');
+  });
+
+  test('hover and focus states ease', async ({ page }) => {
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    for (const [sel, prop] of [
+      ['.person', 'color'],
+      ['.search', 'border-color'],
+      ['.next a', 'color'],
+      ['.head .crumb a', 'color'],
+    ]) {
+      const t = await page
+        .locator(sel)
+        .first()
+        .evaluate((el) => {
+          const cs = getComputedStyle(el);
+          return [cs.transitionProperty, parseFloat(cs.transitionDuration)];
+        });
+      expect(t[0], sel).toContain(prop);
+      expect(t[1], sel).toBeGreaterThan(0);
+    }
+  });
+});

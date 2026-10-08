@@ -20,10 +20,14 @@
     height: 100%;
     object-fit: cover;
   }
+  /* Two veils, one for the night and one for the day, each in its own colour: a gradient cannot ease from
+     one colour to another, so the theme switch cross-fades them. */
+  .head .bg::before,
   .head .bg::after {
     content: '';
     position: absolute;
     inset: 0;
+    transition: opacity var(--t-theme);
     background: linear-gradient(
         90deg,
         rgba(var(--v), 0.96) 0%,
@@ -32,6 +36,19 @@
         rgba(var(--v), 0.3) 100%
       ),
       linear-gradient(0deg, rgba(var(--v), 1) 0%, rgba(var(--v), 0) 40%);
+  }
+  .head .bg::before {
+    --v: var(--v-night);
+  }
+  .head .bg::after {
+    --v: var(--v-day);
+    opacity: 0;
+  }
+  [data-theme='light'] & .head .bg::before {
+    opacity: 0;
+  }
+  [data-theme='light'] & .head .bg::after {
+    opacity: 1;
   }
   .head > * {
     position: relative;
@@ -42,6 +59,10 @@
     flex-wrap: wrap;
     align-items: center;
     margin-bottom: 22px;
+  }
+  .head .crumb a {
+    color: var(--fg);
+    transition: color var(--t-state);
   }
   .head .crumb a:hover {
     color: var(--accent);
@@ -60,6 +81,10 @@
     font: 900 clamp(40px, 5.2vw, 88px) / 1 var(--serif);
     letter-spacing: 0.12em;
     align-self: start;
+    /* the strip of paper it stands on by day arrives with the theme */
+    transition:
+      background-color var(--t-theme),
+      padding var(--t-theme);
   }
   [data-theme='light'] & .head .vt {
     background: rgba(var(--v), 0.95);
@@ -79,6 +104,9 @@
     background: rgba(var(--v), 0.9);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
+    transition:
+      background-color var(--t-theme),
+      border-color var(--t-theme);
   }
   .chips {
     display: flex;
@@ -91,6 +119,14 @@
     border: 1px solid var(--line);
     border-radius: 100px;
     color: var(--muted);
+    transition:
+      background-color var(--t-state),
+      color var(--t-state),
+      border-color var(--t-state),
+      transform var(--t-state) var(--ease-out);
+  }
+  .chips button:active {
+    transform: scale(0.95);
   }
   .chips button:hover {
     color: var(--fg);
@@ -110,6 +146,7 @@
     border-bottom: 1px solid var(--line);
     padding: 6px 2px;
     font-size: 15px;
+    transition: border-color var(--t-state);
   }
   .search::placeholder {
     color: var(--muted);
@@ -133,6 +170,8 @@
   }
   .next a {
     font: 900 clamp(24px, 3vw, 44px) var(--serif);
+    color: var(--fg);
+    transition: color var(--t-state);
   }
   .next a:hover {
     color: var(--accent);
@@ -176,6 +215,10 @@
     padding: 10px 0;
     border-bottom: 1px solid var(--line);
     font: 500 14px var(--mono);
+    color: var(--fg);
+    transition:
+      color var(--t-state),
+      border-color var(--t-theme);
   }
   .person[hidden] {
     display: none;
@@ -202,6 +245,7 @@
       order: -1;
       font-size: 34px;
     }
+    .head .bg::before,
     .head .bg::after {
       background: linear-gradient(
         0deg,
@@ -393,5 +437,124 @@
     .year {
       position: static;
     }
+  }
+
+  /* ───────── state changes ─────────
+     Nothing on these pages appears at once. What arrives rises in the motion of the home page's captions;
+     a list that changes plays its entrance again. The lists are not rebuilt for that: the component flips
+     data-run between 0 and 1, and each value names its own copy of the keyframes, which restarts them. */
+  .entry {
+    animation: var(--t-list) var(--ease-rise) calc(var(--i, 0) * 50ms) backwards;
+  }
+  .entries[data-run='0'] .entry {
+    animation-name: dim-rise-0;
+  }
+  .entries[data-run='1'] .entry {
+    animation-name: dim-rise-1;
+  }
+  /* the roster changes with every letter typed: it settles, it does not start over */
+  .people {
+    animation: 0.35s var(--ease-rise) backwards;
+  }
+  .people[data-run='0'] {
+    animation-name: dim-settle-0;
+  }
+  .people[data-run='1'] {
+    animation-name: dim-settle-1;
+  }
+  .group header {
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) backwards;
+  }
+  /* nothing found, or the request failed */
+  .empty {
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) backwards;
+  }
+  /* still loading: said only if it takes a moment, so a quick answer does not flash a line of text */
+  .empty[data-state='loading'] {
+    animation: dim-fade-0 0.4s var(--ease-rise) 0.3s backwards;
+  }
+  .empty .pill {
+    margin-left: 8px;
+  }
+  /* the big year rises into its place when the reader crosses into another year */
+  .year b {
+    animation: dim-up var(--t-in) var(--ease-out) backwards;
+  }
+  .year small,
+  .tools .count span {
+    animation: dim-fade-0 var(--t-state) var(--ease-rise) backwards;
+  }
+  .tools .count {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .entry,
+    .people,
+    .group header,
+    .empty,
+    .empty[data-state='loading'],
+    .year b {
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+    .entries[data-run='0'] .entry,
+    .people[data-run='0'],
+    .group header,
+    .empty,
+    .year b {
+      animation-name: dim-fade-0;
+    }
+    .entries[data-run='1'] .entry,
+    .people[data-run='1'] {
+      animation-name: dim-fade-1;
+    }
+    .chips button:active {
+      transform: none;
+    }
+    .entry img {
+      transition: none;
+    }
+  }
+}
+
+@keyframes dim-rise-0 {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes dim-rise-1 {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes dim-settle-0 {
+  from {
+    opacity: 0.35;
+    transform: translateY(8px);
+  }
+}
+@keyframes dim-settle-1 {
+  from {
+    opacity: 0.35;
+    transform: translateY(8px);
+  }
+}
+@keyframes dim-fade-0 {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dim-fade-1 {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dim-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.25em);
   }
 }

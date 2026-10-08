@@ -352,6 +352,10 @@ html.lenis {
     font: 900 clamp(40px, 4.4vw, 68px) / 1 var(--serif);
     font-variant-numeric: tabular-nums;
   }
+  /* the live figures replace the stand-ins with a fade, not a swap */
+  .stats b {
+    animation: dim-fade-0 var(--t-in) var(--ease-rise) backwards;
+  }
   .stats span {
     font-size: 14px;
     color: var(--muted);
@@ -511,6 +515,9 @@ html.lenis {
     /* one repository per line */
     display: grid;
     justify-items: start;
+  }
+  .roles dd a {
+    transition: color var(--t-state);
   }
   .roles dd a:hover {
     color: var(--accent);

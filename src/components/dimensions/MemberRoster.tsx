@@ -15,6 +15,8 @@ export const MemberRoster = () => {
     `${STATIC_DATA_API}/member.json`,
   );
   const [query, setQuery] = useState('');
+  // flips with every change of the search: the roster settles in again without being rebuilt (inner.css)
+  const [run, setRun] = useState(0);
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,19 +42,22 @@ export const MemberRoster = () => {
           className='search'
           type='search'
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setRun((r) => 1 - r);
+          }}
           placeholder={t('dimensions.members.search')}
           aria-label={t('dimensions.members.search')}
         />
       </Toolbar>
 
       {loading && (
-        <p className='empty' data-t='body'>
+        <p className='empty' data-state='loading' data-t='body'>
           {t('dimensions.members.loading')}
         </p>
       )}
       {error && (
-        <p className='empty' data-t='body'>
+        <p className='empty' data-state='error' data-t='body'>
           {t('dimensions.members.error')}{' '}
           <button
             type='button'
@@ -80,7 +85,7 @@ export const MemberRoster = () => {
                   {t('dimensions.members.groupCount', { n: g.total })}
                 </span>
               </header>
-              <ul className='people'>
+              <ul className='people' data-run={run}>
                 {g.people.map((m) => (
                   <li
                     className='person'
@@ -103,7 +108,7 @@ export const MemberRoster = () => {
           ))}
 
       {data && shown === 0 && (
-        <p className='empty' data-t='body'>
+        <p className='empty' data-state='empty' data-t='body'>
           {t('dimensions.members.empty')}
         </p>
       )}
