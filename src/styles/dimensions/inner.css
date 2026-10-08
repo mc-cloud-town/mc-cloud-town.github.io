@@ -463,6 +463,12 @@
   .people[data-run='1'] {
     animation-name: dim-settle-1;
   }
+  /* A group comes in from nothing, as a whole: its rows settle from a third (they are never rebuilt, so that is
+     where a search starts them from), and without this they would be there at a third before their heading. */
+  .group {
+    animation: dim-fade-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
+  }
   .group header {
     animation: dim-rise-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
       backwards;
@@ -543,6 +549,7 @@
     }
     .entry,
     .people,
+    .group,
     .group header,
     .empty,
     .empty[data-state='loading'],

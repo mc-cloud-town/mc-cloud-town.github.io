@@ -14,6 +14,9 @@ export const ENTRANCE_PARTS = {
   lede: '.dim .head p[data-t="body"]',
   tools: '.dim .tools',
   list: '.dim .entry, .dim .group header',
+  /** a group of the roster, and its rows */
+  group: '.dim .group',
+  people: '.dim .people',
   next: '.dim .next',
 } as const;
 export type PartName = keyof typeof ENTRANCE_PARTS;

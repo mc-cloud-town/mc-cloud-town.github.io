@@ -23,6 +23,17 @@ const entry = (n: number, title: string) => ({
   title,
   subTitle: `milestone ${n}`,
 });
+const MEMBERS = 'https://mc-ctec.org/static-data/member.json';
+const ROSTER = {
+  member: ['Alpha', 'Bravo', 'Charlie'].map((name, i) => ({
+    name,
+    uuid: `00000000-0000-0000-0000-00000000000${i}`,
+  })),
+  trial: ['Delta', 'Echo'].map((name, i) => ({
+    name,
+    uuid: `00000000-0000-0000-0000-0000000000${10 + i}`,
+  })),
+};
 const SEVEN = [
   entry(4, '2022/8/1'),
   entry(5, '2023/1/2'),
@@ -218,6 +229,48 @@ test.describe('inner pages: the entrance', () => {
     expect(list.start - list.frames[0].t).toBeLessThan(120);
     onlyArrives(frames, 'list');
   });
+
+  for (const when of ['at once', 'late'] as const)
+    test(`a roster that is there ${when} comes in from nothing: its rows are never seen before their heading`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      let answer = () => {};
+      const asked = new Promise<void>((done) => (answer = done));
+      await page.route(MEMBERS, async (r) => {
+        if (when === 'late') await asked;
+        await r.fulfill({ json: ROSTER });
+      });
+      await watchEntrance(page);
+      await openPage(page, '/member/');
+      if (when === 'late') {
+        await settled(page, HEADER);
+        await page.waitForTimeout(400);
+        answer();
+      }
+      await expect(page.locator('.person')).toHaveCount(5);
+      await settled(page, [...HEADER, 'list', 'group', 'people']);
+      const frames = (await entranceFrames(page)).filter((f) => f.parts.people);
+      expect(frames.length).toBeGreaterThan(5);
+      // what the reader sees of the rows, and of their heading: its own opacity within its group's
+      const rows = frames.map((f) => f.parts.people!.o * f.parts.group!.o);
+      const heading = frames.map((f) => f.parts.list!.o * f.parts.group!.o);
+      // the first frame the roster is in the page: nothing of it shows
+      expect(rows[0]).toBeLessThan(0.05);
+      expect(heading[0]).toBeLessThan(0.05);
+      // it only ever comes in, and the rows are never ahead of nothing: while it waits for its turn, both are out of sight
+      rows.forEach((o, i) => {
+        if (i > 0)
+          expect(o, `frame ${i}`).toBeGreaterThanOrEqual(rows[i - 1] - 0.001);
+      });
+      const tools = timing(await entranceFrames(page), 'tools');
+      frames.forEach((f, i) => {
+        if (f.t < tools.start)
+          expect(rows[i], `frame ${i}: before the toolbar`).toBeLessThan(0.05);
+      });
+      expect(rows.at(-1)).toBe(1);
+      expect(heading.at(-1)).toBe(1);
+    });
 
   test('another language at boot changes the words, not the entrance: the same lines go on rising', async ({
     page,
