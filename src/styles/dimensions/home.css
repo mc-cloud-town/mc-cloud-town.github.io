@@ -844,10 +844,17 @@ html.lenis {
     .pal {
       display: none;
     }
+    /* the list takes some of the mascot's room, but stays on the veiled side of the picture */
     .join {
-      max-width: 720px;
+      max-width: min(720px, 62vw);
     }
     .respawn h2 {
+      max-width: none;
+    }
+  }
+  /* up to 860px the veil runs bottom-up under the full width, and so does the list */
+  @media (max-width: 860px) {
+    .join {
       max-width: none;
     }
   }
@@ -900,6 +907,20 @@ html.lenis {
       rgba(var(--v), 0) 72%
     );
   }
+}
+/* day: the footer runs the full width, across the clear side of the photograph, so paper rises under it
+   from the foot of the page (the bottom-up veil of the builds, over this one band) */
+[data-theme='light']:not([data-dim='end']) .dim.dim--home .respawn .dim-foot {
+  width: auto;
+  align-self: stretch;
+  margin-inline: calc(-1 * var(--gutter));
+  padding-inline: var(--gutter);
+  background: linear-gradient(
+    0deg,
+    rgba(var(--v), 0.95) 0%,
+    rgba(var(--v), 0.9) 62%,
+    rgba(var(--v), 0) 100%
+  );
 }
 /* day: the vertical dimension name stands on the photograph, so it gets its own strip of paper */
 [data-theme='light']:not([data-dim='end']) .dim .open .vt {

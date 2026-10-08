@@ -2177,11 +2177,67 @@ test.describe('home: respawn', () => {
           list: el.querySelector('.depts')!.getBoundingClientRect().width,
         };
       });
-      expect(m.list).toBeGreaterThanOrEqual(Math.min(720, m.column) - 1);
+      // up to 860px the text has the whole width; above, it stays on the veiled side of the picture (62% of the screen)
+      const room = width <= 860 ? m.column : Math.min(m.column, 0.62 * width);
+      expect(m.list).toBeGreaterThanOrEqual(Math.min(720, room) - 1);
+      // more than it has beside the mascot (54% of the screen)
+      if (width > 860 && width < 1161)
+        expect(m.list).toBeGreaterThan(0.54 * width + 40);
       await scrollToSection(page, '#respawn .depts', -0.4);
       await expectTextFits(page, { within: '#respawn .depts' });
       await expectNoHorizontalScroll(page);
     });
+
+  test('by day the words of the respawn stand on paper: a wide veil under the list, and paper under the footer', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light', locale: 'en' });
+    await ready(page);
+    await page.evaluate(() =>
+      window.scrollTo(0, document.documentElement.scrollHeight),
+    );
+    await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
+    // how much paper lies over the picture at a point of the screen: the veil's own colour stops, read from its gradient
+    const veil = page.locator('.scene[data-scene="day1"] .veil');
+    await expect(veil).toHaveClass(/veil--wide/);
+    const stops = await veil.evaluate((el) =>
+      [
+        ...getComputedStyle(el).backgroundImage.matchAll(
+          /rgba?\(([^)]+)\) (\d+)%/g,
+        ),
+      ].map((m) => [Number(m[1].split(',')[3] ?? 1), Number(m[2])]),
+    );
+    // at least 90% paper up to 56% of the width
+    expect(stops.slice(0, 2)).toEqual([
+      [0.97, 0],
+      [0.92, 56],
+    ]);
+    // the longest description ends inside that
+    const ends = await page
+      .locator('#respawn .depts li > span')
+      .evaluateAll((els) =>
+        els.map((el) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return Math.max(...[...range.getClientRects()].map((r) => r.right));
+        }),
+      );
+    expect(ends).toHaveLength(3);
+    for (const right of ends) expect(right / 1440).toBeLessThan(0.58);
+    // the footer has its own paper, from edge to edge
+    const foot = page.locator('#respawn .dim-foot');
+    await expect(foot).toHaveCSS('background-image', /linear-gradient\(0deg/);
+    const box = (await foot.boundingBox())!;
+    expect(box.x).toBeLessThanOrEqual(0);
+    expect(box.x + box.width).toBeGreaterThanOrEqual(1440);
+    await expectTextFits(page, { within: '#respawn .dim-foot' });
+    await expectNoHorizontalScroll(page);
+    // by night there is no band: the veil of the scene is dark enough
+    await page.locator('.dim-bar [data-action="theme"]').click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(foot).toHaveCSS('background-image', 'none');
+  });
 
   test('on a phone a department stacks: name, description, link', async ({
     page,
