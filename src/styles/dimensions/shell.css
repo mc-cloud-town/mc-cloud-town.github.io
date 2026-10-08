@@ -329,3 +329,32 @@
     }
   }
 }
+
+/* The navigation cover (Cover.tsx, navigation.ts): one layer over the page, the bar and the menu, under the
+   loader only. It stands in the shell, outside any page, hence outside `.dim`. Opacity is all that ever
+   changes: no overflow lock, no size, nothing the layout or the scrollbar could feel. The length of each
+   fade is set by navigation.ts (280ms in, 520ms out; 100 and 120ms with reduced motion). */
+.dim-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgb(var(--v-night));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.28s var(--ease-rise);
+}
+/* by day it is the paper, unless it leads to the End, which has no daylight */
+[data-theme='light'] .dim-cover:not([data-tone='night']) {
+  background: rgb(var(--v-day));
+}
+/* whole, it also takes the pointer: nothing under it can be clicked while the page changes */
+.dim-cover[data-on='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dim-cover {
+    transition-timing-function: linear;
+  }
+}
