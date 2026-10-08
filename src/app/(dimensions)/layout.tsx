@@ -1,6 +1,8 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useI18nBoot } from '@/i18n/useI18nBoot';
+import { dimensionInitScript, dimensionOfPath } from '@/lib/dimensions/pages';
 import { DimensionProvider } from '#/dimensions/DimensionProvider';
 import { Cover } from '#/dimensions/Cover';
 
@@ -16,7 +18,9 @@ export default function DimensionsLayout({
 }) {
   useI18nBoot();
   return (
-    <DimensionProvider>
+    <DimensionProvider initial={dimensionOfPath(usePathname())}>
+      {/* before anything of the shell is parsed: the page's dimension is on the document from the first paint */}
+      <script dangerouslySetInnerHTML={{ __html: dimensionInitScript }} />
       {children}
       {/* over every page of the shell, and still there while one page gives way to the next */}
       <Cover />

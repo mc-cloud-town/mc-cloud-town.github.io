@@ -1117,3 +1117,124 @@ test.describe('dimensions shell: the language menu', () => {
     await expect(sheet).toHaveCSS('visibility', 'hidden');
   });
 });
+
+test.describe('dimensions shell: the dimension is on the document from the first paint', () => {
+  interface DimLog {
+    /** every value of `<html data-dim>` from the first frame on, in order, without repeats */
+    dims: (string | null)[];
+    /** what it was when the first element of the shell had been parsed */
+    atShell?: string | null;
+    /** what it was, and how the document scrolled, when the parser had finished: before hydration */
+    atParsed?: { dim: string | null; scroll: string; hydrated: boolean };
+  }
+  /** Watch `<html data-dim>` from before the page's own first script. */
+  const watchDim = (page: Page) =>
+    page.addInitScript(() => {
+      const w = window as unknown as { __dim: DimLog };
+      const log: DimLog = { dims: [] };
+      w.__dim = log;
+      const read = () => document.documentElement.getAttribute('data-dim');
+      const hydrated = () => {
+        const bar = document.querySelector('.dim-bar, [data-shell="legacy"]');
+        return Boolean(
+          bar && Object.keys(bar).some((k) => k.startsWith('__reactFiber')),
+        );
+      };
+      new MutationObserver(() => {
+        const d = read();
+        if (log.dims.at(-1) !== d) log.dims.push(d);
+        if (log.atShell === undefined && document.querySelector('.dim'))
+          log.atShell = d;
+      }).observe(document, {
+        attributes: true,
+        attributeFilter: ['data-dim'],
+        childList: true,
+        subtree: true,
+      });
+      document.addEventListener('DOMContentLoaded', () => {
+        log.atParsed = {
+          dim: read(),
+          scroll: getComputedStyle(document.documentElement).scrollBehavior,
+          hydrated: hydrated(),
+        };
+      });
+    });
+  const hydrated = (page: Page) =>
+    page.waitForFunction(() => {
+      const bar = document.querySelector('.dim-bar, [data-shell="legacy"]');
+      return Boolean(
+        bar && Object.keys(bar).some((k) => k.startsWith('__reactFiber')),
+      );
+    });
+  const dimLog = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __dim: DimLog }).__dim);
+
+  for (const [path, dim] of [
+    ['/member/', 'end'],
+    ['/survivalProgress/', 'overworld'],
+    ['/survival/', 'overworld'],
+    ['/', 'overworld'],
+    ['/home/', 'overworld'],
+  ] as const)
+    test(`a hard load of ${path}: data-dim is ${dim} before the page is parsed to its end, and never anything else`, async ({
+      page,
+    }) => {
+      await watchDim(page);
+      await openPage(page, path);
+      await hydrated(page);
+      // two more frames: whatever hydration's effects set has been set
+      await page.evaluate(
+        () =>
+          new Promise((done) =>
+            requestAnimationFrame(() => requestAnimationFrame(done)),
+          ),
+      );
+      const log = await dimLog(page);
+      // the page's own dimension is there when the shell's first element is, and when the parser ends
+      expect(log.atShell).toBe(dim);
+      expect(log.atParsed).toEqual({ dim, scroll: 'auto', hydrated: false });
+      // and hydration does not take it through another one on the way (members: not the overworld first)
+      expect(log.dims.filter((d) => d !== null)).toEqual([dim]);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', dim);
+    });
+
+  test('a legacy page never has it', async ({ page }) => {
+    await watchDim(page);
+    await page.goto('/join/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    await hydrated(page);
+    const log = await dimLog(page);
+    expect(log.atParsed?.dim).toBeNull();
+    // the legacy pages keep the site's own smooth scrolling
+    expect(log.atParsed?.scroll).toBe('smooth');
+    expect(log.dims.filter((d) => d !== null)).toEqual([]);
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.hasAttribute('data-dim'),
+      ),
+    ).toBe(false);
+  });
+
+  test('leaving the shell for a legacy page without a reload takes it away, and coming back brings the page’s own', async ({
+    page,
+  }) => {
+    await openPage(page, '/member/');
+    await hydrated(page);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await page.evaluate(() => {
+      // a client-side step to a legacy page, as Next's router makes it
+      (
+        window as unknown as { next: { router: { push: (u: string) => void } } }
+      ).next.router.push('/join/');
+    });
+    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.hasAttribute('data-dim'),
+      ),
+    ).toBe(false);
+    await page.goBack();
+    await expect(page.locator('.dim .head h1')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+  });
+});
