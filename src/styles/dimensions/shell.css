@@ -459,3 +459,46 @@ html[data-dim] {
     transition-timing-function: linear;
   }
 }
+
+/* ───────── going to another page (pageTransition.ts) ─────────
+   Leave: the content settles out under the cover that is coming in. It goes the way it came, on upwards by a few
+   pixels (as the hero's copy leaves when it is scrolled away), in the time anything leaves (--t-out): gone before
+   the cover is whole. The bar stays; the cover takes it. Given up, the content eases back the same way.
+   The home page's content only fades: it holds the pinned stage, which a moved ancestor would take along.
+   Arrive: under the whole cover the new page's entrance is held, and let go when the cover begins to lift. */
+.dim main {
+  transition:
+    opacity var(--t-out) var(--ease-rise),
+    translate var(--t-out) var(--ease-rise);
+}
+.dim > .dim-foot {
+  transition:
+    color var(--t-theme),
+    border-color var(--t-theme),
+    opacity var(--t-out) var(--ease-rise),
+    translate var(--t-out) var(--ease-rise);
+}
+html[data-nav='leaving'] .dim main,
+html[data-nav='leaving'] .dim > .dim-foot {
+  opacity: 0;
+  translate: 0 -12px;
+}
+html[data-nav='leaving'] .dim.dim--home main {
+  translate: none;
+}
+/* whatever else names an animation here: under the whole cover none of them runs */
+html[data-nav='covered'] .dim main,
+html[data-nav='covered'] .dim main * {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dim main,
+  .dim > .dim-foot {
+    transition-duration: 0.1s;
+    transition-timing-function: linear;
+  }
+  html[data-nav='leaving'] .dim main,
+  html[data-nav='leaving'] .dim > .dim-foot {
+    translate: none;
+  }
+}

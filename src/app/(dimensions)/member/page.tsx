@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { SiteBar } from '#/dimensions/SiteBar';
 import { SiteFooter } from '#/dimensions/SiteFooter';
@@ -32,9 +31,11 @@ export default function Page() {
           <span className='mono' data-t='note'>
             {t('dimensions.nextLabel')}
           </span>
-          <Link className='serif' href='/#respawn' data-t='title'>
+          {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a className='serif' href='/#respawn' data-t='title'>
             {t('dimensions.members.next')} →
-          </Link>
+          </a>
         </div>
       </main>
       <SiteFooter />

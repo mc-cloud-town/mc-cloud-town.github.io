@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import useApi from '@/hooks/useApi';
 import { STATIC_DATA_API } from '@/constants';
@@ -41,9 +40,9 @@ export default function ProgressPage() {
           <span className='mono' data-t='note'>
             {t('dimensions.nextLabel')}
           </span>
-          <Link className='serif' href='/member/' data-t='title'>
+          <a className='serif' href='/member/' data-t='title'>
             {t('dimensions.progress.next')} →
-          </Link>
+          </a>
         </div>
       </main>
       <SiteFooter />

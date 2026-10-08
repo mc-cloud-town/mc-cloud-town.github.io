@@ -5,6 +5,7 @@ import { useI18nBoot } from '@/i18n/useI18nBoot';
 import { dimensionInitScript, dimensionOfPath } from '@/lib/dimensions/pages';
 import { DimensionProvider } from '#/dimensions/DimensionProvider';
 import { Cover } from '#/dimensions/Cover';
+import { PageTransitions } from '#/dimensions/PageTransitions';
 
 import '@/styles/dimensions/tokens.css';
 import '@/styles/dimensions/shell.css';
@@ -24,6 +25,7 @@ export default function DimensionsLayout({
       {children}
       {/* over every page of the shell, and still there while one page gives way to the next */}
       <Cover />
+      <PageTransitions />
     </DimensionProvider>
   );
 }

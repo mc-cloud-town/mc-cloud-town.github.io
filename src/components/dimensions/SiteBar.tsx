@@ -7,7 +7,6 @@ import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import {
   CloseOutlined,
@@ -19,6 +18,7 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { serverLink } from '@/constants';
 import { followSectionLink, wait } from '@/lib/dimensions/navigation';
+import { followPageLink, prefetchPage } from '@/lib/dimensions/pageTransition';
 import { holdPage } from '@/lib/dimensions/pageScroll';
 import { useDimension } from './DimensionProvider';
 import { LanguageMenu } from './LanguageMenu';
@@ -112,6 +112,8 @@ export const SiteBar = ({
     // the page behind stays where it is; the wheel, touch and scroll keys go to the sheet, if it has anything to scroll
     const hold = holdPage(sheet.current);
     const rejoin = isolate(bar.current, sheet.current);
+    // whoever opens the menu is about to go somewhere: its pages are fetched now, not at the click
+    sheet.current.querySelectorAll('a').forEach((a) => prefetchPage(a.href));
     release.current = () => {
       hold.release();
       rejoin();
@@ -169,6 +171,8 @@ export const SiteBar = ({
    * A link was followed. On the home page a link to a section is a jump (navigation.ts): the sheet closes
    * as part of it, at once for a travel, under the cover for a cut. Until then the page behind the sheet stays as
    * the sheet keeps it, held and inert: a cover that is still coming in can be seen through.
+   * A link to another page of the shell is a step under the cover (pageTransition.ts): the sheet stays whole until
+   * the cover is over it, and goes underneath.
    * Anything else: the sheet closes and the link is followed.
    */
   const follow = (e: ReactMouseEvent<HTMLAnchorElement>) => {
@@ -187,6 +191,15 @@ export const SiteBar = ({
           close();
           // a cover that came down over the open sheet lifts only when the sheet is gone
           if (open) return sheetGone(sheet.current);
+        },
+      })
+    )
+      return;
+    if (
+      followPageLink(e, {
+        leave: () => {
+          letGo();
+          close();
         },
       })
     )
@@ -222,7 +235,9 @@ export const SiteBar = ({
   return (
     <>
       <header className='dim-bar' ref={bar}>
-        <Link
+        {/* a plain link on purpose: `follow` takes the step, as a jump or as a transition to the home page */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
           className='logo'
           href='/'
           aria-label={t('dimensions.nav.home')}
@@ -232,7 +247,7 @@ export const SiteBar = ({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src='/assets/brand/brand1.webp' alt='雲鎮工藝 CTEC' />
-        </Link>
+        </a>
         <nav aria-label={t('dimensions.nav.menu')}>{items}</nav>
         <button
           className='pill'

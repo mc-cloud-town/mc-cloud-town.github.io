@@ -338,3 +338,93 @@ test.describe('shell: the language list is an overlay too', () => {
     expect(await measure()).toEqual(before);
   });
 });
+
+test.describe('shell: the cover of a step to another page is an overlay too', () => {
+  for (const [from, link, to] of [
+    ['/member/', '/survivalProgress/', '/survivalProgress/'],
+    ['/', '/member/', '/member/'],
+  ] as const)
+    test(`from ${from} to ${to}: nothing about the layout changes while the cover is up`, async ({
+      page,
+      isMobile,
+    }) => {
+      await page.setViewportSize({ width: 1280, height: 768 });
+      // every frame of the document: the measurements, the cover, and the page it was taken on
+      await page.addInitScript(() => {
+        const w = window as unknown as {
+          __m: { cover: number; path: string; at: unknown }[];
+        };
+        w.__m = [];
+        const tick = () => {
+          const cover = document.querySelector('.dim-cover');
+          const logo = document.querySelector('.dim-bar .logo');
+          if (cover && logo) {
+            const s = getComputedStyle(cover);
+            w.__m.push({
+              cover: s.visibility === 'hidden' ? 0 : +s.opacity,
+              path: window.location.pathname,
+              at: {
+                client: document.documentElement.clientWidth,
+                scrollbar:
+                  window.innerWidth - document.documentElement.clientWidth,
+                logo: logo.getBoundingClientRect().x,
+                body: getComputedStyle(document.body).overflowY,
+                html: getComputedStyle(document.documentElement).overflowY,
+              },
+            });
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      await openPage(page, from);
+      if (from === '/') await ready(page);
+      else await page.locator('.person').first().waitFor();
+      const measure = () =>
+        page.evaluate(() => ({
+          client: document.documentElement.clientWidth,
+          scrollbar: window.innerWidth - document.documentElement.clientWidth,
+          logo: document
+            .querySelector('.dim-bar .logo')!
+            .getBoundingClientRect().x,
+          body: getComputedStyle(document.body).overflowY,
+          html: getComputedStyle(document.documentElement).overflowY,
+        }));
+      const before = await measure();
+      if (!isMobile) expect(before.scrollbar).toBeGreaterThan(0);
+      await page.evaluate(() => {
+        (window as unknown as { __m: unknown[] }).__m = [];
+      });
+      // at 1280 the bar is whole: the link is in it
+      await page.locator(`.dim-bar nav a[href="${link}"]`).click();
+      await expect.poll(() => new URL(page.url()).pathname).toBe(to);
+      await expect(page.locator('.dim-cover')).toHaveCSS(
+        'visibility',
+        'hidden',
+      );
+      // the destination has to be as long as the page that was left for its scrollbar to be the same one
+      await page.locator('.person, .entry').first().waitFor();
+      const seen = await page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __m: { cover: number; path: string; at: unknown }[];
+            }
+          ).__m,
+      );
+      const covered = seen.filter((f) => f.cover > 0);
+      expect(covered.length).toBeGreaterThan(10);
+      expect(covered.some((f) => f.cover === 1)).toBe(true);
+      // on the page that is left: the same from the click until it is gone
+      const leaving = covered.filter((f) => f.path === from);
+      expect(leaving.length).toBeGreaterThan(5);
+      for (const f of leaving) expect(f.at).toEqual(before);
+      // on the page that is reached: `overflow` is never touched, whatever its own length makes of the scrollbar
+      for (const f of covered)
+        expect(f.at).toMatchObject({ body: 'visible', html: 'visible' });
+      const after = await measure();
+      expect(after).toMatchObject({ body: 'visible', html: 'visible' });
+      // and once both are long pages, the layout is the one the reader left
+      expect(after).toEqual(before);
+    });
+});

@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 /** One part of an inner page's entrance in one frame: how much of it shows, and how far below its place it is drawn (its own transform, so a reflow of the page is not mistaken for travel). */
 export interface Part {
@@ -98,3 +98,124 @@ export const animationOf = (page: Page, selector: string) =>
       easing: c.animationTimingFunction,
     };
   }, selector);
+
+/** One frame of `watchNav`: everything a step from one page to another changes. */
+export interface NavFrame {
+  t: number;
+  path: string;
+  y: number;
+  /** opacity of the navigation cover (0 when it is not shown), and its colour */
+  cover: number;
+  tone: string;
+  /** `<html data-nav>`: `leaving`, `covered`, or nothing */
+  nav: string | null;
+  dim: string | null;
+  /** opacity of the home page's loader; null when there is none in the page */
+  loader: number | null;
+  /** the page's content: how much of it shows, and how far it has been moved (its own `translate`) */
+  main: Part | null;
+  /** the first line of an inner page's title */
+  line0: Part | null;
+  /** opacity of the menu sheet (0 when it is hidden) */
+  sheet: number;
+  /** the smooth scroll of the home page is stopped */
+  stopped: boolean;
+}
+
+/**
+ * Record every frame of this document from its first one (a step made by the client router stays in the same
+ * document, so the recording runs through it), and every fade the cover starts. Read with `navFrames`.
+ */
+export const watchNav = (page: Page) =>
+  page.addInitScript(() => {
+    const w = window as unknown as {
+      __nav: NavFrame[];
+      __navRuns: string[];
+      __sameDocument: number;
+    };
+    w.__nav = [];
+    w.__navRuns = [];
+    w.__sameDocument = Math.random();
+    const shown = (el: Element | null) => {
+      if (!el) return 0;
+      const c = getComputedStyle(el);
+      return c.visibility === 'hidden' ? 0 : +c.opacity;
+    };
+    let listening: Element | null = null;
+    const tick = (t: number) => {
+      const html = document.documentElement;
+      const cover = document.querySelector<HTMLElement>('.dim-cover');
+      if (cover && listening !== cover) {
+        listening = cover;
+        cover.addEventListener('transitionrun', (e) =>
+          w.__navRuns.push(
+            `${e.propertyName}:${Math.round(parseFloat(getComputedStyle(cover).transitionDuration) * 1000)}`,
+          ),
+        );
+      }
+      const main = document.querySelector('.dim main');
+      const line = document.querySelector('.dim .head h1 span');
+      const loader = document.querySelector('.dim .loader');
+      const mc = main && getComputedStyle(main);
+      const lc = line && getComputedStyle(line);
+      w.__nav.push({
+        t,
+        path: window.location.pathname,
+        y: Math.round(window.scrollY),
+        cover: shown(cover),
+        tone: cover ? getComputedStyle(cover).backgroundColor : '',
+        nav: html.getAttribute('data-nav'),
+        dim: html.getAttribute('data-dim'),
+        loader: loader ? shown(loader) : null,
+        main: mc
+          ? {
+              o: +mc.opacity,
+              y:
+                mc.translate === 'none'
+                  ? 0
+                  : parseFloat(mc.translate.split(' ')[1] ?? '0'),
+            }
+          : null,
+        line0: lc
+          ? { o: +lc.opacity, y: new DOMMatrix(lc.transform).m42 }
+          : null,
+        sheet: shown(document.querySelector('.dim-sheet')),
+        stopped: html.classList.contains('lenis-stopped'),
+      });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+/** The frames since the last call (or since the document began), and the cover's fades in that time. */
+export const navFrames = (page: Page) =>
+  page.evaluate(() => {
+    const w = window as unknown as { __nav: NavFrame[]; __navRuns: string[] };
+    const out = { frames: w.__nav, runs: w.__navRuns };
+    w.__nav = [];
+    w.__navRuns = [];
+    return out;
+  });
+
+/** A mark that a new document does not carry: the same value before and after means no reload in between. */
+export const documentMark = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { __sameDocument: number }).__sameDocument,
+  );
+
+/** No cover, no step under way, and the wheel moves the page: it is the reader's. */
+export const pageIsFree = async (page: Page) => {
+  await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+  await expect(page.locator('html')).not.toHaveAttribute('data-nav', /.*/);
+  await expect(page.locator('html')).not.toHaveClass(/lenis-stopped/);
+  await expect(page.locator('.dim main')).toHaveCSS('opacity', '1');
+  const before = await page.evaluate(() => window.scrollY);
+  const size = page.viewportSize()!;
+  await page.mouse.move(size.width / 2, size.height / 2);
+  await page.mouse.wheel(0, 300);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY), {
+      message: 'the wheel moves the page',
+    })
+    .toBeGreaterThan(before);
+};

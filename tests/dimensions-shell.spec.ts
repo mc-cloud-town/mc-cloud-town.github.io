@@ -579,6 +579,9 @@ test.describe('dimensions shell: the menu is a designed transition', () => {
     expect(
       await page.evaluate(() => document.querySelector('main')!.inert),
     ).toBe(false);
+    // (the step is a transition now: the page is the reader's when its cover has gone)
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await expect(page.locator('html')).not.toHaveAttribute('data-nav', /.*/);
     await page.mouse.move(195, 500);
     await page.mouse.wheel(0, 300);
     await expect

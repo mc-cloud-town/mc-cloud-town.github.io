@@ -1,7 +1,6 @@
 'use client';
 
 import { Fragment, useEffect, type CSSProperties } from 'react';
-import Link from 'next/link';
 import { useDimension, type Dimension } from './DimensionProvider';
 import { VerticalLabel } from './VerticalLabel';
 
@@ -40,7 +39,8 @@ export const InnerHeader = ({
             <Fragment key={c.label}>
               {i > 0 && <span aria-hidden='true'>/</span>}
               {c.href ? (
-                <Link href={c.href}>{c.label}</Link>
+                // a plain link: the shell takes the step from here (PageTransitions)
+                <a href={c.href}>{c.label}</a>
               ) : (
                 <span className='acc'>{c.label}</span>
               )}
