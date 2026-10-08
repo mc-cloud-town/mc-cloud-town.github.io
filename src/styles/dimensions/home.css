@@ -609,7 +609,91 @@ html.lenis {
     font-size: clamp(40px, 7vw, 120px);
   }
 
+  /* respawn: day one again, the call to join, and the footer of the site at the foot of the section */
+  .respawn {
+    position: relative;
+    min-height: 100vh;
+    padding: 20vh var(--gutter) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .respawn h2 {
+    font-size: clamp(40px, 6vw, 108px);
+    margin: 18px 0 44px;
+    max-width: 54vw;
+  }
+  /* The departments and, beside them, the mascot. The list alone gives this block its size: the mascot is
+     placed against it, one gutter to its right and centred on it, without taking part in the flow.
+     Widths at 1101px, the narrowest screen with a mascot: gutter 6vw + list 54vw + gutter 6vw + mascot 28vw
+     + gutter 6vw = the screen, with 458px for a description and a mascot of 308px. Any narrower and both
+     would be squeezed, so from 1100px down (where the bar, too, takes its narrow layout) the mascot is left
+     out and the list takes its own full measure. */
+  .join {
+    --pal: min(28vw, 400px);
+    position: relative;
+    margin-top: 64px;
+    width: 100%;
+    max-width: min(720px, 54vw);
+  }
+  /* name | description, with the way to apply on a line of its own under the description: beside it, the link
+     took a third of the row and the description wrapped after a few words (user feedback; not as the demo,
+     which has no link) */
+  .depts li {
+    display: grid;
+    grid-template-columns: 7em minmax(0, 1fr);
+    gap: 0 24px;
+    align-items: baseline;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+  }
+  .depts li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .depts b {
+    font: 900 22px var(--serif);
+  }
+  .depts li > span {
+    color: var(--muted);
+  }
+  .depts li > :not(b) {
+    grid-column: 2;
+  }
+  /* a paragraph and its link, at the scale of a row of this list (the openings have 40px there, under 17px text) */
+  .depts .more {
+    margin-top: 12px;
+    justify-self: start;
+    white-space: nowrap;
+  }
+  .pal {
+    position: absolute;
+    left: calc(100% + var(--gutter));
+    top: 50%;
+    width: var(--pal);
+    height: var(--pal);
+    max-width: none;
+    margin-top: calc(var(--pal) / -2);
+    filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.45));
+    /* floating around its place, on properties of its own: its rise (choreography.ts) owns the transform */
+    animation: pal-float 2.8s ease-in-out infinite alternate;
+  }
+  /* the footer of the site is the foot of this section: no rule above it, and the design's 64px under it */
+  .respawn .dim-foot {
+    margin-top: auto;
+    width: 100%;
+    padding: 82px 0 64px;
+    border-top: 0;
+  }
+  /* a section that was jumped to: the focus is on its heading, which is not a control */
+  [data-heading]:focus:not(:focus-visible) {
+    outline: none;
+  }
+
   @media (max-width: 1024px) {
+    /* 44px tall to tap, its words at the foot of that box: the box itself is the gap to the description */
+    .depts .more {
+      margin-top: 0;
+    }
     /* a finger needs 44px around each stop of the rail */
     .rail a {
       width: 44px;
@@ -696,6 +780,13 @@ html.lenis {
     .rail {
       display: none;
     }
+    .depts li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+    .depts li > :not(b) {
+      grid-column: 1;
+    }
   }
   /* short landscape screens: the title would run off the bottom */
   @media (max-height: 480px) {
@@ -740,9 +831,31 @@ html.lenis {
     .rail {
       display: none;
     }
+    .respawn {
+      min-height: 0;
+      padding-top: 96px;
+    }
+    .respawn .dim-foot {
+      padding-bottom: 24px;
+    }
+  }
+  /* no room for the list and the mascot side by side (see .join), or no height for it: no mascot */
+  @media (max-width: 1100px), (max-height: 480px) {
+    .pal {
+      display: none;
+    }
+    .join {
+      max-width: 720px;
+    }
+    .respawn h2 {
+      max-width: none;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     .cue i::after {
+      animation: none;
+    }
+    .pal {
       animation: none;
     }
     .ledger-stage {
@@ -811,6 +924,16 @@ html.lenis {
   }
   to {
     translate: 100% 0;
+  }
+}
+@keyframes pal-float {
+  from {
+    translate: 0 1.5%;
+    rotate: 1deg;
+  }
+  to {
+    translate: 0 -1.5%;
+    rotate: -1deg;
   }
 }
 @keyframes ledger-in {

@@ -293,6 +293,21 @@ export const buildChoreography = (
     // the credits simply scroll over the stars
     change(TRANSITIONS[8]);
 
+    // ── respawn ── the white-out, then the first day again; the mascot rises with the title
+    change(TRANSITIONS[9]);
+    reveals(q('#respawn'));
+    const pal = q('.pal');
+    if (pal)
+      // its floating is a CSS animation on `translate` and `rotate` (home.css), so this rise owns the transform alone
+      gsap.from(pal, {
+        y: 160,
+        rotate: 8,
+        opacity: 0,
+        duration: 1.5,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: q('.respawn h2'), start: 'top 80%' },
+      });
+
     // ── later tasks append here, in page order ──
     // Rule: one section at a time, top to bottom, and everything a section needs (its scene change, its drift,
     // its pin, its reveals(section)) is created together. A pin adds scroll length, so a trigger created before

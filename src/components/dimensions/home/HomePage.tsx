@@ -27,6 +27,7 @@ import { NetherLedger } from './NetherLedger';
 import { RankStatement } from './RankStatement';
 import { Starfield } from './Starfield';
 import { Credits } from './Credits';
+import { Respawn } from './Respawn';
 import { DimensionRail } from './DimensionRail';
 
 /** Shown until the live numbers arrive, and kept if they never do. */
@@ -245,6 +246,7 @@ export const HomePage = () => {
           />
         ))}
         <Credits members={members} />
+        <Respawn />
       </main>
     </div>
   );
