@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers/home';
+import { ready, scrollToSection } from './helpers/home';
 
 const LEGACY = [
   '/join/',
@@ -1481,5 +1481,76 @@ test.describe('the language of the document', () => {
     await page.goBack();
     await page.locator('.person').first().waitFor();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  });
+});
+
+test.describe('behind the shell', () => {
+  const body = (page: Page) =>
+    page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const shell = (page: Page) =>
+    page.locator('.dim').evaluate((el) => getComputedStyle(el).backgroundColor);
+
+  for (const theme of ['dark', 'light'] as const) {
+    const ground = theme === 'dark' ? 'rgb(6, 8, 11)' : 'rgb(238, 242, 245)';
+    for (const path of ['/member/', '/survivalProgress/', '/'] as const)
+      test(`${path} (${theme}): what shows when the page is pulled past its end is the shell's own ground`, async ({
+        page,
+      }) => {
+        await openPage(page, path, { theme });
+        if (path === '/') await ready(page);
+        await atRest(page);
+        expect(await shell(page)).toBe(ground);
+        expect(await body(page)).toBe(ground);
+      });
+
+    test(`a legacy page keeps its own ground (${theme}), also when it is reached from the shell, and the shell has its own again on the way back`, async ({
+      page,
+      browser,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      // what a legacy page has by itself
+      const visit = await browser.newContext();
+      const other = await visit.newPage();
+      await other.addInitScript(
+        (t) => localStorage.setItem('ctec-theme-preference', t),
+        theme,
+      );
+      await other.goto('/join/');
+      await expect(other.locator('[data-shell="legacy"]')).toBeVisible();
+      const legacy = await body(other);
+      await visit.close();
+      expect(legacy).not.toBe(ground);
+
+      await openPage(page, '/member/', { theme });
+      await page.locator('.person').first().waitFor();
+      expect(await body(page)).toBe(ground);
+      const link = page.locator('.dim-foot .pages a[href="/join/"]');
+      await link.scrollIntoViewIfNeeded();
+      await link.click();
+      await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+      await expect.poll(() => body(page)).toBe(legacy);
+      await page.goBack();
+      await page.locator('.person').first().waitFor();
+      await expect.poll(() => body(page)).toBe(ground);
+    });
+  }
+
+  test('by day the home page is dark inside the End, and so is what is behind it; light again after it', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#end', 0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await expect.poll(() => shell(page)).toBe('rgb(6, 8, 11)');
+    await expect.poll(() => body(page)).toBe('rgb(6, 8, 11)');
+    await scrollToSection(page, '#respawn', 0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
+    await expect.poll(() => body(page)).toBe('rgb(238, 242, 245)');
+    // the members' page is in the End too, and stays in the light: only the film goes dark
+    await openPage(page, '/member/', { theme: 'light' });
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    expect(await body(page)).toBe('rgb(238, 242, 245)');
   });
 });

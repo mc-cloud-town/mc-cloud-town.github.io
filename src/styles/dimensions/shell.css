@@ -10,6 +10,20 @@
 html[data-dim] {
   scroll-behavior: auto;
 }
+/* Behind the shell, where a page that is pulled past its end shows what is under it: the shell's own ground
+   (--bg in tokens.css, which is defined on .dim and so not known here), not the legacy pages' ground of app.css.
+   It changes with the theme as the shell does (--t-theme). By day the home page goes dark inside the End, and
+   so does what is behind it; the members' page, which is in the End too, stays in the light. */
+html[data-dim] body {
+  background: #06080b;
+  transition: background-color 0.4s;
+}
+html[data-dim][data-theme='light'] body {
+  background: #eef2f5;
+}
+html[data-theme='light'][data-dim='end']:has(.dim.dim--home) body {
+  background: #06080b;
+}
 
 .dim {
   /* the fixed bar's height, for sticky offsets: 18px padding twice + content (44px controls up to 1024px) */
