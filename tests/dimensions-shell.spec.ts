@@ -1421,3 +1421,65 @@ test.describe('headings inside the shell', () => {
         }
       });
 });
+
+test.describe('the language of the document', () => {
+  const TAGS = { zh_TW: 'zh-Hant', zh_CN: 'zh-Hans', en: 'en' } as const;
+
+  for (const path of ['/', '/member/'] as const)
+    for (const locale of LOCALES)
+      test(`${path} opened in ${locale}: <html lang> is ${TAGS[locale]}, and follows a change of language, with no hydration warning`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        const said: string[] = [];
+        page.on('console', (m) => {
+          if (['error', 'warning'].includes(m.type())) said.push(m.text());
+        });
+        page.on('pageerror', (e) => said.push(e.message));
+        await openPage(page, path, { locale });
+        await expect(page.locator('html')).toHaveAttribute(
+          'lang',
+          TAGS[locale],
+        );
+        if (path === '/') await ready(page);
+        // and by the bar's own list, to each of the other two
+        for (const next of LOCALES.filter((l) => l !== locale)) {
+          await setLanguage(page, next);
+          await expect(page.locator('html')).toHaveAttribute(
+            'lang',
+            TAGS[next],
+          );
+        }
+        expect(
+          said.filter((s) => /hydrat|did not match|mismatch/i.test(s)),
+        ).toEqual([]);
+      });
+
+  test('a legacy page keeps the language tag it is served with, also when it is reached from the shell', async ({
+    page,
+    browser,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // what a legacy page is served with, and keeps (a visit of its own: it would leave its language behind)
+    const visit = await browser.newContext();
+    const other = await visit.newPage();
+    await other.goto('/join/');
+    await expect(other.locator('[data-shell="legacy"]')).toBeVisible();
+    const served = await other.locator('html').getAttribute('lang');
+    expect(served).toBe('zh');
+    await visit.close();
+    // from a page of the shell that is in English, by the footer's link: the same document
+    await openPage(page, '/member/', { locale: 'en' });
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    const link = page.locator('.dim-foot .pages a[href="/join/"]');
+    await link.scrollIntoViewIfNeeded();
+    await link.click();
+    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('lang', served!);
+    // and back in the shell it is the reader's language again
+    await page.goBack();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  });
+});
