@@ -260,10 +260,6 @@ html.lenis {
     max-width: 2200px;
     margin-inline: auto;
   }
-  /* app.css gives every heading the legacy text colour */
-  :is(h1, h2, h3) {
-    color: inherit;
-  }
   .vt {
     writing-mode: vertical-rl;
     text-orientation: mixed;

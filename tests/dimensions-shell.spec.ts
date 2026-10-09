@@ -1398,3 +1398,26 @@ test.describe('footer: the other pages of the site', () => {
     await expect(link).toHaveCSS('color', 'rgb(205, 176, 255)');
   });
 });
+
+test.describe('headings inside the shell', () => {
+  for (const theme of ['dark', 'light'] as const)
+    for (const [path, first, headings] of [
+      ['/survivalProgress/', '.entry', ['.head h1', '.entry h2']],
+      ['/member/', '.person', ['.head h1', '.group h2']],
+    ] as const)
+      test(`${path} (${theme}): its headings are in the shell's ink, not in the legacy pages' text colour`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await openPage(page, path, { theme });
+        await page.locator(first).first().waitFor();
+        await atRest(page);
+        const ink = theme === 'dark' ? 'rgb(242, 244, 246)' : 'rgb(15, 20, 24)';
+        // the shell's own ground colour for text, which is what the page around them has
+        await expect(page.locator('.dim')).toHaveCSS('color', ink);
+        for (const sel of headings) {
+          expect(await page.locator(sel).count(), sel).toBeGreaterThan(0);
+          await expect(page.locator(sel).first(), sel).toHaveCSS('color', ink);
+        }
+      });
+});

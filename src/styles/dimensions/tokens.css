@@ -67,6 +67,11 @@
   color: inherit;
   text-decoration: none;
 }
+/* app.css gives every heading the legacy pages' text colour: inside the shell a heading is in the shell's ink,
+   on every page of it (and changes with the theme as the text around it does) */
+.dim :is(h1, h2, h3, h4, h5, h6) {
+  color: inherit;
+}
 .dim img {
   display: block;
   max-width: 100%;
