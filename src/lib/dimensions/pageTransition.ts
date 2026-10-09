@@ -61,6 +61,13 @@ let step: Step | null = null;
 /** The release of every hold on the page that a step has taken and not yet let go. */
 const holds = new Set<() => void>();
 
+/**
+ * A step to another page is under way: from the click until its cover has gone again and the page is let go.
+ * For that long the cover is the step's alone. A section jump of the home page (sectionJumps.ts) does not start,
+ * and one that is running hands the cover over: it neither lifts it nor moves the page again.
+ */
+export const pageStepUnderWay = () => step !== null || holds.size > 0;
+
 /** `<PageTransitions />` hands the router over while the shell is mounted; returns the release. */
 export const setPageRouter = (r: Router) => {
   router = r;

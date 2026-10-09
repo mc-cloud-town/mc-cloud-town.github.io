@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openPage } from './helpers/dimensions';
-import { ready } from './helpers/home';
+import { clickAt, clickedAt, ready } from './helpers/home';
 import {
   animationOf,
   documentMark,
@@ -814,7 +814,7 @@ test.describe('going to another page', () => {
   /** Do something in the page, in the first frame in which the cover is coming in (between 0.3 and 0.9). */
   const whileComing = (
     page: Page,
-    what: 'back' | 'restored' | { click: string },
+    what: 'back' | 'restored' | 'sent away' | { click: string },
   ) =>
     page.evaluate((act) => {
       const tick = () => {
@@ -827,6 +827,10 @@ test.describe('going to another page', () => {
           window.dispatchEvent(
             new PageTransitionEvent('pageshow', { persisted: true }),
           );
+        else if (act === 'sent away')
+          // what `coverOut` does to the cover, without anything else knowing of it
+          document.querySelector<HTMLElement>('.dim-cover')!.dataset.on =
+            'false';
         else document.querySelector<HTMLElement>(act.click)!.click();
       };
       requestAnimationFrame(tick);
@@ -1044,6 +1048,122 @@ test.describe('going to another page', () => {
     // and the plain click still is a step
     await link.click();
     await arrived(page, '/survivalProgress/');
+  });
+
+  for (const moment of ['coming', 'whole', 'lifting'] as const)
+    test(`a far jump on the home page, then a link to another page while its cover is ${moment}: the step takes the cover over`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await watchNav(page);
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('.loader')).toHaveCount(0);
+      const mark = await documentMark(page);
+      await navFrames(page);
+      // armed for that moment of the cut, then the cut: hero → respawn
+      await clickAt(page, '.dim-bar nav a[href="/member/"]', moment, 0.7);
+      await page.locator('.hero a.btn').click();
+      const clicked = await clickedAt(page);
+      await arrived(page, '/member/');
+      expect(await documentMark(page)).toBe(mark);
+      const { frames } = await navFrames(page);
+      const after = frames.filter((f) => f.t >= clicked.t);
+      // from the first frame the cover is whole after that click, until the members page is in the document:
+      // it stays whole (the cut does not lift it)
+      const whole = after.findIndex((f) => f.cover >= 0.99);
+      const there = after.findIndex((f) => f.path === '/member/' && f.line0);
+      expect(whole).toBeGreaterThanOrEqual(0);
+      expect(there).toBeGreaterThan(whole);
+      after
+        .slice(whole, there + 1)
+        .forEach((f, i) =>
+          expect(f.cover, `frame ${i}`).toBeGreaterThanOrEqual(0.99),
+        );
+      // and the home page is never seen again: none of its content under a cover that can be seen through
+      for (const f of after.slice(whole))
+        if (f.path === '/' && f.main && f.main.o > 0)
+          expect(f.cover).toBeGreaterThanOrEqual(0.99);
+      // the cut does not move the page any further once the step has it
+      const home = after.filter((f) => f.path === '/');
+      expect(new Set(home.map((f) => f.y)).size).toBe(1);
+      // the members page plays its entrance from its start, under the cover that lifts once
+      expectArriveInner(
+        frames,
+        frames.findIndex((f) => f.path === '/member/'),
+      );
+      expect(new URL(page.url()).hash).toBe('');
+      await page.locator('.person').first().waitFor();
+      await pageIsFree(page);
+    });
+
+  test('a link to another page, then a far jump while the cover comes in: one step, and no cut', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await watchNav(page);
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const entries = await page.evaluate(() => window.history.length);
+    await navFrames(page);
+    await clickAt(page, '.hero a.btn', 'coming');
+    await bar(page, '/member/').click();
+    expect((await clickedAt(page)).cover).toBeGreaterThan(0.3);
+    await arrived(page, '/member/');
+    const { frames, runs } = await navFrames(page);
+    // the page never moved (expectLeave: one place for the whole leave), one cover in and out
+    expectArriveInner(
+      frames,
+      expectLeave(frames, {
+        from: '/',
+        to: '/member/',
+        tone: NIGHT,
+        home: true,
+      }),
+    );
+    expect(runs).toEqual(['opacity:280', 'opacity:520']);
+    expect(new URL(page.url()).hash).toBe('');
+    expect(await page.evaluate(() => window.history.length)).toBe(entries + 1);
+    await page.locator('.person').first().waitFor();
+    await pageIsFree(page);
+  });
+
+  test('a cover that is sent away while a step is leaving: no step, the content comes back, the page is free', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await watchNav(page);
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await navFrames(page);
+    await whileComing(page, 'sent away');
+    await bar(page, '/survivalProgress/').click();
+    await expect.poll(() => did(page)).toBeGreaterThan(0.3);
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await page.waitForTimeout(800);
+    expect(new URL(page.url()).pathname).toBe('/member/');
+    const { frames } = await navFrames(page);
+    expect(Math.max(...frames.map((f) => f.cover))).toBeLessThan(1);
+    // the content had begun to leave, and is back
+    expect(Math.min(...frames.map((f) => f.main!.o))).toBeLessThan(0.9);
+    expect(frames.at(-1)).toMatchObject({ nav: null, main: { o: 1, y: 0 } });
+    await pageIsFree(page);
+    // and the next step is whole
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await navFrames(page);
+    await bar(page, '/survivalProgress/').click();
+    await arrived(page, '/survivalProgress/');
+    const next = (await navFrames(page)).frames;
+    expectArriveInner(
+      next,
+      expectLeave(next, {
+        from: '/member/',
+        to: '/survivalProgress/',
+        tone: NIGHT,
+        home: false,
+      }),
+    );
   });
 
   test('reduced motion: a cross-fade of at most 120 ms each way, and nothing travels', async ({

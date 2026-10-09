@@ -12,6 +12,7 @@ import {
   wait,
   type Leave,
 } from './navigation';
+import { pageStepUnderWay } from './pageTransition';
 import { holdPage, type PageHold } from './pageScroll';
 
 /**
@@ -163,7 +164,10 @@ export const mountSectionJumps = (
   };
   const cut = async (el: HTMLElement, id: string, leave?: Leave) => {
     const mine = ++jumps;
-    const stale = () => disposed || mine !== jumps;
+    // Overtaken by a later jump, or the page has gone; or a step to another page has begun (pageTransition.ts):
+    // from then on the cover is that step's. The cut stops where it is: it does not move the page again and does
+    // not lift the cover, and lets go of its own hold only (the step took its own at the click, before this).
+    const stale = () => disposed || mine !== jumps || pageStepUnderWay();
     covered = true;
     const letGo = keep();
     const me: NonNullable<typeof cutting> = { el, landed: false };
@@ -214,12 +218,12 @@ export const mountSectionJumps = (
         if (!left && !stale()) await go();
       } finally {
         try {
-          if (!stale()) {
-            await coverOut();
-            if (!stale()) {
-              covered = false;
-              cutting = null;
-            }
+          if (!stale()) await coverOut();
+          // Lifted, or handed over to a step (before the lift or during it): either way the cover is not this
+          // cut's any more, also not for the cleanup below. A later jump keeps what is its own.
+          if (!disposed && mine === jumps) {
+            covered = false;
+            cutting = null;
           }
         } finally {
           // with the cover, or without it for a cut that was overtaken: the page is held by the later one then
@@ -231,6 +235,8 @@ export const mountSectionJumps = (
   const unjump = setSectionJumper((id, leave) => {
     const el = place(id);
     if (!el) return false;
+    // the reader is on the way to another page: a link to a section is not followed, and not as a plain link either
+    if (pageStepUnderWay()) return true;
     // Asked for again while the page is already being taken there: the jump that is under way is the answer.
     // A cut: until its cover has gone, unless the reader has arrived and scrolled on since.
     if (cutting?.el === el && (!cutting.landed || anchor?.el === el))
@@ -267,8 +273,9 @@ export const mountSectionJumps = (
 
   return () => {
     disposed = true;
-    // leaving in the middle of a cut: the cover must not stay up over the next page, nor the page be held
-    if (covered) clearCover();
+    // Leaving in the middle of a cut: the cover must not stay up over the next page, nor the page be held.
+    // Not when it is a step that takes the reader away: the cover is the step's, and lifts on the page it leads to.
+    if (covered && !pageStepUnderWay()) clearCover();
     hold?.release();
     hold = null;
     unjump();
