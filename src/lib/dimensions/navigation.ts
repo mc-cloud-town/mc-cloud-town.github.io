@@ -19,6 +19,9 @@ export const COVER_REDUCED_OUT_MS = 120;
 /** How long the cover stays whole at the least: a cut reads as one beat, not as a flicker. */
 export const COVER_HOLD_MS = 120;
 
+/** The sign of life on a cover that has been whole for long eases out in this long (shell.css, --t-out). */
+export const COVER_WAIT_OUT_MS = 220;
+
 /** `theme`: the ground of the current theme. `night`: the dark ground, whatever the theme (the End has no daylight). */
 export type CoverTone = 'theme' | 'night';
 
@@ -93,6 +96,29 @@ export const registerCover = (el: HTMLElement) => {
   };
 };
 
+/**
+ * The sign of life on the cover (`<Cover />` renders it): shown when a destination keeps the cover whole for long,
+ * eased out before the cover lifts, dropped at once whenever the cover is taken away.
+ */
+interface CoverWait {
+  show: () => void;
+  hide: () => Promise<void>;
+  drop: () => void;
+}
+let coverWait: CoverWait | null = null;
+
+/** `<Cover />` hands the sign of life over; returns the release. */
+export const registerCoverWait = (w: CoverWait) => {
+  coverWait = w;
+  return () => {
+    if (coverWait === w) coverWait = null;
+  };
+};
+
+export const showCoverWait = () => coverWait?.show();
+/** Resolves when the sign has eased out; at once if it was not shown. */
+export const hideCoverWait = () => coverWait?.hide() ?? Promise.resolve();
+
 /** The length of the fade that starts now. (The shorthand is cleared first: a cover that was made whole without a fade has it set.) */
 const pace = (el: HTMLElement, ms: number) => {
   el.style.transition = '';
@@ -147,6 +173,7 @@ export const clearCover = () => {
   el.style.transition = 'none';
   el.dataset.on = 'false';
   el.style.visibility = 'hidden';
+  coverWait?.drop();
 };
 
 /**

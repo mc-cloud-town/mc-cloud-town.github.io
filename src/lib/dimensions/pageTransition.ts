@@ -4,8 +4,10 @@ import {
   clearCover,
   coverIn,
   coverOut,
+  hideCoverWait,
   isPlainClick,
   nextFrame,
+  showCoverWait,
   wait,
   type Leave,
 } from './navigation';
@@ -23,14 +25,22 @@ import { pageKind, samePath, type PageKind } from './pages';
  *  - A legacy page gets the leave only. It is outside the shell: when the router shows it, the shell is taken down,
  *    and the cover, the hold and the step go with it (`resetPageTransition`, from `<PageTransitions />`).
  *
+ *  - The page changes under the cover, always. A destination that is slow keeps the cover whole: it never lifts onto
+ *    the page that was left. After a while the cover shows a sign of life (`<Cover />`), and past a hard limit the
+ *    step is handed to the browser, which loads the destination as a document; the cover stays until that one unloads.
+ *    A destination that cannot be fetched at all is handed to the browser by the router itself, the same way.
+ *
  * The page is held from the click until the cover has gone again. A step through the history is never ours to
  * delay: it gets the arrival only, which the page plays by itself.
- * Whatever happens, the cover is taken away again and the page let go, once: every path below ends in `giveUp`,
- * in an arrival, in `resetPageTransition`, or in a later step that takes both over.
+ * Whatever happens, the cover is taken away again and the page let go, once: every path below ends in `giveUp`
+ * (before the router was asked), in an arrival, in `resetPageTransition`, in a new document, or in a later step
+ * that takes both over.
  */
 
-/** A destination that has not come by then is not waited for under the cover any longer. */
-export const ARRIVE_TIMEOUT_MS = 4000;
+/** A cover that has been whole for this long shows that something is still happening. */
+export const WAIT_SIGN_MS = 1200;
+/** A destination that has not come by then is loaded by the browser instead, as a document. */
+export const HARD_LIMIT_MS = 12000;
 
 interface Router {
   push: (href: string) => void;
@@ -48,7 +58,9 @@ interface Target {
 interface Step extends Target {
   /** the router has been asked: from here on it is the arrival that is waited for */
   pushed: boolean;
-  timer?: number;
+  /** the two clocks that run while the destination is waited for: the sign of life, and the hard limit */
+  sign?: number;
+  limit?: number;
   /** Let the page go. Works once. */
   letGo: () => void;
   /** The router has put the new page in its place: that is where the page is kept from now on. */
@@ -102,14 +114,20 @@ const sameOrigin = (href: string) => {
   }
 };
 
+const stopClocks = (me: Step) => {
+  window.clearTimeout(me.sign);
+  window.clearTimeout(me.limit);
+};
+
 /**
  * The step ends on the page as it is: the content comes back, the cover lifts, and then the page is let go.
- * For a step that was sent away or failed, and for a destination that does not come. Not for a step that was
- * overtaken: the cover and the page then belong to whatever took its place.
+ * Only for a step that was sent away or failed before the router was asked: once it has been, the page that was
+ * left is never shown again. Not for a step that was overtaken: the cover and the page then belong to whatever
+ * took its place.
  */
 const giveUp = async (me: Step, leave?: () => void | Promise<void>) => {
   if (step !== me) return;
-  window.clearTimeout(me.timer);
+  stopClocks(me);
   step = null;
   setNav(null);
   try {
@@ -127,7 +145,7 @@ const take = async (target: Target, leave?: Leave) => {
   // a step that is overtaken hands the page over: the later one holds it first, then the earlier one lets go
   const me: Step = { ...target, pushed: false, ...hold() };
   if (step) {
-    window.clearTimeout(step.timer);
+    stopClocks(step);
     step.letGo();
   }
   step = me;
@@ -150,10 +168,16 @@ const take = async (target: Target, leave?: Leave) => {
     if (stale()) return;
     setNav('covered');
     me.pushed = true;
-    me.timer = window.setTimeout(() => void giveUp(me), ARRIVE_TIMEOUT_MS);
+    // From here the cover stays whole until the destination is in the document, however long that takes.
+    const toBrowser = () => {
+      // still this step's: the browser loads the destination, and the cover stays until this document is gone
+      if (step === me) window.location.assign(me.href);
+    };
+    me.sign = window.setTimeout(showCoverWait, WAIT_SIGN_MS);
+    me.limit = window.setTimeout(toBrowser, HARD_LIMIT_MS);
     if (router) router.push(me.href);
-    // the shell has gone meanwhile: nothing can take the reader there
-    else void giveUp(me);
+    // the shell has gone meanwhile: there is no router to ask
+    else toBrowser();
   } finally {
     // sent away, or something threw: the page stays as it was
     if (!me.pushed) await giveUp(me, left ? undefined : go);
@@ -196,7 +220,7 @@ export const prefetchPage = (href: string) => {
 export const pageArrived = (pathname: string) => {
   const me = step;
   if (!me?.pushed || !samePath(me.path, pathname)) return;
-  window.clearTimeout(me.timer);
+  stopClocks(me);
   if (me.kind !== 'inner') {
     // The home page: its loader is there, whole, in the cover's own ground. The cover has done its part, and the
     // page is the home page's own from here (behind its loader it goes to the section a hash names).
@@ -210,8 +234,8 @@ export const pageArrived = (pathname: string) => {
   // the router has put the new page at its top: that is where it stays until the cover has gone
   me.moved();
   void (async () => {
-    // one beat under the cover, and the new page's first frame painted under it
-    await Promise.all([wait(COVER_HOLD_MS), nextFrame()]);
+    // one beat under the cover, and the new page's first frame painted under it; a sign of life eases out first
+    await Promise.all([wait(COVER_HOLD_MS), nextFrame(), hideCoverWait()]);
     await nextFrame();
     if (step !== me) return;
     step = null;
@@ -231,7 +255,7 @@ export const pageArrived = (pathname: string) => {
  */
 export const resetPageTransition = () => {
   if (!step && holds.size === 0) return;
-  if (step) window.clearTimeout(step.timer);
+  if (step) stopClocks(step);
   step = null;
   setNav(null);
   clearCover();

@@ -483,12 +483,32 @@ test.describe('going to another page', () => {
       await expect(page.locator('.loader')).toHaveCount(0);
       const mark = await documentMark(page);
       const ground = theme === 'dark' ? NIGHT : DAY;
+      /**
+       * On a quick line nothing is ever put on the cover: in a step whose cover was whole for less than a second,
+       * no frame has a sign of life in the document. (Alone, every step here has the cover whole for about a
+       * tenth of a second. Run beside many other tests the machine can take longer than the 1.2 s after which
+       * the sign is due, and then it is right for it to show: such a step is noted, not judged.)
+       */
+      const noted = async () => {
+        const got = await navFrames(page);
+        expect(got.frames.length).toBeGreaterThan(10);
+        const whole = got.frames.filter((f) => f.cover >= 0.99);
+        const held = whole.length ? whole.at(-1)!.t - whole[0].t : 0;
+        if (held < 1000)
+          expect(got.frames.filter((f) => f.wait !== null)).toEqual([]);
+        else
+          test.info().annotations.push({
+            type: 'slow machine',
+            description: `the cover was whole for ${Math.round(held)} ms: the sign of life was not judged for this step`,
+          });
+        return got;
+      };
 
       // home → members
       await navFrames(page);
       await bar(page, '/member/').click();
       await arrived(page, '/member/');
-      let { frames, runs } = await navFrames(page);
+      let { frames, runs } = await noted();
       let change = expectLeave(frames, {
         from: '/',
         to: '/member/',
@@ -512,7 +532,7 @@ test.describe('going to another page', () => {
       await navFrames(page);
       await bar(page, '/survivalProgress/').click();
       await arrived(page, '/survivalProgress/');
-      ({ frames, runs } = await navFrames(page));
+      ({ frames, runs } = await noted());
       change = expectLeave(frames, {
         from: '/member/',
         to: '/survivalProgress/',
@@ -533,7 +553,7 @@ test.describe('going to another page', () => {
       await expect.poll(() => new URL(page.url()).pathname).toBe('/');
       await ready(page);
       await expect(page.locator('.loader')).toHaveCount(0);
-      ({ frames, runs } = await navFrames(page));
+      ({ frames, runs } = await noted());
       change = expectLeave(frames, {
         from: '/survivalProgress/',
         to: '/',
@@ -706,17 +726,166 @@ test.describe('going to another page', () => {
       .toBeGreaterThan(0);
   });
 
-  test('a destination that does not come: after about four seconds the cover lifts on the page as it was, and the step happens when it can', async ({
+  /**
+   * A destination whose payload is slow. From the first frame the cover is whole until the destination is in the
+   * document, the cover stays whole; and the page that was left is never seen again.
+   */
+  const expectCoveredUntil = (frames: NavFrame[], from: string, to: string) => {
+    const whole = frames.findIndex((f) => f.cover >= 0.99);
+    const there = frames.findIndex((f) => f.path === to);
+    expect(whole).toBeGreaterThan(0);
+    expect(there).toBeGreaterThan(whole);
+    frames
+      .slice(whole, there + 1)
+      .forEach((f, i) =>
+        expect(f.cover, `frame ${i}`).toBeGreaterThanOrEqual(0.99),
+      );
+    for (const f of frames.slice(whole))
+      if (f.path === from && f.main && f.main.o > 0)
+        expect(f.cover).toBeGreaterThanOrEqual(0.99);
+    return { whole, there };
+  };
+  /** The sign of life in these frames: came in after about 1.2 s of whole cover, and was gone before the lift. */
+  const expectSignOfLife = (frames: NavFrame[], whole: number) => {
+    const since = (f: NavFrame) => f.t - frames[whole].t;
+    const signed = frames.filter((f) => f.wait !== null);
+    expect(signed.length).toBeGreaterThan(5);
+    // not before its time (the cover is whole a few frames before the clock starts: the sheet, a painted frame)
+    expect(since(signed[0])).toBeGreaterThan(1150);
+    expect(since(signed[0])).toBeLessThan(1700);
+    // it eases in, and is whole
+    expect(signed[0].wait).toBeLessThan(0.3);
+    expect(Math.max(...signed.map((f) => f.wait!))).toBe(1);
+    // only ever on a whole cover: it is out of the document before the cover begins to lift
+    // (that it eases out, and how, is read from its styles in the next test: how many frames of those 220 ms
+    // are drawn while the destination is being put on the screen is not ours to say)
+    for (const f of signed) expect(f.cover).toBeGreaterThanOrEqual(0.99);
+    const last = frames.indexOf(signed.at(-1)!);
+    const lifting = frames.findIndex((f, i) => i > whole && f.cover < 0.99);
+    expect(lifting).toBeGreaterThan(last);
+  };
+
+  test('a destination that is two seconds late: the cover stays whole, shows a sign of life, and lifts on the destination only', async ({
     page,
   }) => {
-    test.setTimeout(60_000);
     await page.setViewportSize({ width: 1440, height: 900 });
-    let answer = () => {};
-    const slow = new Promise<void>((done) => (answer = done));
     await page.route(/\/survivalProgress\/.*\.txt/, async (r) => {
-      await slow;
+      await new Promise((done) => setTimeout(done, 2000));
       await r.continue();
     });
+    await watchNav(page);
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    const mark = await documentMark(page);
+    // something of the reader's own on the page that is left
+    await page.locator('.search').fill('zz-not-a-member');
+    await expect(page.locator('.empty')).toBeVisible();
+    await navFrames(page);
+    await bar(page, '/survivalProgress/').click();
+    // the map on the cover is being drawn while it shows
+    const map = page.locator('.dim-cover .cover-wait canvas');
+    await expect(map).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.dim-cover .cover-wait p')).toHaveText(
+      '正在進入世界',
+    );
+    await expect
+      .poll(async () => Number(await map.getAttribute('data-frames')))
+      .toBeGreaterThan(5);
+    await arrived(page, '/survivalProgress/');
+    expect(await documentMark(page)).toBe(mark);
+    const { frames, runs } = await navFrames(page);
+    const { whole, there } = expectCoveredUntil(
+      frames,
+      '/member/',
+      '/survivalProgress/',
+    );
+    // it did wait: whole for about two seconds
+    expect(frames[there].t - frames[whole].t).toBeGreaterThan(1700);
+    expectSignOfLife(frames, whole);
+    // one cover: in once, out once
+    expect(runs).toEqual(['opacity:280', 'opacity:520']);
+    expectArriveInner(frames, there);
+    // nothing of the page that was left is on this one
+    await expect(page.locator('.search')).toHaveCount(0);
+    await expect(page.locator('.dim-cover .cover-wait')).toHaveCount(0);
+    await page.locator('.entry').first().waitFor();
+    await pageIsFree(page);
+  });
+
+  test('the sign of life is the loader’s map in small: centred, pixelated, in the site’s motion; with reduced motion it is the finished map, still', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.route(/\/survivalProgress\/.*\.txt/, async (r) => {
+      await new Promise((done) => setTimeout(done, 5000));
+      await r.continue();
+    });
+    for (const reducedMotion of [false, true]) {
+      await openPage(page, '/member/', { reducedMotion, theme: 'light' });
+      await page.locator('.person').first().waitFor();
+      await page.locator('.dim-bar [data-action="menu"]').click();
+      await page.locator('.dim-sheet a[href="/survivalProgress/"]').click();
+      const sign = page.locator('.dim-cover .cover-wait');
+      const map = sign.locator('canvas');
+      await expect(map).toBeVisible({ timeout: 5000 });
+      await expect(sign).toHaveCSS('opacity', '1');
+      // in the middle of the screen, small, with hard pixels; the line under it is readable
+      const box = (await sign.boundingBox())!;
+      expect(Math.abs(box.x + box.width / 2 - 195)).toBeLessThan(1);
+      expect(Math.abs(box.y + box.height / 2 - 422)).toBeLessThan(1);
+      const size = (await map.boundingBox())!;
+      expect(size.width).toBeLessThanOrEqual(126);
+      expect(size.width).toBe(size.height);
+      await expect(map).toHaveCSS('image-rendering', 'pixelated');
+      await expect(sign.locator('p')).toHaveCSS('font-size', '12px');
+      // by day the cover is the paper and the line is ink
+      await expect(page.locator('.dim-cover')).toHaveCSS(
+        'background-color',
+        DAY,
+      );
+      await expect(sign.locator('p')).toHaveCSS('color', 'rgb(65, 76, 87)');
+      // the menu sheet has gone under the cover: nothing of it shows through or beside the sign
+      await expect(page.locator('.dim-sheet')).toHaveCSS(
+        'visibility',
+        'hidden',
+      );
+      const centre = () =>
+        map.evaluate((c: HTMLCanvasElement) =>
+          [...c.getContext('2d')!.getImageData(10, 10, 1, 1).data].join(),
+        );
+      if (reducedMotion) {
+        await expect(sign).toHaveCSS('animation-name', 'dim-fade-0');
+        await expect(sign).toHaveCSS('animation-duration', '0.12s');
+        // drawn once, finished: the centre is done
+        await page.waitForTimeout(400);
+        expect(await map.getAttribute('data-frames')).toBe('1');
+        expect(await centre()).toBe('242,244,246,255');
+      } else {
+        await expect(sign).toHaveCSS('animation-name', 'dim-cover-wait-in');
+        await expect(sign).toHaveCSS('animation-duration', '0.45s');
+        await expect(sign).toHaveCSS(
+          'animation-timing-function',
+          'cubic-bezier(0.16, 1, 0.3, 1)',
+        );
+        await expect(sign).toHaveCSS('transition-duration', '0.22s');
+        // it goes on being drawn
+        const drawn = Number(await map.getAttribute('data-frames'));
+        await expect
+          .poll(async () => Number(await map.getAttribute('data-frames')))
+          .toBeGreaterThan(drawn + 5);
+      }
+      await arrived(page, '/survivalProgress/');
+      await expect(sign).toHaveCount(0);
+    }
+  });
+
+  test('a destination that never comes: the cover stays whole, and after the hard limit the browser loads the destination', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the router's payload never arrives; the page itself, as a document, is there
+    await page.route(/\/survivalProgress\/.*\.txt/, () => {});
     await watchNav(page);
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
@@ -724,32 +893,25 @@ test.describe('going to another page', () => {
     await navFrames(page);
     const clicked = Date.now();
     await bar(page, '/survivalProgress/').click();
-    const cover = page.locator('.dim-cover');
-    await expect(cover).toHaveCSS('opacity', '1');
-    // still covered after three seconds
-    await page.waitForTimeout(3000);
-    await expect(cover).toHaveCSS('opacity', '1');
-    // and lifted soon after four
-    await expect(cover).toHaveCSS('visibility', 'hidden', { timeout: 4000 });
-    expect(Date.now() - clicked).toBeGreaterThan(4000);
-    expect(Date.now() - clicked).toBeLessThan(7000);
-    expect(new URL(page.url()).pathname).toBe('/member/');
-    // the page as it was, and the reader's
-    await pageIsFree(page);
-    const { frames, runs } = await navFrames(page);
-    expect(runs.slice(0, 2)).toEqual(['opacity:280', 'opacity:520']);
-    expect(frames.at(-1)!.main).toEqual({ o: 1, y: 0 });
-    // the destination comes after all: the page changes without a cover, onto its own entrance
-    answer();
-    await arrived(page, '/survivalProgress/');
+    // ten seconds on: still this document, still covered, the sign of life showing
+    await page.waitForTimeout(10_000);
     expect(await documentMark(page)).toBe(mark);
-    const late = (await navFrames(page)).frames;
-    for (const f of late) expect(f.cover).toBe(0);
-    const there = late.filter(
-      (f) => f.path === '/survivalProgress/' && f.line0,
-    );
-    expect(there[0].line0!.o).toBeLessThan(0.2);
-    expect(there.at(-1)!.line0).toEqual({ o: 1, y: 0 });
+    const { frames } = await navFrames(page);
+    const whole = frames.findIndex((f) => f.cover >= 0.99);
+    expect(whole).toBeGreaterThan(0);
+    for (const f of frames.slice(whole)) {
+      expect(f.cover).toBeGreaterThanOrEqual(0.99);
+      expect(f.path).toBe('/member/');
+    }
+    expect(frames.at(-1)!.wait).toBe(1);
+    // at the limit (12 s: HARD_LIMIT_MS in pageTransition.ts) the destination is loaded as a document
+    await expect
+      .poll(() => documentMark(page).catch(() => mark), { timeout: 15_000 })
+      .not.toBe(mark);
+    expect(Date.now() - clicked).toBeGreaterThan(11_500);
+    await arrived(page, '/survivalProgress/');
+    await page.locator('.entry').first().waitFor();
+    await pageIsFree(page);
   });
 
   test('a destination that cannot be fetched is loaded the plain way, and no cover is left on it', async ({
@@ -1284,33 +1446,38 @@ test.describe('going to a legacy page', () => {
       );
     });
 
-  test('a legacy page that does not come: the cover lifts on the page as it was after about four seconds', async ({
+  test('a legacy page that is two seconds late: the cover stays whole with a sign of life, and goes with the shell', async ({
     page,
   }) => {
-    test.setTimeout(60_000);
     await page.setViewportSize({ width: 1440, height: 900 });
-    let answer = () => {};
-    const slow = new Promise<void>((done) => (answer = done));
     await page.route(/\/join\/.*\.txt/, async (r) => {
-      await slow;
+      await new Promise((done) => setTimeout(done, 2000));
       await r.continue();
     });
     await watchNav(page);
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
     await legacyLink(page);
-    const clicked = Date.now();
+    const mark = await documentMark(page);
+    await navFrames(page);
     await page.locator('#probe-legacy').click();
-    const cover = page.locator('.dim-cover');
-    await expect(cover).toHaveCSS('opacity', '1');
-    await page.waitForTimeout(3000);
-    await expect(cover).toHaveCSS('opacity', '1');
-    await expect(cover).toHaveCSS('visibility', 'hidden', { timeout: 4000 });
-    expect(Date.now() - clicked).toBeGreaterThan(4000);
-    expect(new URL(page.url()).pathname).toBe('/member/');
-    await pageIsFree(page);
-    answer();
+    await expect(page.locator('.dim-cover .cover-wait canvas')).toBeVisible({
+      timeout: 5000,
+    });
     await onLegacy(page);
+    expect(await documentMark(page)).toBe(mark);
+    const { frames, runs } = await navFrames(page);
+    const whole = frames.findIndex((f) => f.cover >= 0.99);
+    const there = frames.findIndex((f) => f.path === '/join/');
+    expect(there).toBeGreaterThan(whole);
+    expect(frames[there].t - frames[whole].t).toBeGreaterThan(1700);
+    // whole until the members page was gone; the members page is never seen under less
+    for (const f of frames.slice(whole))
+      if (f.path === '/member/') expect(f.cover).toBeGreaterThanOrEqual(0.99);
+    expect(frames.some((f) => f.wait === 1)).toBe(true);
+    // the cover never lifts: it goes with the shell, and the sign with it
+    expect(runs).toEqual(['opacity:280']);
+    for (const f of frames.slice(there)) expect(f.wait).toBeNull();
   });
 
   test('a legacy page that cannot be fetched is loaded the plain way, and stepping back leaves no cover and no hold', async ({

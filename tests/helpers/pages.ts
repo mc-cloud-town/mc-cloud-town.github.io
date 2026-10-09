@@ -121,6 +121,8 @@ export interface NavFrame {
   line0: Part | null;
   /** opacity of the menu sheet (0 when it is hidden) */
   sheet: number;
+  /** opacity of the sign of life on the cover; null when it is not in the document */
+  wait: number | null;
   /** the smooth scroll of the home page is stopped */
   stopped: boolean;
 }
@@ -150,11 +152,13 @@ export const watchNav = (page: Page) =>
       const cover = document.querySelector<HTMLElement>('.dim-cover');
       if (cover && listening !== cover) {
         listening = cover;
-        cover.addEventListener('transitionrun', (e) =>
+        cover.addEventListener('transitionrun', (e) => {
+          // the cover's own fades, not those of what is on it
+          if (e.target !== cover) return;
           w.__navRuns.push(
             `${e.propertyName}:${Math.round(parseFloat(getComputedStyle(cover).transitionDuration) * 1000)}`,
-          ),
-        );
+          );
+        });
       }
       const main = document.querySelector('.dim main');
       const line = document.querySelector('.dim .head h1 span');
@@ -183,6 +187,10 @@ export const watchNav = (page: Page) =>
           ? { o: +lc.opacity, y: new DOMMatrix(lc.transform).m42 }
           : null,
         sheet: shown(document.querySelector('.dim-sheet')),
+        wait: (() => {
+          const sign = document.querySelector('.dim-cover .cover-wait');
+          return sign ? +getComputedStyle(sign).opacity : null;
+        })(),
         stopped: html.classList.contains('lenis-stopped'),
       });
       requestAnimationFrame(tick);
