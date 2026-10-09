@@ -9,11 +9,10 @@ import { expect, test, type Page } from '@playwright/test';
  */
 const LIVE_URL = process.env.PARITY_LIVE_URL ?? 'https://mc-ctec.org';
 
+// The pages of the redesign (/, /home/, /survival/, /survivalProgress/, /member/) are no longer the deployed
+// ones and are covered by tests/dimensions-*.spec.ts; only the pages still in the old shell are compared.
 const ROUTES = [
-  '/',
   '/join/',
-  '/survival/',
-  '/member/',
   '/redstoneCollection/',
   '/architectureCollection/',
   '/openSource/',
@@ -130,4 +129,5 @@ test('unknown route renders the 404 page', async ({ page }) => {
   const res = await page.goto('/this-page-does-not-exist/');
   expect(res?.status()).toBe(404);
   await expect(page.locator('a[href="/home/"]')).toBeVisible();
+  await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
 });
