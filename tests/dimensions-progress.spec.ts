@@ -579,7 +579,10 @@ test.describe('progress page: an address that names an entry', () => {
     const total = (await list(request)).length;
     await openPage(page, '/survivalProgress/?index=5');
     await expectLandedOn(page, total - 5);
-    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    // The reader goes back to the top themselves, with a key. (Not by script: for the first moments after the
+    // landing the entry is kept in place against anything but the reader, while the page settles around it.)
+    await page.keyboard.press('Home');
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await setLanguage(page, 'en');
     await expect(page.locator('.tools [data-v="overworld"]')).toHaveText(
       'Overworld',
