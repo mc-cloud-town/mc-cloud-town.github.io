@@ -114,13 +114,16 @@ const HEAD_TEXT = [
 
 /**
  * Legibility findings whose fix is a choice between several designs, awaiting the user's decision
- * (task-10-report.md, "Needs a decision"). In the cases they apply to, that one block is not asserted in the
- * case itself, so everything else in the case still is; it is kept as a `test.fixme` of its own, by the name
- * of the report entry, and comes back by deleting its line here.
+ * (task-10-report.md, "Needs a decision"). In the cases they apply to, that one block is not asserted against AA
+ * in the case itself, so everything else in the case still is; it is kept as a `test.fixme` of its own, by the
+ * name of the report entry, and comes back by deleting its line here.
+ * A finding that has a `floor` is not left unwatched meanwhile: in every case it applies to, the block is still
+ * asserted against that ratio, so it cannot get worse than it is while the decision is open.
  */
 const PENDING: {
   entry: string;
   selector: string;
+  floor?: number;
   applies: (
     page: string,
     viewport: string,
@@ -140,6 +143,8 @@ const PENDING: {
     // Needs a decision 2: the day accent is 4.7 : 1 on bare paper, so any picture under the veil takes it below 4.5
     entry: 'decision 2, the current page of the crumb in the day accent',
     selector: '.head .crumb .acc',
+    // 12px in the accent is asked 4.5 : 1 and has between 3 and 4.5 over the picture: never less than 3 : 1
+    floor: 3,
     applies: (page, _viewport, _width, theme) =>
       page === 'progress' && theme === 'light',
   },
@@ -306,6 +311,10 @@ for (const vp of VIEWPORTS) {
                   (sel) => !pending.some((p) => p.selector === sel),
                 ).join(', '),
               ),
+            // what awaits a decision is held to its floor meanwhile
+            ...pending
+              .filter((p) => p.floor !== undefined)
+              .map((p) => () => expectLegible(page, p.selector, p.floor)),
           ]);
           await shoot(page, info, `${name}-${tag}-top`);
 

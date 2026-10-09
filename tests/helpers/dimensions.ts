@@ -361,7 +361,12 @@ export const expectNotCovered = async (
  * WCAG AA asks for (4.5 : 1; 3 : 1 for large text, from 24px, or from 18.66px in bold). The weakest twentieth of
  * the pixels behind a block is left out, so a single bright speck in a photograph does not decide it.
  */
-export const expectLegible = async (page: Page, selector: string) => {
+export const expectLegible = async (
+  page: Page,
+  selector: string,
+  /** ask for this ratio instead of AA's: for a block whose design is still to be decided, the least it may be meanwhile */
+  floor?: number,
+) => {
   const blocks = await page.evaluate((sel) => {
     const vh = window.innerHeight,
       vw = window.innerWidth;
@@ -436,7 +441,7 @@ export const expectLegible = async (page: Page, selector: string) => {
         },
         [png, b.color] as const,
       );
-      const need = b.large ? 3 : 4.5;
+      const need = floor ?? (b.large ? 3 : 4.5);
       if (ratio < need)
         problems.push(
           `contrast ${ratio.toFixed(2)} < ${need}: ${b.name} (${b.color})`,
