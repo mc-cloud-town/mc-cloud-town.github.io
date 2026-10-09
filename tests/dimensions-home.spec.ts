@@ -118,6 +118,9 @@ test.describe('home: the outline', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
+    // the page has settled: the names of the credits are in, and with them the last re-measure of the page
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await expect(page.locator('.loader')).toHaveCount(0);
     await page.locator('.dim-bar nav a[data-d="nether"]').click();
     await expect(page.locator('#nether .say')).toBeFocused();
     expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
@@ -127,8 +130,13 @@ test.describe('home: the outline', () => {
     const say = page.locator('#nether .say');
     await expect(say).toHaveCSS('font-weight', '900');
     await expect(say).toHaveCSS('font-family', /Chiron Sung HK/);
-    await expect(say).toHaveCSS('font-size', '54.72px'); // 3.8vw of 1440
-    await expect(say).toHaveCSS('line-height', '72.2304px'); // 1.32
+    // 3.8vw of 1440 and 1.32 of that (the engines round a font size differently, in the second decimal)
+    const type = await say.evaluate((el) => {
+      const c = getComputedStyle(el);
+      return [parseFloat(c.fontSize), parseFloat(c.lineHeight)];
+    });
+    expect(Math.abs(type[0] - 54.72)).toBeLessThan(0.05);
+    expect(Math.abs(type[1] - 72.23)).toBeLessThan(0.1);
     await expect(say).toHaveCSS('margin', '0px');
     await expect(say).toHaveCSS('color', 'rgb(242, 244, 246)');
     for (const sel of ['.rank h3', '#credits h3'])
@@ -701,7 +709,8 @@ test.describe('home: nether', () => {
           stage: Math.round(stage.height),
           ledger: Math.round(ledger.height),
           vh: window.innerHeight,
-          vw: window.innerWidth,
+          // what a block can be as wide as: the screen without a scrollbar that takes room
+          vw: document.documentElement.clientWidth,
           width: Math.round(stage.width),
         };
       });
@@ -763,7 +772,9 @@ test.describe('home: nether', () => {
               ledger: Math.round(box('#ledger').height) / window.innerHeight,
               stage:
                 Math.round(box('.ledger-stage').height) / window.innerHeight,
-              width: Math.round(box('.ledger-stage').width) / window.innerWidth,
+              width:
+                Math.round(box('.ledger-stage').width) /
+                document.documentElement.clientWidth,
             };
           }),
         note,
@@ -905,7 +916,9 @@ test.describe('home: nether', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
-    await scrollToLedgerStep(page, 0.5);
+    // the middle of the fourth facility, not its first pixel: the new language's text above is not as tall, and
+    // not every engine moves the page with it (Chromium and Firefox do; WebKit keeps the same number of pixels)
+    await scrollToLedgerStep(page, 3.5 / 6);
     await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
     await setLanguage(page, 'en');
     await expect(page.locator('.ledger-now h3')).toHaveText(

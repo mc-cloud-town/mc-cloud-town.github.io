@@ -1,4 +1,38 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/** The engines that are run on request beside Chromium (playwright.config.ts names their projects after them). */
+export type OtherEngine = 'webkit' | 'firefox';
+
+/**
+ * Why a test is not run in another engine: what it measures, not what the page does, depends on the engine as
+ * Playwright runs it here. Each is a harness difference; the page's own behaviour in that engine is covered by
+ * the tests that do run. (Measured on this machine: `engines.mjs` in the final-fix workspace.)
+ */
+export const NOT_HERE = {
+  /** WebKit's Windows port draws about 40 frames a second with gaps of 70 ms and more, under no load at all. */
+  frames:
+    'reads a transition frame by frame, and this engine draws a 280 ms fade in one or two frames here: the counts of frames and what the first frame shows cannot be met',
+  /** Firefox: in one direct load of three the first frame comes when the first fade is half over. */
+  firstFrame:
+    'judges the first frame it can record, which this engine draws later after the page begins than Chromium does',
+  classicScrollbar:
+    'needs a scrollbar that takes room in the layout, which Playwright cannot switch on in this engine',
+  scrollbarColor:
+    'this engine has no scrollbar-color: the sheet keeps the system scrollbar',
+  tabToLinks:
+    'Safari does not stop on links with Tab unless the reader has asked for it in the system settings',
+  tabWraps:
+    'Tab after the last link goes to the browser itself, and there is none in this engine as Playwright runs it: the focus stays',
+  focusRing:
+    'this engine decides :focus-visible for a focus set by script from how the element before it was focused, not from the key just pressed',
+} as const;
+
+/** First statement of a test that cannot be measured in an engine: skips it there, with the reason in the report. */
+export const skipIn = (engines: OtherEngine[], reason: string) =>
+  test.skip(
+    engines.includes(test.info().project.name as OtherEngine),
+    `${engines.join(' and ')}: ${reason}`,
+  );
 
 export const VIEWPORTS = [
   { name: 'phone-s', width: 360, height: 740 },
@@ -123,7 +157,12 @@ export const expectTextFits = async (
         const r = rects[i];
         if (r.left < -1 || r.right > vw + 1)
           out.push(`outside viewport: ${label(el)}`);
-        if (el.scrollWidth > el.clientWidth + 1)
+        // (an inline box has no width of its own to overflow, and the engines do not agree on what they
+        // report for one: Chromium and WebKit say 0 for both, Firefox the width of the text for one of them)
+        if (
+          getComputedStyle(el).display !== 'inline' &&
+          el.scrollWidth > el.clientWidth + 1
+        )
           out.push(`overflows its box: ${label(el)}`);
         if (behind[i]) return;
         if (

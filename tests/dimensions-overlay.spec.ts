@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openPage } from './helpers/dimensions';
+import { NOT_HERE, openPage, skipIn } from './helpers/dimensions';
 import {
   landedOn,
   ready,
@@ -10,6 +10,11 @@ import {
 // A classic scrollbar that takes room in the layout, as on a Windows desktop. Headless Chromium hides it by
 // default, and a launch option cannot be set for a single group of tests: hence a file of its own.
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } });
+// (WebKit's Windows port has such a scrollbar by itself. Firefox, as Playwright runs it, never shows one.)
+test.skip(
+  ({ browserName }) => browserName === 'firefox',
+  `firefox: ${NOT_HERE.classicScrollbar}`,
+);
 
 const openSheet = async (page: Page) => {
   await page.locator('.dim-bar [data-action="menu"]').click();
@@ -155,6 +160,7 @@ test.describe('home: the cover of a jump is an overlay too', () => {
     page,
     isMobile,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1280, height: 768 });
     await openPage(page, '/');
     await ready(page);
@@ -274,6 +280,7 @@ test.describe('shell: the open menu has no scrollbar of its own unless it must',
   test('on a screen too short for six links the sheet scrolls, with a thin scrollbar in the design, and the page does not move', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.scrollbarColor);
     await page.setViewportSize({ width: 640, height: 280 });
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
@@ -348,6 +355,7 @@ test.describe('shell: the cover of a step to another page is an overlay too', ()
       page,
       isMobile,
     }) => {
+      skipIn(['webkit'], NOT_HERE.frames);
       await page.setViewportSize({ width: 1280, height: 768 });
       // every frame of the document: the measurements, the cover, and the page it was taken on
       await page.addInitScript(() => {

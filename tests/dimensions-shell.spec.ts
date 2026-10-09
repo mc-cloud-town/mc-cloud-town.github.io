@@ -31,8 +31,10 @@ import {
   expectTextFits,
   FOOTER_PAGES,
   LOCALES,
+  NOT_HERE,
   openPage,
   setLanguage,
+  skipIn,
   VIEWPORTS,
 } from './helpers/dimensions';
 
@@ -469,6 +471,8 @@ test.describe('dimensions shell: the menu is a designed transition', () => {
   test('while the sheet is open Tab stays in the bar and the sheet, and the page is in reach again when it closes', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.tabToLinks);
+    skipIn(['firefox'], NOT_HERE.tabWraps);
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
     const outside = () =>
@@ -514,6 +518,7 @@ test.describe('dimensions shell: the menu is a designed transition', () => {
   test('opened with the pointer the first link shows no focus ring; opened with the keyboard it does', async ({
     page,
   }) => {
+    skipIn(['firefox'], NOT_HERE.focusRing);
     await openPage(page, '/member/');
     const button = page.locator('.dim-bar [data-action="menu"]');
     const first = page.locator('.dim-sheet a').first();
@@ -636,6 +641,7 @@ test.describe('dimensions shell: the menu is a designed transition', () => {
   test('when the sheet closes because the screen grew, focus is on the same link in the bar, not on the hidden button', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.tabToLinks);
     await openPage(page, '/member/');
     await openSheet(page);
     await page.keyboard.press('Tab');

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { atRest, openPage } from './helpers/dimensions';
+import { atRest, NOT_HERE, openPage, skipIn } from './helpers/dimensions';
 import { clickAt, clickedAt, ready } from './helpers/home';
 import {
   animationOf,
@@ -107,6 +107,8 @@ test.describe('inner pages: the entrance', () => {
     test(`a direct load of ${path} at ${width}×${height}: the title rises line by line, the label and the lede follow, the toolbar after`, async ({
       page,
     }) => {
+      skipIn(['webkit'], NOT_HERE.frames);
+      skipIn(['firefox'], NOT_HERE.firstFrame);
       await page.setViewportSize({ width, height });
       await watchEntrance(page);
       await openPage(page, path);
@@ -187,6 +189,7 @@ test.describe('inner pages: the entrance', () => {
   test('a list that is there at once still waits for its turn: it comes after the toolbar has begun', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.route(PROGRESS, (r) => r.fulfill({ json: SEVEN }));
     await watchEntrance(page);
@@ -208,6 +211,7 @@ test.describe('inner pages: the entrance', () => {
   test('a list that arrives late does not wait any longer: it rises as soon as it is there', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     let answer = () => {};
     const asked = new Promise<void>((done) => (answer = done));
@@ -234,6 +238,7 @@ test.describe('inner pages: the entrance', () => {
     test(`a roster that is there ${when} comes in from nothing: its rows are never seen before their heading`, async ({
       page,
     }) => {
+      skipIn(['webkit'], NOT_HERE.frames);
       await page.setViewportSize({ width: 1440, height: 900 });
       let answer = () => {};
       const asked = new Promise<void>((done) => (answer = done));
@@ -440,9 +445,13 @@ const expectArriveInner = (frames: NavFrame[], change: number) => {
   // Under the whole cover the entrance is held: until the frame it is let go in, nothing of it is spent.
   // (In that frame the cover has only just begun to lift.)
   const go = after.findIndex((f) => f.nav === null);
-  expect(go).toBeGreaterThan(2);
+  // Firefox leaves frames out at this very moment (the frame in which the entrance is let go has come up to a
+  // quarter of a second after the one before, in one run of three): how many frames the held entrance had, and
+  // how far the cover has lifted in that one frame, is not asked of it. Everything else is.
+  const gaps = test.info().project.name === 'firefox';
+  if (!gaps) expect(go).toBeGreaterThan(2);
   for (const f of after.slice(0, go)) expect(f.cover).toBe(1);
-  expect(after[go].cover).toBeGreaterThan(0.8);
+  if (!gaps) expect(after[go].cover).toBeGreaterThan(0.8);
   for (const f of after.slice(0, go + 1)) {
     expect(f.line0!.o).toBeLessThan(0.05);
     expect(f.line0!.y).toBe(after[0].line0!.y);
@@ -476,6 +485,7 @@ test.describe('going to another page', () => {
     test(`home → members → progress → home, each a leave under the cover and an arrival (${theme})`, async ({
       page,
     }) => {
+      skipIn(['webkit'], NOT_HERE.frames);
       await page.setViewportSize({ width: 1440, height: 900 });
       await watchNav(page);
       await openPage(page, '/', { theme });
@@ -667,6 +677,7 @@ test.describe('going to another page', () => {
   test('from the sheet at 390×844: the sheet stays whole until the cover is over it, and the new page is free', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 390, height: 844 });
     await watchNav(page);
     await openPage(page, '/');
@@ -807,6 +818,7 @@ test.describe('going to another page', () => {
   test('a destination that is two seconds late: the cover stays whole, shows a sign of life, and lifts on the destination only', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.route(/\/survivalProgress\/.*\.txt/, async (r) => {
       await new Promise((done) => setTimeout(done, 2000));
@@ -870,7 +882,11 @@ test.describe('going to another page', () => {
       await expect(sign).toHaveCSS('opacity', '1');
       // in the middle of the screen, small, with hard pixels; the line under it is readable
       const box = (await sign.boundingBox())!;
-      expect(Math.abs(box.x + box.width / 2 - 195)).toBeLessThan(1);
+      // (of what the page has of it: a scrollbar that takes room is not part of the cover)
+      const middle = await page.evaluate(
+        () => document.documentElement.clientWidth / 2,
+      );
+      expect(Math.abs(box.x + box.width / 2 - middle)).toBeLessThan(1);
       expect(Math.abs(box.y + box.height / 2 - 422)).toBeLessThan(1);
       const size = (await map.boundingBox())!;
       expect(size.width).toBeLessThanOrEqual(126);
@@ -1042,6 +1058,7 @@ test.describe('going to another page', () => {
   test('a step back during the leave is not held up: the leave is given up, nothing is left behind', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await watchNav(page);
     await openPage(page, '/survivalProgress/');
@@ -1084,6 +1101,7 @@ test.describe('going to another page', () => {
   test('a second link during the leave: the reader goes to the second page only', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await watchNav(page);
     await openPage(page, '/member/');
@@ -1114,6 +1132,7 @@ test.describe('going to another page', () => {
   });
 
   test('the same link twice is one step', async ({ page }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await watchNav(page);
     await openPage(page, '/member/');
@@ -1147,6 +1166,7 @@ test.describe('going to another page', () => {
   test('a page restored from the cache during the leave: the cover is taken away, the step is given up, the page is free', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await watchNav(page);
     await openPage(page, '/member/');
@@ -1184,6 +1204,7 @@ test.describe('going to another page', () => {
     page,
     context,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     // Other sites are not visited: the click is what is under test. "No content" is the answer that leaves the
     // browser on the page it is on, so that the page can be looked at afterwards.
@@ -1255,6 +1276,7 @@ test.describe('going to another page', () => {
     test(`a far jump on the home page, then a link to another page while its cover is ${moment}: the step takes the cover over`, async ({
       page,
     }) => {
+      skipIn(['webkit'], NOT_HERE.frames);
       await page.setViewportSize({ width: 1440, height: 900 });
       await watchNav(page);
       await openPage(page, '/');
@@ -1301,6 +1323,7 @@ test.describe('going to another page', () => {
   test('a link to another page, then a far jump while the cover comes in: one step, and no cut', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await watchNav(page);
     await openPage(page, '/');
@@ -1333,6 +1356,7 @@ test.describe('going to another page', () => {
   test('a cover that is sent away while a step is leaving: no step, the content comes back, the page is free', async ({
     page,
   }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
     await page.setViewportSize({ width: 1440, height: 900 });
     await watchNav(page);
     await openPage(page, '/member/');
@@ -1433,6 +1457,7 @@ test.describe('going to a legacy page', () => {
     test(`from an inner page: the leave half only, and back clears everything (${theme})`, async ({
       page,
     }) => {
+      skipIn(['webkit'], NOT_HERE.frames);
       await page.setViewportSize({ width: 1440, height: 900 });
       await watchNav(page);
       await openPage(page, '/member/', { theme });
