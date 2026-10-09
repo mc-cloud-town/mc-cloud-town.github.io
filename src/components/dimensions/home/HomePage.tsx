@@ -35,7 +35,7 @@ import { Respawn } from './Respawn';
 import { DimensionRail } from './DimensionRail';
 
 /** Shown until the live numbers arrive, and kept if they never do. */
-const MILESTONES = 53;
+const DEFAULT_MILESTONES = 53;
 const DEFAULT_MEMBERS = 116;
 const DEFAULT_REPOS = 29;
 
@@ -76,6 +76,15 @@ export const HomePage = () => {
   const { data: repos } = useApi<{ name: string }[]>(
     `${GITHUB_API}?per_page=100`,
   );
+  // the same list the progress page counts, so the figure, the link and that page agree
+  const { data: progress } = useApi<unknown[]>(
+    `${STATIC_DATA_API}/${i18n.language}/survivalProgress.json`,
+  );
+  // The last count that arrived: another language asks for its own file, and the figure does not fall back to
+  // the default while that one is on its way.
+  const [milestones, setMilestones] = useState(DEFAULT_MILESTONES);
+  if (Array.isArray(progress) && progress.length !== milestones)
+    setMilestones(progress.length);
   // the static export is rendered at build time: the day count is only known in the browser
   const days = useSyncExternalStore<number | null>(
     noSubscription,
@@ -197,7 +206,9 @@ export const HomePage = () => {
                 </span>
               </div>
               <div>
-                <b data-stat='milestones'>{MILESTONES}</b>
+                <b data-stat='milestones' key={milestones}>
+                  {milestones}
+                </b>
                 <span data-t='note'>
                   {t('dimensions.overworld.stats.milestones')}
                 </span>
@@ -228,7 +239,7 @@ export const HomePage = () => {
             </div>
           </div>
           <a className='more rise' href='/survivalProgress/' data-t='control'>
-            {t('dimensions.overworld.more', { count: MILESTONES })}{' '}
+            {t('dimensions.overworld.more', { count: milestones })}{' '}
             <span aria-hidden='true'>→</span>
           </a>
         </DimensionOpening>

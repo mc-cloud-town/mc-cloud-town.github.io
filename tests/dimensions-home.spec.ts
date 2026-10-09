@@ -120,6 +120,50 @@ test.describe('home: overworld', () => {
     await expect(page.locator('[data-stat="repos"]')).toHaveText('29');
   });
 
+  test('the milestone count comes from the same data as the progress page, in the figure and in the link', async ({
+    page,
+  }) => {
+    const entries = Array.from({ length: 7 }, (_, i) => ({
+      imageUrl: `survivalProgress/p${i + 1}.webp`,
+      title: `2023/0${i + 1}/01`,
+      subTitle: `milestone ${i + 1}`,
+    }));
+    await page.route(/static-data\/[^/]+\/survivalProgress\.json/, (r) =>
+      r.fulfill({ json: entries }),
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    await expect(page.locator('[data-stat="milestones"]')).toHaveText('7');
+    await expect(page.locator('#overworld a.more')).toHaveText(
+      /完整的世界紀錄，7 個里程碑/,
+    );
+    // the same in another language (its own file is asked for, and answered the same)
+    await setLanguage(page, 'en');
+    await expect(page.locator('[data-stat="milestones"]')).toHaveText('7');
+    await expect(page.locator('#overworld a.more')).toHaveText(
+      /The full world log, 7 milestones/,
+    );
+    // and the page the link leads to lists as many
+    await page.goto('/survivalProgress/');
+    await expect(page.locator('.entry')).toHaveCount(7);
+  });
+
+  test('the milestone count keeps its default when the request fails', async ({
+    page,
+  }) => {
+    await page.route(/static-data\/[^/]+\/survivalProgress\.json/, (r) =>
+      r.abort(),
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    await expect(page.locator('[data-stat="milestones"]')).toHaveText('53');
+    await expect(page.locator('#overworld a.more')).toHaveText(
+      /完整的世界紀錄，53 個里程碑/,
+    );
+  });
+
   test('each of the three builds shows its own scene', async ({ page }) => {
     await openPage(page, '/');
     await ready(page);
