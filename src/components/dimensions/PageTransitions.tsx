@@ -35,8 +35,15 @@ export const PageTransitions = () => {
 
   useEffect(() => setPageRouter(router), [router]);
 
-  // before the new page is painted: its entrance is held under the cover from its first frame
+  // Before the new page is painted: its entrance is held under the cover from its first frame.
+  // (A layout effect of the shell layout, after the page's own: see `pageArrived` for what that order is to it.)
   useLayoutEffect(() => pageArrived(pathname), [pathname]);
+
+  // The shell itself is going (a step to a legacy page): nothing of the step may outlive it. As a layout effect's
+  // cleanup, so that it happens while the shell is taken out of the document and before the router puts the
+  // legacy page at its top: a hold that was still there when the browser tells the page of that scroll would
+  // put the legacy page back where the reader had been on the page before.
+  useLayoutEffect(() => resetPageTransition, []);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -74,8 +81,6 @@ export const PageTransitions = () => {
       document.removeEventListener('focusin', onNear);
       window.removeEventListener('popstate', resetPageTransition);
       window.removeEventListener('pageshow', onShow);
-      // the shell itself is going (a legacy page): nothing of a step may outlive it
-      resetPageTransition();
     };
   }, []);
 

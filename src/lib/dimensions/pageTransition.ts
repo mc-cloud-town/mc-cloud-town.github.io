@@ -231,7 +231,13 @@ export const pageArrived = (pathname: string) => {
     me.letGo();
     return;
   }
-  // the router has put the new page at its top: that is where it stays until the cover has gone
+  // The new page is at its top, and that is where it stays until the cover has gone: the hold is told so.
+  // The router puts it there itself, in the layout phase of the commit that shows the page (its scroll handler
+  // is inside the page's own tree), and `<PageTransitions />`, a later sibling in the shell layout, calls this
+  // from a layout effect of the same commit, so normally after it. The arrival must not hang on that order: if
+  // the hold were told of the old place, it would take the router's scroll for a stray one and put the new page
+  // back there. So the page is put at its top here as well; an inner page has no other place to land on.
+  window.scrollTo({ top: 0, behavior: 'instant' });
   me.moved();
   void (async () => {
     // one beat under the cover, and the new page's first frame painted under it; a sign of life eases out first

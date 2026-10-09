@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openPage } from './helpers/dimensions';
-import { clickAt, clickedAt, ready } from './helpers/home';
+import { clickAt, clickedAt, ready, scrollToSection } from './helpers/home';
 import {
   animationOf,
   documentMark,
@@ -1444,6 +1444,82 @@ test.describe('going to a legacy page', () => {
           home: false,
         }),
       );
+    });
+
+  for (const from of ['/member/', '/'] as const)
+    test(`from far down ${from}: the legacy page is at its top, and stays there`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await watchNav(page);
+      await openPage(page, from);
+      if (from === '/') {
+        await ready(page);
+        await expect(page.locator('.loader')).toHaveCount(0);
+        await scrollToSection(page, '#nether', 0);
+      } else {
+        await page.locator('.person').first().waitFor();
+        await page.evaluate(() =>
+          window.scrollTo({ top: 900, behavior: 'instant' }),
+        );
+      }
+      const y = await page.evaluate(() => window.scrollY);
+      expect(y).toBeGreaterThan(800);
+      await legacyLink(page);
+      const mark = await documentMark(page);
+      // The order under test: the router puts the legacy page at its top while it commits; the browser tells the
+      // page of that scroll a little later, and the shell's effects are cleaned up a little later too. Which of the
+      // two comes first is not ours to say, so the test says it: the moment the legacy page is in the document
+      // (a microtask after the commit, before any clean-up that was put off), the page is told of the scroll.
+      await page.evaluate(() => {
+        const seen = new MutationObserver(() => {
+          if (!document.querySelector('[data-shell="legacy"]')) return;
+          seen.disconnect();
+          const w = window as unknown as { __told: number; __held: boolean };
+          w.__told = window.scrollY;
+          window.dispatchEvent(new Event('scroll'));
+          // and is the page still held then? (a hold cancels the wheel)
+          w.__held = !document.dispatchEvent(
+            new WheelEvent('wheel', {
+              deltaY: 100,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        });
+        seen.observe(document.body, { childList: true, subtree: true });
+      });
+      await navFrames(page);
+      await page.locator('#probe-legacy').click();
+      await onLegacy(page);
+      // the router had put the page at its top when the scroll was told of, and the step's hold had been let go
+      expect(
+        await page.evaluate(() => {
+          const w = window as unknown as { __told?: number; __held?: boolean };
+          return [w.__told, w.__held];
+        }),
+      ).toEqual([0, false]);
+      expect(await documentMark(page)).toBe(mark);
+      // a good many frames on: whatever was still to be dispatched has been
+      await page.evaluate(
+        () =>
+          new Promise<void>((done) => {
+            let n = 0;
+            const tick = () =>
+              ++n < 30 ? requestAnimationFrame(tick) : done();
+            requestAnimationFrame(tick);
+          }),
+      );
+      const { frames } = await navFrames(page);
+      // held where it was for the whole leave
+      const before = frames.filter((f) => f.path === from);
+      expect(before.length).toBeGreaterThan(5);
+      for (const f of before) expect(f.y).toBe(y);
+      // and at the top of the legacy page in every frame of it
+      const there = frames.filter((f) => f.path === '/join/');
+      expect(there.length).toBeGreaterThan(25);
+      there.forEach((f, i) => expect(f.y, `frame ${i}`).toBe(0));
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
     });
 
   test('a legacy page that is two seconds late: the cover stays whole with a sign of life, and goes with the shell', async ({
