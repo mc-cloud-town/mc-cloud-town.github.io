@@ -625,6 +625,45 @@ test.describe('going to another page', () => {
     await pageIsFree(page);
   });
 
+  test('leaving from far down an inner page: the page does not move by a pixel while its content settles out', async ({
+    page,
+  }) => {
+    // Firefox once followed the rise of the content with the scroll (scroll anchoring), for one frame of the leave
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await page.evaluate(() =>
+      window.scrollTo({ top: 700, behavior: 'instant' }),
+    );
+    await expect
+      .poll(() => page.evaluate(() => Math.round(window.scrollY)))
+      .toBe(700);
+    await page.evaluate(() => {
+      const w = window as unknown as { __ys: [string, number, string][] };
+      w.__ys = [];
+      const tick = () => {
+        w.__ys.push([
+          window.location.pathname,
+          window.scrollY,
+          document.documentElement.dataset.nav ?? '',
+        ]);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await bar(page, '/survivalProgress/').click();
+    await arrived(page, '/survivalProgress/');
+    const seen = await page.evaluate(
+      () => (window as unknown as { __ys: [string, number, string][] }).__ys,
+    );
+    const before = seen.filter(([path]) => path === '/member/');
+    expect(
+      before.filter(([, , nav]) => nav === 'leaving').length,
+    ).toBeGreaterThan(3);
+    // not rounded: within a pixel of where it was, in every frame of the leave
+    for (const [, y] of before) expect(Math.abs(y - 700)).toBeLessThan(1);
+  });
+
   test('from the sheet at 390×844: the sheet stays whole until the cover is over it, and the new page is free', async ({
     page,
   }) => {

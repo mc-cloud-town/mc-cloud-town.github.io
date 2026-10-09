@@ -578,6 +578,12 @@ html[data-nav='leaving'] .dim > .dim-foot {
   opacity: 0;
   translate: 0 -12px;
 }
+/* The page is held for the whole of a step. Firefox takes the content's rise for a change of layout and scrolls
+   after it (its scroll anchoring follows `translate`); the hold then puts the page back, one frame late, and
+   that frame shows the page seven pixels off. With no anchor to follow, the page stays. */
+html[data-nav] {
+  overflow-anchor: none;
+}
 html[data-nav='leaving'] .dim.dim--home main {
   translate: none;
 }
