@@ -36,6 +36,8 @@ export const LanguageMenu = () => {
   const trigger = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
+  /** The list was open when the pill was pressed: that press closes it, whatever happens before the click. */
+  const pressedOpen = useRef(false);
   const current = Math.max(
     0,
     LANGS.findIndex((l) => l.value === normalise(i18n.language)),
@@ -118,7 +120,19 @@ export const LanguageMenu = () => {
         aria-label={t('dimensions.nav.languageNow', {
           language: LANGS[current].name,
         })}
-        onClick={() => (open ? hide(false) : show())}
+        // Safari does not give a button the focus when it is clicked: the press takes the focus from the open
+        // list to nothing, the list closes on that blur, and the click that follows would open it again.
+        // So what the pill does is decided by what it was when it was pressed. (A click from the keyboard
+        // has no press before it, and no count of clicks.)
+        onPointerDown={() => {
+          pressedOpen.current = open;
+        }}
+        onClick={(e) => {
+          const wasOpen = e.detail > 0 && pressedOpen.current;
+          pressedOpen.current = false;
+          if (open || wasOpen) hide(false);
+          else show();
+        }}
         onKeyDown={(e) => {
           if (open || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
           e.preventDefault();
