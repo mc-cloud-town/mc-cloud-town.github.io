@@ -1314,21 +1314,26 @@ test.describe('home: arriving, leaving and robustness', () => {
     await scrollToSection(page, '#overworld');
     expect(await visibleScenes(page)).toEqual(['town']);
 
-    // The same by a link of the shell (none leads to a legacy page today, so one is put into the page):
-    // the leave half under the cover, then the legacy page, and nothing of the step on it.
+    // The same by a link of the shell, the footer's: the leave half under the cover, then the legacy page, and
+    // nothing of the step on it.
     await expect(page.locator('.loader')).toHaveCount(0);
-    await page.evaluate(() => {
-      const a = document.createElement('a');
-      a.href = '/join/';
-      a.id = 'probe-legacy';
-      a.textContent = 'join';
-      a.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:99';
-      document.querySelector('.dim main')!.append(a);
+    const link = page.locator('.dim-foot .pages a[href="/join/"]');
+    await link.evaluate((a) => {
+      window.scrollTo({
+        top:
+          a.getBoundingClientRect().bottom +
+          window.scrollY -
+          window.innerHeight +
+          8,
+        behavior: 'instant',
+      });
       (window as unknown as { __same: boolean }).__same = true;
     });
+    await atRest(page);
+    await expect(link).toBeInViewport();
     const y = await page.evaluate(() => window.scrollY);
     await record(page);
-    await page.locator('#probe-legacy').click();
+    await link.click();
     await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
     // the cover came in whole over the page, which stayed where it was, before the page changed
     const frames = await recorded(page);

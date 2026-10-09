@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { ready } from './helpers/home';
 
 const LEGACY = [
   '/join/',
@@ -22,10 +23,13 @@ test.describe('legacy shell', () => {
 });
 
 import {
+  atRest,
+  expectFooterLines,
   expectNoHorizontalScroll,
   expectNoMissingKeys,
   expectTapTargets,
   expectTextFits,
+  FOOTER_PAGES,
   LOCALES,
   openPage,
   setLanguage,
@@ -1242,5 +1246,149 @@ test.describe('dimensions shell: the dimension is on the document from the first
     await page.goBack();
     await expect(page.locator('.dim .head h1')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+  });
+});
+
+test.describe('footer: the other pages of the site', () => {
+  /** The six links of the row, by language, in the footer's order. */
+  const WORDS = {
+    zh_TW: {
+      label: '其他頁面',
+      links: [
+        '紅石作品',
+        '建築作品',
+        '開源項目',
+        '伺服器硬體',
+        '合作夥伴及團隊',
+        '加入我們',
+      ],
+    },
+    zh_CN: {
+      label: '其他页面',
+      links: [
+        '红石作品',
+        '建筑作品',
+        '开源项目',
+        '服务器硬件',
+        '合作伙伴及团队',
+        '加入我们',
+      ],
+    },
+    en: {
+      label: 'More pages',
+      links: [
+        'Redstone',
+        'Building',
+        'Open Source',
+        'Server Hardware',
+        'Partners',
+        'Join Us',
+      ],
+    },
+  } as const;
+
+  for (const [path, first] of [
+    ['/', '.hero h1'],
+    ['/survivalProgress/', '.entry'],
+    ['/member/', '.person'],
+  ] as const)
+    test(`${path} leads to every legacy page from its footer, as a labelled group`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, path);
+      if (path === '/') await ready(page);
+      await page.locator(first).first().waitFor();
+      const group = page.locator('.dim-foot nav.pages');
+      await expect(group).toHaveCount(1);
+      await expect(group).toHaveAccessibleName(WORDS.zh_TW.label);
+      await expect(
+        page.getByRole('navigation', { name: '其他頁面' }),
+      ).toHaveCount(1);
+      const links = group.locator('a');
+      await expect(links).toHaveText([...WORDS.zh_TW.links]);
+      expect(
+        await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))),
+      ).toEqual([...FOOTER_PAGES]);
+      // every legacy route is one of them, or the same page under its other address
+      const reachable = new Set<string>([...FOOTER_PAGES, '/collaborative/']);
+      for (const route of LEGACY) expect(reachable.has(route)).toBe(true);
+    });
+
+  for (const locale of LOCALES)
+    for (const [width, height] of [
+      [1440, 900],
+      [1024, 768],
+      [768, 1024],
+      [390, 844],
+      [360, 740],
+    ] as const)
+      test(`the row at ${width}×${height} in ${locale}: the footer's own type, its words evenly spaced, big enough to tap`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        await openPage(page, '/member/', { locale });
+        await page.locator('.person').first().waitFor();
+        await page.locator('.dim-foot').scrollIntoViewIfNeeded();
+        await atRest(page);
+        const group = page.locator('.dim-foot nav.pages');
+        await expect(group.locator('.label')).toHaveText(WORDS[locale].label);
+        await expect(group.locator('a')).toHaveText([...WORDS[locale].links]);
+        await expectNoMissingKeys(page);
+        // the same type and the same hover as the links out of the site
+        const style = (sel: string) =>
+          page
+            .locator(sel)
+            .first()
+            .evaluate((el) => {
+              const c = getComputedStyle(el);
+              return [
+                c.fontFamily,
+                c.fontSize,
+                c.fontWeight,
+                c.color,
+                c.transitionProperty,
+                c.transitionDuration,
+              ];
+            });
+        expect(await style('.dim-foot .pages a')).toEqual(
+          await style('.dim-foot .links a'),
+        );
+        await expectFooterLines(page);
+        await expectTextFits(page, { within: '.dim-foot' });
+        await expectTapTargets(page);
+        await expectNoHorizontalScroll(page);
+        // no word is broken: each link is one line
+        for (const a of await group.locator('a').all())
+          expect((await a.boundingBox())!.height).toBeLessThanOrEqual(44.5);
+      });
+
+  test('a link of the row eases to the accent under the pointer, like the other links of the footer', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    const link = page.locator('.dim-foot .pages a').first();
+    await link.scrollIntoViewIfNeeded();
+    await atRest(page);
+    const rest = await link.evaluate((el) => getComputedStyle(el).color);
+    await link.hover();
+    // on its way: neither the colour at rest nor the accent yet
+    const colours = await link.evaluate(
+      (el) =>
+        new Promise<string[]>((done) => {
+          const seen: string[] = [];
+          const tick = () => {
+            seen.push(getComputedStyle(el).color);
+            if (seen.length < 30) requestAnimationFrame(tick);
+            else done(seen);
+          };
+          tick();
+        }),
+    );
+    expect(new Set(colours).size).toBeGreaterThan(3);
+    expect(colours.at(-1)).not.toBe(rest);
+    await expect(link).toHaveCSS('color', 'rgb(205, 176, 255)');
   });
 });

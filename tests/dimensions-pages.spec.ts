@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openPage } from './helpers/dimensions';
-import { clickAt, clickedAt, ready, scrollToSection } from './helpers/home';
+import { atRest, openPage } from './helpers/dimensions';
+import { clickAt, clickedAt, ready } from './helpers/home';
 import {
   animationOf,
   documentMark,
@@ -1358,16 +1358,26 @@ test.describe('going to another page', () => {
 });
 
 test.describe('going to a legacy page', () => {
-  /** No link of the shell leads to a legacy page today: one is put into the page, where nothing is over it. */
-  const legacyLink = (page: Page) =>
-    page.evaluate(() => {
-      const a = document.createElement('a');
-      a.href = '/join/';
-      a.id = 'probe-legacy';
-      a.textContent = 'join';
-      a.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:99';
-      document.querySelector('.dim main')!.append(a);
-    });
+  /** The footer's own link to a legacy page. */
+  const LEGACY_LINK = '.dim-foot .pages a[href="/join/"]';
+  /**
+   * Bring that link onto the screen, at its foot (so the page is far down, and still has a little way to go),
+   * and wait until the page is at rest there.
+   */
+  const legacyLink = async (page: Page) => {
+    await page.locator(LEGACY_LINK).evaluate((a) =>
+      window.scrollTo({
+        top:
+          a.getBoundingClientRect().bottom +
+          window.scrollY -
+          window.innerHeight +
+          8,
+        behavior: 'instant',
+      }),
+    );
+    await atRest(page);
+    await expect(page.locator(LEGACY_LINK)).toBeInViewport();
+  };
   /** The legacy page, with nothing of the shell or of a step on it. */
   const onLegacy = async (page: Page) => {
     await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
@@ -1391,7 +1401,7 @@ test.describe('going to a legacy page', () => {
       await legacyLink(page);
       const mark = await documentMark(page);
       await navFrames(page);
-      await page.locator('#probe-legacy').click();
+      await page.locator(LEGACY_LINK).click();
       await onLegacy(page);
       expect(await documentMark(page)).toBe(mark);
       const { frames, runs } = await navFrames(page);
@@ -1456,16 +1466,11 @@ test.describe('going to a legacy page', () => {
       if (from === '/') {
         await ready(page);
         await expect(page.locator('.loader')).toHaveCount(0);
-        await scrollToSection(page, '#nether', 0);
-      } else {
-        await page.locator('.person').first().waitFor();
-        await page.evaluate(() =>
-          window.scrollTo({ top: 900, behavior: 'instant' }),
-        );
-      }
+      } else await page.locator('.person').first().waitFor();
+      // the link is in the footer, at the foot of the page
+      await legacyLink(page);
       const y = await page.evaluate(() => window.scrollY);
       expect(y).toBeGreaterThan(800);
-      await legacyLink(page);
       const mark = await documentMark(page);
       // The order under test: the router puts the legacy page at its top while it commits; the browser tells the
       // page of that scroll a little later, and the shell's effects are cleaned up a little later too. Which of the
@@ -1490,7 +1495,7 @@ test.describe('going to a legacy page', () => {
         seen.observe(document.body, { childList: true, subtree: true });
       });
       await navFrames(page);
-      await page.locator('#probe-legacy').click();
+      await page.locator(LEGACY_LINK).click();
       await onLegacy(page);
       // the router had put the page at its top when the scroll was told of, and the step's hold had been let go
       expect(
@@ -1536,7 +1541,7 @@ test.describe('going to a legacy page', () => {
     await legacyLink(page);
     const mark = await documentMark(page);
     await navFrames(page);
-    await page.locator('#probe-legacy').click();
+    await page.locator(LEGACY_LINK).click();
     await expect(page.locator('.dim-cover .cover-wait canvas')).toBeVisible({
       timeout: 5000,
     });
@@ -1566,7 +1571,7 @@ test.describe('going to a legacy page', () => {
     await page.locator('.person').first().waitFor();
     await legacyLink(page);
     const mark = await documentMark(page);
-    await page.locator('#probe-legacy').click();
+    await page.locator(LEGACY_LINK).click();
     await onLegacy(page);
     // a new document this time
     expect(await documentMark(page)).not.toBe(mark);
@@ -1589,7 +1594,7 @@ test.describe('going to a legacy page', () => {
     const opened = context
       .waitForEvent('page', { timeout: 5000 })
       .catch(() => null);
-    await page.locator('#probe-legacy').click({ modifiers: ['ControlOrMeta'] });
+    await page.locator(LEGACY_LINK).click({ modifiers: ['ControlOrMeta'] });
     await page.bringToFront();
     await page.waitForTimeout(500);
     const { frames } = await navFrames(page);

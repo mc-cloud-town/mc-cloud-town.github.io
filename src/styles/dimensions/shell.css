@@ -119,7 +119,29 @@ html[data-dim] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    column-gap: clamp(18px, 6vw - 2px, 28px);
+    column-gap: var(--foot-gap);
+  }
+  .dim-foot {
+    --foot-gap: clamp(18px, 6vw - 2px, 28px);
+  }
+  /* The other pages of the site (not in the design demos): a line of its own, above the footer's own line.
+     A run of words, each link one unbroken word, with the space of the line of links between them. Where the
+     line is too short for all of them they wrap like text and the rows are balanced, so none is left with a
+     scrap; the label then stands on a line of its own above them. */
+  .dim-foot .pages {
+    flex-basis: 100%;
+    text-wrap: balance;
+  }
+  .dim-foot .pages > * {
+    display: inline-block;
+    white-space: nowrap;
+    margin-inline-end: var(--foot-gap);
+  }
+  .dim-foot .pages > :last-child {
+    margin-inline-end: 0;
+  }
+  .dim-foot .pages .label {
+    transition: color var(--t-theme);
   }
 
   /* additions not in the design demos */
@@ -399,6 +421,9 @@ html[data-dim] {
     }
   }
   @media (max-width: 860px) {
+    .dim-foot .pages .label {
+      display: block;
+    }
     /* own row; contain keeps the logo from stretching to the row width */
     .dim-foot img {
       flex-basis: 100%;

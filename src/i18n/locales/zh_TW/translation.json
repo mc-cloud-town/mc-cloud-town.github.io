@@ -472,6 +472,7 @@
       ]
     },
     "footer": {
+      "more": "其他頁面",
       "support": "支持我們",
       "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
     },

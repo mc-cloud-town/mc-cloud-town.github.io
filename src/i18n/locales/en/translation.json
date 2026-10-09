@@ -480,6 +480,7 @@
       ]
     },
     "footer": {
+      "more": "More pages",
       "support": "Support us",
       "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
     },

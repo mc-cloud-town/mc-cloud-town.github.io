@@ -6,6 +6,7 @@ import path from 'node:path';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import {
   atRest,
+  expectFooterLines,
   expectNoHorizontalScroll,
   expectLegible,
   expectNoMissingKeys,
@@ -145,33 +146,6 @@ const PENDING: {
 ];
 
 /**
- * The footer's links read as one line of words: all on one row, with the same space between each word and the
- * next (measured on the words, not on the boxes that make them big enough to tap).
- */
-const expectFooterLine = async (page: Page) => {
-  const words = await page.locator('.dim-foot a').evaluateAll((links) =>
-    links.map((a) => {
-      const range = document.createRange();
-      range.selectNodeContents(a);
-      const r = range.getBoundingClientRect();
-      return { left: r.left, right: r.right, mid: (r.top + r.bottom) / 2 };
-    }),
-  );
-  expect(words.length, 'links in the footer').toBeGreaterThan(2);
-  const problems: string[] = [];
-  const rows = new Set(words.map((w) => Math.round(w.mid)));
-  if (rows.size > 1) problems.push(`footer links on ${rows.size} rows`);
-  else {
-    const gaps = words.slice(1).map((w, i) => w.left - words[i].right);
-    if (Math.max(...gaps) - Math.min(...gaps) > 1.5)
-      problems.push(
-        `footer links unevenly spaced: ${gaps.map((g) => g.toFixed(1)).join(', ')}`,
-      );
-  }
-  expect(problems, problems.join('\n')).toEqual([]);
-};
-
-/**
  * A set of figures that wraps does so evenly: every row holds as many as the others (four, or two and two;
  * never three and one left over).
  */
@@ -282,7 +256,7 @@ for (const vp of VIEWPORTS) {
         await expect(page.locator('.dim-foot')).toBeInViewport();
         found.push(
           ...(await check(page, 'foot', { passing: BAR }, [
-            () => expectFooterLine(page),
+            () => expectFooterLines(page),
           ])),
         );
         await shoot(page, info, `home-${tag}-foot`);
@@ -380,7 +354,7 @@ for (const vp of VIEWPORTS) {
           await expect(page.locator('.dim-foot')).toBeInViewport();
           found.push(
             ...(await check(page, 'foot', { passing: OVER_LIST }, [
-              () => expectFooterLine(page),
+              () => expectFooterLines(page),
             ])),
           );
           await shoot(page, info, `${name}-${tag}-foot`);
