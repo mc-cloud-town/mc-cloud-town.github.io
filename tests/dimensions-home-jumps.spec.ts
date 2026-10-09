@@ -1521,10 +1521,10 @@ test.describe('home: arriving, leaving and robustness', () => {
     expect(await lines.count()).toBe(3);
     for (const span of await lines.all())
       await expect(span).toHaveCSS('opacity', '1');
-    await expect(page.locator('.ledger-stage')).not.toHaveCSS(
-      'position',
-      'fixed',
-    );
+    // the facilities are a list in the flow of the page: no stage, nothing pinned
+    await expect(page.locator('#ledger .ledger-plain > li')).toHaveCount(6);
+    await expect(page.locator('.ledger-plain')).toHaveCSS('position', 'static');
+    await expect(page.locator('.ledger-stage')).toHaveCount(0);
     await expect(page.locator('.pin-spacer')).toHaveCount(0);
     // the rail still says where the reader is
     await jumpTo(page, '#nether', 0.1);
