@@ -76,27 +76,40 @@ export const buildChoreography = (
     };
 
     if (opts.reduced) {
-      // no scrubbed motion: the scene simply switches when its section reaches the middle of the screen
-      const show = (id: string) =>
+      // No scrubbed motion: the scene simply switches when its section reaches the middle of the screen.
+      // It is read from where the page is, not from what was passed on the way: a jump (a scrollbar drag, the End
+      // key, a long list scrolled in one step) passes whole sections without any of them ever being on screen.
+      const places = [
+        { el: q('.hero'), scene: 'spawn' as string },
+        ...TRANSITIONS.filter(has).map((def) => ({
+          el: q(def.trigger),
+          scene: def.to as string,
+        })),
+      ];
+      let showing = '';
+      const show = (id: string) => {
+        if (id === showing) return;
+        showing = id;
         gsap.utils
           .toArray<HTMLElement>('.scene', root)
           .forEach((s) =>
             gsap.set(s, { autoAlpha: s.dataset.scene === id ? 1 : 0 }),
           );
+      };
+      /** The scene of the last section whose top has reached the middle of the screen. */
+      const sync = () => {
+        const middle = window.innerHeight / 2;
+        let id = 'spawn';
+        for (const p of places)
+          if (p.el && p.el.getBoundingClientRect().top <= middle) id = p.scene;
+        show(id);
+      };
       ScrollTrigger.create({
-        trigger: q('.hero'),
-        start: 'top 50%',
-        end: 'bottom 50%',
-        onToggle: (s) => s.isActive && show('spawn'),
+        start: 0,
+        end: 'max',
+        onUpdate: sync,
+        onRefresh: sync,
       });
-      TRANSITIONS.filter(has).forEach((def) =>
-        ScrollTrigger.create({
-          trigger: q(def.trigger),
-          start: 'top 50%',
-          end: 'bottom 50%',
-          onToggle: (s) => s.isActive && show(def.to),
-        }),
-      );
       dims();
       return;
     }

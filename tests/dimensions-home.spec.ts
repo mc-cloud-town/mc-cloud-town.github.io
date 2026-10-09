@@ -909,6 +909,29 @@ test.describe('home: nether', () => {
       expect(new Set(tops).size).toBe(6);
       await expectNoHorizontalScroll(page);
     });
+
+  test('reduced motion: the scene is the one of the place on the page, also after a jump past whole sections', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+    // from the top straight into the list of facilities: the opening of the nether is never on screen
+    await jumpTo(page, '#ledger .ledger-plain > li:nth-child(4)');
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    // to the foot of the page, and straight back: every section of the End is passed in one step
+    await jumpTo(page, '#respawn', 0.2);
+    await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
+    await jumpTo(page, '#ledger .ledger-plain > li:nth-child(4)');
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    await jumpTo(page, '.rank', 0.1);
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    await jumpTo(page, '[data-work="overworld-1"]', 0.6);
+    await expect.poll(() => visibleScenes(page)).toEqual(['w2']);
+    await jumpTo(page, '.hero');
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+  });
 });
 
 test.describe('home: the end', () => {
