@@ -41,7 +41,10 @@ export const Credits = ({ members }: { members: IMembers | null }) => {
   const { t } = useTranslation();
   return (
     <section className='credits' id='credits' data-dim='end'>
-      <h2 data-t='note'>{t('dimensions.end.credits.tools')}</h2>
+      {/* the credits are part of the End: their headings are a level below its statement */}
+      <h3 className='cast' data-t='note'>
+        {t('dimensions.end.credits.tools')}
+      </h3>
       <dl className='roles'>
         {ROLES.map(([key, repos]) => (
           <div key={key}>
@@ -65,7 +68,9 @@ export const Credits = ({ members }: { members: IMembers | null }) => {
       {(['member', 'trial'] as const).map((group) =>
         members?.[group]?.length ? (
           <div key={group}>
-            <h2 data-t='note'>{t(`dimensions.end.credits.${group}`)}</h2>
+            <h3 className='cast' data-t='note'>
+              {t(`dimensions.end.credits.${group}`)}
+            </h3>
             <p className='names' data-names={group}>
               {members[group].map((m, i) => (
                 // the live data repeats some uuids, so the position is part of the key

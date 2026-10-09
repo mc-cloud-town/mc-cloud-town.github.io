@@ -12,7 +12,8 @@ export const RankStatement = ({
     <p className='mono acc' data-t='note'>
       {label}
     </p>
-    <h2 className='serif rise' data-t='title'>
+    {/* part of the nether, so a level below its statement */}
+    <h3 className='claim serif rise' data-t='title'>
       {lines.map((line, i) =>
         // keyed by position: the same nodes carry every language
         i < lines.length - 1 ? (
@@ -21,7 +22,7 @@ export const RankStatement = ({
           <em key={i}>{line}</em>
         ),
       )}
-    </h2>
+    </h3>
     <p className='rise' data-t='body'>
       {body}
     </p>

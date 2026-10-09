@@ -598,11 +598,11 @@ html.lenis {
   .rank {
     padding: 26vh var(--gutter);
   }
-  .rank h2 {
+  .rank .claim {
     font-size: clamp(56px, 9vw, 170px);
     line-height: 1.05;
   }
-  .rank h2 em {
+  .rank .claim em {
     font-style: normal;
     color: var(--accent);
     display: block;
@@ -619,14 +619,14 @@ html.lenis {
     padding: 10vh var(--gutter) 30vh;
     text-align: center;
   }
-  .credits h2 {
+  .credits .cast {
     font: 500 13px var(--mono);
     letter-spacing: 0.3em;
     color: var(--accent);
     margin: 22vh 0 40px;
   }
   /* only the heading that opens the credits: the headings of the name lists are first in their own block */
-  .credits > h2:first-child {
+  .credits > .cast:first-child {
     margin-top: 0;
   }
   .roles {

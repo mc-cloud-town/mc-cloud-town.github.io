@@ -24,13 +24,14 @@ export const DimensionOpening = ({
         <span className='acc'>{tag}</span>
         <span>{DIMENSION_MARKS[id]}</span>
       </div>
-      {/* the statement is the section's heading: a jump to the section puts the focus here */}
-      <p className='say' data-say data-t='title' data-heading tabIndex={-1}>
+      {/* the statement is the dimension's heading, second in the outline after the title: a jump to the section
+          puts the focus here. Its look is the class's (home.css), not the tag's. */}
+      <h2 className='say' data-say data-t='title' data-heading tabIndex={-1}>
         {/* keyed by position: the same nodes carry every language, so their scroll animations survive a switch */}
         {say.map((line, i) => (
           <span key={i}>{line}</span>
         ))}
-      </p>
+      </h2>
       <p className='body rise' data-t='body'>
         {body}
       </p>

@@ -65,6 +65,80 @@ test.describe('home: spawn', () => {
   });
 });
 
+test.describe('home: the outline', () => {
+  for (const locale of ['zh_TW', 'zh_CN', 'en'] as const)
+    test(`the headings make an outline in ${locale}: one h1, each dimension's statement an h2, nothing skipped`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, '/', { locale });
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      const outline = await page.evaluate(() =>
+        [...document.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => ({
+          level: Number(h.tagName[1]),
+          text: (h.getAttribute('aria-label') ?? h.textContent ?? '').trim(),
+          section: h.closest('section')?.id || h.closest('section')?.className,
+          target: h.hasAttribute('data-heading'),
+        })),
+      );
+      expect(outline.length).toBeGreaterThan(12);
+      for (const h of outline) expect(h.text.length).toBeGreaterThan(0);
+      // one title, and it comes first
+      expect(outline.filter((h) => h.level === 1)).toHaveLength(1);
+      expect(outline[0]).toMatchObject({ level: 1, text: '雲鎮工藝' });
+      // going down, never more than one level at a time
+      outline.forEach((h, i) => {
+        if (i > 0)
+          expect(
+            h.level - outline[i - 1].level,
+            `"${outline[i - 1].text}" (h${outline[i - 1].level}) → "${h.text}" (h${h.level})`,
+          ).toBeLessThanOrEqual(1);
+      });
+      // the four parts of the page are its second level, in page order, and nothing else is
+      expect(
+        outline.filter((h) => h.level === 2).map((h) => h.section),
+      ).toEqual(['overworld', 'nether', 'end', 'respawn']);
+      // what a dimension holds is below its statement: builds, the facility, the claim, the credits
+      const third = outline.filter((h) => h.level === 3).map((h) => h.section);
+      expect(third.filter((s) => s === 'work-sec')).toHaveLength(5);
+      expect(third).toContain('ledger');
+      expect(third).toContain('rank');
+      expect(third.filter((s) => s === 'credits')).toHaveLength(3);
+      expect(outline.every((h) => h.level <= 3)).toBe(true);
+      // where a jump puts the focus is a real heading
+      expect(outline.filter((h) => h.target).map((h) => h.level)).toEqual([
+        1, 2, 2, 2, 2,
+      ]);
+    });
+
+  test('a jump to a dimension puts the focus on its heading, and the statement looks as it did', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await page.locator('.dim-bar nav a[data-d="nether"]').click();
+    await expect(page.locator('#nether .say')).toBeFocused();
+    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
+      'H2',
+    );
+    // the statement's own type, not the legacy headings': serif 900, the design's size and leading, the page's colour
+    const say = page.locator('#nether .say');
+    await expect(say).toHaveCSS('font-weight', '900');
+    await expect(say).toHaveCSS('font-family', /Chiron Sung HK/);
+    await expect(say).toHaveCSS('font-size', '54.72px'); // 3.8vw of 1440
+    await expect(say).toHaveCSS('line-height', '72.2304px'); // 1.32
+    await expect(say).toHaveCSS('margin', '0px');
+    await expect(say).toHaveCSS('color', 'rgb(242, 244, 246)');
+    for (const sel of ['.rank h3', '#credits h3'])
+      await expect(page.locator(sel).first()).not.toHaveCSS(
+        'color',
+        'rgb(241, 245, 249)', // the legacy --text-primary
+      );
+  });
+});
+
 test.describe('home: overworld', () => {
   test('the town scene shows behind the statement, with the label upright on the right', async ({
     page,
@@ -565,9 +639,9 @@ test.describe('home: nether', () => {
     await ready(page);
     await scrollToSection(page, '.rank', -0.3);
     // one line only, and it is the accent-coloured one
-    await expect(page.locator('.rank h2')).toHaveText('亞洲第一');
-    await expect(page.locator('.rank h2 em')).toHaveText('亞洲第一');
-    await expect(page.locator('.rank h2 em')).toHaveCount(1);
+    await expect(page.locator('.rank h3')).toHaveText('亞洲第一');
+    await expect(page.locator('.rank h3 em')).toHaveText('亞洲第一');
+    await expect(page.locator('.rank h3 em')).toHaveCount(1);
     // no locale claims a world ranking any more
     for (const locale of ['zh_TW', 'zh_CN', 'en']) {
       const rank: string[] = JSON.parse(
@@ -576,8 +650,8 @@ test.describe('home: nether', () => {
       expect(rank, locale).toHaveLength(1);
       expect(rank.join(' '), locale).not.toMatch(/第六|6th|sixth/i);
     }
-    await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
-    await expect(page.locator('.rank h2 em')).toHaveCSS(
+    await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h3 em')).toHaveCSS(
       'color',
       'rgb(255, 106, 69)',
     );
@@ -640,7 +714,7 @@ test.describe('home: nether', () => {
       await expectNoHorizontalScroll(page);
       await scrollToSection(page, '.rank', -0.3);
       expect(await visibleScenes(page), size).toEqual(['nether']);
-      await expect(page.locator('.rank h2')).toBeVisible();
+      await expect(page.locator('.rank h3')).toBeVisible();
       await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
       expect(await visibleScenes(page), size).toEqual(['w3']);
     }
@@ -744,7 +818,7 @@ test.describe('home: nether', () => {
     await scrollToSection(page, '.rank', 0);
     expect(await visibleScenes(page)).toEqual(['nether']);
     expect(await shownPictures(page)).toEqual(['5']);
-    await expect(page.locator('.rank h2')).toBeVisible();
+    await expect(page.locator('.rank h3')).toBeVisible();
     await expectTextFits(page, { within: '.rank' });
     await expectTapTargets(page);
   });
@@ -846,8 +920,8 @@ test.describe('home: nether', () => {
     await expect(page.locator('.ledger-list li.on .mono')).toHaveText('06');
     await scrollToSection(page, '.rank', -0.3);
     expect(await visibleScenes(page)).toEqual(['nether']);
-    await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
-    await expect(page.locator('.rank h2 em')).not.toHaveText('亞洲第一');
+    await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h3 em')).not.toHaveText('亞洲第一');
     await expectTextFits(page, { within: '.rank' });
     // the statement of the opening lights up in the new language
     const sayHeight = await page
@@ -888,7 +962,7 @@ test.describe('home: nether', () => {
     );
     await scrollToSection(page, '.rank', -0.3);
     expect(await visibleScenes(page)).toEqual(['nether']);
-    await expect(page.locator('.rank h2')).toBeVisible();
+    await expect(page.locator('.rank h3')).toBeVisible();
   });
 
   for (const [width, height] of [
@@ -1114,7 +1188,7 @@ test.describe('home: the end', () => {
     expect(Math.abs(back.rotate)).toBeLessThan(0.01);
     expect(back.scale).toBeCloseTo(1, 3);
     await expect(page.locator('.scene[data-scene="hall"]')).toBeHidden();
-    await expect(page.locator('.rank h2')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
   });
 
   test('the moon slides in from the right and the farm rises from the bottom, and both undo', async ({
@@ -1340,7 +1414,7 @@ test.describe('home: the end', () => {
     await expect(page.locator('#credits .roles a')).toHaveCount(18);
     await expect(page.locator('#credits [data-names]')).toHaveCount(0);
     // no heading is left behind for a list that is not there
-    await expect(page.locator('#credits h2')).toHaveCount(1);
+    await expect(page.locator('#credits h3')).toHaveCount(1);
     await expect(page.locator('#credits a.more')).toBeVisible();
     await expect(page.locator('#credits .fin')).toHaveText('還沒結束。');
   });
@@ -1463,7 +1537,7 @@ test.describe('home: the end', () => {
       const state = () =>
         page.evaluate(() => {
           const h2 = document
-            .querySelector('.rank h2')!
+            .querySelector('.rank h3')!
             .getBoundingClientRect();
           const tag = document
             .querySelector('#end .tag')!
@@ -1477,7 +1551,7 @@ test.describe('home: the end', () => {
           };
         });
       const html = page.locator('html');
-      const em = page.locator('.rank h2 em');
+      const em = page.locator('.rank h3 em');
       const tag = page.locator('#end .tag .acc');
       const stillNether = async (step: string) => {
         await scrollToSection(page, '#end', -0.62);
@@ -1521,7 +1595,7 @@ test.describe('home: the end', () => {
     );
     await expect(page.locator('#end .tag span').nth(1)).toHaveText('THE END');
     await scrollToSection(page, '#credits', 0.3);
-    await expect(page.locator('#credits h2').first()).toHaveCSS(
+    await expect(page.locator('#credits h3').first()).toHaveCSS(
       'color',
       'rgb(205, 176, 255)',
     );
@@ -1633,7 +1707,7 @@ test.describe('home: the end', () => {
       if (sel.startsWith('[data-work'))
         await lit(page, `${sel} .work > div > *`);
     }
-    await expect(page.locator('#credits h2').first()).toHaveText(
+    await expect(page.locator('#credits h3').first()).toHaveText(
       'OPEN-SOURCE TOOLS',
     );
     await expect(page.locator('#credits .roles dt').first()).toHaveText(

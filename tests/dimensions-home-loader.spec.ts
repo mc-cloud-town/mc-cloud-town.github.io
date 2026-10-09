@@ -62,7 +62,7 @@ const expectReadableWithoutScript = async (page: Page) => {
     await expect(h).toHaveCSS('opacity', '1');
   }
   for (const sel of [
-    '.rank h2',
+    '.rank h3',
     '#credits .roles',
     '#respawn h2',
     '#respawn .depts',
