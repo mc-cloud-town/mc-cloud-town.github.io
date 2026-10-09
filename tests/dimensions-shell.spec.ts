@@ -1064,8 +1064,11 @@ test.describe('dimensions shell: the language menu', () => {
       );
       expect(rows).toHaveLength(3);
       for (const r of rows) {
-        expect(r.w).toBeGreaterThanOrEqual(44);
-        expect(r.h).toBeGreaterThanOrEqual(44);
+        // 44px is the requirement, and the styles ask for exactly that. A box that is laid out at 44px can be
+        // measured a fraction under it (43.99999 was read here now and then): the same half pixel of rounding
+        // that expectTapTargets allows, and no more.
+        expect(r.w).toBeGreaterThanOrEqual(43.5);
+        expect(r.h).toBeGreaterThanOrEqual(43.5);
         expect(r.inside).toBe(true);
         expect(r.size).toBeGreaterThanOrEqual(14);
       }
