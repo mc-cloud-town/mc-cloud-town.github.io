@@ -171,6 +171,26 @@ const expectFooterLine = async (page: Page) => {
   expect(problems, problems.join('\n')).toEqual([]);
 };
 
+/**
+ * A set of figures that wraps does so evenly: every row holds as many as the others (four, or two and two;
+ * never three and one left over).
+ */
+const expectEvenRows = async (page: Page, selector: string) => {
+  const rows = await page.locator(selector).evaluateAll((els) => {
+    const count = new Map<number, number>();
+    for (const el of els) {
+      const top = Math.round(el.getBoundingClientRect().top);
+      count.set(top, (count.get(top) ?? 0) + 1);
+    }
+    return [...count.values()];
+  });
+  expect(rows.length, `${selector} is in the page`).toBeGreaterThan(0);
+  expect(
+    new Set(rows).size,
+    `${selector} wraps unevenly: rows of ${rows.join(' + ')}`,
+  ).toBe(1);
+};
+
 const shoot = async (page: Page, info: TestInfo, name: string) => {
   const file = `${name.replace(/[^\w.-]+/g, '_')}.jpg`;
   const body = await page.screenshot({ type: 'jpeg', quality: 60 });
@@ -233,7 +253,14 @@ for (const vp of VIEWPORTS) {
             .toContain(stop.scene);
           await atRest(page);
           found.push(
-            ...(await check(page, where, stop.anchor ? {} : { passing: BAR })),
+            ...(await check(
+              page,
+              where,
+              stop.anchor ? {} : { passing: BAR },
+              stop.sel === '#overworld'
+                ? [() => expectEvenRows(page, '#overworld .stats b')]
+                : [],
+            )),
           );
           await shoot(page, info, `home-${tag}-${i}-${stop.sel}`);
           if (stop.walk)
