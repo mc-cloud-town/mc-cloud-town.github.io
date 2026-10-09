@@ -167,7 +167,12 @@ test.describe('home: respawn', () => {
       await expect(
         page.locator('#respawn .depts li a').last(),
       ).toBeInViewport();
-      await expectTextFits(page, { within: '#respawn .depts' });
+      // (at the end of the page the list is read on from further up: on a short screen its first rows are
+      // passing behind the bar by now, the more so since the footer has a line more)
+      await expectTextFits(page, {
+        within: '#respawn .depts',
+        passing: '.dim-bar',
+      });
       await expectTextFits(page, { within: '#respawn .dim-foot' });
       // The footer is the shell's own (13px links, as on the inner pages), so only the sizes to tap are checked here.
       const small = await page.evaluate(() =>
@@ -179,7 +184,8 @@ test.describe('home: respawn', () => {
               .map((r) => `${Math.round(r.width)}x${Math.round(r.height)}`),
       );
       expect(small).toEqual([]);
-      expect(await page.locator('#respawn a').count()).toBe(9);
+      // the call to join, three ways to apply, and the footer's eleven: six pages of the site, five links out
+      expect(await page.locator('#respawn a').count()).toBe(15);
       await expectNoHorizontalScroll(page);
       // by day the page is light again after the End
       if (theme === 'light')
