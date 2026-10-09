@@ -306,6 +306,15 @@ html.lenis {
     height: 100vh;
     min-height: 620px;
   }
+  /* On a phone `100vh` is the screen with the browser's bars put away: while they show, the foot of the hero
+     (the way down, the call to join) is under them. The small viewport height is what is left with the bars
+     showing, and it does not change while the page is scrolled, so nothing is measured again. Where there are
+     no such bars the two are the same. */
+  @supports (height: 100svh) {
+    .hero {
+      height: 100svh;
+    }
+  }
   .hero .vt {
     position: absolute;
     right: var(--gutter);
@@ -504,6 +513,7 @@ html.lenis {
   }
 
   /* nether ledger */
+  /* (the stage's own rule for the small viewport height follows this one: as the hero) */
   .ledger-stage {
     position: relative;
     height: 100vh;
@@ -513,6 +523,11 @@ html.lenis {
     gap: 5vw;
     align-items: center;
     padding: 0 var(--gutter);
+  }
+  @supports (height: 100svh) {
+    .ledger-stage {
+      height: 100svh;
+    }
   }
   .ledger-list li {
     display: grid;

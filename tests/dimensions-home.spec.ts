@@ -49,6 +49,59 @@ test.describe('home: spawn', () => {
     await expect(page.locator('.hero-copy')).toContainText('Join us');
   });
 
+  test('the hero and the pinned stage are as tall as the screen that is left under a phone’s address bar (svh), and as tall as the screen where there is none', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    // what the stylesheet says: the small viewport height where the browser knows it, after a plain vh for one that does not
+    const declared = await page.evaluate(() => {
+      const out: Record<string, string[]> = { hero: [], stage: [] };
+      const walk = (rules: CSSRuleList, scope: string) => {
+        for (const rule of rules) {
+          const inner = (rule as CSSGroupingRule).cssRules;
+          const own = (rule as CSSStyleRule).selectorText ?? '';
+          const style = (rule as CSSStyleRule).style;
+          const supports =
+            rule instanceof CSSSupportsRule ? rule.conditionText : '';
+          const here = `${scope} ${supports} ${own}`;
+          const height = style?.getPropertyValue('height');
+          if (height && /\.dim--home/.test(here)) {
+            if (/\.hero$/.test(own)) out.hero.push(height);
+            if (/\.ledger-stage$/.test(own)) out.stage.push(height);
+          }
+          if (inner) walk(inner, here);
+        }
+      };
+      for (const sheet of document.styleSheets) {
+        try {
+          walk(sheet.cssRules, '');
+        } catch {
+          // a stylesheet of another origin (the fonts): not ours to read
+        }
+      }
+      return out;
+    });
+    for (const heights of [declared.hero, declared.stage]) {
+      expect(heights).toContain('100vh');
+      expect(heights).toContain('100svh');
+      expect(heights.indexOf('100vh')).toBeLessThan(heights.indexOf('100svh'));
+    }
+    // and nothing changes where the two are the same: the whole screen, as before
+    const vh = page.viewportSize()!.height;
+    expect(
+      await page
+        .locator('.hero')
+        .evaluate((el) => el.getBoundingClientRect().height),
+    ).toBe(Math.max(vh, 620));
+    await scrollToSection(page, '#ledger', 0.2);
+    expect(
+      await page
+        .locator('.ledger-stage')
+        .evaluate((el) => el.getBoundingClientRect().height),
+    ).toBe(vh);
+  });
+
   test('/home/ is the same page', async ({ page }) => {
     await openPage(page, '/home/');
     await ready(page);
