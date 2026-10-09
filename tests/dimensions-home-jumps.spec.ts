@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openPage } from './helpers/dimensions';
+import { atRest, openPage } from './helpers/dimensions';
 import {
   clickAt,
   clickedAt,
@@ -1532,5 +1532,293 @@ test.describe('home: arriving, leaving and robustness', () => {
       'data-d',
       'nether',
     );
+  });
+});
+
+test.describe('home: stepping back lands where the reader was', () => {
+  /** Where the reader is: the page, the section at the head of the screen and how far into it, the scenes, the facility. */
+  const where = (page: Page) =>
+    page.evaluate(() => {
+      const sections = [...document.querySelectorAll('.dim--home main > *')];
+      let i = 0;
+      sections.forEach((s, k) => {
+        if (s.getBoundingClientRect().top <= 1) i = k;
+      });
+      const shown = (el: Element) => {
+        const c = getComputedStyle(el);
+        return c.visibility !== 'hidden' && +c.opacity > 0.5;
+      };
+      return {
+        y: Math.round(window.scrollY),
+        section: sections[i]?.id || sections[i]?.className || '',
+        into: Math.round(-sections[i]?.getBoundingClientRect().top),
+        scenes: [...document.querySelectorAll<HTMLElement>('.scene')]
+          .filter(shown)
+          .map((s) => s.dataset.scene),
+        facility: document.querySelector('.ledger-now h3')?.textContent ?? '',
+        pictures: [...document.querySelectorAll<HTMLElement>('[data-ledger]')]
+          .filter((i) => +getComputedStyle(i).opacity > 0.5)
+          .map((i) => i.dataset.ledger),
+        dim: document.documentElement.dataset.dim,
+      };
+    });
+  /** The page has come to rest and nothing is over it. */
+  const still = async (page: Page) => {
+    await atRest(page);
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+  };
+  /** Back on the home page: its loader has gone, and the page is at rest. */
+  const backHome = async (page: Page) => {
+    await page.goBack();
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await still(page);
+  };
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ] as const) {
+    test(`at ${width}×${height}, leaving from the credits through the link to the roster and stepping back: the credits again, at the same line`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      // the names are in: they are a good part of the height of the credits
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      const more = page.locator('#credits a.more');
+      // the link in the middle of the screen, as a reader who is about to follow it has it
+      await more.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        window.scrollTo({
+          top: r.top + window.scrollY - window.innerHeight / 2,
+          behavior: 'instant',
+        });
+      });
+      await still(page);
+      const before = await where(page);
+      expect(before.section).toBe('credits');
+      expect(before.scenes).toEqual(['end']);
+      const linkAt = (await more.boundingBox())!.y;
+
+      await more.click();
+      await page.locator('.person').first().waitFor();
+      await expect(page.locator('.dim-cover')).toHaveCSS(
+        'visibility',
+        'hidden',
+      );
+      await backHome(page);
+      const after = await where(page);
+      expect(after.section).toBe('credits');
+      expect(after.scenes).toEqual(['end']);
+      expect(after.dim).toBe('end');
+      expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+      expect(
+        Math.abs((await more.boundingBox())!.y - linkAt),
+      ).toBeLessThanOrEqual(4);
+      // the page is the reader's: the wheel moves it on from there
+      await page.mouse.move(width / 2, height / 2);
+      await page.mouse.wheel(0, 300);
+      await expect
+        .poll(() => page.evaluate(() => window.scrollY))
+        .toBeGreaterThan(after.y);
+    });
+
+    test(`at ${width}×${height}, leaving from inside the pinned ledger and stepping back: the same facility, its name and its picture`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      // the fourth of six facilities
+      await page.evaluate(() => {
+        const top =
+          document.querySelector('#ledger')!.getBoundingClientRect().top +
+          window.scrollY;
+        window.scrollTo({
+          top: top + (3.5 / 6) * 3 * window.innerHeight,
+          behavior: 'instant',
+        });
+      });
+      await expect
+        .poll(async () => (await where(page)).pictures)
+        .toEqual(['3']);
+      await still(page);
+      const before = await where(page);
+      expect(before.section).toBe('ledger');
+      expect(before.facility).toBe('雙維度百萬豬布林交易');
+      expect(before.scenes).toEqual(['nether']);
+
+      // a link of the page itself: the way to the roster, from the bar or from the sheet
+      if (width > 1100)
+        await page.locator('.dim-bar nav a[href="/member/"]').click();
+      else {
+        await page.locator('.dim-bar [data-action="menu"]').click();
+        await page.locator('.dim-sheet a[href="/member/"]').click();
+      }
+      await page.locator('.person').first().waitFor();
+      await expect(page.locator('.dim-cover')).toHaveCSS(
+        'visibility',
+        'hidden',
+      );
+      await backHome(page);
+      await expect
+        .poll(async () => (await where(page)).pictures)
+        .toEqual(['3']);
+      const after = await where(page);
+      expect(after.section).toBe('ledger');
+      expect(after.facility).toBe('雙維度百萬豬布林交易');
+      expect(after.scenes).toEqual(['nether']);
+      expect(after.dim).toBe('nether');
+      expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+      await expect(page.locator('.pin-spacer')).toHaveCount(1);
+    });
+  }
+
+  test('the place is there when the loader lifts: its scene and its picture from the first frame, and the page does not move after', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="end-1"]', 0.5);
+    await still(page);
+    const before = await where(page);
+    expect(before.scenes).toEqual(['farm']);
+    await page.locator('.dim-bar nav a[href="/survivalProgress/"]').click();
+    await page.locator('.entry').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    // from the moment the home page is back: every frame in which its loader is no longer whole
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __lift: { y: number; scenes: string; decoded: boolean }[];
+      };
+      w.__lift = [];
+      const tick = () => {
+        const loader = document.querySelector('.dim--home .loader');
+        const home = document.querySelector('.dim--home');
+        const c = loader && getComputedStyle(loader);
+        const o = !c || c.visibility === 'hidden' ? 0 : +c.opacity;
+        const inner = loader?.querySelector('.loader-in');
+        if (
+          home &&
+          (o < 1 || (inner && +getComputedStyle(inner).opacity < 1))
+        ) {
+          const scenes = [
+            ...document.querySelectorAll<HTMLElement>('.scene'),
+          ].filter((s) => {
+            const sc = getComputedStyle(s);
+            return sc.visibility !== 'hidden' && +sc.opacity > 0.5;
+          });
+          w.__lift.push({
+            y: Math.round(window.scrollY),
+            scenes: scenes.map((s) => s.dataset.scene).join('+'),
+            decoded: scenes.every((s) =>
+              [...s.querySelectorAll('img')].every(
+                (i) => i.complete && i.naturalWidth > 0,
+              ),
+            ),
+          });
+        }
+        if (w.__lift.length < 90) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await backHome(page);
+    const lift = await (
+      await page.waitForFunction(() => {
+        const f = (
+          window as unknown as {
+            __lift: { y: number; scenes: string; decoded: boolean }[];
+          }
+        ).__lift;
+        return f.length >= 90 ? f : null;
+      })
+    ).jsonValue();
+    for (const f of lift!) {
+      expect(Math.abs(f.y - before.y)).toBeLessThanOrEqual(4);
+      expect(f.scenes).toBe('farm');
+      expect(f.decoded).toBe(true);
+    }
+  });
+
+  test('a fresh visit starts at the top, whatever was remembered: by its address, and through the link home', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    await still(page);
+    await page.locator('.dim-bar nav a[href="/member/"]').click();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    // the link home: a new visit to the page, not a step back to the old one
+    await page.locator('.head .crumb a').first().click();
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await still(page);
+    let now = await where(page);
+    expect(now.y).toBe(0);
+    expect(now.scenes).toEqual(['spawn']);
+    // and by its address, in a new document
+    await page.goto('/');
+    await ready(page);
+    await still(page);
+    now = await where(page);
+    expect(now.y).toBe(0);
+    expect(now.scenes).toEqual(['spawn']);
+    // while a step back from there is still to where the reader was, two visits ago
+    await page.goBack();
+    await ready(page);
+    await still(page);
+    expect((await where(page)).y).toBe(0);
+  });
+
+  test('a hash wins over what was remembered: an address that names a section lands on that section', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // arrived at by its address, then read on down to the credits
+    await openPage(page, '/#nether');
+    await ready(page);
+    await landedOn(page, '#nether');
+    await scrollToSection(page, '#credits', 0.3);
+    await still(page);
+    expect((await where(page)).section).toBe('credits');
+    await page.locator('.dim-bar nav a[href="/member/"]').click();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    // the address of that visit still names the nether
+    await page.goBack();
+    await ready(page);
+    await landedOn(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    // and so does a link to a section, from another page
+    await page.goForward();
+    await page.locator('.person').first().waitFor();
+    await page.goto('/#end');
+    await ready(page);
+    await landedOn(page, '#end');
+  });
+
+  test('reduced motion: the same place after a step back', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await jumpTo(page, '#ledger .ledger-plain > li:nth-child(5)', -0.2);
+    await still(page);
+    const before = await where(page);
+    expect(before.section).toBe('ledger');
+    expect(before.scenes).toEqual(['nether']);
+    await page.locator('.dim-bar nav a[href="/member/"]').click();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await backHome(page);
+    const after = await where(page);
+    expect(after.section).toBe('ledger');
+    expect(after.scenes).toEqual(['nether']);
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
   });
 });

@@ -13,13 +13,22 @@ import {
   type Leave,
 } from './navigation';
 import { pageStepUnderWay } from './pageTransition';
+import {
+  recallHomePlace,
+  rememberHomePlace,
+  type HomePlace,
+} from './homePlace';
 import { holdPage, type PageHold } from './pageScroll';
 
 /**
  * Going to a section of the home page: the jumps asked for by a link (travel or cut), the place the reader is kept
- * on when the page is measured again, and arriving with a hash. It moves the page that choreography.ts has built
- * and reads its ScrollTriggers; it creates none (every ScrollTrigger is created in choreography.ts).
+ * on when the page is measured again, arriving with a hash, and coming back to where the reader was (homePlace.ts).
+ * It moves the page that choreography.ts has built and reads its ScrollTriggers; it creates none (every
+ * ScrollTrigger is created in choreography.ts).
  */
+
+/** The reader's place is written down this long after the page last moved. */
+const REMEMBER_AFTER_MS = 120;
 
 /** The dimensions in page order: a jump to the next or the previous one travels, a jump further away cuts. */
 const ORDER: Dimension[] = ['overworld', 'nether', 'end', 'respawn'];
@@ -89,18 +98,76 @@ export const mountSectionJumps = (
       : root.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) ?? null;
 
   // Whoever was taken to a section and has not scrolled since stays on it when the page is measured again
-  // (the names of the credits arrive, the language changes, the window is resized).
-  let anchor: { el: HTMLElement; y: number } | null = null;
+  // (the names of the credits arrive, the language changes, the window is resized). A reader who came back to
+  // where they were is kept the same way, at their distance into the section (`back`).
+  let anchor: { el: HTMLElement; y: number; back?: HomePlace } | null = null;
+  /**
+   * Where a remembered place is on the page as it is now. The same distance into the section, if the section is
+   * as tall as it was. If it is not (the names of the credits are not in yet, the window has another size), the
+   * distance is kept from the nearer end of the section: what grows in the middle of it then moves the far end.
+   */
+  const placeOf = (el: HTMLElement, back: HomePlace) => {
+    const height = el.getBoundingClientRect().height;
+    const into =
+      Math.abs(height - back.height) <= 2 || back.into <= back.height / 2
+        ? back.into
+        : height - (back.height - back.into);
+    return Math.min(
+      Math.max(0, Math.round(top(el) + Math.max(0, into))),
+      ScrollTrigger.maxScroll(window),
+    );
+  };
+  const sections = () => [
+    ...root.querySelectorAll<HTMLElement>(':scope > main > *'),
+  ];
+  /** The reader's place as it is now: the last section that has reached the head of the screen. */
+  const measure = (): HomePlace | null => {
+    const all = sections();
+    let i = -1;
+    let box: DOMRect | null = null;
+    all.forEach((el, k) => {
+      const r = el.getBoundingClientRect();
+      if (r.top <= 1) [i, box] = [k, r];
+    });
+    if (!box) return null;
+    const shown = (el: Element) => {
+      const c = getComputedStyle(el);
+      return c.visibility !== 'hidden' && +c.opacity > 0.01;
+    };
+    return {
+      section: i,
+      into: Math.round(-(box as DOMRect).top),
+      height: Math.round((box as DOMRect).height),
+      pictures: [...root.querySelectorAll<HTMLElement>('.world .scene')]
+        .filter(shown)
+        .flatMap((scene) => [...scene.querySelectorAll('img')])
+        .filter((img) => img.getAttribute('src') && shown(img))
+        .map((img) => img.getAttribute('src') as string),
+    };
+  };
+  let remembering: number | undefined;
+  const remember = () => {
+    window.clearTimeout(remembering);
+    remembering = undefined;
+    // gone from the document (the reader has left): what was written last stands
+    if (!root.isConnected) return;
+    const now = measure();
+    if (now) rememberHomePlace(now);
+  };
   const onScroll = () => {
     if (anchor && Math.abs(window.scrollY - anchor.y) > 2) anchor = null;
+    window.clearTimeout(remembering);
+    remembering = window.setTimeout(remember, REMEMBER_AFTER_MS);
   };
   const onRefresh = () => {
     if (!anchor) return;
-    const y = top(anchor.el);
+    const y = anchor.back ? placeOf(anchor.el, anchor.back) : top(anchor.el);
     anchor.y = y;
     if (Math.abs(window.scrollY - y) > 1) moveTo(y);
   };
   window.addEventListener('scroll', onScroll, { passive: true });
+  // leaving for another document: the last place, also if the page moved a moment ago
+  window.addEventListener('pagehide', remember);
   ScrollTrigger.addEventListener('refresh', onRefresh);
 
   /** Each jump has a number: one that was overtaken by a later one stops where it is. */
@@ -269,6 +336,17 @@ export const mountSectionJumps = (
     moveTo(top(landing));
     opts.settle();
     anchor = { el: landing, y: window.scrollY };
+  } else {
+    // A step back to this visit: the reader is put where they were, the same way and under the same loader.
+    // (An address that names a section wins: that is where it says to go.)
+    const back = recallHomePlace();
+    const el = back && sections()[back.section];
+    if (back && el && (back.section > 0 || back.into > 0)) {
+      ScrollTrigger.refresh();
+      moveTo(placeOf(el, back));
+      opts.settle();
+      anchor = { el, y: window.scrollY, back };
+    }
   }
 
   return () => {
@@ -279,6 +357,9 @@ export const mountSectionJumps = (
     hold?.release();
     hold = null;
     unjump();
+    // the page moved a moment ago and has not been written down: now, while it can still be measured
+    if (remembering !== undefined) remember();
+    window.removeEventListener('pagehide', remember);
     window.removeEventListener('scroll', onScroll);
     ScrollTrigger.removeEventListener('refresh', onRefresh);
   };

@@ -19,6 +19,7 @@ import useApi from '@/hooks/useApi';
 import { buildChoreography } from '@/lib/dimensions/choreography';
 import { daysSince, SERVER_START_MS } from '@/lib/dimensions/format';
 import { hashId } from '@/lib/dimensions/navigation';
+import { markHomeVisit, recallHomePlace } from '@/lib/dimensions/homePlace';
 import { picturesAt } from '@/constants/scenes';
 import type { IMembers } from '@/types/IMember';
 import { World } from './World';
@@ -49,8 +50,13 @@ const daysToday = () => daysSince(SERVER_START_MS, Date.now());
  * The pictures the loader must not lift without, besides the first one: those of the place the reader arrives at.
  * One string (addresses, a line each), so that asking twice gives the same value.
  */
-const picturesOfArrival = () =>
-  picturesAt(hashId(window.location.hash)).join('\n');
+const picturesOfArrival = () => {
+  const hash = hashId(window.location.hash);
+  // an address that names a section; or a step back to where the reader was (sectionJumps.ts lands on either)
+  return (hash ? picturesAt(hash) : recallHomePlace()?.pictures ?? []).join(
+    '\n',
+  );
+};
 const noPictures = () => '';
 
 export const HomePage = () => {
@@ -70,6 +76,8 @@ export const HomePage = () => {
     noPictures,
   );
   const first = useMemo(() => (arrival ? arrival.split('\n') : []), [arrival]);
+  // this visit has a name from here on, under which the reader's place is remembered (homePlace.ts)
+  useEffect(markHomeVisit, []);
   const [ledger, setLedger] = useState(0);
   const { t, i18n } = useTranslation();
   const { data: members } = useApi<IMembers>(`${STATIC_DATA_API}/member.json`);
