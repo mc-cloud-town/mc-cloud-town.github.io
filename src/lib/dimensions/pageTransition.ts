@@ -20,6 +20,8 @@ import { pageKind, samePath, type PageKind } from './pages';
  *  - Arrive: an inner page is mounted under the cover with its entrance held (`data-nav='covered'`), and the cover
  *    lifts onto that entrance. The home page's loader is its entrance: the cover is the loader's ground and is taken
  *    away the moment the loader is there, so the reader sees one cover, not two.
+ *  - A legacy page gets the leave only. It is outside the shell: when the router shows it, the shell is taken down,
+ *    and the cover, the hold and the step go with it (`resetPageTransition`, from `<PageTransitions />`).
  *
  * The page is held from the click until the cover has gone again. A step through the history is never ours to
  * delay: it gets the arrival only, which the page plays by itself.
@@ -152,8 +154,8 @@ const take = async (target: Target, leave?: Leave) => {
 };
 
 /**
- * Take the reader to another page of the shell, as a transition. True if the step was taken over (the caller
- * cancels the link's own navigation), false if the link is not ours: another site, another kind of page, this page.
+ * Take the reader to another page of the site, as a transition. True if the step was taken over (the caller
+ * cancels the link's own navigation), false if the link is not ours: another site, not a page, this page.
  * `leave` is called under the whole cover, for what the reader came from (the menu sheet).
  */
 export const goToPage = (href: string, { leave }: { leave?: Leave } = {}) => {
@@ -168,7 +170,7 @@ export const goToPage = (href: string, { leave }: { leave?: Leave } = {}) => {
   return true;
 };
 
-/** Fetch a page of the shell ahead of the click, so that the cover waits for the network as little as can be. */
+/** Fetch a page of the site ahead of the click, so that the cover waits for the network as little as can be. */
 export const prefetchPage = (href: string) => {
   const url = router && sameOrigin(href);
   if (
@@ -188,9 +190,10 @@ export const pageArrived = (pathname: string) => {
   const me = step;
   if (!me?.pushed || !samePath(me.path, pathname)) return;
   window.clearTimeout(me.timer);
-  if (me.kind === 'home') {
-    // Its loader is there, whole, in the cover's own ground: the cover has done its part, and the page is the
-    // home page's own from here (behind its loader it goes to the section a hash names).
+  if (me.kind !== 'inner') {
+    // The home page: its loader is there, whole, in the cover's own ground. The cover has done its part, and the
+    // page is the home page's own from here (behind its loader it goes to the section a hash names).
+    // (A legacy page does not arrive here: the shell, and this with it, is gone by then.)
     step = null;
     setNav(null);
     clearCover();

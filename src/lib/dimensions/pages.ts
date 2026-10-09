@@ -16,20 +16,30 @@ export const samePath = (a: string, b: string) => bare(a) === bare(b);
 export const dimensionOfPath = (path: string): Dimension =>
   PAGE_DIMENSIONS[bare(path)] ?? 'overworld';
 
-/** The home page's entrance is its loader; an inner page's is its header (inner.css). */
-export type PageKind = 'home' | 'inner';
+/**
+ * What a step arrives on. The home page's entrance is its loader; an inner page's is its header (inner.css);
+ * a legacy page is outside the new shell and has none of ours: a step to it is the leave only.
+ */
+export type PageKind = 'home' | 'inner' | 'legacy';
 
-/** The pages of the new shell, by bare path: what a step from one to another arrives on. */
-const SHELL_PAGES = new Map<string, PageKind>([
+/** The pages of the site a link of the shell may lead to, by bare path. */
+const PAGES = new Map<string, PageKind>([
   ['', 'home'],
   ['home', 'home'],
   ['member', 'inner'],
   ['survivalProgress', 'inner'],
   ['survival', 'inner'],
+  ['join', 'legacy'],
+  ['hardware', 'legacy'],
+  ['openSource', 'legacy'],
+  ['partner', 'legacy'],
+  ['collaborative', 'legacy'],
+  ['redstoneCollection', 'legacy'],
+  ['architectureCollection', 'legacy'],
 ]);
 
-/** What kind of page of the shell a path leads to; nothing if it is not one of them. */
-export const pageKind = (path: string) => SHELL_PAGES.get(bare(path));
+/** What kind of page a path leads to; nothing if it is not a page of the site (a file, an unknown address). */
+export const pageKind = (path: string) => PAGES.get(bare(path));
 
 /**
  * Runs while the served HTML is parsed, before anything of the shell is painted and long before hydration:

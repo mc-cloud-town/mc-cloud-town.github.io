@@ -1313,6 +1313,59 @@ test.describe('home: arriving, leaving and robustness', () => {
     await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
     await scrollToSection(page, '#overworld');
     expect(await visibleScenes(page)).toEqual(['town']);
+
+    // The same by a link of the shell (none leads to a legacy page today, so one is put into the page):
+    // the leave half under the cover, then the legacy page, and nothing of the step on it.
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await page.evaluate(() => {
+      const a = document.createElement('a');
+      a.href = '/join/';
+      a.id = 'probe-legacy';
+      a.textContent = 'join';
+      a.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:99';
+      document.querySelector('.dim main')!.append(a);
+      (window as unknown as { __same: boolean }).__same = true;
+    });
+    const y = await page.evaluate(() => window.scrollY);
+    await record(page);
+    await page.locator('#probe-legacy').click();
+    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    // the cover came in whole over the page, which stayed where it was, before the page changed
+    const frames = await recorded(page);
+    expect(Math.max(...frames.map((f) => f.cover))).toBe(1);
+    for (const f of frames.filter((f) => f.scenes.length > 0))
+      expect(f.y).toBe(y);
+    // in the same document, and nothing of the shell or of the step is left on the legacy page
+    expect(
+      await page.evaluate(() =>
+        Boolean((window as unknown as { __same?: boolean }).__same),
+      ),
+    ).toBe(true);
+    await expect(page.locator('.dim-cover')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => ({
+        nav: document.documentElement.getAttribute('data-nav'),
+        dim: document.documentElement.getAttribute('data-dim'),
+        lenis: [...document.documentElement.classList].filter((c) =>
+          c.startsWith('lenis'),
+        ),
+      })),
+    ).toEqual({ nav: null, dim: null, lenis: [] });
+    // the legacy page is not held: the wheel moves it
+    await page.mouse.move(720, 450);
+    await page.mouse.wheel(0, 300);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(0);
+    // and back: the home page again, with its loader, no cover, nothing held
+    await page.goBack();
+    await ready(page);
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await expect(page.locator('html')).not.toHaveAttribute('data-nav', /.*/);
+    await expect(page.locator('html')).not.toHaveClass(/lenis-stopped/);
+    await expect(page.locator('.dim main')).toHaveCSS('opacity', '1');
+    await scrollToSection(page, '#overworld');
+    expect(await visibleScenes(page)).toEqual(['town']);
   });
 
   test('leaving for an inner page without a reload takes the smooth scroll and the pin away, and coming back rebuilds them', async ({

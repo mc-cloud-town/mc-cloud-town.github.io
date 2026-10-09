@@ -1074,3 +1074,168 @@ test.describe('going to another page', () => {
     await pageIsFree(page);
   });
 });
+
+test.describe('going to a legacy page', () => {
+  /** No link of the shell leads to a legacy page today: one is put into the page, where nothing is over it. */
+  const legacyLink = (page: Page) =>
+    page.evaluate(() => {
+      const a = document.createElement('a');
+      a.href = '/join/';
+      a.id = 'probe-legacy';
+      a.textContent = 'join';
+      a.style.cssText = 'position:fixed;left:24px;bottom:24px;z-index:99';
+      document.querySelector('.dim main')!.append(a);
+    });
+  /** The legacy page, with nothing of the shell or of a step on it. */
+  const onLegacy = async (page: Page) => {
+    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    await expect(page.locator('.dim-cover')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => ({
+        nav: document.documentElement.getAttribute('data-nav'),
+        dim: document.documentElement.getAttribute('data-dim'),
+      })),
+    ).toEqual({ nav: null, dim: null });
+  };
+
+  for (const theme of ['dark', 'light'] as const)
+    test(`from an inner page: the leave half only, and back clears everything (${theme})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await watchNav(page);
+      await openPage(page, '/member/', { theme });
+      await page.locator('.person').first().waitFor();
+      await legacyLink(page);
+      const mark = await documentMark(page);
+      await navFrames(page);
+      await page.locator('#probe-legacy').click();
+      await onLegacy(page);
+      expect(await documentMark(page)).toBe(mark);
+      const { frames, runs } = await navFrames(page);
+      // the leave, as between two pages of the shell: content out, cover whole, page held, in the theme's ground
+      const change = expectLeave(frames, {
+        from: '/member/',
+        to: '/join/',
+        tone: theme === 'dark' ? NIGHT : DAY,
+        home: false,
+      });
+      // and no arrive half: the cover never lifts, it goes with the shell
+      expect(runs).toEqual(['opacity:280']);
+      for (const f of frames.slice(change)) {
+        expect(f.cover).toBe(0);
+        expect(f.nav).toBeNull();
+      }
+      // the legacy page is the reader's
+      await page.mouse.move(720, 450);
+      await page.mouse.wheel(0, 300);
+      await expect
+        .poll(() => page.evaluate(() => window.scrollY))
+        .toBeGreaterThan(0);
+
+      // back: the inner page plays its entrance, with no cover, and is free
+      await navFrames(page);
+      await page.goBack();
+      await arrived(page, '/member/');
+      const back = (await navFrames(page)).frames;
+      for (const f of back) expect(f.cover).toBe(0);
+      const there = back.filter((f) => f.path === '/member/' && f.line0);
+      expect(there[0].line0!.o).toBeLessThan(0.2);
+      expect(there.at(-1)!.line0).toEqual({ o: 1, y: 0 });
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+      await page.locator('.person').first().waitFor();
+      await pageIsFree(page);
+      // and a step between pages of the shell is whole again afterwards
+      await page.evaluate(() =>
+        window.scrollTo({ top: 0, behavior: 'instant' }),
+      );
+      await navFrames(page);
+      await bar(page, '/survivalProgress/').click();
+      await arrived(page, '/survivalProgress/');
+      const next = (await navFrames(page)).frames;
+      expectArriveInner(
+        next,
+        expectLeave(next, {
+          from: '/member/',
+          to: '/survivalProgress/',
+          tone: theme === 'dark' ? NIGHT : DAY,
+          home: false,
+        }),
+      );
+    });
+
+  test('a legacy page that does not come: the cover lifts on the page as it was after about four seconds', async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    let answer = () => {};
+    const slow = new Promise<void>((done) => (answer = done));
+    await page.route(/\/join\/.*\.txt/, async (r) => {
+      await slow;
+      await r.continue();
+    });
+    await watchNav(page);
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await legacyLink(page);
+    const clicked = Date.now();
+    await page.locator('#probe-legacy').click();
+    const cover = page.locator('.dim-cover');
+    await expect(cover).toHaveCSS('opacity', '1');
+    await page.waitForTimeout(3000);
+    await expect(cover).toHaveCSS('opacity', '1');
+    await expect(cover).toHaveCSS('visibility', 'hidden', { timeout: 4000 });
+    expect(Date.now() - clicked).toBeGreaterThan(4000);
+    expect(new URL(page.url()).pathname).toBe('/member/');
+    await pageIsFree(page);
+    answer();
+    await onLegacy(page);
+  });
+
+  test('a legacy page that cannot be fetched is loaded the plain way, and stepping back leaves no cover and no hold', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route(/\/join\/.*\.txt/, (r) => r.abort());
+    await watchNav(page);
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await legacyLink(page);
+    const mark = await documentMark(page);
+    await page.locator('#probe-legacy').click();
+    await onLegacy(page);
+    // a new document this time
+    expect(await documentMark(page)).not.toBe(mark);
+    await page.goBack();
+    await arrived(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await pageIsFree(page);
+  });
+
+  test('the browser’s own clicks on a link to a legacy page are left alone', async ({
+    page,
+    context,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await watchNav(page);
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await legacyLink(page);
+    await navFrames(page);
+    const opened = context
+      .waitForEvent('page', { timeout: 5000 })
+      .catch(() => null);
+    await page.locator('#probe-legacy').click({ modifiers: ['ControlOrMeta'] });
+    await page.bringToFront();
+    await page.waitForTimeout(500);
+    const { frames } = await navFrames(page);
+    expect(frames.length).toBeGreaterThan(3);
+    for (const f of frames) {
+      expect(f.cover).toBe(0);
+      expect(f.nav).toBeNull();
+      expect(f.path).toBe('/member/');
+    }
+    await (await opened)?.close();
+  });
+});
