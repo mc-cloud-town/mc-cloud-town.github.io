@@ -146,6 +146,10 @@ export const HomePage = () => {
       <PortalCanvas />
       <div className='flash' aria-hidden='true' />
       <Loader reduced={reduced} onDone={onDone} />
+      {/* scripts off: nothing would ever lift the loader, so it is not shown at all */}
+      <noscript>
+        <style>{'.dim.dim--home .loader{display:none}'}</style>
+      </noscript>
       <SiteBar variant='home' />
       <DimensionRail />
       <main>

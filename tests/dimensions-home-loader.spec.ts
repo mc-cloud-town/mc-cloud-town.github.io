@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { expectNoMissingKeys, openPage } from './helpers/dimensions';
 import {
   type LoaderFrame,
@@ -9,26 +9,279 @@ import {
 
 /** Same as LOADER_TIMEOUT_MS in src/components/dimensions/home/Loader.tsx. */
 const LOADER_TIMEOUT_MS = 6000;
+/** Every script file of the page (the inline ones in the HTML are not files). */
+const PAGE_SCRIPT = /\/_next\/static\/.*\.js(\?|$)/;
+
+/** What is on top at the middle of the title: the loader, or the page. */
+const overTitle = (page: Page) =>
+  page.evaluate(() => {
+    const r = document.querySelector('.hero h1')!.getBoundingClientRect();
+    const top = document.elementFromPoint(
+      r.left + r.width / 2,
+      r.top + r.height / 2,
+    );
+    return top?.closest('.loader') ? 'loader' : 'page';
+  });
+
+/** Every statement, body, figure and caption of the page can be read: there, shown, and with words in it. */
+const expectReadableWithoutScript = async (page: Page) => {
+  await expect(page.locator('.hero h1')).toBeVisible();
+  expect(await overTitle(page)).toBe('page');
+  await expect(page.locator('.hero-meta span')).toBeVisible();
+  await expect(page.locator('.hero-copy .lead')).toBeVisible();
+  for (const id of ['overworld', 'nether', 'end']) {
+    const lines = page.locator(`#${id} .say span`);
+    expect(await lines.count(), `${id}: lines`).toBeGreaterThan(0);
+    await lines.first().scrollIntoViewIfNeeded();
+    for (const line of await lines.all()) {
+      await expect(line, id).toBeVisible();
+      await expect(line, id).toHaveCSS('opacity', '1');
+      expect((await line.textContent())!.trim().length).toBeGreaterThan(0);
+    }
+    const body = page.locator(`#${id} p.body`);
+    await expect(body, id).toBeVisible();
+    await expect(body, id).toHaveCSS('opacity', '1');
+  }
+  // the figures: none stands empty over its caption
+  const figures = page.locator('#overworld .stats b');
+  expect(await figures.count()).toBe(4);
+  let shown = 0;
+  for (const b of await figures.all())
+    if (await b.isVisible()) {
+      shown++;
+      expect((await b.textContent())!.trim()).toMatch(/^[\d,]+$/);
+    }
+  expect(shown).toBeGreaterThanOrEqual(3);
+  await expect(page.locator('#overworld a.more')).toBeVisible();
+  // the captions of the builds, the rank and the last section
+  const captions = page.locator('.work h3');
+  expect(await captions.count()).toBe(5);
+  for (const h of await captions.all()) {
+    await h.scrollIntoViewIfNeeded();
+    await expect(h).toBeVisible();
+    await expect(h).toHaveCSS('opacity', '1');
+  }
+  for (const sel of [
+    '.rank h2',
+    '#credits .roles',
+    '#respawn h2',
+    '#respawn .depts',
+  ]) {
+    await page.locator(sel).scrollIntoViewIfNeeded();
+    await expect(page.locator(sel), sel).toBeVisible();
+    await expect(page.locator(sel), sel).toHaveCSS('opacity', '1');
+  }
+};
+
+/** One frame of the fail-safe test. */
+interface SafeFrame {
+  t: number;
+  live: boolean;
+  name: string;
+  o: number;
+  ready: boolean;
+}
+
+test.describe('home: never stuck behind the loader', () => {
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ] as const)
+    test(`with scripts off at ${width}×${height} there is no loader, and the whole page can be read`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({
+        javaScriptEnabled: false,
+        viewport: { width, height },
+      });
+      const page = await context.newPage();
+      await page.goto('/', { waitUntil: 'load' });
+      // it is in the served page, and hidden at once
+      await expect(page.locator('.loader')).toHaveCount(1);
+      await expect(page.locator('.loader')).toBeHidden();
+      await expectReadableWithoutScript(page);
+      // the first picture is the served page's own
+      expect(
+        await page
+          .locator('.scene.is-first img')
+          .evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth),
+      ).toBeGreaterThan(0);
+      const [scroll, inner] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        window.innerWidth,
+      ]);
+      expect(scroll).toBeLessThanOrEqual(inner);
+      await context.close();
+    });
+
+  test('when the script of the page never arrives the loader gives way by itself after about ten seconds, with a fade', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route(PAGE_SCRIPT, (r) => r.abort());
+    await page.addInitScript(() => {
+      const w = window as unknown as { __fade: number[]; __t0?: number };
+      w.__fade = [0, 0, 0];
+      const tick = () => {
+        const el = document.querySelector('.loader');
+        if (el) {
+          w.__t0 ??= performance.now();
+          const c = getComputedStyle(el);
+          const o = c.visibility === 'hidden' ? 0 : +c.opacity;
+          // when it was last whole, when it was first gone, and how many frames lay between
+          if (o === 1) w.__fade = [performance.now() - w.__t0, 0, 0];
+          else if (o > 0) w.__fade[2]++;
+          else if (!w.__fade[1]) w.__fade[1] = performance.now() - w.__t0;
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.loader')).toBeVisible();
+    expect(await overTitle(page)).toBe('loader');
+    await page.waitForTimeout(6500);
+    // well past the page's own timeout, and still whole: the fail-safe is later than anything the script does
+    await expect(page.locator('.loader')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.loader')).toBeHidden({ timeout: 8000 });
+    const [whole, gone, between] = await page.evaluate(
+      () => (window as unknown as { __fade: number[] }).__fade,
+    );
+    expect(whole).toBeGreaterThan(9000);
+    expect(gone).toBeLessThan(12_000);
+    expect(between, 'frames of the fade').toBeGreaterThan(5);
+    await expectReadableWithoutScript(page);
+  });
+
+  test('with script the fail-safe is called off at once: a loader that waits its full six seconds lifts in its own way', async ({
+    page,
+  }) => {
+    await page.route('**/CTEC_Members.webp', () => {
+      // never answered
+    });
+    await page.addInitScript(() => {
+      const w = window as unknown as { __safe: SafeFrame[] };
+      w.__safe = [];
+      const tick = (t: number) => {
+        const el = document.querySelector('.loader');
+        const home = document.querySelector<HTMLElement>('.dim--home');
+        if (el && home) {
+          const c = getComputedStyle(el);
+          w.__safe.push({
+            t,
+            live: document.documentElement.hasAttribute('data-live'),
+            name: c.animationName,
+            o: c.visibility === 'hidden' ? 0 : +c.opacity,
+            ready: home.dataset.ready === 'true',
+          });
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await openPage(page, '/');
+    await page
+      .locator('.dim[data-ready="true"]')
+      .waitFor({ timeout: LOADER_TIMEOUT_MS + 5000 });
+    await expect(page.locator('.loader')).toBeHidden();
+    const frames = await page.evaluate(
+      () => (window as unknown as { __safe: SafeFrame[] }).__safe,
+    );
+    const live = frames.filter((f) => f.live);
+    const before = frames.filter((f) => !f.live);
+    // the served page carries the fail-safe; the script calls it off within the first moments
+    expect(before.length).toBeGreaterThan(0);
+    for (const f of before)
+      expect(f.name).toBe('loader-failsafe, loader-failsafe-gone');
+    expect(live.length).toBeGreaterThan(200);
+    expect(live[0].t - frames[0].t).toBeLessThan(3000);
+    for (const f of live) expect(f.name).toBe('none');
+    // whole for the full wait, and the lift begins only when the page is handed over
+    const waiting = live.filter((f) => !f.ready);
+    expect(waiting.at(-1)!.t - frames[0].t).toBeGreaterThan(5000);
+    for (const f of waiting) expect(f.o).toBe(1);
+    // with script the statements are dimmed until they are scrolled through, as before
+    await expect(page.locator('#overworld .say span').first()).toHaveCSS(
+      'opacity',
+      '0.16',
+    );
+  });
+
+  test('a script that arrives after the fail-safe does not bring the loader back, and the page still works', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route(PAGE_SCRIPT, async (r) => {
+      await new Promise((done) => setTimeout(done, 11_500));
+      await r.continue().catch(() => {});
+    });
+    await page.addInitScript(() => {
+      const w = window as unknown as { __back: number; __gone: boolean };
+      w.__back = 0;
+      w.__gone = false;
+      const tick = () => {
+        const el = document.querySelector('.loader');
+        const c = el && getComputedStyle(el);
+        const o = !c || c.visibility === 'hidden' ? 0 : +c.opacity;
+        if (el && o === 0) w.__gone = true;
+        // frames in which it shows again after it had gone
+        else if (w.__gone && o > 0) w.__back++;
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.loader')).toBeVisible();
+    await expect(page.locator('.loader')).toBeHidden({ timeout: 14_000 });
+    await page.locator('.dim[data-ready="true"]').waitFor({ timeout: 30_000 });
+    await page.waitForTimeout(1500);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __back: number }).__back,
+      ),
+    ).toBe(0);
+    expect(await overTitle(page)).toBe('page');
+    // the page is built all the same: the scene changes with the scroll
+    await page.evaluate(() => {
+      const el = document.querySelector('#overworld')!;
+      window.scrollTo({
+        top: el.getBoundingClientRect().top + window.scrollY + 300,
+        behavior: 'instant',
+      });
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>('.scene')]
+            .filter((s) => {
+              const c = getComputedStyle(s);
+              return c.visibility !== 'hidden' && +c.opacity > 0.5;
+            })
+            .map((s) => s.dataset.scene),
+        ),
+      )
+      .toEqual(['town']);
+  });
+});
 
 test.describe('home: loader', () => {
-  test('the served HTML already has the loader over the whole screen', async ({
-    browser,
+  test('the served HTML already has the loader over the whole screen, before any script of the page has run', async ({
+    page,
   }) => {
-    const context = await browser.newContext({
-      javaScriptEnabled: false,
-      viewport: { width: 1440, height: 900 },
-    });
-    const page = await context.newPage();
-    await page.goto('/', { waitUntil: 'load' });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the script of the page never arrives: what is seen is the served HTML and its styles
+    await page.route(PAGE_SCRIPT, (r) => r.abort());
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     const loader = page.locator('.loader');
     await expect(loader).toBeVisible();
+    await expect(loader).toHaveCSS('opacity', '1');
     const box = (await loader.boundingBox())!;
     expect(box.x).toBeLessThanOrEqual(0);
     expect(box.y).toBeLessThanOrEqual(0);
     expect(box.width).toBeGreaterThanOrEqual(1440);
     expect(box.height).toBeGreaterThanOrEqual(900);
     await expect(loader).toHaveCSS('background-color', 'rgb(6, 8, 11)');
-    await context.close();
   });
 
   test('the title is covered until the page is ready, and the lifting loader lets clicks through', async ({
@@ -150,13 +403,11 @@ test.describe('home: the loader is a map of the world being generated', () => {
   const number = (f: LoaderFrame) => Number(f.pct.replace('%', ''));
 
   test('the served HTML has the map as a 21×21 pixel canvas, drawn large with hard pixels', async ({
-    browser,
+    page,
   }) => {
-    const context = await browser.newContext({
-      javaScriptEnabled: false,
-      viewport: { width: 1440, height: 900 },
-    });
-    const page = await context.newPage();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the served page before any script of it has run (with scripts off there is no loader at all)
+    await page.route(PAGE_SCRIPT, (r) => r.abort());
     await page.goto('/', { waitUntil: 'load' });
     const map = page.locator('.loader canvas');
     await expect(map).toHaveCount(1);
@@ -181,7 +432,6 @@ test.describe('home: the loader is a map of the world being generated', () => {
     );
     // no picture of any kind in the loader
     await expect(page.locator('.loader img')).toHaveCount(0);
-    await context.close();
   });
 
   test('chunks pass through their stages from the centre outward and settle into a finished square with a blue ring', async ({

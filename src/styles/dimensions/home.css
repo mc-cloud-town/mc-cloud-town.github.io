@@ -130,6 +130,12 @@ html.lenis {
     color: #f2f4f6;
     display: grid;
     place-items: center;
+    /* The fail-safe, which needs no script: if the page's script has not started after ten seconds (it is off,
+       it never arrived, it failed), the loader gives way by itself and the served page is read as it is.
+       Loader.tsx calls it off the moment it starts (`html[data-live]`, at the foot of this file). */
+    animation:
+      loader-failsafe var(--t-list) var(--ease-rise) 10s forwards,
+      loader-failsafe-gone 1ms linear calc(10s + var(--t-list)) forwards;
   }
   /* a map of the world being generated: the percentage, the map (Loader.tsx draws it), the stage */
   .loader-in {
@@ -403,9 +409,10 @@ html.lenis {
     font-size: clamp(30px, 3.8vw, 64px);
     line-height: 1.32;
   }
+  /* whole in the served page; dimmed, to be lit line by line, only once the script that lights them runs
+     (`html[data-live]`, at the foot of this file) */
   .say span {
     display: block;
-    opacity: 0.16;
     text-wrap: balance;
   }
   .open p.body {
@@ -438,6 +445,11 @@ html.lenis {
   .stats span {
     font-size: 14px;
     color: var(--muted);
+  }
+  /* a figure only the browser knows (the day count) is not in the served page: until it is there, its caption
+     does not stand alone under nothing */
+  .stats div:has(> b:empty) {
+    display: none;
   }
   /* the home page is the trailer: each part ends with a way into the full page */
   .more {
@@ -943,9 +955,18 @@ html.lenis {
     .ledger-now h3 span {
       animation: none;
     }
-    .say span {
-      opacity: 1;
-    }
+  }
+}
+
+/* The page's script has started (Loader.tsx marks the document): the loader is the script's from here on, and the
+   statements wait, dimmed, for the scroll that lights them. Without the mark (scripts off, or a script that never
+   came) the loader gives way by itself and every statement stands whole. */
+html[data-live] .dim.dim--home .loader {
+  animation: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-live] .dim.dim--home .say span {
+    opacity: 0.16;
   }
 }
 
@@ -1009,6 +1030,20 @@ html.lenis {
   }
 }
 
+/* It fades, then it is taken away: two animations, the second beginning when the first has ended. Hidden from
+   its first keyframe on: after a delay this long the clock ends a hair short of the last keyframe, and "hidden"
+   is a value that is only reached at the very end. */
+@keyframes loader-failsafe {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes loader-failsafe-gone {
+  from,
+  to {
+    visibility: hidden;
+  }
+}
 @keyframes cue {
   from {
     translate: -100% 0;

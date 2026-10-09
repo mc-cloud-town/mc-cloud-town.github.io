@@ -34,6 +34,8 @@ const loaded = (img: HTMLImageElement | null) =>
  * (loaderMap.ts), with the percentage above the map and the stage below it.
  * Calls onDone once the fonts and the first scene are in and the map is finished, lifts off the page, then
  * removes itself. It is part of the static markup, so it is the first thing painted; it starts once `reduced` is known.
+ * Should this script never start, the served page is not left behind it: home.css takes the loader away after ten
+ * seconds, and HomePage's `noscript` style at once where scripts are off.
  */
 export const Loader = ({
   reduced,
@@ -53,6 +55,15 @@ export const Loader = ({
   useEffect(() => {
     const el = box.current;
     if (!el || reduced === null) return;
+    // The fail-safe of the served page (home.css) has taken the loader away, or is doing so: this script came
+    // too late to cover the page again. The page is handed over as it stands.
+    const served = getComputedStyle(el);
+    if (served.visibility === 'hidden' || +served.opacity < 1) {
+      onDone();
+      return;
+    }
+    // from here on the loader is this script's: the fail-safe is called off
+    document.documentElement.dataset.live = '';
     const ctx = map.current?.getContext('2d');
     // per-chunk lateness: what makes the fronts ragged while loading (seeded here, never during render)
     const late = seedLateness();
