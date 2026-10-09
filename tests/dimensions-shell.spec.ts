@@ -1554,3 +1554,40 @@ test.describe('behind the shell', () => {
     expect(await body(page)).toBe('rgb(238, 242, 245)');
   });
 });
+
+test.describe('the year in the footer', () => {
+  test('a reader whose year is later than the year the site was built in sees their year, and the page hydrates without a mismatch', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const said: string[] = [];
+    page.on('console', (m) => {
+      if (['error', 'warning'].includes(m.type())) said.push(m.text());
+    });
+    page.on('pageerror', (e) => said.push(e.message));
+    // the served page says the year of the build; this reader opens it five years on
+    const built = new Date().getFullYear();
+    await page.clock.setFixedTime(new Date(`${built + 5}-03-01T12:00:00Z`));
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-foot [data-t="note"]').last()).toHaveText(
+      `© 2022–${built + 5} Cloud Town Exquisite Craft`,
+    );
+    // React names a text that differs between the served page and the first render by these numbers
+    expect(
+      said.filter((s) => /hydrat|#418|#423|#425|did not match/i.test(s)),
+    ).toEqual([]);
+  });
+
+  test('the served page already says a year, also with scripts off', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/member/');
+    await expect(page.locator('.dim-foot [data-t="note"]').last()).toHaveText(
+      /^© 2022–20\d\d Cloud Town Exquisite Craft$/,
+    );
+    await context.close();
+  });
+});

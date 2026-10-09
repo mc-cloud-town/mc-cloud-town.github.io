@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { serverLink } from '@/constants';
 
@@ -18,9 +18,18 @@ const PAGES = [
   ['/join/', 'menu.join'],
 ] as const;
 
+/** The year of the build (next.config.ts): what the served page says, and what the first render must say too. */
+const BUILD_YEAR = Number(process.env.NEXT_PUBLIC_BUILD_YEAR);
+const builtIn = () => BUILD_YEAR;
+const thisYear = () => new Date().getFullYear();
+const noSubscription = () => () => {};
+
 export const SiteFooter = () => {
   const { t } = useTranslation();
   const label = useId();
+  // the reader's own year, once the page is theirs: read in the browser only, so a page that was built last year
+  // and is opened this year hydrates as it was served and then says this year
+  const year = useSyncExternalStore(noSubscription, thisYear, builtIn);
   return (
     <footer className='dim-foot'>
       {/* a line of its own above the footer's: a named group, its words set like the links below (shell.css) */}
@@ -55,9 +64,7 @@ export const SiteFooter = () => {
           {t('dimensions.footer.support')}
         </a>
       </div>
-      <span data-t='note'>
-        {t('dimensions.footer.rights', { year: new Date().getFullYear() })}
-      </span>
+      <span data-t='note'>{t('dimensions.footer.rights', { year })}</span>
     </footer>
   );
 };
