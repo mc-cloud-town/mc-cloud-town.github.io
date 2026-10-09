@@ -112,6 +112,15 @@ html[data-dim] {
   .dim-foot a:hover {
     color: var(--accent);
   }
+  /* The links are one line of words with the same space between each and the next: the design's 28px, less on
+     a phone, where five words and four spaces of 28px are wider than the screen (from 18px at 360px wide, the
+     narrowest the five fit in every language, back to 28px at 500px). */
+  .dim-foot .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: clamp(18px, 6vw - 2px, 28px);
+  }
 
   /* additions not in the design demos */
   .dim-bar nav a.on {
@@ -377,6 +386,16 @@ html[data-dim] {
   @media (min-width: 1101px) {
     .dim-sheet {
       display: none;
+    }
+  }
+  @media (max-width: 1024px) {
+    /* Where fingers are used every link is a box of at least 44px (tokens.css). A word is wider than that; the
+       single letter is not, and its box would push its neighbours 18px further away on either side than the
+       words are from each other. So the letter stands in the middle of its box, and the box gives back what it
+       is wider than the letter: the space between the words stays the line's. */
+    .dim-foot a[data-short] {
+      justify-content: center;
+      margin-inline: calc((1ch - 44px) / 2);
     }
   }
   @media (max-width: 860px) {
