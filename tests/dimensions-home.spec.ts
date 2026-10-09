@@ -114,7 +114,14 @@ test.describe('home: spawn', () => {
     const days = Math.floor(
       (Date.now() - Date.UTC(2022, 6, 22, 16)) / 86_400_000,
     );
-    await expect(page.locator('.hero-meta')).toContainText(String(days));
+    // with the thousands separator, as the same number among the figures of the overworld (spec 7.1)
+    expect(days).toBeGreaterThan(999);
+    const written = days.toLocaleString('en-US');
+    expect(written).toContain(',');
+    await expect(page.locator('.hero-meta strong')).toContainText(
+      `已運行 ${written} 天`,
+    );
+    await expect(page.locator('[data-stat="days"]')).toHaveText(written);
   });
 });
 

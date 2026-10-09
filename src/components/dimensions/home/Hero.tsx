@@ -32,7 +32,8 @@ export const Hero = () => {
           {now === null
             ? ''
             : t('dimensions.hero.uptime', {
-                days: daysSince(SERVER_START_MS, now),
+                // written as every number of the site is: with the thousands separator
+                days: daysSince(SERVER_START_MS, now).toLocaleString('en-US'),
                 clock,
               })}
         </strong>
