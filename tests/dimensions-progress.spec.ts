@@ -1,6 +1,16 @@
 // tests/dimensions-progress.spec.ts
-import { expect, test, type Page } from '@playwright/test';
-import { expectNoMissingKeys, openPage } from './helpers/dimensions';
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from '@playwright/test';
+import {
+  atRest,
+  expectNoMissingKeys,
+  openPage,
+  setLanguage,
+} from './helpers/dimensions';
 
 const DATA = /static-data\/[^/]+\/survivalProgress\.json/;
 
@@ -293,5 +303,289 @@ test.describe('progress page: state changes are transitions', () => {
       'none',
     );
     await expect(first).toHaveCSS('opacity', '1');
+  });
+});
+
+/** One reading of `watchLanding`: where the page is, and how the entry asked for stands in it. */
+interface LandFrame {
+  /** a frame, or the moment right after something changed a height or moved the page */
+  on: 'frame' | 'change';
+  y: number;
+  /** the entry is in the page */
+  there: boolean;
+  /** how much of it shows, through everything it is inside of */
+  shown: number;
+  /** where its own box begins, from the top of the screen (without the rise it arrives with) */
+  top: number;
+  /** the highlight: how strong it is, and the animation that runs it */
+  mark: number;
+  marking: string;
+}
+
+/**
+ * Record the page and the entry `#entry-<no>` from the first frame on. Once the entry is there, also at every
+ * change that could move it (the content changes its height, the page is scrolled): read after the page itself
+ * has answered the change, in the same frame, which is what that frame then shows.
+ */
+const watchLanding = (page: Page) =>
+  page.addInitScript(() => {
+    const w = window as unknown as { __land: LandFrame[]; __want?: string };
+    w.__land = [];
+    let watching = false;
+    const read = (on: LandFrame['on']) => {
+      const el = w.__want
+        ? document.querySelector<HTMLElement>(w.__want)
+        : null;
+      let shown = 1;
+      for (let e: HTMLElement | null = el; e; e = e.parentElement) {
+        const c = getComputedStyle(e);
+        if (c.visibility === 'hidden') shown = 0;
+        shown *= +c.opacity;
+      }
+      const before = el && getComputedStyle(el, '::before');
+      let top = 0;
+      for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement)
+        top += e.offsetTop;
+      w.__land.push({
+        on,
+        y: Math.round(window.scrollY),
+        there: !!el,
+        shown: el ? shown : 0,
+        top: Math.round(top - window.scrollY),
+        mark: before && before.content !== 'none' ? +before.opacity : 0,
+        marking: before ? before.animationName : 'none',
+      });
+      if (el && !watching) {
+        watching = true;
+        // registered after the page's own, so they run after them
+        new ResizeObserver(() => read('change')).observe(el.closest('main')!);
+        window.addEventListener('scroll', () => read('change'));
+      }
+    };
+    // a frame is read when it has been drawn
+    const drawn = new MessageChannel();
+    drawn.port1.onmessage = () => read('frame');
+    const tick = () => {
+      drawn.port2.postMessage(0);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+const landFrames = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __land: LandFrame[] }).__land);
+
+/** The entry stands right under the bar and the toolbar, and nothing of the page covers it. */
+const expectLandedOn = async (page: Page, no: number) => {
+  const entry = page.locator(`#entry-${no}`);
+  await expect(entry).toHaveCount(1);
+  await expect(entry).toBeVisible();
+  await expect
+    .poll(
+      () =>
+        page.evaluate((id) => {
+          const el = document.querySelector(id)!.getBoundingClientRect();
+          const tools = document
+            .querySelector('.dim .tools')!
+            .getBoundingClientRect();
+          const bar = document
+            .querySelector('.dim-bar')!
+            .getBoundingClientRect();
+          return {
+            // below the toolbar wherever that is, and a line below where it sticks, under the bar
+            clear: el.top >= tools.bottom,
+            // (offsets are whole pixels and the page scrolls to whole pixels: a pixel either way)
+            placed: Math.abs(el.top - (bar.bottom + tools.height) - 24) <= 1.5,
+          };
+        }, `#entry-${no}`),
+      { message: `entry ${no} under the bar and the toolbar` },
+    )
+    .toEqual({ clear: true, placed: true });
+};
+
+test.describe('progress page: an address that names an entry', () => {
+  const list = async (request: APIRequestContext) =>
+    (await (
+      await request.get(
+        'https://mc-ctec.org/static-data/zh_TW/survivalProgress.json',
+      )
+    ).json()) as { subTitle: string }[];
+
+  test('every entry has its own id, the number of the milestone', async ({
+    page,
+    request,
+  }) => {
+    const total = (await list(request)).length;
+    await openPage(page, '/survivalProgress/');
+    await expect(page.locator('.entry')).toHaveCount(total);
+    const ids = await page
+      .locator('.entry')
+      .evaluateAll((els) => els.map((e) => e.id));
+    expect(ids).toEqual(
+      Array.from({ length: total }, (_, i) => `entry-${total - i}`),
+    );
+    // nothing is asked for: the page is at its top and no entry is marked
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.locator('.entry[data-landed]')).toHaveCount(0);
+  });
+
+  for (const index of [0, 5, 30])
+    test(`the old ?index=${index} lands on that entry (the ${index}th from the newest), in place before the list shows, and marks it for a moment`, async ({
+      page,
+      request,
+    }) => {
+      const data = await list(request);
+      const no = data.length - index;
+      await watchLanding(page);
+      await page.addInitScript(
+        (id) => ((window as unknown as { __want: string }).__want = id),
+        `#entry-${no}`,
+      );
+      await openPage(page, `/survivalProgress/?index=${index}`);
+      await expect(page.locator(`#entry-${no} h2`)).toHaveText(
+        data[data.length - 1 - index].subTitle,
+      );
+      await expectLandedOn(page, no);
+      // the filters are all open, so it is in the list
+      for (const f of ['dim', 'year'])
+        await expect(
+          page.locator(`[data-filter="${f}"] button[data-v=""]`),
+        ).toHaveAttribute('aria-pressed', 'true');
+      // it is marked: the mark swells and fades, in the motion of the page
+      await expect(page.locator(`#entry-${no}`)).toHaveAttribute(
+        'data-landed',
+        '',
+      );
+      await expect
+        .poll(async () => {
+          const frames = await landFrames(page);
+          const peak = Math.max(...frames.map((f) => f.mark));
+          return peak > 0.05 && frames.at(-1)!.mark === 0;
+        })
+        .toBe(true);
+      const frames = await landFrames(page);
+      const withEntry = frames.filter((f) => f.there);
+      const final = withEntry.at(-1)!;
+      // no pop: in the first frame the entry is in the page, it is where it will stay on the screen;
+      expect(Math.abs(withEntry[0].top - final.top)).toBeLessThanOrEqual(2);
+      // whatever changes a height or moves the page after that is answered before the frame is drawn;
+      const changes = withEntry.filter((f) => f.on === 'change');
+      for (const f of changes)
+        expect(Math.abs(f.top - final.top)).toBeLessThanOrEqual(2);
+      // and at rest it stays there
+      for (const f of withEntry.slice(-30))
+        expect(Math.abs(f.top - final.top)).toBeLessThanOrEqual(2);
+      // it was not shown before it was there, and it came in (its first frame is not whole)
+      expect(withEntry[0].shown).toBeLessThan(0.5);
+      expect(final.shown).toBe(1);
+      // the mark is a fade both ways: several frames between nothing and its peak, and it begins from nothing
+      const marked = frames.filter((f) => f.on === 'frame' && f.mark > 0);
+      expect(marked.length).toBeGreaterThan(20);
+      const peak = Math.max(...marked.map((f) => f.mark));
+      const at = marked.findIndex((f) => f.mark === peak);
+      expect(at, 'frames of the swell').toBeGreaterThanOrEqual(3);
+      expect(marked.length - at, 'frames of the fade').toBeGreaterThan(20);
+      expect(marked[0].mark).toBeLessThan(peak);
+      expect(frames.find((f) => f.marking !== 'none')!.marking).toBe(
+        'entry-landed',
+      );
+      expect(Math.max(...marked.map((f) => f.mark))).toBeLessThanOrEqual(0.2);
+    });
+
+  test('an entry hash lands on that entry too', async ({ page, request }) => {
+    const total = (await list(request)).length;
+    const no = total - 12;
+    await openPage(page, `/survivalProgress/#entry-${no}`);
+    await expectLandedOn(page, no);
+    await expect(page.locator(`#entry-${no}`)).toHaveAttribute(
+      'data-landed',
+      '',
+    );
+  });
+
+  test('a hash that names an entry the filters hide opens the filters, and lands on it', async ({
+    page,
+    request,
+  }) => {
+    const total = (await list(request)).length;
+    await openPage(page, '/survivalProgress/');
+    await page.locator('.entry').first().waitFor();
+    await page.locator('[data-filter="dim"] button[data-v="end"]').click();
+    const hidden = await page.evaluate((n) => {
+      const shown = new Set(
+        [...document.querySelectorAll('.entry')].map((e) => e.id),
+      );
+      for (let no = n - 8; no > 0; no--)
+        if (!shown.has(`entry-${no}`)) return no;
+      return 0;
+    }, total);
+    expect(hidden).toBeGreaterThan(0);
+    await expect(page.locator(`#entry-${hidden}`)).toHaveCount(0);
+    await page.evaluate((no) => (window.location.hash = `entry-${no}`), hidden);
+    await expect(
+      page.locator('[data-filter="dim"] button[data-v=""]'),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.entry')).toHaveCount(total);
+    await expectLandedOn(page, hidden);
+  });
+
+  for (const address of [
+    '?index=9999',
+    '?index=-1',
+    '?index=abc',
+    '?index=',
+    '#entry-0',
+    '#entry-9999',
+    '#entry-x',
+  ])
+    test(`${address} names no entry: the page opens at its top, without an error`, async ({
+      page,
+      request,
+    }) => {
+      const total = (await list(request)).length;
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await openPage(page, `/survivalProgress/${address}`);
+      await expect(page.locator('.entry')).toHaveCount(total);
+      await atRest(page);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await expect(page.locator('.entry[data-landed]')).toHaveCount(0);
+      await expect(page.locator('.head h1')).toBeVisible();
+      expect(errors).toEqual([]);
+    });
+
+  test('reduced motion: it lands on the entry, and nothing is marked', async ({
+    page,
+    request,
+  }) => {
+    const total = (await list(request)).length;
+    await watchLanding(page);
+    await page.addInitScript(
+      (id) => ((window as unknown as { __want: string }).__want = id),
+      `#entry-${total - 5}`,
+    );
+    await openPage(page, '/survivalProgress/?index=5', { reducedMotion: true });
+    await expectLandedOn(page, total - 5);
+    await atRest(page);
+    await page.waitForTimeout(1200);
+    const frames = (await landFrames(page)).filter((f) => f.there);
+    expect(frames.length).toBeGreaterThan(30);
+    for (const f of frames) expect(f.mark).toBe(0);
+  });
+
+  test('another language keeps the reader where they are: the entry is landed on once', async ({
+    page,
+    request,
+  }) => {
+    const total = (await list(request)).length;
+    await openPage(page, '/survivalProgress/?index=5');
+    await expectLandedOn(page, total - 5);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await setLanguage(page, 'en');
+    await expect(page.locator('.tools [data-v="overworld"]')).toHaveText(
+      'Overworld',
+    );
+    await expect(page.locator('.entry')).toHaveCount(total);
+    await atRest(page);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
 });

@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -23,6 +24,40 @@ import { Toolbar } from './Toolbar';
 const validYear = (y: string) => (/^\d{4}$/.test(y) ? y : '');
 
 const DIMS: ProgressDimension[] = ['overworld', 'nether', 'end'];
+
+/**
+ * The milestone an address names, by its number (1 is the oldest), or none.
+ * `#entry-<number>` is this page's own form. `?index=N` is the old page's share link: the N-th entry of its
+ * list, which ran from the newest (0) to the oldest, as this one does.
+ */
+const entryAsked = (total: number): number | null => {
+  const hash = /^#entry-(\d+)$/.exec(window.location.hash);
+  const index = new URLSearchParams(window.location.search).get('index');
+  const no = hash
+    ? Number(hash[1])
+    : index !== null && /^\d+$/.test(index)
+      ? total - Number(index)
+      : NaN;
+  return no >= 1 && no <= total ? no : null;
+};
+
+/** Where an element begins on the page, by its own box (it may be rising into place just now). */
+const pageTop = (el: HTMLElement) => {
+  let top = 0;
+  for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement)
+    top += e.offsetTop;
+  return top;
+};
+/** The space a line of the page keeps from what is stuck above it. */
+const LANDING_GAP = 24;
+/** The longest the entry is kept in place while the page settles around it. */
+const KEEP_MS = 5000;
+const frames = (n: number): Promise<void> =>
+  new Promise((done) =>
+    requestAnimationFrame(() =>
+      n > 1 ? void frames(n - 1).then(done) : done(),
+    ),
+  );
 
 export const ProgressLog = ({
   data,
@@ -46,6 +81,95 @@ export const ProgressLog = ({
     setRun((r) => 1 - r);
   };
   const list = useRef<HTMLOListElement>(null);
+
+  // An address that names an entry. Read once, when the list is first there (it is the browser's alone: the
+  // served page has no list), and again whenever the hash changes; another language's list does not ask again.
+  const [asked, setAsked] = useState<{ no: number | null } | null>(null);
+  if (data && asked === null) setAsked({ no: entryAsked(data.length) });
+  const total = data?.length ?? 0;
+  useEffect(() => {
+    if (!total) return;
+    const onHash = () => {
+      const no = entryAsked(total);
+      if (no === null) return;
+      // every filter is opened, so the entry is in the list
+      setFilterDim('');
+      setYear('');
+      setAsked({ no });
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [total]);
+  // The landing: at once and before the list is painted, so the entry is in its place when the list comes in
+  // (a cut under the entrance, not a scroll the reader watches). Clear of the bar and the stuck toolbar.
+  useLayoutEffect(() => {
+    const no = asked?.no;
+    if (!no) return;
+    const el = document.getElementById(`entry-${no}`);
+    if (!el) return;
+    const tools = document.querySelector<HTMLElement>('.dim .tools');
+    const place = () => {
+      const clear =
+        (tools
+          ? (parseFloat(getComputedStyle(tools).top) || 0) + tools.offsetHeight
+          : 0) + LANDING_GAP;
+      // the same place for the browser, should it go to the hash itself once the page has loaded
+      el.style.setProperty('scroll-margin-top', `${clear}px`);
+      const top = Math.max(0, pageTop(el) - clear);
+      if (Math.abs(window.scrollY - top) >= 1)
+        window.scrollTo({ top, behavior: 'instant' });
+    };
+    place();
+    // While the page settles, the entry is kept where it was put. What stands above it still changes its height
+    // (the fonts arrive and the lines wrap anew), and the browser moves the page on its own account (to keep
+    // what is on screen, or to the hash when the page has loaded). Each is answered in the frame it happens in,
+    // so the frame that shows the change shows the entry in its place. It ends when the page has settled, and
+    // at once when the reader takes the page.
+    const main = el.closest('main');
+    const keep = new ResizeObserver(() => (el.isConnected ? place() : letGo()));
+    const INPUT = [
+      'wheel',
+      'touchstart',
+      'pointerdown',
+      'mousedown',
+      'keydown',
+    ] as const;
+    let kept = true;
+    const letGo = () => {
+      kept = false;
+      keep.disconnect();
+      clearTimeout(limit);
+      window.removeEventListener('scroll', place);
+      INPUT.forEach((type) => window.removeEventListener(type, letGo));
+    };
+    const limit = setTimeout(letGo, KEEP_MS);
+    if (main) keep.observe(main);
+    window.addEventListener('scroll', place, { passive: true });
+    INPUT.forEach((type) =>
+      window.addEventListener(type, letGo, { passive: true }),
+    );
+    // settled: the page has loaded, and the fonts the list needs (asked for once it is laid out) are in
+    void Promise.all([
+      new Promise<void>((done) =>
+        document.readyState === 'complete'
+          ? done()
+          : window.addEventListener('load', () => done(), { once: true }),
+      ),
+      frames(2).then(() => document.fonts.ready),
+    ])
+      .then(() => frames(2))
+      .then(() => kept && letGo());
+    // The mark (inner.css) begins when the entry has come in. Asked for again, it plays again.
+    let live = true;
+    el.removeAttribute('data-landed');
+    void Promise.allSettled(el.getAnimations().map((a) => a.finished)).then(
+      () => live && el.setAttribute('data-landed', ''),
+    );
+    return () => {
+      live = false;
+      letGo();
+    };
+  }, [asked]);
 
   const items = useMemo(
     () =>
@@ -197,6 +321,7 @@ export const ProgressLog = ({
             {shown.map((it, i) => (
               <li
                 className='entry'
+                id={`entry-${it.no}`}
                 key={it.no}
                 data-dim={it.dim}
                 data-year={it.year}

@@ -365,6 +365,23 @@
     padding: 26px 0;
     border-top: 1px solid var(--line);
   }
+  /* Arrived at by its address (`?index=`, `#entry-`): the entry is marked for a moment. A wash of the accent
+     swells behind it and fades away, once, after the entry itself has come in (ProgressLog.tsx sets the mark
+     then). Behind the entry's own content, and a little wider than the row. */
+  .entry {
+    position: relative;
+    isolation: isolate;
+  }
+  .entry[data-landed]::before {
+    content: '';
+    position: absolute;
+    inset: 0 -16px;
+    z-index: -1;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    animation: entry-landed 2.4s var(--ease-rise);
+  }
   .entry figure {
     aspect-ratio: 16 / 9;
     overflow: hidden;
@@ -583,9 +600,25 @@
     .entry img {
       transition: none;
     }
+    /* no mark: the landing itself has put the entry at the head of the screen */
+    .entry[data-landed]::before {
+      animation: none;
+    }
   }
 }
 
+/* quick to swell (--t-in of its 2.4s), slow to go */
+@keyframes entry-landed {
+  0% {
+    opacity: 0;
+  }
+  19% {
+    opacity: 0.14;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 @keyframes dim-rise-0 {
   from {
     opacity: 0;
