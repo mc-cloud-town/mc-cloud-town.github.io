@@ -25,6 +25,8 @@ export default defineConfig({
     },
     {
       name: 'mobile',
+      // the matrix sets its own viewports
+      testIgnore: /dimensions-matrix/,
       use: { ...devices['Pixel 7'] },
     },
   ],

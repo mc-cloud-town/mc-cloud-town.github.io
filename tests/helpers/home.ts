@@ -484,3 +484,32 @@ export const watchLanding = (page: Page, id: string) =>
 
 export const landingFrames = (page: Page): Promise<LandingFrame[]> =>
   page.evaluate(() => (window as unknown as { __seen: LandingFrame[] }).__seen);
+
+/**
+ * The arrival that follows the loader has played out: the bar, the last line of the hero and the last sign of the
+ * title all stand whole in their places. (Its parts start one after another, so "nothing moves" is true before
+ * it begins as well; this waits for its end.)
+ */
+export const arrived = async (page: Page) => {
+  await ready(page);
+  await expect(page.locator('.dim-bar')).toHaveCSS('opacity', '1');
+  await expect(page.locator('.hero .cue')).toHaveCSS('opacity', '1');
+  await expect
+    .poll(
+      () =>
+        page
+          .locator('.hero h1 b')
+          .last()
+          .evaluate((el) => {
+            const m = new DOMMatrix(getComputedStyle(el).transform);
+            const c = new DOMMatrix(
+              getComputedStyle(
+                document.querySelector('.scene.is-first .cam')!,
+              ).transform,
+            );
+            return Math.abs(m.m42) < 0.5 && Math.abs(c.a - 1) < 0.001;
+          }),
+      { message: 'the title has risen and the camera has settled' },
+    )
+    .toBe(true);
+};
