@@ -104,6 +104,8 @@ html[data-dim] {
   }
   /* its own colour, so the hover eases from a fixed value instead of trailing the footer's */
   .dim-foot a {
+    /* a control, not a note: the floor for anything that is read and used is 14px (the demo has 13) */
+    font-size: 14px;
     color: var(--muted);
     transition: color var(--t-state);
   }
