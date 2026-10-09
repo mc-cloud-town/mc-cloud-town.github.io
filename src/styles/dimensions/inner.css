@@ -50,8 +50,14 @@
   [data-theme='light'] & .head .bg::after {
     opacity: 1;
   }
+  /* Over the picture, whatever their order: where the label is put first (order: -1, at 860px and below) a grid
+     paints it first as well, and the picture, which comes later in that order, was painted over it. */
   .head > * {
     position: relative;
+    z-index: 1;
+  }
+  .head .bg {
+    z-index: 0;
   }
   .head .crumb {
     display: flex;
@@ -244,6 +250,8 @@
       writing-mode: horizontal-tb;
       order: -1;
       font-size: 34px;
+      /* as wide as its words, as the upright one is: by day its strip of paper is the label's, not the row's */
+      justify-self: start;
     }
     .head .bg::before,
     .head .bg::after {
