@@ -225,6 +225,7 @@ export const HomePage = () => {
           label={t('dimensions.dim.nether')}
         />
         <NetherLedger
+          reduced={reduced}
           index={ledger}
           items={
             t('dimensions.nether.ledger', { returnObjects: true }) as {

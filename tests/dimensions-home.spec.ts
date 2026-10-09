@@ -838,12 +838,77 @@ test.describe('home: nether', () => {
     await scrollToSection(page, '#ledger', 0);
     await expect(page.locator('.pin-spacer')).toHaveCount(0);
     expect(await visibleScenes(page)).toEqual(['nether']);
-    await expect(page.locator('.ledger-list li')).toHaveCount(6);
-    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[0]);
+    await expect(page.locator('#ledger .ledger-plain > li')).toHaveCount(6);
+    await expect(page.locator('#ledger .ledger-plain h3').first()).toHaveText(
+      FACILITIES[0],
+    );
     await scrollToSection(page, '.rank', -0.3);
     expect(await visibleScenes(page)).toEqual(['nether']);
     await expect(page.locator('.rank h2')).toBeVisible();
   });
+
+  for (const [width, height] of [
+    [390, 844],
+    [844, 390],
+    [1440, 900],
+  ] as const)
+    test(`reduced motion at ${width}×${height}: all six facilities are a plain list, each with its date, name and picture`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/', { reducedMotion: true });
+      await ready(page);
+      const rows = page.locator('#ledger .ledger-plain > li');
+      await expect(rows).toHaveCount(6);
+      // in the flow of the page: nothing is pinned, and each row stands below the one before
+      await expect(page.locator('.pin-spacer')).toHaveCount(0);
+      const tops: number[] = [];
+      for (let i = 0; i < 6; i++) {
+        const row = rows.nth(i);
+        await row.scrollIntoViewIfNeeded();
+        await expect(row.locator('h3'), `name ${i}`).toHaveText(FACILITIES[i]);
+        await expect(row.locator('h3'), `name ${i}`).toBeVisible();
+        await expect(row.locator('.acc'), `date ${i}`).toHaveText(
+          /^\d{4}\.\d{2}\.\d{2}$/,
+        );
+        await expect(row.locator('.acc'), `date ${i}`).toBeVisible();
+        const img = row.locator('img');
+        await expect(img, `picture ${i}`).toHaveAttribute(
+          'src',
+          new RegExp(`/${['p4', 'p10', 'p12', 'p38', 'p49', 'p51'][i]}\.webp$`),
+        );
+        await expect
+          .poll(
+            () =>
+              img.evaluate(
+                (el: HTMLImageElement) =>
+                  el.complete &&
+                  el.naturalWidth > 0 &&
+                  +getComputedStyle(el).opacity,
+              ),
+            { message: `picture ${i} is loaded and shown` },
+          )
+          .toBe(1);
+        const box = (await img.boundingBox())!;
+        expect(box.width, `picture ${i} width`).toBeGreaterThan(120);
+        expect(box.height, `picture ${i} height`).toBeGreaterThan(60);
+        // a picture and its words can be seen together
+        const whole = (await row.boundingBox())!;
+        expect(whole.height, `row ${i} fits the screen`).toBeLessThanOrEqual(
+          height,
+        );
+        tops.push(
+          await row.evaluate(
+            (el) => el.getBoundingClientRect().top + window.scrollY,
+          ),
+        );
+        // read on the way down: a row may be passing behind the bar
+        await expectTextFits(page, { within: '#ledger', passing: '.dim-bar' });
+      }
+      expect([...tops].sort((a, b) => a - b)).toEqual(tops);
+      expect(new Set(tops).size).toBe(6);
+      await expectNoHorizontalScroll(page);
+    });
 });
 
 test.describe('home: the end', () => {

@@ -536,6 +536,53 @@ html.lenis {
     display: block;
     animation: ledger-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
+  /* Reduced motion: no pin and no steps (NetherLedger.tsx). The facilities are a plain list in the flow of the
+     page, each with its own picture. The list stands on the page's ground, which rises under it and falls away
+     after it, so the words never depend on which part of the fixed picture happens to be behind them. */
+  .ledger-plain {
+    display: grid;
+    gap: clamp(56px, 10vh, 112px);
+    padding: 22vh var(--gutter);
+    background: linear-gradient(
+      180deg,
+      rgba(var(--v), 0) 0,
+      rgba(var(--v), 0.92) 16vh,
+      rgba(var(--v), 0.92) calc(100% - 16vh),
+      rgba(var(--v), 0) 100%
+    );
+  }
+  .ledger-plain li {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    gap: 5vw;
+    align-items: center;
+  }
+  .ledger-plain p {
+    display: flex;
+    gap: 14px;
+    color: var(--muted);
+  }
+  .ledger-plain h3 {
+    font-size: clamp(28px, 3.6vw, 60px);
+    margin-top: 14px;
+    overflow-wrap: anywhere;
+  }
+  .ledger-plain figure {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  /* a picture that arrives late fades in: nothing pops, with reduced motion as without */
+  .ledger-plain img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--t-in) var(--ease-rise);
+  }
+  .ledger-plain img[data-in] {
+    opacity: 1;
+  }
   .rank {
     padding: 26vh var(--gutter);
   }
@@ -772,6 +819,11 @@ html.lenis {
     .ledger-list {
       display: none;
     }
+    /* the words, then the picture under them */
+    .ledger-plain li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
     .roles div {
       grid-template-columns: 1fr;
       gap: 2px;
@@ -833,6 +885,15 @@ html.lenis {
     }
     .ledger-now {
       max-width: none;
+    }
+    /* a picture as wide as this screen would be taller than it: side by side again, so each row fits */
+    .ledger-plain {
+      padding-block: 96px;
+      gap: 48px;
+    }
+    .ledger-plain li {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+      gap: 5vw;
     }
     .rank {
       padding-block: 96px;
