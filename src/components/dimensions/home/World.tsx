@@ -1,3 +1,4 @@
+import type { CSSProperties, ReactNode } from 'react';
 import { NETHER_IMAGES, SCENES } from '@/constants/scenes';
 
 const VEIL: Record<string, string> = {
@@ -8,8 +9,54 @@ const VEIL: Record<string, string> = {
   foot: 'veil veil--foot',
 };
 
-/** The fixed stage. Scenes are stacked layers; choreography.ts decides which one is showing. */
-export const World = ({ children }: { children?: React.ReactNode }) => (
+/**
+ * One picture of a scene. Until it is its turn it has no address, so nothing is fetched for it: the loader waits
+ * for the first picture and the fonts, and fourteen more pictures would compete with them (a fixed full-screen
+ * layer is always "in view", so lazy loading does nothing here). With scripts off nothing would ever give it one,
+ * so the served page carries it in a `noscript` as well.
+ */
+const Picture = ({
+  src,
+  now,
+  ledger,
+  style,
+}: {
+  src: string;
+  now: boolean;
+  ledger?: number;
+  style?: CSSProperties;
+}) => (
+  <>
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img
+      src={now ? src : undefined}
+      alt=''
+      data-ledger={ledger}
+      style={style}
+    />
+    {!now && (
+      <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt='' />
+      </noscript>
+    )}
+  </>
+);
+
+/**
+ * The fixed stage. Scenes are stacked layers; choreography.ts decides which one is showing.
+ * The first picture is in the served page. `first` names the others that are needed before the loader lifts
+ * (the picture of the place the reader arrives at), and `all` is set once it has lifted.
+ */
+export const World = ({
+  first = [],
+  all = false,
+  children,
+}: {
+  first?: readonly string[];
+  all?: boolean;
+  children?: ReactNode;
+}) => (
   <div className='world' aria-hidden='true'>
     {SCENES.map((s, i) => (
       <div
@@ -20,18 +67,18 @@ export const World = ({ children }: { children?: React.ReactNode }) => (
         <div className='zoom'>
           <div className='cam'>
             {s.src && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={s.src} alt='' loading={i === 0 ? 'eager' : 'lazy'} />
+              <Picture
+                src={s.src}
+                now={i === 0 || all || first.includes(s.src)}
+              />
             )}
             {s.id === 'nether' &&
               NETHER_IMAGES.map((src, k) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Picture
                   key={src}
                   src={src}
-                  alt=''
-                  loading='lazy'
-                  data-ledger={k}
+                  now={all || first.includes(src)}
+                  ledger={k}
                   style={{ opacity: k === 0 ? 1 : 0 }}
                 />
               ))}

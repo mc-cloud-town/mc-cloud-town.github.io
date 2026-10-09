@@ -21,18 +21,17 @@ const HOLD_S = 0.18;
 /** With reduced motion the finished map gives way in one brief fade. */
 const REDUCED_FADE_S = 0.12;
 
-const loaded = (img: HTMLImageElement | null) =>
-  !img || img.complete
-    ? Promise.resolve()
-    : new Promise<void>((done) => {
-        img.addEventListener('load', () => done(), { once: true });
-        img.addEventListener('error', () => done(), { once: true });
-      });
+/** The picture is in and decoded, so the frame that first shows it does not wait for it; or it failed, which is no reason to wait. */
+const loaded = (img: HTMLImageElement) =>
+  img.decode().then(
+    () => {},
+    () => {},
+  );
 
 /**
  * A map of the world being generated: chunks pass through their stages from the centre outward
  * (loaderMap.ts), with the percentage above the map and the stage below it.
- * Calls onDone once the fonts and the first scene are in and the map is finished, lifts off the page, then
+ * Calls onDone once the fonts and the first pictures are in and the map is finished, lifts off the page, then
  * removes itself. It is part of the static markup, so it is the first thing painted; it starts once `reduced` is known.
  * Should this script never start, the served page is not left behind it: home.css takes the loader away after ten
  * seconds, and HomePage's `noscript` style at once where scripts are off.
@@ -84,11 +83,13 @@ export const Loader = ({
     const assets = Promise.race([
       Promise.all([
         document.fonts.ready,
-        loaded(
-          el.parentElement?.querySelector<HTMLImageElement>(
-            '.scene.is-first img',
-          ) ?? null,
-        ),
+        // every picture that has an address by now: the first scene, and the place the reader arrives at
+        // (World.tsx gives the others theirs when the loader has lifted)
+        ...[
+          ...(el.parentElement?.querySelectorAll<HTMLImageElement>(
+            '.world img[src]',
+          ) ?? []),
+        ].map(loaded),
       ]),
       new Promise((done) => (giveUp = setTimeout(done, LOADER_TIMEOUT_MS))),
     ]);

@@ -73,6 +73,21 @@ export const TRANSITIONS: TransitionDef[] = [
   { trigger: '#respawn', from: 'end', to: 'day1', fx: 'wake' },
 ];
 
+/**
+ * The pictures behind a place of the page that can be arrived at by its id (`#end`), other than the first one,
+ * which is in the served page. At the top of a section its own transition has played out, so it is that
+ * section's scene alone; the facilities begin with the first of their pictures.
+ */
+export const picturesAt = (id: string): string[] => {
+  const scene =
+    id === 'ledger'
+      ? 'nether'
+      : TRANSITIONS.find((t) => t.trigger === `#${id}`)?.to;
+  if (scene === 'nether') return [NETHER_IMAGES[0]];
+  const src = SCENES.find((s) => s.id === scene)?.src;
+  return src ? [src] : [];
+};
+
 /** The Latin mark beside each dimension's tag. Untranslated on purpose: a design mark, identical in every language. */
 export const DIMENSION_MARKS = {
   overworld: 'OVERWORLD',

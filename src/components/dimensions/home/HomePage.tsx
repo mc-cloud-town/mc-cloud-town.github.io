@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -17,6 +18,8 @@ import { GITHUB_API, STATIC_DATA_API } from '@/constants';
 import useApi from '@/hooks/useApi';
 import { buildChoreography } from '@/lib/dimensions/choreography';
 import { daysSince, SERVER_START_MS } from '@/lib/dimensions/format';
+import { hashId } from '@/lib/dimensions/navigation';
+import { picturesAt } from '@/constants/scenes';
 import type { IMembers } from '@/types/IMember';
 import { World } from './World';
 import { Loader } from './Loader';
@@ -42,6 +45,14 @@ const prefersReducedMotion = () =>
 
 const daysToday = () => daysSince(SERVER_START_MS, Date.now());
 
+/**
+ * The pictures the loader must not lift without, besides the first one: those of the place the reader arrives at.
+ * One string (addresses, a line each), so that asking twice gives the same value.
+ */
+const picturesOfArrival = () =>
+  picturesAt(hashId(window.location.hash)).join('\n');
+const noPictures = () => '';
+
 export const HomePage = () => {
   const root = useRef<HTMLDivElement>(null);
   const { setDim } = useDimension();
@@ -52,6 +63,13 @@ export const HomePage = () => {
     prefersReducedMotion,
     () => null,
   );
+  // known only in the browser, like `reduced`: the served page asks for the first picture alone
+  const arrival = useSyncExternalStore(
+    noSubscription,
+    picturesOfArrival,
+    noPictures,
+  );
+  const first = useMemo(() => (arrival ? arrival.split('\n') : []), [arrival]);
   const [ledger, setLedger] = useState(0);
   const { t, i18n } = useTranslation();
   const { data: members } = useApi<IMembers>(`${STATIC_DATA_API}/member.json`);
@@ -142,7 +160,10 @@ export const HomePage = () => {
 
   return (
     <div className='dim dim--home' ref={root} data-ready={ready}>
-      <World>{reduced !== null && <Starfield reduced={reduced} />}</World>
+      {/* every other picture is asked for when the loader lifts, not before (and not as late as the scroll) */}
+      <World first={first} all={ready}>
+        {reduced !== null && <Starfield reduced={reduced} />}
+      </World>
       <PortalCanvas />
       <div className='flash' aria-hidden='true' />
       <Loader reduced={reduced} onDone={onDone} />

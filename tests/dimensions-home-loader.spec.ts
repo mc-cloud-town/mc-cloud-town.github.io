@@ -572,3 +572,196 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await expect(page.locator('.hero h1')).toBeVisible();
   });
 });
+
+/** The pictures of the scenes, by the end of their address: the first one, and the fourteen others. */
+const SPAWN_PICTURE = 'CTEC_Members.webp';
+const OTHER_PICTURES = [
+  'CTEC_Building.webp',
+  ...[40, 33, 17, 4, 10, 12, 38, 49, 51, 21, 14, 6, 2].map(
+    (n) => `/survivalProgress/p${n}.webp`,
+  ),
+];
+
+/** What `watchPictures` has seen. */
+interface PictureLog {
+  /** when the page was handed over (`data-ready`), on the page's own clock */
+  readyAt: number | null;
+  /** the scroll position at that moment */
+  readyY: number;
+  /** when each picture was asked for, by address */
+  asked: Record<string, number>;
+  /** the pictures of the scenes on screen that were decoded at the first frame the page was handed over */
+  decodedAtReady: string[];
+  /** the scenes on screen at that frame */
+  scenesAtReady: string[];
+}
+
+/** From the first frame: when the page is handed over, and when each picture is asked for (the browser's own record). */
+const watchPictures = (page: Page) =>
+  page.addInitScript(() => {
+    const log: PictureLog = {
+      readyAt: null,
+      readyY: 0,
+      asked: {},
+      decodedAtReady: [],
+      scenesAtReady: [],
+    };
+    (window as unknown as { __pictures: PictureLog }).__pictures = log;
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries())
+        if (/\.webp$/.test(e.name)) log.asked[e.name] ??= e.startTime;
+    }).observe({ type: 'resource', buffered: true });
+    const tick = () => {
+      const home = document.querySelector<HTMLElement>('.dim--home');
+      if (home?.dataset.ready !== 'true') return requestAnimationFrame(tick);
+      log.readyAt = performance.now();
+      log.readyY = window.scrollY;
+      const scenes = [
+        ...document.querySelectorAll<HTMLElement>('.scene'),
+      ].filter((s) => {
+        const c = getComputedStyle(s);
+        return c.visibility !== 'hidden' && +c.opacity > 0.5;
+      });
+      log.scenesAtReady = scenes.map((s) => s.dataset.scene!);
+      log.decodedAtReady = scenes.flatMap((s) =>
+        [...s.querySelectorAll('img')]
+          .filter(
+            (i) =>
+              +getComputedStyle(i).opacity > 0.5 &&
+              i.complete &&
+              i.naturalWidth > 0,
+          )
+          .map((i) => i.currentSrc),
+      );
+    };
+    requestAnimationFrame(tick);
+  });
+const pictures = (page: Page) =>
+  page.evaluate(
+    () => (window as unknown as { __pictures: PictureLog }).__pictures,
+  );
+/** When the picture whose address ends like this was asked for; undefined if it never was. */
+const askedAt = (log: PictureLog, end: string) =>
+  Object.entries(log.asked).find(([url]) => url.endsWith(end))?.[1];
+
+test.describe('home: the other pictures wait for the loader', () => {
+  test('only the first picture is asked for under the loader; the fourteen others start when it lifts, without a scroll', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // a first picture that takes its time: the loader is up for a good while
+    await page.route(`**/${SPAWN_PICTURE}`, async (r) => {
+      await new Promise((done) => setTimeout(done, 2500));
+      await r.continue();
+    });
+    await watchPictures(page);
+    await openPage(page, '/');
+    await ready(page);
+    // all of them, and the page has not been scrolled
+    await expect
+      .poll(async () => {
+        const log = await pictures(page);
+        return OTHER_PICTURES.filter((p) => askedAt(log, p) === undefined);
+      })
+      .toEqual([]);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    const log = await pictures(page);
+    expect(log.readyAt).toBeGreaterThan(2500);
+    expect(askedAt(log, SPAWN_PICTURE)).toBeLessThan(2000);
+    for (const p of OTHER_PICTURES) {
+      expect(askedAt(log, p), `${p} waits for the loader`).toBeGreaterThan(
+        2500,
+      );
+      // at the lift: within a moment of the page being handed over (a frame is the grain of this clock)
+      expect(
+        Math.abs(askedAt(log, p)! - log.readyAt!),
+        `${p} starts at the lift`,
+      ).toBeLessThan(400);
+    }
+    // the next scene is the first of them to be asked for
+    const order = OTHER_PICTURES.map((p) => askedAt(log, p)!);
+    expect(Math.min(...order)).toBe(order[0]);
+    // and they arrive: every picture of every scene
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            [
+              ...document.querySelectorAll<HTMLImageElement>('.world img'),
+            ].filter((i) => i.complete && i.naturalWidth > 0).length,
+        ),
+      )
+      .toBe(15);
+  });
+
+  test('arriving at #end, the hall is asked for under the loader and decoded before it lifts; the rest still waits', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the picture of the place arrived at takes its time: the loader waits for it
+    await page.route('**/survivalProgress/p21.webp', async (r) => {
+      await new Promise((done) => setTimeout(done, 2500));
+      await r.continue();
+    });
+    await watchPictures(page);
+    await openPage(page, '/#end');
+    await ready(page);
+    const log = await pictures(page);
+    expect(log.readyAt).toBeGreaterThan(2500);
+    expect(log.readyY).toBeGreaterThan(900);
+    expect(log.scenesAtReady).toEqual(['hall']);
+    expect(log.decodedAtReady.length).toBe(1);
+    expect(log.decodedAtReady[0]).toMatch(/\/p21\.webp$/);
+    expect(askedAt(log, '/survivalProgress/p21.webp')).toBeLessThan(2000);
+    await expect
+      .poll(async () => {
+        const now = await pictures(page);
+        return OTHER_PICTURES.filter((p) => askedAt(now, p) === undefined);
+      })
+      .toEqual([]);
+    const after = await pictures(page);
+    for (const p of OTHER_PICTURES.filter((p) => !p.endsWith('/p21.webp')))
+      expect(askedAt(after, p), `${p} waits for the loader`).toBeGreaterThan(
+        2500,
+      );
+  });
+
+  test('arriving at #ledger, the first facility is the picture that is there when the loader lifts', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await watchPictures(page);
+    await openPage(page, '/#ledger');
+    await ready(page);
+    const log = await pictures(page);
+    expect(log.scenesAtReady).toEqual(['nether']);
+    expect(log.decodedAtReady.length).toBe(1);
+    expect(log.decodedAtReady[0]).toMatch(/\/p4\.webp$/);
+  });
+
+  test('with scripts off every picture of every scene is still loaded', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    await page.goto('/', { waitUntil: 'load' });
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLImageElement>('.world img')]
+            .filter((i) => i.complete && i.naturalWidth > 0)
+            .map((i) => i.currentSrc.split('/').pop())
+            .sort(),
+        ),
+      )
+      .toEqual(
+        [SPAWN_PICTURE, ...OTHER_PICTURES]
+          .map((p) => p.split('/').pop())
+          .sort(),
+      );
+    await context.close();
+  });
+});
