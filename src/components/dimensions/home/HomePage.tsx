@@ -160,37 +160,46 @@ export const HomePage = () => {
           label={t('dimensions.dim.overworld')}
         >
           <div className='stats rise'>
-            <div>
-              {/* a new node for a new number: a figure that arrives late fades in (home.css) */}
-              <b data-stat='days' key={days ?? 'none'}>
-                {days === null ? '' : days.toLocaleString('en-US')}
-              </b>
-              <span data-t='note'>{t('dimensions.overworld.stats.days')}</span>
+            {/* two pairs: where four do not fit in a row they stand two and two, never three and one (home.css) */}
+            <div className='pair'>
+              <div>
+                {/* a new node for a new number: a figure that arrives late fades in (home.css) */}
+                <b data-stat='days' key={days ?? 'none'}>
+                  {days === null ? '' : days.toLocaleString('en-US')}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.days')}
+                </span>
+              </div>
+              <div>
+                <b data-stat='milestones'>{MILESTONES}</b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.milestones')}
+                </span>
+              </div>
             </div>
-            <div>
-              <b data-stat='milestones'>{MILESTONES}</b>
-              <span data-t='note'>
-                {t('dimensions.overworld.stats.milestones')}
-              </span>
-            </div>
-            <div>
-              <b
-                data-stat='members'
-                key={members?.member?.length ?? DEFAULT_MEMBERS}
-              >
-                {members?.member?.length ?? DEFAULT_MEMBERS}
-              </b>
-              <span data-t='note'>
-                {t('dimensions.overworld.stats.members')}
-              </span>
-            </div>
-            <div>
-              <b data-stat='repos' key={repos ? 'live' : 'default'}>
-                {repos
-                  ? repos.filter((r) => !r.name.startsWith('.')).length
-                  : DEFAULT_REPOS}
-              </b>
-              <span data-t='note'>{t('dimensions.overworld.stats.repos')}</span>
+            <div className='pair'>
+              <div>
+                <b
+                  data-stat='members'
+                  key={members?.member?.length ?? DEFAULT_MEMBERS}
+                >
+                  {members?.member?.length ?? DEFAULT_MEMBERS}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.members')}
+                </span>
+              </div>
+              <div>
+                <b data-stat='repos' key={repos ? 'live' : 'default'}>
+                  {repos
+                    ? repos.filter((r) => !r.name.startsWith('.')).length
+                    : DEFAULT_REPOS}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.repos')}
+                </span>
+              </div>
             </div>
           </div>
           <a className='more rise' href='/survivalProgress/' data-t='control'>

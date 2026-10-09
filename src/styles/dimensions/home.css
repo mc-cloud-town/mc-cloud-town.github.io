@@ -414,10 +414,16 @@ html.lenis {
     font-size: 17px;
     color: var(--muted);
   }
-  .stats {
+  /* Four figures in a row; where the column is too narrow for four, two and two. They are held in two pairs so
+     that a row never breaks after the third (which is what a plain wrap did at 1024px, and would do wherever a
+     language's captions happen to be a little longer). */
+  .stats,
+  .stats .pair {
     display: flex;
-    flex-wrap: wrap;
     gap: 20px 56px;
+  }
+  .stats {
+    flex-wrap: wrap;
     margin-top: 64px;
   }
   .stats b {
