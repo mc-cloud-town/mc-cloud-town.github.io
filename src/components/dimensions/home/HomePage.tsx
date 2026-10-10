@@ -20,6 +20,7 @@ import { buildChoreography } from '@/lib/dimensions/choreography';
 import { daysSince, SERVER_START_MS } from '@/lib/dimensions/format';
 import { hashId } from '@/lib/dimensions/navigation';
 import { markHomeVisit, recallHomePlace } from '@/lib/dimensions/homePlace';
+import { onNextTick } from '@/lib/dimensions/nextTick';
 import { picturesAt } from '@/constants/scenes';
 import type { IMembers } from '@/types/IMember';
 import { World } from './World';
@@ -126,10 +127,12 @@ export const HomePage = () => {
     });
     // The arrival, timed against the loader lifting off (0.5s in): the camera settles, the title rises, the rest follows.
     // The camera move is on .cam so it never fights the scroll-driven moves on .zoom.
+    // Its parts stand where they start from at once, and it plays from the next tick, as the lift does (Loader.tsx):
+    // the two begin together, after the time this build takes.
     const arrival = reduced
       ? null
       : gsap
-          .timeline()
+          .timeline({ paused: true })
           .fromTo(
             el.querySelector('.scene.is-first .cam'),
             { scale: 1.3 },
@@ -160,7 +163,9 @@ export const HomePage = () => {
             1.2,
           );
     ScrollTrigger.refresh();
+    const unplayed = arrival ? onNextTick(() => arrival.play()) : null;
     return () => {
+      unplayed?.();
       arrival?.revert();
       dispose();
     };

@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { useTranslation } from 'react-i18next';
 import { MAP_SIZE, drawMap, seedLateness } from '@/lib/dimensions/loaderMap';
+import { onNextTick } from '@/lib/dimensions/nextTick';
 import { markWhole } from './World';
 
 /** However slow the fonts or the first picture are, the loader lifts after this long. */
@@ -84,6 +85,8 @@ export const Loader = ({
     let arrived = false;
     let giveUp: ReturnType<typeof setTimeout> | undefined;
     let label: ReturnType<typeof setTimeout> | undefined;
+    /** Calls off a lift that has not begun yet. */
+    let unstarted: (() => void) | undefined;
     const tweens: (gsap.core.Tween | gsap.core.Timeline)[] = [];
     // every picture that has an address by now: the first scene, and the place the reader arrives at
     // (World.tsx gives the others theirs when the loader has lifted)
@@ -108,23 +111,27 @@ export const Loader = ({
       // the first scene, when the page is handed over.
       flushSync(onDone);
       el.style.pointerEvents = 'none'; // the page underneath is live from here on
-      const away = gsap.timeline({ onComplete: () => setGone(true) });
-      tweens.push(away);
-      if (reduced)
-        return away.to(el, {
-          autoAlpha: 0,
-          duration: REDUCED_FADE_S,
-          ease: 'none',
-        });
-      // the map opens onto the world
-      away
-        .to(el.querySelector('.loader-in'), {
-          opacity: 0,
-          scale: 1.6,
-          duration: 0.6,
-          ease: 'power3.in',
-        })
-        .to(el, { autoAlpha: 0, duration: 0.9, ease: 'power2.out' }, '-=.1');
+      // The lift itself begins on the next tick: building the page took this one a while (a good second on a slow
+      // device), and a lift begun before it would be found that far along, or over, when the next frame comes.
+      unstarted = onNextTick(() => {
+        const away = gsap.timeline({ onComplete: () => setGone(true) });
+        tweens.push(away);
+        if (reduced)
+          return void away.to(el, {
+            autoAlpha: 0,
+            duration: REDUCED_FADE_S,
+            ease: 'none',
+          });
+        // the map opens onto the world
+        away
+          .to(el.querySelector('.loader-in'), {
+            opacity: 0,
+            scale: 1.6,
+            duration: 0.6,
+            ease: 'power3.in',
+          })
+          .to(el, { autoAlpha: 0, duration: 0.9, ease: 'power2.out' }, '-=.1');
+      });
     };
     /** Everything is in: the last chunks finish, the square holds for a beat, then the lift. */
     const complete = () => {
@@ -175,6 +182,7 @@ export const Loader = ({
       cancelled = true;
       clearTimeout(giveUp);
       clearTimeout(label);
+      unstarted?.();
       gsap.killTweensOf(st);
       tweens.forEach((tween) => tween.kill());
     };

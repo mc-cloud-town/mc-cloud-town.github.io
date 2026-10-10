@@ -967,6 +967,87 @@ test.describe('home: the other pictures wait for the loader', () => {
       ).toEqual([]);
     });
 
+  test('arriving at #end with a picture that never comes: at the timeout the page is handed over on the hall all the same, and the picture fades in when it does come', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    let release = () => {};
+    const held = new Promise<void>((done) => (release = done));
+    await page.route('**/survivalProgress/p21.webp', async (r) => {
+      await held;
+      await r.continue();
+    });
+    await watchHandover(page);
+    await openPage(page, '/#end');
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const { handover, after } = await handoverSeen(page);
+    // the loader gave up, not the page: it is where the address says, on its scene, in its dimension
+    expect(handover.length).toBe(1);
+    expect(handover[0].t).toBeGreaterThan(LOADER_TIMEOUT_MS);
+    expect(Math.abs(handover[0].top)).toBeLessThanOrEqual(1);
+    expect(handover[0]).toMatchObject({
+      scenes: ['hall'],
+      dim: 'end',
+      loader: 1,
+      map: 1,
+      // the picture is not in: nothing to show, and not marked as whole
+      picture: 0,
+      whole: false,
+    });
+    expect(after.length).toBeGreaterThan(3);
+    expect(
+      after.filter(
+        (f) =>
+          Math.abs(f.top) > 1 ||
+          f.scenes.join() !== 'hall' ||
+          f.picture !== 0 ||
+          f.whole,
+      ),
+    ).toEqual([]);
+    // it comes at last: it fades in, over frames, and is not marked as one the loader lifted on
+    release();
+    await expect
+      .poll(async () => (await handoverSeen(page)).after.at(-1)!.picture)
+      .toBe(1);
+    const late = (await handoverSeen(page)).after.slice(after.length);
+    const rising = late.map((f) => f.picture).filter((o) => o > 0 && o < 1);
+    expect(new Set(rising).size).toBeGreaterThan(3);
+    expect(late.map((f) => f.picture)).toEqual(
+      [...late.map((f) => f.picture)].sort((a, b) => a - b),
+    );
+    expect(late.some((f) => f.whole)).toBe(false);
+  });
+
+  // The page is built in the step that hands it over, which takes a slow device a good while; the lift is started
+  // on the tick after it, so that this while is not taken out of the lift.
+  test('on a slow device the lift still plays in full: the loader goes over many frames, in its own time', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    await watchHandover(page);
+    await openPage(page, '/#end');
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const { handover, after } = await handoverSeen(page);
+    expect(handover.length).toBe(1);
+    const gone = after.find((f) => f.loader === 0)!;
+    expect(gone).toBeDefined();
+    // the map opens for 0.6 s, the cover goes in the 0.9 s that follow, a tenth of a second into each other
+    const LIFT_MS = 1400;
+    const lasted = gone.t - handover[0].t;
+    expect(lasted).toBeGreaterThan(LIFT_MS - 100);
+    expect(lasted).toBeLessThan(LIFT_MS + 500);
+    // and both parts of it are seen on their way
+    const lifting = after.filter((f) => f.t <= gone.t);
+    const steps = (of: 'map' | 'loader') =>
+      new Set(lifting.map((f) => f[of]).filter((o) => o > 0 && o < 1)).size;
+    expect(steps('map')).toBeGreaterThan(4);
+    expect(steps('loader')).toBeGreaterThan(4);
+  });
+
   test('with scripts off every picture of every scene is still loaded', async ({
     browser,
   }) => {
