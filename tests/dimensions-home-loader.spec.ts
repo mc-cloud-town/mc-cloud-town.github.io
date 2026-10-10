@@ -747,6 +747,85 @@ const pictures = (page: Page) =>
 const askedAt = (log: PictureLog, end: string) =>
   Object.entries(log.asked).find(([url]) => url.endsWith(end))?.[1];
 
+/** The page as `watchHandover` sees it. */
+interface Handover {
+  /** on the page's own clock */
+  t: number;
+  /** how far `#end` is from the head of the screen */
+  top: number;
+  scenes: string[];
+  dim: string | undefined;
+  /** opacity of the hall's picture (0 while its scene is hidden), and whether the loader marked it whole */
+  picture: number;
+  whole: boolean;
+  /** opacity of the loader, and of the block that holds its map */
+  loader: number;
+  map: number;
+}
+/**
+ * From the first frame: the page at the very moment it is handed over (`data-ready`: an observer is told before
+ * anything else runs, and before any frame), and in every frame from then on.
+ */
+const watchHandover = (page: Page) =>
+  page.addInitScript(() => {
+    const w = window as unknown as {
+      __handover: Handover[];
+      __after: Handover[];
+    };
+    w.__handover = [];
+    w.__after = [];
+    const see = (): Handover => {
+      const shown = (sel: string) => {
+        const el = document.querySelector(sel);
+        const c = el && getComputedStyle(el);
+        return !c || c.visibility === 'hidden' ? 0 : +c.opacity;
+      };
+      return {
+        t: performance.now(),
+        top: Math.round(
+          document.querySelector('#end')!.getBoundingClientRect().top,
+        ),
+        scenes: [...document.querySelectorAll<HTMLElement>('.scene')]
+          .filter((s) => {
+            const c = getComputedStyle(s);
+            return c.visibility !== 'hidden' && +c.opacity > 0.5;
+          })
+          .map((s) => s.dataset.scene!),
+        dim: document.documentElement.dataset.dim,
+        picture: shown('.scene[data-scene="hall"] img'),
+        whole:
+          document.querySelector<HTMLElement>('.scene[data-scene="hall"] img')
+            ?.dataset.whole !== undefined,
+        loader: shown('.loader'),
+        map: shown('.loader-in'),
+      };
+    };
+    const isReady = () =>
+      document.querySelector<HTMLElement>('.dim--home')?.dataset.ready ===
+      'true';
+    const arm = () => {
+      const home = document.querySelector('.dim--home');
+      if (!home) return requestAnimationFrame(arm);
+      new MutationObserver(() => {
+        if (isReady()) w.__handover.push(see());
+      }).observe(home, { attributes: true, attributeFilter: ['data-ready'] });
+    };
+    arm();
+    const tick = () => {
+      if (isReady()) w.__after.push(see());
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+const handoverSeen = (page: Page) =>
+  page.evaluate(() => {
+    const w = window as unknown as {
+      __handover: Handover[];
+      __after: Handover[];
+    };
+    return { handover: w.__handover, after: w.__after };
+  });
+
 test.describe('home: the other pictures wait for the loader', () => {
   test('only the first picture is asked for under the loader; the fourteen others start when it lifts, without a scroll', async ({
     page,
@@ -859,80 +938,31 @@ test.describe('home: the other pictures wait for the loader', () => {
         await new Promise((done) => setTimeout(done, 1500));
         await r.continue();
       });
-      await page.addInitScript(() => {
-        interface Seen {
-          top: number;
-          scenes: string[];
-          picture: number;
-          loader: number;
-          map: number;
-        }
-        const w = window as unknown as { __handover: Seen[]; __after: Seen[] };
-        w.__handover = [];
-        w.__after = [];
-        const see = (): Seen => {
-          const shown = (sel: string) => {
-            const el = document.querySelector(sel);
-            const c = el && getComputedStyle(el);
-            return !c || c.visibility === 'hidden' ? 0 : +c.opacity;
-          };
-          return {
-            top: Math.round(
-              document.querySelector('#end')!.getBoundingClientRect().top,
-            ),
-            scenes: [...document.querySelectorAll<HTMLElement>('.scene')]
-              .filter((s) => {
-                const c = getComputedStyle(s);
-                return c.visibility !== 'hidden' && +c.opacity > 0.5;
-              })
-              .map((s) => s.dataset.scene!),
-            picture: shown('.scene[data-scene="hall"] img'),
-            loader: shown('.loader'),
-            map: shown('.loader-in'),
-          };
-        };
-        const isReady = () =>
-          document.querySelector<HTMLElement>('.dim--home')?.dataset.ready ===
-          'true';
-        // the moment itself: an observer is told before anything else runs, and before any frame
-        const arm = () => {
-          const home = document.querySelector('.dim--home');
-          if (!home) return requestAnimationFrame(arm);
-          new MutationObserver(() => {
-            if (isReady()) w.__handover.push(see());
-          }).observe(home, {
-            attributes: true,
-            attributeFilter: ['data-ready'],
-          });
-        };
-        arm();
-        // and every frame from then on
-        const tick = () => {
-          if (isReady()) w.__after.push(see());
-          requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      });
+      await watchHandover(page);
       await openPage(page, '/#end', { reducedMotion });
       await ready(page);
       await expect(page.locator('.loader')).toHaveCount(0);
-      const { handover, after } = await page.evaluate(() => {
-        const w = window as unknown as {
-          __handover: unknown[];
-          __after: unknown[];
-        };
-        return { handover: w.__handover, after: w.__after };
-      });
+      const { handover, after } = await handoverSeen(page);
       // handed over once: on the section, on its scene, its picture whole, and the loader has not begun to lift
-      expect(handover).toEqual([
-        { top: 0, scenes: ['hall'], picture: 1, loader: 1, map: 1 },
-      ]);
+      expect(handover.length).toBe(1);
+      expect(Math.abs(handover[0].top)).toBeLessThanOrEqual(1);
+      expect(handover[0]).toMatchObject({
+        scenes: ['hall'],
+        dim: 'end',
+        picture: 1,
+        whole: true,
+        loader: 1,
+        map: 1,
+      });
       // and no frame after it shows anything else under the lifting loader
       expect(after.length).toBeGreaterThan(3);
       expect(
-        (after as { top: number; scenes: string[]; picture: number }[]).filter(
+        after.filter(
           (f) =>
-            Math.abs(f.top) > 1 || f.scenes.join() !== 'hall' || f.picture < 1,
+            Math.abs(f.top) > 1 ||
+            f.scenes.join() !== 'hall' ||
+            f.picture < 1 ||
+            f.dim !== 'end',
         ),
       ).toEqual([]);
     });

@@ -30,7 +30,13 @@ export const DimensionProvider = ({
 }) => {
   const [dim, setDimState] = useState<Dimension>(initial);
 
-  const setDim = useCallback((d: Dimension) => setDimState(d), []);
+  // The document is told at once, not when React next gets round to it: the dimension is the ground and the accent
+  // of what is on screen, and whoever sets it has just put the page there (the home page as it is handed over, a
+  // scroll into the next section). The effect below says the same a moment later, and is what a first render has.
+  const setDim = useCallback((d: Dimension) => {
+    document.documentElement.dataset.dim = d;
+    setDimState(d);
+  }, []);
 
   // <html data-dim> drives the accent colour; remove it when leaving for a legacy page.
   useEffect(() => {
