@@ -51,11 +51,10 @@ const daysToday = () => daysSince(SERVER_START_MS, Date.now());
  * One string (addresses, a line each), so that asking twice gives the same value.
  */
 const picturesOfArrival = () => {
+  // in the order sectionJumps.ts lands by: a return to where the reader was; or else an address that names a section
+  const back = recallHomePlace();
   const hash = hashId(window.location.hash);
-  // an address that names a section; or a step back to where the reader was (sectionJumps.ts lands on either)
-  return (hash ? picturesAt(hash) : recallHomePlace()?.pictures ?? []).join(
-    '\n',
-  );
+  return (back ? back.pictures : hash ? picturesAt(hash) : []).join('\n');
 };
 const noPictures = () => '';
 

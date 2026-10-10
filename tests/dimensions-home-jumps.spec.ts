@@ -1754,8 +1754,12 @@ test.describe('home: stepping back lands where the reader was', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
     await scrollToSection(page, '#credits', 0.3);
     await still(page);
+    const before = await where(page);
+    expect(before.section).toBe('credits');
+    expect(before.y).toBeGreaterThan(0);
     await page.locator('.dim-bar nav a[href="/member/"]').click();
     await page.locator('.person').first().waitFor();
     await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
@@ -1774,14 +1778,130 @@ test.describe('home: stepping back lands where the reader was', () => {
     now = await where(page);
     expect(now.y).toBe(0);
     expect(now.scenes).toEqual(['spawn']);
-    // while a step back from there is still to where the reader was, two visits ago
+    // (the same address again takes the place of the visit before it in the history: one step back is the roster)
     await page.goBack();
-    await ready(page);
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    // and one more is the first visit, in a document that never saw it: where the reader was then, not the top
+    await backHome(page);
+    expect(new URL(page.url()).pathname).toBe('/');
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
     await still(page);
-    expect((await where(page)).y).toBe(0);
+    const after = await where(page);
+    expect(after.section).toBe('credits');
+    expect(after.scenes).toEqual(['end']);
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
   });
 
-  test('a hash wins over what was remembered: an address that names a section lands on that section', async ({
+  /** The link to the roster in the credits, in the middle of the screen: the reader is about to follow it. */
+  const toTheRosterLink = async (page: Page) => {
+    // the names are in: they are a good part of the height of the credits
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await page.locator('#credits a.more').evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      window.scrollTo({
+        top: r.top + window.scrollY - window.innerHeight / 2,
+        behavior: 'instant',
+      });
+    });
+    await still(page);
+  };
+  const toTheRoster = async (page: Page, link: string) => {
+    await page.locator(link).click();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+  };
+
+  test('after a jump from the bar the address names the End: read on to the credits, leave and step back, and it is the credits again', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await page.locator('.dim-bar nav a[data-d="end"]').click();
+    await landedOn(page, '#end');
+    const opening = (await where(page)).y;
+    await toTheRosterLink(page);
+    const before = await where(page);
+    expect(before.section).toBe('credits');
+    expect(before.scenes).toEqual(['end']);
+    // several screens below the End's opening, which the address of this visit still names
+    expect(before.y - opening).toBeGreaterThan(2 * 900);
+    expect(new URL(page.url()).hash).toBe('#end');
+
+    await toTheRoster(page, '#credits a.more');
+    await backHome(page);
+    expect(new URL(page.url()).hash).toBe('#end');
+    const after = await where(page);
+    expect(after.section).toBe('credits');
+    expect(after.scenes).toEqual(['end']);
+    expect(after.dim).toBe('end');
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+    // the page is the reader's: the wheel moves it on from there
+    await page.mouse.move(720, 450);
+    await page.mouse.wheel(0, 300);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(after.y);
+  });
+
+  test('a step forward to the visit is a return to it as well: the remembered place, not the section its address names', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    // the link home: a new visit, which starts at the top
+    await page.locator('.head .crumb a').first().click();
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await still(page);
+    expect((await where(page)).y).toBe(0);
+    await page.locator('.dim-bar nav a[data-d="end"]').click();
+    await landedOn(page, '#end');
+    await toTheRosterLink(page);
+    const before = await where(page);
+    expect(before.section).toBe('credits');
+
+    await page.goBack();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await page.goForward();
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await still(page);
+    expect(new URL(page.url()).hash).toBe('#end');
+    const after = await where(page);
+    expect(after.section).toBe('credits');
+    expect(after.scenes).toEqual(['end']);
+    expect(after.dim).toBe('end');
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+  });
+
+  test('a jump to the Nether and no scrolling after it: leaving and stepping back is the Nether’s opening', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await page.locator('.dim-bar nav a[data-d="nether"]').click();
+    await landedOn(page, '#nether');
+    await still(page);
+    expect(new URL(page.url()).hash).toBe('#nether');
+    const before = await where(page);
+    expect(before.y).toBeGreaterThan(0);
+
+    await toTheRoster(page, '.dim-bar nav a[href="/member/"]');
+    await backHome(page);
+    // what was remembered and what the address names are the same place
+    await landedOn(page, '#nether');
+    const after = await where(page);
+    expect(after.scenes).toEqual(['nether']);
+    expect(after.dim).toBe('nether');
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
+  });
+
+  test('on a return the remembered place wins over the hash; an address that names a section decides only where nothing is remembered', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -1789,23 +1909,27 @@ test.describe('home: stepping back lands where the reader was', () => {
     await openPage(page, '/#nether');
     await ready(page);
     await landedOn(page, '#nether');
-    await scrollToSection(page, '#credits', 0.3);
-    await still(page);
-    expect((await where(page)).section).toBe('credits');
-    await page.locator('.dim-bar nav a[href="/member/"]').click();
-    await page.locator('.person').first().waitFor();
-    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
-    // the address of that visit still names the nether
-    await page.goBack();
-    await ready(page);
-    await landedOn(page, '#nether');
-    expect(await visibleScenes(page)).toEqual(['nether']);
-    // and so does a link to a section, from another page
+    await toTheRosterLink(page);
+    const before = await where(page);
+    expect(before.section).toBe('credits');
+    await toTheRoster(page, '.dim-bar nav a[href="/member/"]');
+    // the address of that visit still names the nether: the reader was at the credits
+    await backHome(page);
+    expect(new URL(page.url()).hash).toBe('#nether');
+    const after = await where(page);
+    expect(after.section).toBe('credits');
+    expect(after.scenes).toEqual(['end']);
+    expect(after.dim).toBe('end');
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+    // a link to a section, from another page: a new visit, and it lands where the address says
     await page.goForward();
     await page.locator('.person').first().waitFor();
     await page.goto('/#end');
     await ready(page);
     await landedOn(page, '#end');
+    // the End's opening stands over the hall
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
   });
 
   test('reduced motion: the same place after a step back', async ({ page }) => {

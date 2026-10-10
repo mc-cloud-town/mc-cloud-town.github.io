@@ -327,25 +327,30 @@ export const mountSectionJumps = (
     return true;
   });
 
-  // Arriving with a hash: the loader is the cover. It is still whole now, so the page goes there at once,
-  // measured with the pin in place.
-  const hash = hashId(window.location.hash);
-  const landing = hash && place(hash);
-  if (landing) {
-    ScrollTrigger.refresh();
-    moveTo(top(landing));
-    opts.settle();
-    anchor = { el: landing, y: window.scrollY };
-  } else {
-    // A step back to this visit: the reader is put where they were, the same way and under the same loader.
-    // (An address that names a section wins: that is where it says to go.)
-    const back = recallHomePlace();
-    const el = back && sections()[back.section];
-    if (back && el && (back.section > 0 || back.into > 0)) {
+  // Arriving somewhere other than the top: the loader is the cover. It is still whole now, so the page goes there
+  // at once, measured with the pin in place.
+  // A return to this visit (back, forward, reload) comes first: the reader is put where they were. The address
+  // still names the section of their last jump, however far they have read on since, so on a return it does not
+  // decide. A place is remembered for a visit only once the reader has been on it: a new visit has none.
+  const back = recallHomePlace();
+  const was = back && sections()[back.section];
+  if (back && was) {
+    // (remembered at the very top: the page is there already)
+    if (back.section > 0 || back.into > 0) {
       ScrollTrigger.refresh();
-      moveTo(placeOf(el, back));
+      moveTo(placeOf(was, back));
       opts.settle();
-      anchor = { el, y: window.scrollY, back };
+      anchor = { el: was, y: window.scrollY, back };
+    }
+  } else {
+    // Nothing remembered (a fresh load, a shared link, a new entry): an address that names a section says where.
+    const hash = hashId(window.location.hash);
+    const landing = hash && place(hash);
+    if (landing) {
+      ScrollTrigger.refresh();
+      moveTo(top(landing));
+      opts.settle();
+      anchor = { el: landing, y: window.scrollY };
     }
   }
 
