@@ -216,9 +216,9 @@ const HEAD_TEXT = [
 
 /**
  * Legibility findings whose fix is a choice between several designs, awaiting the user's decision
- * (task-10-report.md and task-g1-report.md, "Needs a decision"). In the cases they apply to, that one block is not asserted against AA
- * in the case itself, so everything else in the case still is; it is kept as a `test.fixme` of its own, by the
- * name of the report entry, and comes back by deleting its line here.
+ * (task-10-report.md and task-g1-report.md, "Needs a decision"). In the cases they apply to, that one block is
+ * not asserted against AA in the case itself, so everything else in the case still is; it is kept as a
+ * `test.fixme` of its own, by the name of the report entry, and comes back by deleting its line here.
  * A finding that has a `floor` is not left unwatched meanwhile: in every case it applies to, the block is still
  * asserted against that ratio, so it cannot get worse than it is while the decision is open.
  */
@@ -240,7 +240,9 @@ const PENDING: {
     selector: '.head .vt',
     applies: (page, viewport, width, theme) =>
       theme === 'dark' &&
-      (page === 'progress' ? width > 860 : viewport === 'ultrawide'),
+      (page === 'progress'
+        ? width > 860
+        : page === 'members' && viewport === 'ultrawide'),
   },
   {
     // Needs a decision 2: the day accent is 4.7 : 1 on bare paper, so any picture under the veil takes it below 4.5
