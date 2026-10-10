@@ -114,6 +114,109 @@ test.describe('home: never stuck behind the loader', () => {
       await context.close();
     });
 
+  /** The rows of the ledger's list that can be read: shown, inside the screen's width, and not cut off by the stage. */
+  const facilities = (page: Page) =>
+    page.evaluate(() => {
+      const stage = document
+        .querySelector('#ledger .ledger-stage')!
+        .getBoundingClientRect();
+      return [
+        ...document.querySelectorAll<HTMLElement>('#ledger .ledger-list li'),
+      ]
+        .filter((li) => {
+          const r = li.getBoundingClientRect();
+          const c = getComputedStyle(li);
+          return (
+            r.width > 0 &&
+            r.height > 0 &&
+            c.visibility !== 'hidden' &&
+            +c.opacity > 0.5 &&
+            r.left >= 0 &&
+            r.right <= window.innerWidth &&
+            r.top >= stage.top - 1 &&
+            r.bottom <= stage.bottom + 1
+          );
+        })
+        .map((li) => (li.lastElementChild?.textContent ?? '').trim());
+    });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+    [844, 390],
+  ] as const)
+    test(`with scripts off at ${width}×${height} all six Nether facilities can be read`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({
+        javaScriptEnabled: false,
+        viewport: { width, height },
+      });
+      const page = await context.newPage();
+      await page.goto('/', { waitUntil: 'load' });
+      // what is served is the stage, and nothing will ever step through it
+      await expect(page.locator('html')).not.toHaveAttribute('data-live');
+      await expect(page.locator('#ledger .ledger-stage')).toHaveCount(1);
+      await expect(page.locator('#ledger .ledger-list li')).toHaveCount(6);
+      await page.locator('#ledger .ledger-stage').scrollIntoViewIfNeeded();
+      for (const li of await page.locator('#ledger .ledger-list li').all())
+        await expect(li).toBeVisible();
+      const names = await facilities(page);
+      expect(names).toHaveLength(6);
+      expect(new Set(names).size).toBe(6);
+      for (const name of names) expect(name.length).toBeGreaterThan(0);
+      // the one the stage itself shows is the first of them, and it is not cut off either
+      await expect(page.locator('#ledger .ledger-now h3')).toBeVisible();
+      expect(names[0]).toBe(
+        (await page.locator('#ledger .ledger-now h3').textContent())!.trim(),
+      );
+      expect(
+        await page.evaluate(() => {
+          const stage = document
+            .querySelector('#ledger .ledger-stage')!
+            .getBoundingClientRect();
+          const now = document
+            .querySelector('#ledger .ledger-now')!
+            .getBoundingClientRect();
+          return now.top >= stage.top - 1 && now.bottom <= stage.bottom + 1;
+        }),
+      ).toBe(true);
+      const [scroll, inner] = await page.evaluate(() => [
+        document.documentElement.scrollWidth,
+        window.innerWidth,
+      ]);
+      expect(scroll).toBeLessThanOrEqual(inner);
+      await context.close();
+    });
+
+  for (const [width, height] of [
+    [390, 844],
+    [844, 390],
+  ] as const)
+    test(`with scripts on at ${width}×${height} the pinned stage is as it was: one screen, one facility, no list`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('html')).toHaveAttribute('data-live', /.*/);
+      await expect(page.locator('#ledger .ledger-list li')).toHaveCount(6);
+      await expect(page.locator('#ledger .ledger-list')).toBeHidden();
+      await expect(page.locator('#ledger .ledger-list')).toHaveCSS(
+        'display',
+        'none',
+      );
+      await expect(page.locator('#ledger .ledger-stage')).toHaveCSS(
+        'overflow',
+        'hidden',
+      );
+      expect(
+        await page
+          .locator('#ledger .ledger-stage')
+          .evaluate((el) => Math.round(el.getBoundingClientRect().height)),
+      ).toBe(height);
+    });
+
   test('when the script of the page never arrives the loader gives way by itself after about ten seconds, with a fade', async ({
     page,
   }) => {

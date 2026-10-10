@@ -980,6 +980,19 @@ html[data-live] .dim.dim--home .loader {
     opacity: 0.16;
   }
 }
+/* Without the mark nothing pins the ledger and nothing steps through it: its stage is one screen that names one
+   facility of six. Where the list of all six is left out for want of room (a phone, a short landscape screen) it
+   stands in the flow again, over the one the stage names, and the stage is as tall as that takes. */
+@media (max-width: 860px), (max-height: 480px) {
+  html:not([data-live]) .dim.dim--home .ledger-stage {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  html:not([data-live]) .dim.dim--home .ledger-list {
+    display: block;
+  }
+}
 
 /* Each section keeps the accent of its own dimension, so the text of the one that is leaving the screen
    does not change colour when the page (<html data-dim>: bar, veil, theme) moves on to the next.
