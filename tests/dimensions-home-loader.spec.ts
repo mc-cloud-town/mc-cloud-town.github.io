@@ -815,7 +815,11 @@ test.describe('home: the other pictures wait for the loader', () => {
     expect(log.scenesAtReady).toEqual(['hall']);
     expect(log.decodedAtReady.length).toBe(1);
     expect(log.decodedAtReady[0]).toMatch(/\/p21\.webp$/);
-    expect(askedAt(log, '/survivalProgress/p21.webp')).toBeLessThan(2000);
+    // under the loader: asked for so long before the lift that the loader waited out the whole of its delay
+    // (measured against the lift, not against the start of the page: how soon the script starts is the machine's)
+    const asked = askedAt(log, '/survivalProgress/p21.webp');
+    expect(asked).toBeDefined();
+    expect(log.readyAt! - asked!).toBeGreaterThan(2500);
     await expect
       .poll(async () => {
         const now = await pictures(page);
