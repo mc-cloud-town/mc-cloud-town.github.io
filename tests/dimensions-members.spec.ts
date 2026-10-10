@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 import {
+  atRest,
+  expectLegible,
   expectNoHorizontalScroll,
   expectNoMissingKeys,
   expectTextFits,
@@ -164,4 +166,28 @@ test.describe('members page: state changes are transitions', () => {
       await expect(el).toHaveCSS('transition-duration', durations);
     }
   });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ] as const)
+    test(`by day at ${width}×${height} the current page of the crumb can be read over the header's picture`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/member/', { theme: 'light' });
+      await page.locator('.person').first().waitFor();
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+      await expect
+        .poll(() =>
+          page
+            .locator('.head .bg img')
+            .evaluate(
+              (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+            ),
+        )
+        .toBe(true);
+      await atRest(page);
+      await expectLegible(page, '.head .crumb .acc');
+    });
 });

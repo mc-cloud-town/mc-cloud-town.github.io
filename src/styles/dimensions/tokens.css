@@ -126,6 +126,11 @@
   --line: rgba(15, 20, 24, 0.24);
   --logo: none;
   --accent: #0b6fb5;
+  /* The accent as the colour of small words that stand over a picture (the current page of an inner header's
+     crumb). The day accents have 4.7 : 1 on bare paper at best, and no veil leaves bare paper: the same hue,
+     deeper, has 4.5 : 1 and more on the palest ground a header gives it. Lines, marks and hovers stay on --accent.
+     By night there is none, and the words are in the accent itself. */
+  --accent-ink: #095b95;
   --s1: 0.97;
   --s2: 0.92;
   --s3: 0.22;
@@ -147,9 +152,12 @@
 }
 [data-theme='light'][data-dim='nether'] .dim {
   --accent: #c2330f;
+  --accent-ink: #a72c0d;
 }
+/* (the End's day accent is deep enough as it is) */
 [data-theme='light'][data-dim='end'] .dim {
   --accent: #6234c4;
+  --accent-ink: #6234c4;
 }
 /* The End has no daylight: on the home page the interface goes dark for this one dimension. */
 [data-theme='light'][data-dim='end'] .dim.dim--home {

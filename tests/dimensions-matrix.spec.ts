@@ -244,15 +244,8 @@ const PENDING: {
         ? width > 860
         : page === 'members' && viewport === 'ultrawide'),
   },
-  {
-    // Needs a decision 2: the day accent is 4.7 : 1 on bare paper, so any picture under the veil takes it below 4.5
-    entry: 'decision 2, the current page of the crumb in the day accent',
-    selector: '.head .crumb .acc',
-    // 12px in the accent is asked 4.5 : 1 and has between 3 and 4.5 over the picture: never less than 3 : 1
-    floor: 3,
-    applies: (page, _viewport, _width, theme) =>
-      page === 'progress' && theme === 'light',
-  },
+  // (Decision 2, the current page of the crumb in the day accent, is settled: Task G1 gave accent-coloured words
+  // of an inner header a deeper ink of the same hue by day, and the block is asked for AA like the others.)
   // The home page, read for legibility since Task G1. What follows is what that first reading found outside the
   // two places that task set right (the day paper of the hero and of the respawn); each has a floor just under
   // what it measures today.
