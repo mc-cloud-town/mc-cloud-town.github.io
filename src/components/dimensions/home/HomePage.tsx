@@ -108,6 +108,14 @@ export const HomePage = () => {
   }[];
 
   // Build once the loader is done, so measurements see the final fonts and layout.
+  // The build is also the landing (a section named by the address, the place of a return: sectionJumps.ts) and the
+  // change to its scene, and it is done before the loader takes its first step away: the loader hands the page over
+  // with `flushSync` (Loader.tsx), and React runs the effects of such an update before it returns. Left to the
+  // scheduler it came a task after `data-ready`, and a frame in between showed the first scene under a loader that
+  // had begun to go.
+  // An effect, not a layout effect: its cleanup must come after the router has put the next page at the top.
+  // ScrollTrigger remembers the last scroll position it read; taken down while the page is still where the reader
+  // left it, it gives that position back to the next visit's first refresh (a fresh visit then starts far down).
   useEffect(() => {
     if (!ready || reduced === null || !root.current) return;
     const el = root.current;

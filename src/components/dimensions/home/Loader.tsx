@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { useTranslation } from 'react-i18next';
 import { MAP_SIZE, drawMap, seedLateness } from '@/lib/dimensions/loaderMap';
+import { markWhole } from './World';
 
 /** However slow the fonts or the first picture are, the loader lifts after this long. */
 export const LOADER_TIMEOUT_MS = 6000;
@@ -58,6 +60,9 @@ export const Loader = ({
     // too late to cover the page again. The page is handed over as it stands.
     const served = getComputedStyle(el);
     if (served.visibility === 'hidden' || +served.opacity < 1) {
+      // This handover is not run through at once as the one in `lift` is: React builds the page when it next gets
+      // round to it (`flushSync` cannot be used inside an effect). No cover is left to lift in step with it: the
+      // script started ten seconds late, and the reader has the served page in front of them already.
       onDone();
       return;
     }
@@ -80,23 +85,28 @@ export const Loader = ({
     let giveUp: ReturnType<typeof setTimeout> | undefined;
     let label: ReturnType<typeof setTimeout> | undefined;
     const tweens: (gsap.core.Tween | gsap.core.Timeline)[] = [];
+    // every picture that has an address by now: the first scene, and the place the reader arrives at
+    // (World.tsx gives the others theirs when the loader has lifted)
+    const pictures = () => [
+      ...(el.parentElement?.querySelectorAll<HTMLImageElement>(
+        '.world img[src]',
+      ) ?? []),
+    ];
     const assets = Promise.race([
-      Promise.all([
-        document.fonts.ready,
-        // every picture that has an address by now: the first scene, and the place the reader arrives at
-        // (World.tsx gives the others theirs when the loader has lifted)
-        ...[
-          ...(el.parentElement?.querySelectorAll<HTMLImageElement>(
-            '.world img[src]',
-          ) ?? []),
-        ].map(loaded),
-      ]),
+      Promise.all([document.fonts.ready, ...pictures().map(loaded)]),
       new Promise((done) => (giveUp = setTimeout(done, LOADER_TIMEOUT_MS))),
     ]);
 
-    /** The page is handed over (it is built behind the loader from here on), and the loader lifts off it. */
+    /** The page is handed over, built and put in its place in that same step, and then the loader lifts off it. */
     const lift = () => {
-      onDone();
+      // What is in by now stands whole when the cover goes: the fade of a late picture (home.css) is for one that
+      // comes after this. A picture the loader gave up waiting for is not in, and fades in when it comes.
+      pictures().forEach(markWhole);
+      // At once, not when React next gets round to it: the page is built, put on the place the reader arrives at
+      // and switched to its scene (HomePage's effect on `ready`: React runs the effects of a `flushSync` update
+      // before it returns) before the first step of the lift. Otherwise the loader would already be going, over
+      // the first scene, when the page is handed over.
+      flushSync(onDone);
       el.style.pointerEvents = 'none'; // the page underneath is live from here on
       const away = gsap.timeline({ onComplete: () => setGone(true) });
       tweens.push(away);

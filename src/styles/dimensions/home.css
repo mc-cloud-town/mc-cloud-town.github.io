@@ -1007,7 +1007,8 @@ html[data-live] .dim.dim--home .loader {
 /* A picture that comes after its scene is on the screen (the pictures are asked for when the loader lifts, and a
    reader on a slow line can cut to a scene before its picture has come) fades in when it can be drawn (World.tsx
    marks it), in the time of anything that arrives; it does not pop. Opacity only. Not the first picture, which
-   the loader waits for, nor the facilities' pictures, whose opacity the ledger drives. */
+   the loader waits for (nor, below, any other it waited for: the picture of the place the reader arrives at),
+   nor the facilities' pictures, whose opacity the ledger drives. */
 html[data-live]
   .dim.dim--home
   .scene:not(.is-first)
@@ -1022,6 +1023,14 @@ html[data-live]
   .cam
   > img[data-in]:not([data-ledger]) {
   opacity: 1;
+}
+/* In before the loader lifted (Loader.tsx marks it as it lifts): the cover goes on a picture that is whole. */
+html[data-live]
+  .dim.dim--home
+  .scene:not(.is-first)
+  .cam
+  > img[data-whole]:not([data-ledger]) {
+  transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-live]

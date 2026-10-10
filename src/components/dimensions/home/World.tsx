@@ -15,7 +15,8 @@ const VEIL: Record<string, string> = {
  * layer is always "in view", so lazy loading does nothing here). With scripts off nothing would ever give it one,
  * so the served page carries it in a `noscript` as well.
  * A picture is marked once it can be drawn (`data-in`): one that comes after its scene is on screen fades in on
- * that mark instead of popping (home.css).
+ * that mark instead of popping (home.css). One that is in before the loader lifts is marked whole as well, by the
+ * loader (`markWhole`, `data-whole`): it does not fade, the cover lifts on it as it stands.
  */
 const mark = (img: HTMLImageElement) => {
   // decoded first, so the fade is not the frame in which the picture is still being unpacked
@@ -25,6 +26,12 @@ const mark = (img: HTMLImageElement) => {
     .then(() => {
       if (img.naturalWidth > 0) img.dataset.in = '';
     });
+};
+/** For the loader, as it lifts: a picture that is in by then is there whole, without the fade of a late one. */
+export const markWhole = (img: HTMLImageElement) => {
+  if (!img.complete || img.naturalWidth === 0) return;
+  img.dataset.in = '';
+  img.dataset.whole = '';
 };
 /** Already there when the page's script takes over (the first picture, or one from the cache): no `load` will come. */
 const arrivedAlready = (img: HTMLImageElement | null) => {

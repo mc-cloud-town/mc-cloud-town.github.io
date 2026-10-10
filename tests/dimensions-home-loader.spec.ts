@@ -842,6 +842,97 @@ test.describe('home: the other pictures wait for the loader', () => {
     expect(log.decodedAtReady[0]).toMatch(/\/p4\.webp$/);
   });
 
+  // The page is handed over (`data-ready`) and the loader starts to lift in one step with the landing: read at
+  // the very moment the mark appears, not a frame later, so a frame that happens to fall in between cannot hide
+  // (or show) a page that is handed over while it still stands on the first scene.
+  for (const reducedMotion of [false, true])
+    test(`arriving at #end${reducedMotion ? ' with reduced motion' : ''}, the page is on the hall, picture whole, at the moment it is handed over`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      // the picture comes late: with reduced motion the loader lifts the moment it is in
+      await page.route('**/survivalProgress/p21.webp', async (r) => {
+        await new Promise((done) => setTimeout(done, 1500));
+        await r.continue();
+      });
+      await page.addInitScript(() => {
+        interface Seen {
+          top: number;
+          scenes: string[];
+          picture: number;
+          loader: number;
+          map: number;
+        }
+        const w = window as unknown as { __handover: Seen[]; __after: Seen[] };
+        w.__handover = [];
+        w.__after = [];
+        const see = (): Seen => {
+          const shown = (sel: string) => {
+            const el = document.querySelector(sel);
+            const c = el && getComputedStyle(el);
+            return !c || c.visibility === 'hidden' ? 0 : +c.opacity;
+          };
+          return {
+            top: Math.round(
+              document.querySelector('#end')!.getBoundingClientRect().top,
+            ),
+            scenes: [...document.querySelectorAll<HTMLElement>('.scene')]
+              .filter((s) => {
+                const c = getComputedStyle(s);
+                return c.visibility !== 'hidden' && +c.opacity > 0.5;
+              })
+              .map((s) => s.dataset.scene!),
+            picture: shown('.scene[data-scene="hall"] img'),
+            loader: shown('.loader'),
+            map: shown('.loader-in'),
+          };
+        };
+        const isReady = () =>
+          document.querySelector<HTMLElement>('.dim--home')?.dataset.ready ===
+          'true';
+        // the moment itself: an observer is told before anything else runs, and before any frame
+        const arm = () => {
+          const home = document.querySelector('.dim--home');
+          if (!home) return requestAnimationFrame(arm);
+          new MutationObserver(() => {
+            if (isReady()) w.__handover.push(see());
+          }).observe(home, {
+            attributes: true,
+            attributeFilter: ['data-ready'],
+          });
+        };
+        arm();
+        // and every frame from then on
+        const tick = () => {
+          if (isReady()) w.__after.push(see());
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      await openPage(page, '/#end', { reducedMotion });
+      await ready(page);
+      await expect(page.locator('.loader')).toHaveCount(0);
+      const { handover, after } = await page.evaluate(() => {
+        const w = window as unknown as {
+          __handover: unknown[];
+          __after: unknown[];
+        };
+        return { handover: w.__handover, after: w.__after };
+      });
+      // handed over once: on the section, on its scene, its picture whole, and the loader has not begun to lift
+      expect(handover).toEqual([
+        { top: 0, scenes: ['hall'], picture: 1, loader: 1, map: 1 },
+      ]);
+      // and no frame after it shows anything else under the lifting loader
+      expect(after.length).toBeGreaterThan(3);
+      expect(
+        (after as { top: number; scenes: string[]; picture: number }[]).filter(
+          (f) =>
+            Math.abs(f.top) > 1 || f.scenes.join() !== 'hall' || f.picture < 1,
+        ),
+      ).toEqual([]);
+    });
+
   test('with scripts off every picture of every scene is still loaded', async ({
     browser,
   }) => {
