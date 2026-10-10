@@ -27,13 +27,181 @@ test.describe('home: jumping to a section', () => {
   const historyLength = (page: Page) =>
     page.evaluate(() => window.history.length);
 
-  test('to the next dimension: the page travels there through the portal, with no cover', async ({
+  /** A travel goes to a neighbouring dimension that is no further than this many screens; anything else is a cut. */
+  const REACH = 2.5;
+  /** How far the top of `target` is from the top of the screen, in screens (the pin's spacer counts: it is scrolled). */
+  const screensTo = (page: Page, target: string) =>
+    page.evaluate(
+      (sel) =>
+        Math.abs(document.querySelector(sel)!.getBoundingClientRect().top) /
+        window.innerHeight,
+      target,
+    );
+  /** Click `link`, wait until the page has landed on `target`, and say how it went there. */
+  const jump = async (page: Page, link: string, target: string) => {
+    const far = await screensTo(page, target);
+    await record(page);
+    await page.locator(link).click();
+    await landedOn(page, target);
+    const frames = await recorded(page);
+    return {
+      far,
+      frames,
+      /** frames in which the page stood somewhere else than in the frame before */
+      steps: frames.filter((f, i) => i > 0 && f.y !== frames[i - 1].y).length,
+      /** distinct places the page was drawn at */
+      places: new Set(frames.map((f) => f.y)).size,
+      cover: Math.max(...frames.map((f) => f.cover)),
+      landing: await coverAtLanding(page),
+    };
+  };
+  type Jump = Awaited<ReturnType<typeof jump>>;
+  const expectTravel = (j: Jump, what: string) => {
+    expect(j.far, `${what}: within reach`).toBeLessThanOrEqual(REACH);
+    expect(j.cover, `${what}: never covered`).toBe(0);
+    expect(j.steps, `${what}: moved over many frames`).toBeGreaterThan(20);
+  };
+  const expectCut = (j: Jump, what: string) => {
+    expect(j.landing, `${what}: moved under a whole cover`).toBe(1);
+    expect(j.places, `${what}: only ever at the start or at the target`).toBe(
+      2,
+    );
+  };
+  /** Put the page somewhere at once, and wait until it knows where it is. */
+  const stand = async (page: Page, sel: string, off: number, dim: string) => {
+    await jumpTo(page, sel, off);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', dim);
+    await atRest(page);
+    // the smooth scroll has nothing left to run
+    await page.waitForTimeout(300);
+  };
+
+  test('from the hero: the Overworld is near and the page travels there; the Nether is the next dimension too, but seven screens away, and the page cuts', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
-    await scrollToSection(page, '#overworld', 0);
+    // the bar and the rail alike
+    for (const link of [
+      '.dim-bar nav a[data-d="overworld"]',
+      '.rail a[data-d="overworld"]',
+    ]) {
+      await stand(page, '#top', 0, 'overworld');
+      const near = await jump(page, link, '#overworld');
+      expectTravel(near, link);
+      // it rode the push from the spawn into the town
+      expect(near.frames.map((f) => f.scenes.join('+'))).toContain('spawn');
+      expect(await visibleScenes(page)).toEqual(['town']);
+      await expect(page.locator('#overworld [data-heading]')).toBeFocused();
+    }
+    for (const link of [
+      '.dim-bar nav a[data-d="nether"]',
+      '.rail a[data-d="nether"]',
+    ]) {
+      await stand(page, '#top', 0, 'overworld');
+      const far = await jump(page, link, '#nether');
+      expect(far.far, link).toBeGreaterThan(REACH);
+      expectCut(far, link);
+      // none of the three builds and no portal on the way: nothing is seen but the start, the cover and the target
+      expect(
+        Math.max(...far.frames.map((f) => f.portal * (1 - f.cover))),
+        link,
+      ).toBe(0);
+      expect(await visibleScenes(page)).toEqual(['nether']);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+      await expect(page.locator('#nether [data-heading]')).toBeFocused();
+      expect(new URL(page.url()).hash).toBe('#nether');
+    }
+  });
+
+  test('from inside the pinned ledger to the End: a cut from the first facility, a travel from the last', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const pinned = async () =>
+      expect(Math.abs(await topOf(page, '.ledger-stage'))).toBeLessThanOrEqual(
+        2,
+      );
+    // the first facility: the rest of the pin and the rank's statement lie between
+    await stand(page, '#ledger', 0.3, 'nether');
+    await pinned();
+    await expect.poll(() => shownPictures(page)).toEqual(['0']);
+    const far = await jump(page, '.dim-bar nav a[data-d="end"]', '#end');
+    expect(far.far).toBeGreaterThan(REACH);
+    expectCut(far, 'from the first facility');
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    // the last facility: still pinned, and the End within reach
+    await stand(page, '#ledger', 2.7, 'nether');
+    await pinned();
+    await expect.poll(() => shownPictures(page)).toEqual(['5']);
+    const near = await jump(page, '.rail a[data-d="end"]', '#end');
+    expect(near.far).toBeGreaterThan(1.5);
+    expectTravel(near, 'from the last facility');
+    near.frames.forEach((f, i) =>
+      expect(f.y, `frame ${i}`).toBeGreaterThanOrEqual(
+        near.frames[i - 1]?.y ?? 0,
+      ),
+    );
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await expect(page.locator('#end [data-heading]')).toBeFocused();
+  });
+
+  test('the reach is two and a half screens: a neighbour just inside it is travelled to, just outside it is cut to', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await stand(page, '#nether', -(REACH - 0.1), 'overworld');
+    const inside = await jump(
+      page,
+      '.dim-bar nav a[data-d="nether"]',
+      '#nether',
+    );
+    expect(inside.far).toBeGreaterThan(REACH - 0.2);
+    expectTravel(inside, 'inside the reach');
+    await stand(page, '#nether', -(REACH + 0.1), 'overworld');
+    const outside = await jump(
+      page,
+      '.dim-bar nav a[data-d="nether"]',
+      '#nether',
+    );
+    expect(outside.far).toBeGreaterThan(REACH);
+    expect(outside.far).toBeLessThan(REACH + 0.2);
+    expectCut(outside, 'outside the reach');
+  });
+
+  test('back across a whole dimension is a cut: from the respawn to the End, and from the Nether to the top by the logo', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await stand(page, '#respawn', 0, 'respawn');
+    const end = await jump(page, '.dim-bar nav a[data-d="end"]', '#end');
+    expect(end.far).toBeGreaterThan(REACH);
+    expectCut(end, 'respawn → the End');
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await stand(page, '#nether', 0, 'nether');
+    const top = await jump(page, '.dim-bar .logo', '.hero');
+    expect(top.far).toBeGreaterThan(REACH);
+    expectCut(top, 'the Nether → the top');
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+  });
+
+  test('to the next dimension when it is near: the page travels there through the portal, with no cover', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    // the last build of the Overworld: the Nether begins a screen and a half further down
+    await scrollToSection(page, '[data-work="overworld-2"]', 0);
+    expect(await screensTo(page, '#nether')).toBeLessThanOrEqual(REACH);
     const entries = await historyLength(page);
     await record(page);
     await page.locator('.dim-bar nav a[data-d="nether"]').click();
@@ -64,15 +232,10 @@ test.describe('home: jumping to a section', () => {
     expect(new URL(page.url()).hash).toBe('#nether');
     expect(await historyLength(page)).toBe(entries);
     expect(await shownPictures(page)).toEqual(['0']);
-    // and the way back is a travel too
-    await record(page);
-    await page.locator('.rail a[data-d="overworld"]').click();
-    await landedOn(page, '#overworld');
-    const back = await recorded(page);
-    expect(
-      back.filter((f, i) => i > 0 && f.y !== back[i - 1].y).length,
-    ).toBeGreaterThan(20);
-    expect(Math.max(...back.map((f) => f.cover))).toBe(0);
+    // the way back to the Overworld's opening is across its three builds, six screens: a cut
+    const back = await jump(page, '.rail a[data-d="overworld"]', '#overworld');
+    expect(back.far).toBeGreaterThan(REACH);
+    expectCut(back, 'back to the opening');
     expect(await visibleScenes(page)).toEqual(['town']);
     expect(new URL(page.url()).hash).toBe('#overworld');
     expect(await historyLength(page)).toBe(entries);
@@ -551,10 +714,12 @@ test.describe('home: a jump that is interrupted', () => {
     page,
   }) => {
     await start(page);
-    await scrollToSection(page, '#overworld', 0);
+    // in the Overworld, within reach of the Nether: 2.4 screens, a travel of a second and a half
+    await scrollToSection(page, '#nether', -2.4);
     await watchAddress(page);
     await record(page);
-    // the overworld → the nether; a second later, the same link once more
+    // the overworld → the nether; 0.7 seconds later, about halfway through the travel's time, the same
+    // link once more
     await page.evaluate(() => {
       const link = document.querySelector<HTMLElement>(
         '.dim-bar nav a[data-d="nether"]',
@@ -566,7 +731,7 @@ test.describe('home: a jump that is interrupted', () => {
             (window as unknown as { __again: number }).__again =
               performance.now();
             link.click();
-          }, 1000),
+          }, 700),
         { once: true },
       );
     });
@@ -580,20 +745,15 @@ test.describe('home: a jump that is interrupted', () => {
     frames.forEach((f, i) =>
       expect(f.y, `frame ${i}`).toBeGreaterThanOrEqual(frames[i - 1]?.y ?? 0),
     );
-    // the page was well on its way at the second click, and does not start again from a standstill:
-    // in the 150ms after it, it covers at least half of what it covered in the 150ms before
-    const span = (from: number, to: number) => {
-      const inside = frames.filter((f) => f.t >= from && f.t <= to);
-      expect(inside.length).toBeGreaterThan(3);
-      return inside.at(-1)!.y - inside[0].y;
-    };
-    const before = span(again - 150, again);
-    const after = span(again, again + 150);
-    expect(before).toBeGreaterThan(100);
-    expect(after).toBeGreaterThan(before * 0.5);
-    // one travel: within its 2.2 seconds, and arrived once
+    // the page was well on its way at the second click, and not yet there
     const moving = frames.filter((f, i) => i > 0 && f.y !== frames[i - 1].y);
-    expect(moving.at(-1)!.t - moving[0].t).toBeLessThan(2350);
+    const at = frames.filter((f) => f.t <= again).at(-1)!.y;
+    expect(at - frames[0].y).toBeGreaterThan(900);
+    expect(frames.at(-1)!.y - at).toBeGreaterThan(200);
+    // One travel, which does not start again from a standstill: 2.4 screens take it a second and a half, and it
+    // was over within that from its first movement. Begun again at the second click it would have taken those
+    // 0.7 seconds and then the 1.2 a travel takes at the least.
+    expect(moving.at(-1)!.t - moving[0].t).toBeLessThan(1650);
     expect(await addresses(page)).toEqual(['#nether']);
     expect(Math.max(...frames.map((f) => f.cover))).toBe(0);
     await expect(page.locator('#nether [data-heading]')).toBeFocused();
@@ -604,7 +764,8 @@ test.describe('home: a jump that is interrupted', () => {
     page,
   }) => {
     await start(page, 390, 844);
-    await scrollToSection(page, '#overworld', 0);
+    // in the Overworld, within reach of the Nether (2.4 screens): from further away the jump would be a cut
+    await scrollToSection(page, '#nether', -2.4);
     const y0 = await page.evaluate(() => window.scrollY);
     await watchAddress(page);
     const menu = page.locator('.dim-bar [data-action="menu"]');
@@ -1020,10 +1181,10 @@ test.describe('home: a cover is never left stuck', () => {
       expect(await coverAtLanding(page)).toBe(1);
       await expect(page.locator('#overworld [data-heading]')).toBeFocused();
       if (!reducedMotion) {
-        // a near one travels, with no cover: nothing still believes that a cover is up
+        // a near one (the top, one screen up) travels, with no cover: nothing still believes that a cover is up
         await record(page);
-        await bar(page, 'nether').click();
-        await landedOn(page, '#nether');
+        await page.locator('.dim-bar .logo').click();
+        await landedOn(page, '.hero');
         expect(Math.max(...(await recorded(page)).map((f) => f.cover))).toBe(0);
       }
       await free(page);

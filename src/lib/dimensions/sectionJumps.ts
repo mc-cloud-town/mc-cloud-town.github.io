@@ -30,8 +30,15 @@ import { holdPage, type PageHold } from './pageScroll';
 /** The reader's place is written down this long after the page last moved. */
 const REMEMBER_AFTER_MS = 120;
 
-/** The dimensions in page order: a jump to the next or the previous one travels, a jump further away cuts. */
+/** The dimensions in page order: a jump to the next or the previous one may travel, a jump further away cuts. */
 const ORDER: Dimension[] = ['overworld', 'nether', 'end', 'respawn'];
+/**
+ * How far a travel may go, in screens. A neighbouring dimension can still be most of the page away (from the hero
+ * to the Nether's opening: three builds; from the respawn to the End's: two builds and the credits): at a travel's
+ * pace that is every transition on the way at once, which is what the cut is for. Within this distance there is
+ * one boundary to ride, at most.
+ */
+const TRAVEL_REACH = 2.5;
 /** A travel takes between these many seconds, longer the further it goes (in screens). */
 const TRAVEL = { min: 1.2, max: 2.2, perScreen: 0.125 };
 /**
@@ -66,9 +73,10 @@ export const mountSectionJumps = (
   const { lenis } = opts;
 
   // ── going to a section ──
-  // A film moves between scenes in two ways: it travels, or it cuts. To the next or the previous dimension the page
-  // travels, so the reader rides the transition of that boundary. Further away it cuts under the cover: the page
-  // jumps while it is covered, and the cover lifts on the target, whose opening plays again.
+  // A film moves between scenes in two ways: it travels, or it cuts. To the next or the previous dimension, if that
+  // is near (TRAVEL_REACH), the page travels, so the reader rides the transition of that boundary. Further away,
+  // in dimensions or in screens, it cuts under the cover: the page jumps while it is covered, and the cover lifts
+  // on the target, whose opening plays again.
   const top = (el: HTMLElement) =>
     Math.min(
       Math.max(0, Math.round(el.getBoundingClientRect().top + window.scrollY)),
@@ -310,7 +318,16 @@ export const mountSectionJumps = (
       return true;
     const to = ORDER.indexOf(dimOf(el) ?? opts.here());
     const y = top(el);
-    if (lenis && !covered && Math.abs(to - ORDER.indexOf(opts.here())) <= 1) {
+    // in scroll pixels, as the page is now: the spacer of the pinned ledger is part of the way
+    const near =
+      Math.abs(y - window.scrollY) <= TRAVEL_REACH * window.innerHeight;
+    if (
+      lenis &&
+      !covered &&
+      Math.abs(to - ORDER.indexOf(opts.here())) <= 1 &&
+      // (a travel that is under way goes on, wherever it started from)
+      (near || lenis.userData.travel === el)
+    ) {
       // a travel: for as long as it is the one that moves the page
       if (lenis.userData.travel === el) {
         void leave?.();
