@@ -10,6 +10,7 @@ import {
 } from './helpers/dimensions';
 import {
   flashState,
+  landedOn,
   ready,
   scrollToSection,
   visibleScenes,
@@ -650,5 +651,104 @@ test.describe('home: respawn', () => {
     expect(await visibleScenes(page)).toEqual(['day1']);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
     await expectNoMissingKeys(page);
+  });
+  // The pictures of the scenes are asked for when the loader lifts; on a slow line the one the reader cuts to may
+  // not be there yet when the cover lifts.
+  for (const reducedMotion of [false, true])
+    test(`by day a cut to the respawn shows paper, never black, while its picture is on its way, and the picture fades in${reducedMotion ? ' (briefly, with reduced motion)' : ''}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      // the picture of day one is held back until the test lets it through
+      let letThrough = () => {};
+      const held = new Promise<void>((done) => (letThrough = done));
+      await page.route(/survivalProgress\/p2\.webp/, async (route) => {
+        await held;
+        await route.continue();
+      });
+      await openPage(page, '/', { theme: 'light', reducedMotion });
+      await ready(page);
+      const picture = page.locator('.scene[data-scene="day1"] .cam > img');
+      // a far jump, from the button of the hero: a cut under the cover
+      await page.locator('.hero a.btn').click();
+      await landedOn(page, '#respawn');
+      await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
+      expect(
+        await picture.evaluate((img: HTMLImageElement) => img.naturalWidth),
+      ).toBe(0);
+      // the side of the screen the day paper leaves clear, above the mascot: the paper's tone, not the stage's black
+      const clear: [number, number][] = [0.16, 0.3].flatMap((y) =>
+        [0.78, 0.86, 0.96].map((x) => [x * 1440, y * 900] as [number, number]),
+      );
+      for (const [i, rgb] of (await colours(page, clear, true)).entries())
+        for (const c of rgb)
+          expect(
+            c,
+            `the ground at ${clear[i].map(Math.round)}: ${rgb.map(Math.round)}`,
+          ).toBeGreaterThan(200);
+      // from here on, the picture's opacity in every frame
+      await picture.evaluate((img) => {
+        const w = window as unknown as { __fade: number[] };
+        w.__fade = [];
+        const tick = () => {
+          w.__fade.push(+getComputedStyle(img).opacity);
+          if (w.__fade.at(-1)! < 1 || w.__fade.length < 3)
+            requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      letThrough();
+      await expect(picture).toHaveCSS('opacity', '1');
+      const fade = await page.evaluate(
+        () => (window as unknown as { __fade: number[] }).__fade,
+      );
+      expect(
+        await picture.evaluate((img: HTMLImageElement) => img.naturalWidth),
+      ).toBeGreaterThan(0);
+      // it was not there, and it came in over several frames: never a step from nothing to whole
+      expect(fade[0], fade.join(' ')).toBe(0);
+      fade.forEach((o, i) => {
+        if (i) expect(o, fade.join(' ')).toBeGreaterThanOrEqual(fade[i - 1]);
+      });
+      expect(
+        fade.filter((o) => o > 0.02 && o < 0.98).length,
+        fade.join(' '),
+      ).toBeGreaterThanOrEqual(reducedMotion ? 2 : 6);
+      // opacity alone, in the site's own time for something that arrives (a brief fade with reduced motion)
+      await expect(picture).toHaveCSS('transition-property', 'opacity');
+      await expect(picture).toHaveCSS(
+        'transition-duration',
+        reducedMotion ? '0.12s' : '0.45s',
+      );
+      // the photograph is there now
+      const now = await colours(page, clear, true);
+      expect(
+        now.some((rgb) => rgb.some((c) => c < 200)),
+        'the photograph has colour',
+      ).toBe(true);
+    });
+
+  test('by night the stage under a picture that is on its way is as dark as it was', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    let letThrough = () => {};
+    const held = new Promise<void>((done) => (letThrough = done));
+    await page.route(/survivalProgress\/p2\.webp/, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await openPage(page, '/');
+    await ready(page);
+    await page.locator('.hero a.btn').click();
+    await landedOn(page, '#respawn');
+    const far: [number, number][] = [[0.86 * 1440, 0.3 * 900]];
+    // under the night veil the bare stage is nearly black
+    for (const c of (await colours(page, far, true))[0])
+      expect(c).toBeLessThan(40);
+    letThrough();
+    await expect(
+      page.locator('.scene[data-scene="day1"] .cam > img'),
+    ).toHaveCSS('opacity', '1');
   });
 });

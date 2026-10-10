@@ -19,6 +19,7 @@ import {
   type HomePlace,
 } from './homePlace';
 import { holdPage, type PageHold } from './pageScroll';
+import { picturesAt } from '@/constants/scenes';
 
 /**
  * Going to a section of the home page: the jumps asked for by a link (travel or cut), the place the reader is kept
@@ -244,6 +245,14 @@ export const mountSectionJumps = (
     // not lift the cover, and lets go of its own hold only (the step took its own at the click, before this).
     const stale = () => disposed || mine !== jumps || pageStepUnderWay();
     covered = true;
+    // The picture of the place the cut leads to is wanted before the others that are still on their way (all of
+    // them were asked for when the loader lifted): the cover should lift on a picture, not on its ground.
+    const wanted = picturesAt(id);
+    if (wanted.length)
+      root.querySelectorAll<HTMLImageElement>('.world img').forEach((img) => {
+        if (wanted.includes(img.getAttribute('src') ?? ''))
+          img.fetchPriority = 'high';
+      });
     const letGo = keep();
     const me: NonNullable<typeof cutting> = { el, landed: false };
     cutting = me;

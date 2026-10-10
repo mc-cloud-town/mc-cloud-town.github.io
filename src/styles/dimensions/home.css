@@ -1004,6 +1004,51 @@ html[data-live] .dim.dim--home .loader {
   }
 }
 
+/* A picture that comes after its scene is on the screen (the pictures are asked for when the loader lifts, and a
+   reader on a slow line can cut to a scene before its picture has come) fades in when it can be drawn (World.tsx
+   marks it), in the time of anything that arrives; it does not pop. Opacity only. Not the first picture, which
+   the loader waits for, nor the facilities' pictures, whose opacity the ledger drives. */
+html[data-live]
+  .dim.dim--home
+  .scene:not(.is-first)
+  .cam
+  > img:not([data-ledger]) {
+  opacity: 0;
+  transition: opacity var(--t-in) var(--ease-rise);
+}
+html[data-live]
+  .dim.dim--home
+  .scene:not(.is-first)
+  .cam
+  > img[data-in]:not([data-ledger]) {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-live]
+    .dim.dim--home
+    .scene:not(.is-first)
+    .cam
+    > img:not([data-ledger]) {
+    transition: opacity 0.12s linear;
+  }
+}
+/* Until then the scene stands on its ground. By night that is the stage's black, under a dark veil. By day the
+   scenes of the Overworld are read on paper, and their veils leave a side of the picture clear: there the ground
+   is paper too, so that no scene of the day ever comes in from black. (The Nether's and the End's stay dark.) */
+[data-theme='light']:not([data-dim='end'])
+  .dim.dim--home
+  .scene:is(
+    [data-scene='spawn'],
+    [data-scene='town'],
+    [data-scene='w1'],
+    [data-scene='w2'],
+    [data-scene='w3'],
+    [data-scene='day1']
+  )
+  .cam {
+  background: rgb(var(--v));
+}
+
 /* Each section keeps the accent of its own dimension, so the text of the one that is leaving the screen
    does not change colour when the page (<html data-dim>: bar, veil, theme) moves on to the next.
    In the day theme the page is dark while it is in the End, and so the night accents apply to everything on it. */

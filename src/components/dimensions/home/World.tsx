@@ -14,7 +14,22 @@ const VEIL: Record<string, string> = {
  * for the first picture and the fonts, and fourteen more pictures would compete with them (a fixed full-screen
  * layer is always "in view", so lazy loading does nothing here). With scripts off nothing would ever give it one,
  * so the served page carries it in a `noscript` as well.
+ * A picture is marked once it can be drawn (`data-in`): one that comes after its scene is on screen fades in on
+ * that mark instead of popping (home.css).
  */
+const mark = (img: HTMLImageElement) => {
+  // decoded first, so the fade is not the frame in which the picture is still being unpacked
+  void img
+    .decode()
+    .catch(() => undefined)
+    .then(() => {
+      if (img.naturalWidth > 0) img.dataset.in = '';
+    });
+};
+/** Already there when the page's script takes over (the first picture, or one from the cache): no `load` will come. */
+const arrivedAlready = (img: HTMLImageElement | null) => {
+  if (img?.complete && img.naturalWidth > 0) mark(img);
+};
 const Picture = ({
   src,
   now,
@@ -29,10 +44,12 @@ const Picture = ({
   <>
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img
+      ref={arrivedAlready}
       src={now ? src : undefined}
       alt=''
       data-ledger={ledger}
       style={style}
+      onLoad={(e) => mark(e.currentTarget)}
     />
     {!now && (
       <noscript>
