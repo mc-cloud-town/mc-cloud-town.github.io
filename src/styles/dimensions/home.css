@@ -11,6 +11,12 @@ html.lenis {
 }
 
 .dim.dim--home {
+  /* how wide the departments of the respawn are (.join). Known here, on the page, because the day paper of that
+     scene (at the foot of this file) is cut to the same width. */
+  --join-w: min(720px, 54vw);
+  /* and how far its title may run (the max-width of .respawn h2) */
+  --title-w: 54vw;
+
   /* ───────── the world ───────── */
   .world {
     position: fixed;
@@ -713,7 +719,7 @@ html.lenis {
     position: relative;
     margin-top: 64px;
     width: 100%;
-    max-width: min(720px, 54vw);
+    max-width: var(--join-w);
   }
   /* name | description, with the way to apply on a line of its own under the description: beside it, the link
      took a third of the row and the description wrapped after a few words (user feedback; not as the demo,
@@ -938,9 +944,9 @@ html.lenis {
       display: none;
     }
     /* the list takes some of the mascot's room, but stays on the veiled side of the picture */
-    .join {
-      max-width: min(720px, 62vw);
-    }
+    --join-w: min(720px, 62vw);
+    /* the title has the whole column, from gutter to gutter */
+    --title-w: calc(100% - 2 * var(--gutter));
     .respawn h2 {
       max-width: none;
     }
@@ -1023,13 +1029,73 @@ html[data-live] .dim.dim--home .loader {
     );
   }
 }
+/* day, the hero: the paper reaches to the end of the column of text (.hero-copy: one gutter in, 460px wide) at
+   every width, not to a share of the screen, which a narrower screen's column outran; one gutter further it is
+   gone, and the photograph is untouched from there to the title's own paper on the right.
+   (`50% - 1100px`: where the page begins on a screen wider than its 2200px.) */
+@media (min-width: 861px) {
+  [data-theme='light']:not([data-dim='end']) .dim.dim--home .veil--hero {
+    --edge: calc(max(0px, 50% - 1100px) + var(--gutter) + 460px);
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), var(--h1)) 0,
+      rgba(var(--v), 0.94) var(--edge),
+      rgba(var(--v), 0) calc(var(--edge) + var(--gutter)),
+      rgba(var(--v), var(--h3)) 68%,
+      rgba(var(--v), var(--h4)) 82%,
+      rgba(var(--v), var(--h5)) 100%
+    );
+  }
+  /* day, the respawn: paper under the column of text (button, departments: as wide as .join) and no further. It
+     is gone one gutter on, which is where the mascot stands: that side of the photograph keeps its colour.
+     The title may run further than the column on a wide screen (54vw against 720px): as far as it may run there
+     is a light wash, as much as type of that size needs to be read on the darkest of the picture and no more.
+     Where title and column are equally wide the two end together. By night the scene keeps its wide veil. */
+  [data-theme='light']:not([data-dim='end'])
+    .dim.dim--home
+    .scene[data-scene='day1']
+    .veil {
+    --from: calc(max(0px, 50% - 1100px) + var(--gutter));
+    --edge: calc(var(--from) + var(--join-w));
+    --title: calc(var(--from) + var(--title-w));
+    background: linear-gradient(
+        90deg,
+        rgba(var(--v), 0.97) 0,
+        rgba(var(--v), 0.94) var(--edge),
+        rgba(var(--v), 0) calc(var(--edge) + var(--gutter))
+      ),
+      linear-gradient(
+        90deg,
+        rgba(var(--v), 0.3) var(--title),
+        rgba(var(--v), 0) calc(var(--title) + var(--gutter))
+      );
+  }
+}
+/* day, the respawn on a narrow screen: the bottom-up veil, with more paper in the upper half, where the
+   departments are read over the dark of this picture (the sea) */
+@media (max-width: 860px) {
+  [data-theme='light']:not([data-dim='end'])
+    .dim.dim--home
+    .scene[data-scene='day1']
+    .veil {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--v), 0.96) 0%,
+      rgba(var(--v), 0.88) 55%,
+      rgba(var(--v), 0.7) 100%
+    );
+  }
+}
 /* day: the footer runs the full width, across the clear side of the photograph, so paper rises under it
-   from the foot of the page (the bottom-up veil of the builds, over this one band) */
+   from the foot of the page (the bottom-up veil of the builds, over this one band). On a screen wider than the
+   page (2200px) the band goes on to the edges of the screen, as the photograph does. */
 [data-theme='light']:not([data-dim='end']) .dim.dim--home .respawn .dim-foot {
+  --bleed: calc(var(--gutter) + max(0px, 50vw - 1100px));
   width: auto;
+  max-width: none;
   align-self: stretch;
-  margin-inline: calc(-1 * var(--gutter));
-  padding-inline: var(--gutter);
+  margin-inline: calc(-1 * var(--bleed));
+  padding-inline: var(--bleed);
   background: linear-gradient(
     0deg,
     rgba(var(--v), 0.95) 0%,

@@ -103,6 +103,108 @@ const check = async (
   return found;
 };
 
+/**
+ * What stands over a scene on the home page, by what it is: every kind is read against the pixels behind it
+ * wherever it stands on the screen, at every stop of the page.
+ */
+const HOME_TEXT: [kind: string, selector: string][] = [
+  ['hero meta', '.hero-meta [data-t]'],
+  ['hero lead', '.hero-copy .lead'],
+  ['statement', '.open .say span'],
+  ['body of a dimension', '.open p.body'],
+  ['work caption', '.work [data-t]'],
+  ['rank statement', '.rank .claim, .rank p[data-t="body"]'],
+  ['respawn title', '#respawn h2'],
+  ['department rows', '#respawn .depts [data-t]'],
+  ['footer', '#respawn .dim-foot [data-t]'],
+];
+
+/**
+ * The home page's words can be read where the screen stands (`expectLegible`, its method and its thresholds).
+ * A block is read when it is there to be read: lit (a statement waits dimmed for the scroll that lights it; a
+ * block that is rising in has not arrived), and clear of the bar, which carries a ground of its own.
+ * `seen` counts what was read, by kind, so that a kind that was never read anywhere on the page is a finding too.
+ * `pending` is what awaits a decision in this case (see PENDING): it is not asked for AA here (it is kept as a
+ * fixme of its own), only for its floor, if it has one.
+ */
+const expectHomeLegible = async (
+  page: Page,
+  seen: Map<string, number>,
+  pending: { selector: string; floor?: number }[] = [],
+) => {
+  const kinds = await page.evaluate(
+    ([text, bar, skip, floors]) => {
+      const vh = window.innerHeight;
+      const under = document.querySelector(bar)!.getBoundingClientRect().bottom;
+      const through = (el: Element) => {
+        let o = 1;
+        for (
+          let e: Element | null = el;
+          e && e !== document.documentElement;
+          e = e.parentElement
+        ) {
+          const c = getComputedStyle(e);
+          if (c.visibility === 'hidden' || c.display === 'none') return 0;
+          o *= +c.opacity;
+        }
+        return o;
+      };
+      const out: string[] = [];
+      for (const [kind, sel] of text)
+        for (const el of document.querySelectorAll(sel)) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          if (r.top < under || r.top >= vh - 2) continue;
+          if (through(el) < 0.99) continue;
+          const held = skip.findIndex((s) => el.matches(s));
+          if (held < 0) {
+            el.setAttribute('data-legible', '');
+            out.push(kind);
+          } else {
+            el.setAttribute('data-legible-held', String(held));
+            out.push(`held ${held}`);
+            // read as well, against its floor
+            if (floors[held] !== null) out.push(kind);
+          }
+        }
+      return out;
+    },
+    [
+      HOME_TEXT,
+      BAR,
+      pending.map((p) => p.selector),
+      pending.map((p) => p.floor ?? null),
+    ] as const,
+  );
+  const whole = await page.locator('[data-legible]').count();
+  const problems: string[] = [];
+  const run = async (selector: string, floor?: number) => {
+    try {
+      await expectLegible(page, selector, floor);
+    } catch (e) {
+      problems.push(...(e as Error).message.split('\n\n')[0].split('\n'));
+    }
+  };
+  try {
+    const read = kinds.filter((kind) => !kind.startsWith('held '));
+    for (const kind of read) seen.set(kind, (seen.get(kind) ?? 0) + 1);
+    if (whole) await run('[data-legible]');
+    for (const [i, p] of pending.entries())
+      if (p.floor !== undefined && kinds.includes(`held ${i}`))
+        await run(`[data-legible-held="${i}"]`, p.floor);
+  } finally {
+    await page.evaluate(() =>
+      document
+        .querySelectorAll('[data-legible], [data-legible-held]')
+        .forEach((el) => {
+          el.removeAttribute('data-legible');
+          el.removeAttribute('data-legible-held');
+        }),
+    );
+  }
+  expect(problems, problems.join('\n')).toEqual([]);
+};
+
 /** What stands over the header's picture on an inner page, each in its own colour. */
 const HEAD_TEXT = [
   '.head .crumb a',
@@ -114,7 +216,7 @@ const HEAD_TEXT = [
 
 /**
  * Legibility findings whose fix is a choice between several designs, awaiting the user's decision
- * (task-10-report.md, "Needs a decision"). In the cases they apply to, that one block is not asserted against AA
+ * (task-10-report.md and task-g1-report.md, "Needs a decision"). In the cases they apply to, that one block is not asserted against AA
  * in the case itself, so everything else in the case still is; it is kept as a `test.fixme` of its own, by the
  * name of the report entry, and comes back by deleting its line here.
  * A finding that has a `floor` is not left unwatched meanwhile: in every case it applies to, the block is still
@@ -129,6 +231,7 @@ const PENDING: {
     viewport: string,
     width: number,
     theme: ThemeName,
+    locale: Locale,
   ) => boolean;
 }[] = [
   {
@@ -147,6 +250,59 @@ const PENDING: {
     floor: 3,
     applies: (page, _viewport, _width, theme) =>
       page === 'progress' && theme === 'light',
+  },
+  // The home page, read for legibility since Task G1. What follows is what that first reading found outside the
+  // two places that task set right (the day paper of the hero and of the respawn); each has a floor just under
+  // what it measures today.
+  {
+    // Needs a decision 3: the column is 44vw wide and the day paper of the side veil ends before it does; only
+    // English fills the column to its end, and only at this width is the picture behind that end dark
+    entry:
+      'decision 3, the Overworld body past the day paper in English at 1024',
+    selector: '#overworld p.body',
+    floor: 3.5,
+    applies: (page, viewport, _width, theme, locale) =>
+      page === 'home' &&
+      theme === 'light' &&
+      viewport === 'tablet-land' &&
+      locale === 'en',
+  },
+  {
+    // Needs a decision 4: a note in the day accent (4.7 : 1 on bare paper) stands high in the bottom-up veil of a
+    // build, where there is little paper: 1.5 to 4.4 : 1 at every width, in every language
+    entry: 'decision 4, the notes of the Overworld builds in the day accent',
+    selector: '[data-work^="overworld"] p.acc',
+    floor: 1.5,
+    applies: (page, _viewport, _width, theme) =>
+      page === 'home' && theme === 'light',
+  },
+  {
+    // Needs a decision 5: the End is dark in both themes; at 360px its accent has 4.1 to 4.2 : 1 over the moon
+    entry: 'decision 5, the note of the first End build on a small phone',
+    selector: '[data-work="end-0"] p.acc',
+    floor: 4,
+    applies: (page, viewport) => page === 'home' && viewport === 'phone-s',
+  },
+  {
+    // Needs a decision 6: by night the side veil has thinned to about a half where the body ends, over a bright
+    // town: 2.5 to 4.5 : 1 in the muted grey (25 of the 27 night cases; the two that pass are held to the floor too)
+    entry: 'decision 6, the Overworld body in the muted grey by night',
+    selector: '#overworld p.body',
+    floor: 2.4,
+    applies: (page, _viewport, _width, theme) =>
+      page === 'home' && theme === 'dark',
+  },
+  {
+    // Needs a decision 7: by night the footer's links (3.7 to 4.25 : 1 at 1024 and 1280) and a department's
+    // description (4.5 less a hair, at 844 × 390) stand in the muted grey where the wide veil is thin
+    entry:
+      'decision 7, the footer and the departments of the respawn in the muted grey by night',
+    selector: '#respawn .dim-foot [data-t], #respawn .depts li > span',
+    floor: 3.5,
+    applies: (page, viewport, _width, theme) =>
+      page === 'home' &&
+      theme === 'dark' &&
+      ['tablet-land', 'laptop', 'phone-land'].includes(viewport),
   },
 ];
 
@@ -216,6 +372,56 @@ for (const vp of VIEWPORTS) {
     for (const theme of THEMES) {
       const tag = `${vp.name} ${locale} ${theme}`;
 
+      const homePending = PENDING.filter((p) =>
+        p.applies('home', vp.name, vp.width, theme, locale as Locale),
+      );
+      for (const p of homePending)
+        test.fixme(`home ${tag}: ${p.entry}`, async ({ page }) => {
+          test.slow();
+          await page.setViewportSize({ width: vp.width, height: vp.height });
+          await openPage(page, '/', { locale: locale as Locale, theme });
+          await arrived(page);
+          // at every screen of the page where it stands: AA, as everything else
+          let seen = 0;
+          const read = async () => {
+            const there = await page.evaluate(
+              ([sel, bar]) => {
+                const under = document
+                  .querySelector(bar)!
+                  .getBoundingClientRect().bottom;
+                let n = 0;
+                for (const el of document.querySelectorAll(sel)) {
+                  const r = el.getBoundingClientRect();
+                  if (r.top < under || r.top >= window.innerHeight - 2)
+                    continue;
+                  el.setAttribute('data-legible', '');
+                  n++;
+                }
+                return n;
+              },
+              [p.selector, BAR] as const,
+            );
+            if (!there) return;
+            seen += there;
+            try {
+              await expectLegible(page, '[data-legible]');
+            } finally {
+              await page.evaluate(() =>
+                document
+                  .querySelectorAll('[data-legible]')
+                  .forEach((el) => el.removeAttribute('data-legible')),
+              );
+            }
+          };
+          for (const stop of HOME_STOPS) {
+            await jumpTo(page, stop.sel, stop.off);
+            await atRest(page);
+            await read();
+            if (stop.walk) await walk(page, stop.sel, read);
+          }
+          expect(seen, `${p.selector} was on screen`).toBeGreaterThan(0);
+        });
+
       test(`home ${tag}`, async ({ page }, info) => {
         test.slow();
         await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -223,6 +429,8 @@ for (const vp of VIEWPORTS) {
         await arrived(page);
         await expectNoMissingKeys(page);
         const found: string[] = [];
+        const read = new Map<string, number>();
+        const legible = () => expectHomeLegible(page, read, homePending);
         for (const [i, stop] of HOME_STOPS.entries()) {
           const where = `${stop.sel}+${stop.off.toFixed(2)}`;
           // at once: the page is checked where it stands, not on the way there
@@ -237,15 +445,17 @@ for (const vp of VIEWPORTS) {
               where,
               stop.anchor ? {} : { passing: BAR },
               stop.sel === '#overworld'
-                ? [() => expectEvenRows(page, '#overworld .stats b')]
-                : [],
+                ? [() => expectEvenRows(page, '#overworld .stats b'), legible]
+                : [legible],
             )),
           );
           await shoot(page, info, `home-${tag}-${i}-${stop.sel}`);
           if (stop.walk)
             await walk(page, stop.sel, async (n) => {
               found.push(
-                ...(await check(page, `${where} ↓${n}`, { passing: BAR })),
+                ...(await check(page, `${where} ↓${n}`, { passing: BAR }, [
+                  legible,
+                ])),
               );
               await shoot(page, info, `home-${tag}-${i}-${stop.sel}-down${n}`);
             });
@@ -262,9 +472,13 @@ for (const vp of VIEWPORTS) {
         found.push(
           ...(await check(page, 'foot', { passing: BAR }, [
             () => expectFooterLines(page),
+            legible,
           ])),
         );
         await shoot(page, info, `home-${tag}-foot`);
+        // every kind of text was read somewhere on the page
+        for (const [kind] of HOME_TEXT)
+          if (!read.get(kind)) found.push(`never read for legibility: ${kind}`);
         expect(found, found.join('\n')).toEqual([]);
       });
 
@@ -273,7 +487,7 @@ for (const vp of VIEWPORTS) {
         ['members', '/member/', '.person'],
       ] as const) {
         const pending = PENDING.filter((p) =>
-          p.applies(name, vp.name, vp.width, theme),
+          p.applies(name, vp.name, vp.width, theme, locale as Locale),
         );
         for (const p of pending)
           test.fixme(`${name} ${tag}: ${p.entry}`, async ({ page }) => {

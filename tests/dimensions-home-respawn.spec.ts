@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
+  atRest,
+  expectLegible,
   expectNoHorizontalScroll,
   expectNoMissingKeys,
   expectTextFits,
@@ -357,56 +359,147 @@ test.describe('home: respawn', () => {
       await expectNoHorizontalScroll(page);
     });
 
-  test('by day the words of the respawn stand on paper: a wide veil under the list, and paper under the footer', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await openPage(page, '/', { theme: 'light', locale: 'en' });
-    await ready(page);
-    await page.evaluate(() =>
-      window.scrollTo(0, document.documentElement.scrollHeight),
+  /** The colour of the screen at each point (the mean of a 5 × 5 patch), with the veil of the day-one scene or without it. */
+  const colours = async (
+    page: Page,
+    points: [x: number, y: number][],
+    veil: boolean,
+  ) => {
+    const hide = veil
+      ? null
+      : await page.addStyleTag({
+          content:
+            '.scene[data-scene="day1"] .veil { visibility: hidden !important; }',
+        });
+    const png = (await page.screenshot()).toString('base64');
+    await hide?.evaluate((el) => (el as Element).remove());
+    return page.evaluate(
+      async ([data, at]) => {
+        const bitmap = await createImageBitmap(
+          await (await fetch(`data:image/png;base64,${data}`)).blob(),
+        );
+        const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(bitmap, 0, 0);
+        const k = bitmap.width / window.innerWidth;
+        return at.map(([x, y]) => {
+          const px = ctx.getImageData(x * k - 2, y * k - 2, 5, 5).data;
+          const sum = [0, 0, 0];
+          for (let i = 0; i < px.length; i += 4)
+            for (let c = 0; c < 3; c++) sum[c] += px[i + c];
+          return sum.map((v) => v / 25);
+        });
+      },
+      [png, points] as const,
     );
-    await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
-    // how much paper lies over the picture at a point of the screen: the veil's own colour stops, read from its gradient
-    const veil = page.locator('.scene[data-scene="day1"] .veil');
-    await expect(veil).toHaveClass(/veil--wide/);
-    const stops = await veil.evaluate((el) =>
-      [
-        ...getComputedStyle(el).backgroundImage.matchAll(
-          /rgba?\(([^)]+)\) (\d+)%/g,
-        ),
-      ].map((m) => [Number(m[1].split(',')[3] ?? 1), Number(m[2])]),
-    );
-    // at least 90% paper up to 56% of the width
-    expect(stops.slice(0, 2)).toEqual([
-      [0.97, 0],
-      [0.92, 56],
-    ]);
-    // the longest description ends inside that
-    const ends = await page
-      .locator('#respawn .depts li > span')
-      .evaluateAll((els) =>
-        els.map((el) => {
-          const range = document.createRange();
-          range.selectNodeContents(el);
-          return Math.max(...[...range.getClientRects()].map((r) => r.right));
-        }),
+  };
+
+  for (const [width, height] of [
+    [1280, 720],
+    [1440, 900],
+    [2560, 1440],
+  ] as const)
+    test(`by day at ${width}×${height} the words of the respawn stand on paper, and beside them the photograph keeps its colour`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      // the longest copy
+      await openPage(page, '/', { theme: 'light', locale: 'en' });
+      await ready(page);
+      await page.evaluate(() =>
+        window.scrollTo(0, document.documentElement.scrollHeight),
       );
-    expect(ends).toHaveLength(3);
-    for (const right of ends) expect(right / 1440).toBeLessThan(0.58);
-    // the footer has its own paper, from edge to edge
-    const foot = page.locator('#respawn .dim-foot');
-    await expect(foot).toHaveCSS('background-image', /linear-gradient\(0deg/);
-    const box = (await foot.boundingBox())!;
-    expect(box.x).toBeLessThanOrEqual(0);
-    expect(box.x + box.width).toBeGreaterThanOrEqual(1440);
-    await expectTextFits(page, { within: '#respawn .dim-foot' });
-    await expectNoHorizontalScroll(page);
-    // by night there is no band: the veil of the scene is dark enough
-    await page.locator('.dim-bar [data-action="theme"]').click();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await expect(foot).toHaveCSS('background-image', 'none');
-  });
+      await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
+      // the photograph itself has come
+      await expect
+        .poll(() =>
+          page
+            .locator('.scene[data-scene="day1"] img')
+            .evaluate(
+              (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+            ),
+        )
+        .toBe(true);
+      await atRest(page);
+      // the ground alone is measured first: without the words that stand on it, and without the mascot
+      const ground = await page.addStyleTag({
+        content:
+          '#respawn > :not(.dim-foot), #respawn .pal { visibility: hidden !important; }',
+      });
+      const foot = page.locator('#respawn .dim-foot');
+      const [join, title, band, bar] = await Promise.all([
+        page.locator('#respawn .join').boundingBox(),
+        // as far as the title may run: its box, whatever this language's words fill of it
+        page.locator('#respawn h2').evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          return r.left + parseFloat(getComputedStyle(el).maxWidth);
+        }),
+        foot.boundingBox(),
+        page.locator('.dim-bar').boundingBox(),
+      ]);
+      const gutter = await page
+        .locator('#respawn')
+        .evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft));
+      // the rows of the screen between the bar and the footer's own band
+      const top = bar!.y + bar!.height + 40;
+      const rows = [0.1, 0.4, 0.7, 0.95].map(
+        (f) => top + f * (band!.y - 20 - top),
+      );
+      expect(band!.y - top).toBeGreaterThan(200);
+      // under the column of text: paper, whatever the photograph has there
+      const column: [number, number][] = rows.flatMap((y) =>
+        [join!.x, join!.x + join!.width / 2, join!.x + join!.width - 4].map(
+          (x) => [x, y] as [number, number],
+        ),
+      );
+      for (const [i, rgb] of (await colours(page, column, true)).entries())
+        for (const c of rgb)
+          expect(
+            c,
+            `paper at ${column[i].map(Math.round)}: ${rgb.map(Math.round)}`,
+          ).toBeGreaterThan(205);
+      // one gutter past the words (the list, or the title where it may run further) and on to the edge of the
+      // screen: the photograph as it is
+      const from = Math.max(join!.x + join!.width, title) + gutter + 4;
+      expect(from).toBeLessThan(0.75 * width);
+      const beside: [number, number][] = rows
+        .slice(0, 2)
+        .flatMap((y) =>
+          [from, (from + width) / 2, width - 6].map(
+            (x) => [x, y] as [number, number],
+          ),
+        );
+      const [veiled, bare] = [
+        await colours(page, beside, true),
+        await colours(page, beside, false),
+      ];
+      for (const [i, rgb] of veiled.entries())
+        for (const [c, v] of rgb.entries())
+          expect(
+            Math.abs(v - bare[i][c]),
+            `the photograph at ${beside[i].map(Math.round)}: ${rgb.map(Math.round)} under the veil, ${bare[i].map(Math.round)} without`,
+          ).toBeLessThanOrEqual(3);
+      await ground.evaluate((el) => (el as Element).remove());
+      await atRest(page);
+      // and the words can be read against what is really behind them
+      await expectLegible(
+        page,
+        '#respawn h2, #respawn .depts [data-t], #respawn .dim-foot [data-t]',
+      );
+      // the footer has its own paper, from edge to edge
+      await expect(foot).toHaveCSS('background-image', /linear-gradient\(0deg/);
+      expect(band!.x).toBeLessThanOrEqual(0);
+      expect(band!.x + band!.width).toBeGreaterThanOrEqual(width);
+      await expectTextFits(page, { within: '#respawn .dim-foot' });
+      await expectNoHorizontalScroll(page);
+      // by night there is no band, and the scene keeps its wide veil
+      await page.locator('.dim-bar [data-action="theme"]').click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+      await expect(foot).toHaveCSS('background-image', 'none');
+      await expect(page.locator('.scene[data-scene="day1"] .veil')).toHaveClass(
+        /veil--wide/,
+      );
+    });
 
   test('on a phone a department stacks: name, description, link', async ({
     page,
