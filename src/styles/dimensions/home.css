@@ -710,10 +710,11 @@ html.lenis {
   }
   /* The departments and, beside them, the mascot. The list alone gives this block its size: the mascot is
      placed against it, one gutter to its right and centred on it, without taking part in the flow.
-     Widths at 1101px, the narrowest screen with a mascot: gutter 6vw + list 54vw + gutter 6vw + mascot 28vw
-     + gutter 6vw = the screen, with 458px for a description and a mascot of 308px. Any narrower and both
-     would be squeezed, so from 1100px down (where the bar, too, takes its narrow layout) the mascot is left
-     out and the list takes its own full measure. */
+     Side by side the two always fit between the gutters: gutter 6vw + list 54vw + gutter 6vw + mascot 28vw
+     + gutter 6vw = the screen (and on a wide screen each has reached its cap). What gives out first as the
+     screen narrows is the list: a department is name (7em) | gap (24px) | description, and a description needs
+     320px. The mascot is shown for as long as the layout holds that, and left out where it does not (the
+     query at the foot of this block). */
   .join {
     --pal: min(28vw, 400px);
     position: relative;
@@ -938,8 +939,16 @@ html.lenis {
       padding-bottom: 24px;
     }
   }
-  /* no room for the list and the mascot side by side (see .join), or no height for it: no mascot */
-  @media (max-width: 1100px), (max-height: 480px) {
+  /* Where the layout cannot hold the mascot (see .join), there is none:
+     - up to 860px a department is stacked and the veil runs bottom-up: there is no side to stand on;
+     - the list beside it (54vw) would leave a description less than 320px: narrower than (7em + 24px + 320px)
+       / 0.54, which is 845px, so today the breakpoint above is reached first and this limit only speaks if
+       that one moves;
+     - or the screen has no height for it.
+     It is not the bar's breakpoint (1100px): at 1024px the list has 553px and the mascot 287px. */
+  @media (max-width: 860px),
+    (max-width: calc((7em + 24px + 320px) / 0.54)),
+    (max-height: 480px) {
     .pal {
       display: none;
     }

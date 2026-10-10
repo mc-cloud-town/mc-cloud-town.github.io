@@ -258,14 +258,45 @@ test.describe('home: respawn', () => {
     return { list: list!, mascot: mascot! };
   };
 
-  // 1101px is the narrowest screen with the mascot: the width at which the bar, too, leaves its narrow layout
+  /**
+   * Whether the layout can hold the mascot on this screen, from the layout's own sizes as the page has them: the
+   * departments stand as name | description (two columns: only above the breakpoint); beside the mascot the list
+   * is 54% of the screen, 720px at most, and that leaves a description at least 320px; and gutter, list, gutter,
+   * mascot (28% of the screen, 400px at most), gutter are no wider than the screen. A screen 480px high or less
+   * has no room for it either.
+   */
+  const MIN_DESCRIPTION = 320;
+  const holdsMascot = (page: Page) =>
+    page.evaluate((least) => {
+      const width = document.documentElement.clientWidth;
+      const gutter = parseFloat(
+        getComputedStyle(document.querySelector('#respawn')!).paddingLeft,
+      );
+      const row = getComputedStyle(
+        document.querySelector('#respawn .depts li')!,
+      );
+      const columns = row.gridTemplateColumns.split(' ').map(parseFloat);
+      const list = Math.min(720, 0.54 * width);
+      const mascot = Math.min(0.28 * width, 400);
+      return (
+        columns.length === 2 &&
+        list - columns[0] - parseFloat(row.columnGap) >= least &&
+        3 * gutter + list + mascot <= width + 0.5 &&
+        window.innerHeight > 480
+      );
+    }, MIN_DESCRIPTION);
+
+  // 1024 × 768 is the tablet on its side; 861 is the narrowest screen on which a department is name | description
   for (const [width, height] of [
     [1920, 1080],
     [1440, 900],
     [1280, 720],
     [1101, 700],
+    [1024, 768],
+    [900, 700],
+    [861, 700],
   ] as const)
-    test(`at ${width}×${height} the mascot stands beside the departments, centred on them`, async ({
+    test(`at ${width}×${height} the layout holds the mascot: it stands beside the departments, centred on them`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -273,14 +304,34 @@ test.describe('home: respawn', () => {
       await openPage(page, '/', { locale: 'en' });
       await ready(page);
       await scrollToSection(page, '#respawn', 0.25);
+      expect(await holdsMascot(page), 'the layout holds it').toBe(true);
       const pal = page.locator('#respawn .pal');
       await expect(pal).toBeVisible();
       await expect(pal).toHaveCSS('opacity', '1');
+      // fetched, since it is shown
+      await expect
+        .poll(() => pal.evaluate((el: HTMLImageElement) => el.naturalWidth))
+        .toBeGreaterThan(0);
       // let its rise finish: from here on it only floats a few pixels around its place
       await page.waitForTimeout(1700);
       const { list, mascot } = await mascotAndList(page);
-      expect(mascot.width).toBeGreaterThanOrEqual(300);
-      expect(list.width).toBeGreaterThanOrEqual(590);
+      // each at the size the layout gives it (the mascot's own box: on the screen it is turned a degree as it floats)
+      expect(
+        Math.abs(
+          (await pal.evaluate((el: HTMLElement) => el.offsetWidth)) -
+            Math.min(0.28 * width, 400),
+        ),
+      ).toBeLessThan(2);
+      expect(Math.abs(list.width - Math.min(720, 0.54 * width))).toBeLessThan(
+        2,
+      );
+      const texts = await page
+        .locator('#respawn .depts li > span')
+        .evaluateAll((els) =>
+          els.map((el) => el.getBoundingClientRect().width),
+        );
+      expect(texts).toHaveLength(3);
+      for (const w of texts) expect(w).toBeGreaterThanOrEqual(MIN_DESCRIPTION);
       // a column of its own to the right of the list, one gutter away
       const gutter = await page
         .locator('#respawn')
@@ -296,7 +347,7 @@ test.describe('home: respawn', () => {
       // and clear of what is above and below it
       const [button, foot] = await Promise.all([
         page.locator('#respawn a.btn').boundingBox(),
-        page.locator('#respawn .dim-foot img').boundingBox(),
+        page.locator('#respawn .dim-foot').boundingBox(),
       ]);
       const clear = (b: {
         x: number;
@@ -308,24 +359,40 @@ test.describe('home: respawn', () => {
         b.y + b.height <= mascot.y ||
         b.y >= mascot.y + mascot.height;
       expect(clear(button!)).toBe(true);
-      expect(clear(foot!)).toBe(true);
+      // the footer's words (its box begins with its own padding, which the mascot may float into)
+      const words = await page
+        .locator('#respawn .dim-foot [data-t], #respawn .dim-foot img')
+        .evaluateAll((els) =>
+          els.map((el) => {
+            const r = el.getBoundingClientRect();
+            return { x: r.x, y: r.y, width: r.width, height: r.height };
+          }),
+        );
+      expect(words.length).toBeGreaterThan(5);
+      for (const w of words) expect(clear(w)).toBe(true);
+      expect(foot!.y + foot!.height).toBeGreaterThan(mascot.y);
+      await scrollToSection(page, '#respawn .depts', -0.4);
+      await expectTextFits(page, { within: '#respawn' });
       await expectNoHorizontalScroll(page);
     });
 
+  // 860: the departments stack, there is no side to stand on. 1280 × 450: wide enough, not high enough.
   for (const [width, height] of [
-    [1100, 700],
-    [1024, 768],
+    [860, 700],
     [844, 390],
     [768, 1024],
     [390, 844],
+    [360, 740],
+    [1280, 450],
   ] as const)
-    test(`at ${width}×${height} there is no mascot, and the departments have its room`, async ({
+    test(`at ${width}×${height} the layout cannot hold the mascot: there is none, and the departments have its room`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
       await openPage(page, '/', { locale: 'en' });
       await ready(page);
       await scrollToSection(page, '#respawn', 0.25);
+      expect(await holdsMascot(page), 'the layout holds it').toBe(false);
       const pal = page.locator('#respawn .pal');
       await expect(pal).toHaveCount(1);
       await expect(pal).toBeHidden();
@@ -352,8 +419,7 @@ test.describe('home: respawn', () => {
       const room = width <= 860 ? m.column : Math.min(m.column, 0.62 * width);
       expect(m.list).toBeGreaterThanOrEqual(Math.min(720, room) - 1);
       // more than it has beside the mascot (54% of the screen)
-      if (width > 860 && width < 1161)
-        expect(m.list).toBeGreaterThan(0.54 * width + 40);
+      if (width < 1161) expect(m.list).toBeGreaterThan(0.54 * width + 40);
       await scrollToSection(page, '#respawn .depts', -0.4);
       await expectTextFits(page, { within: '#respawn .depts' });
       await expectNoHorizontalScroll(page);
@@ -394,7 +460,9 @@ test.describe('home: respawn', () => {
     );
   };
 
+  // 1024 × 768 as well: the paper follows the column of text, not a share of the screen
   for (const [width, height] of [
+    [1024, 768],
     [1280, 720],
     [1440, 900],
     [2560, 1440],
