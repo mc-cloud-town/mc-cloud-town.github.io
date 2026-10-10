@@ -26,6 +26,14 @@ const THEMES: ThemeName[] = ['dark', 'light'];
 /** Set to a directory to keep every screenshot of the run there as well (for reading them side by side). */
 const SHOTS = process.env.MATRIX_SHOTS;
 
+/**
+ * Set to measure what awaits a decision instead of holding it to its floor: every pending block of the home page
+ * is then asked for a ratio no block has, in every case of its family (not only those listed as failing), so each
+ * case reports what each block really measures, named by its decision. The floors below were set from such a run.
+ */
+const MEASURE = !!process.env.MATRIX_MEASURE;
+const UNREACHABLE = 99;
+
 /** The facilities of the pinned ledger: one stop each. The pin is three screens of scrolling long. */
 const LEDGER_STEPS = 6;
 const LEDGER_SCREENS = 3;
@@ -130,7 +138,7 @@ const HOME_TEXT: [kind: string, selector: string][] = [
 const expectHomeLegible = async (
   page: Page,
   seen: Map<string, number>,
-  pending: { selector: string; floor?: number }[] = [],
+  pending: { entry: string; selector: string; floor?: number }[] = [],
 ) => {
   const kinds = await page.evaluate(
     ([text, bar, skip, floors]) => {
@@ -178,11 +186,17 @@ const expectHomeLegible = async (
   );
   const whole = await page.locator('[data-legible]').count();
   const problems: string[] = [];
-  const run = async (selector: string, floor?: number) => {
+  const run = async (selector: string, floor?: number, entry?: string) => {
     try {
       await expectLegible(page, selector, floor);
     } catch (e) {
-      problems.push(...(e as Error).message.split('\n\n')[0].split('\n'));
+      problems.push(
+        ...(e as Error).message
+          .split('\n\n')[0]
+          .split('\n')
+          // what is held to a floor says which decision it is
+          .map((line) => (entry ? `[${entry.split(',')[0]}] ${line}` : line)),
+      );
     }
   };
   try {
@@ -191,7 +205,7 @@ const expectHomeLegible = async (
     if (whole) await run('[data-legible]');
     for (const [i, p] of pending.entries())
       if (p.floor !== undefined && kinds.includes(`held ${i}`))
-        await run(`[data-legible-held="${i}"]`, p.floor);
+        await run(`[data-legible-held="${i}"]`, p.floor, p.entry);
   } finally {
     await page.evaluate(() =>
       document
@@ -205,6 +219,44 @@ const expectHomeLegible = async (
   expect(problems, problems.join('\n')).toEqual([]);
 };
 
+/**
+ * The pictures of the scenes that show have come and can be drawn: the page is read on its pictures, never on the
+ * bare stage a picture has yet to arrive on. (They are asked for when the loader lifts, and a stop of this walk
+ * can be reached before one has come.) What then fades in is waited for by `atRest`.
+ */
+const picturesIn = (page: Page, where: string) =>
+  expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>('.dim .scene')]
+            .filter((scene) => {
+              const c = getComputedStyle(scene);
+              return c.visibility !== 'hidden' && +c.opacity > 0.01;
+            })
+            .flatMap((scene) => [
+              ...scene.querySelectorAll<HTMLImageElement>('.cam > img'),
+            ])
+            // one of the facilities' pictures that is not the one showing has nothing to wait for
+            .filter(
+              (img) =>
+                img.dataset.ledger === undefined ||
+                +getComputedStyle(img).opacity > 0.01,
+            )
+            .every(
+              (img) =>
+                img.complete &&
+                img.naturalWidth > 0 &&
+                (img.dataset.ledger !== undefined || img.dataset.in === ''),
+            ),
+        ),
+      {
+        message: `${where}: the pictures of the scenes on screen`,
+        timeout: 30_000,
+      },
+    )
+    .toBe(true);
+
 /** What stands over the header's picture on an inner page, each in its own colour. */
 const HEAD_TEXT = [
   '.head .crumb a',
@@ -213,6 +265,101 @@ const HEAD_TEXT = [
   '.head p[data-t="body"]',
   '.head .vt',
 ];
+
+/**
+ * What each finding of the home page measures at the least, case by case (`viewport locale theme`), a little
+ * under it: read with the page at rest and its pictures in (a `MATRIX_MEASURE` run, Task G1 fix round 1;
+ * the figures are in task-g1-report.md). Only the cases that are under AA are here.
+ */
+type Floors = Record<string, number>;
+const FLOORS_3: Floors = {
+  'tablet-land en light': 3.6,
+};
+const FLOORS_4: Floors = {
+  'phone-s en light': 1.9,
+  'phone-s zh_CN light': 2.2,
+  'phone-s zh_TW light': 2.2,
+  'phone en light': 2.1,
+  'phone zh_CN light': 2.3,
+  'phone zh_TW light': 2.3,
+  'phone-land en light': 1.4,
+  'phone-land zh_CN light': 1.4,
+  'phone-land zh_TW light': 1.4,
+  'tablet en light': 2.5,
+  'tablet zh_CN light': 2.5,
+  'tablet zh_TW light': 2.5,
+  'tablet-land en light': 1.9,
+  'tablet-land zh_CN light': 1.9,
+  'tablet-land zh_TW light': 1.9,
+  'laptop en light': 1.4,
+  'laptop zh_CN light': 1.4,
+  'laptop zh_TW light': 1.4,
+  'desktop en light': 1.8,
+  'desktop zh_CN light': 1.8,
+  'desktop zh_TW light': 1.8,
+  'desktop-l en light': 2.0,
+  'desktop-l zh_CN light': 2.0,
+  'desktop-l zh_TW light': 2.0,
+  'ultrawide en light': 2.4,
+  'ultrawide zh_CN light': 2.4,
+  'ultrawide zh_TW light': 2.4,
+};
+const FLOORS_5: Floors = {
+  'phone-s en dark': 4.0,
+  'phone-s en light': 4.0,
+  'phone-s zh_CN dark': 4.0,
+  'phone-s zh_CN light': 4.0,
+  'phone-s zh_TW dark': 4.0,
+  'phone-s zh_TW light': 4.0,
+};
+const FLOORS_6: Floors = {
+  'phone-s en dark': 3.1,
+  'phone-s zh_CN dark': 3.6,
+  'phone-s zh_TW dark': 3.6,
+  'phone en dark': 3.7,
+  'phone zh_CN dark': 3.6,
+  'phone zh_TW dark': 3.6,
+  'phone-land en dark': 4.1,
+  'phone-land zh_CN dark': 4.1,
+  'phone-land zh_TW dark': 4.1,
+  'tablet en dark': 4.0,
+  'tablet zh_CN dark': 4.1,
+  'tablet zh_TW dark': 4.1,
+  'tablet-land en dark': 2.3,
+  'tablet-land zh_CN dark': 2.5,
+  'tablet-land zh_TW dark': 2.5,
+  'laptop en dark': 3.4,
+  'laptop zh_CN dark': 2.9,
+  'laptop zh_TW dark': 2.9,
+  'desktop en dark': 4.0,
+  'desktop zh_CN dark': 3.6,
+  'desktop zh_TW dark': 3.6,
+  'desktop-l zh_CN dark': 4.2,
+  'desktop-l zh_TW dark': 4.2,
+  'ultrawide zh_CN dark': 4.2,
+  'ultrawide zh_TW dark': 4.2,
+};
+const FLOORS_7: Floors = {
+  'phone-land zh_CN dark': 4.4,
+  'phone-land zh_TW dark': 4.4,
+  'tablet-land en dark': 3.6,
+  'tablet-land zh_CN dark': 3.8,
+  'tablet-land zh_TW dark': 3.8,
+  'laptop en dark': 4.1,
+  'laptop zh_CN dark': 4.0,
+  'laptop zh_TW dark': 4.0,
+};
+/** A finding of the home page applies in the cases it has a floor for. */
+const onHome =
+  (floors: Floors) =>
+  (
+    page: string,
+    viewport: string,
+    _width: number,
+    theme: ThemeName,
+    locale: Locale,
+  ) =>
+    page === 'home' && `${viewport} ${locale} ${theme}` in floors;
 
 /**
  * Legibility findings whose fix is a choice between several designs, awaiting the user's decision
@@ -226,6 +373,14 @@ const PENDING: {
   entry: string;
   selector: string;
   floor?: number;
+  /**
+   * For a finding of the home page: the cases it is found in (`viewport locale theme`), each with its own floor,
+   * a little under the least that case measures with the page at rest and its pictures in. A case that is not
+   * listed reads the block at AA like any other.
+   */
+  floors?: Record<string, number>;
+  /** the cases a measuring run reads it in: the theme it is a finding of */
+  family?: ThemeName | 'both';
   applies: (
     page: string,
     viewport: string,
@@ -246,58 +401,57 @@ const PENDING: {
   },
   // (Decision 2, the current page of the crumb in the day accent, is settled: Task G1 gave accent-coloured words
   // of an inner header a deeper ink of the same hue by day, and the block is asked for AA like the others.)
-  // The home page, read for legibility since Task G1. What follows is what that first reading found outside the
-  // two places that task set right (the day paper of the hero and of the respawn); each has a floor just under
-  // what it measures today.
+  // The home page, read for legibility since Task G1. What follows is what that reading found outside the places
+  // that task set right (the day paper of the hero and of the respawn). Each is listed for the cases it fails in,
+  // and held there to that case's own floor.
   {
     // Needs a decision 3: the column is 44vw wide and the day paper of the side veil ends before it does; only
-    // English fills the column to its end, and only at this width is the picture behind that end dark
+    // English fills the column to its end, and only at this width is the picture behind that end dark (3.72 : 1)
     entry:
       'decision 3, the Overworld body past the day paper in English at 1024',
     selector: '#overworld p.body',
-    floor: 3.5,
-    applies: (page, viewport, _width, theme, locale) =>
-      page === 'home' &&
-      theme === 'light' &&
-      viewport === 'tablet-land' &&
-      locale === 'en',
+    family: 'light',
+    floors: FLOORS_3,
+    applies: onHome(FLOORS_3),
   },
   {
     // Needs a decision 4: a note in the day accent (4.7 : 1 on bare paper) stands high in the bottom-up veil of a
-    // build, where there is little paper: 1.5 to 4.4 : 1 at every width, in every language
+    // build, where there is little paper. Every day case: the least of a case is 1.54 to 2.67 : 1 (the first
+    // build's note, or the third's on a phone); the second build's note has 3.7 to 4.4
     entry: 'decision 4, the notes of the Overworld builds in the day accent',
     selector: '[data-work^="overworld"] p.acc',
-    floor: 1.5,
-    applies: (page, _viewport, _width, theme) =>
-      page === 'home' && theme === 'light',
+    family: 'light',
+    floors: FLOORS_4,
+    applies: onHome(FLOORS_4),
   },
   {
-    // Needs a decision 5: the End is dark in both themes; at 360px its accent has 4.1 to 4.2 : 1 over the moon
+    // Needs a decision 5: the End is dark in both themes; at 360px its accent has 4.11 to 4.13 : 1 over the moon
+    // (6.7 and more at every other width)
     entry: 'decision 5, the note of the first End build on a small phone',
     selector: '[data-work="end-0"] p.acc',
-    floor: 4,
-    applies: (page, viewport) => page === 'home' && viewport === 'phone-s',
+    family: 'both',
+    floors: FLOORS_5,
+    applies: onHome(FLOORS_5),
   },
   {
     // Needs a decision 6: by night the side veil has thinned to about a half where the body ends, over a bright
-    // town: 2.5 to 4.5 : 1 in the muted grey (25 of the 27 night cases; the two that pass are held to the floor too)
+    // town: 2.46 to 4.35 : 1 in the muted grey, in 25 of the 27 night cases (English at 1920 and 2560 passes)
     entry: 'decision 6, the Overworld body in the muted grey by night',
     selector: '#overworld p.body',
-    floor: 2.4,
-    applies: (page, _viewport, _width, theme) =>
-      page === 'home' && theme === 'dark',
+    family: 'dark',
+    floors: FLOORS_6,
+    applies: onHome(FLOORS_6),
   },
   {
-    // Needs a decision 7: by night the footer's links (3.7 to 4.25 : 1 at 1024 and 1280) and a department's
-    // description (4.5 less a hair, at 844 × 390) stand in the muted grey where the wide veil is thin
+    // Needs a decision 7: by night the footer's links stand in the muted grey where the wide veil is thin: 3.7 to
+    // 3.91 : 1 at 1024, 4.17 to 4.22 at 1280. At 844 × 390 a department's description in Chinese is on the line
+    // (4.50 at rest, a hair under it in an earlier reading): listed, so that it is not a coin toss
     entry:
       'decision 7, the footer and the departments of the respawn in the muted grey by night',
     selector: '#respawn .dim-foot [data-t], #respawn .depts li > span',
-    floor: 3.5,
-    applies: (page, viewport, _width, theme) =>
-      page === 'home' &&
-      theme === 'dark' &&
-      ['tablet-land', 'laptop', 'phone-land'].includes(viewport),
+    family: 'dark',
+    floors: FLOORS_7,
+    applies: onHome(FLOORS_7),
   },
 ];
 
@@ -367,9 +521,15 @@ for (const vp of VIEWPORTS) {
     for (const theme of THEMES) {
       const tag = `${vp.name} ${locale} ${theme}`;
 
+      const key = `${vp.name} ${locale} ${theme}`;
       const homePending = PENDING.filter((p) =>
-        p.applies('home', vp.name, vp.width, theme, locale as Locale),
-      );
+        MEASURE
+          ? p.family === 'both' || p.family === theme
+          : p.applies('home', vp.name, vp.width, theme, locale as Locale),
+      ).map((p) => ({
+        ...p,
+        floor: MEASURE ? UNREACHABLE : p.floors?.[key] ?? p.floor,
+      }));
       for (const p of homePending)
         test.fixme(`home ${tag}: ${p.entry}`, async ({ page }) => {
           test.slow();
@@ -433,6 +593,7 @@ for (const vp of VIEWPORTS) {
           await expect
             .poll(() => visibleScenes(page), { message: `${where} scene` })
             .toContain(stop.scene);
+          await picturesIn(page, where);
           await atRest(page);
           found.push(
             ...(await check(
@@ -447,6 +608,8 @@ for (const vp of VIEWPORTS) {
           await shoot(page, info, `home-${tag}-${i}-${stop.sel}`);
           if (stop.walk)
             await walk(page, stop.sel, async (n) => {
+              await picturesIn(page, `${where} ↓${n}`);
+              await atRest(page);
               found.push(
                 ...(await check(page, `${where} ↓${n}`, { passing: BAR }, [
                   legible,
