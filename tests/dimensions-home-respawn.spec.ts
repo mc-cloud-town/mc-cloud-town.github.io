@@ -460,114 +460,128 @@ test.describe('home: respawn', () => {
     );
   };
 
-  // 1024 × 768 as well: the paper follows the column of text, not a share of the screen
-  for (const [width, height] of [
-    [1024, 768],
-    [1280, 720],
-    [1440, 900],
-    [2560, 1440],
-  ] as const)
-    test(`by day at ${width}×${height} the words of the respawn stand on paper, and beside them the photograph keeps its colour`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height });
-      // the longest copy
-      await openPage(page, '/', { theme: 'light', locale: 'en' });
-      await ready(page);
-      await page.evaluate(() =>
-        window.scrollTo(0, document.documentElement.scrollHeight),
-      );
-      await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
-      // the photograph itself has come
-      await expect
-        .poll(() =>
-          page
-            .locator('.scene[data-scene="day1"] img')
-            .evaluate(
-              (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
-            ),
-        )
-        .toBe(true);
-      await atRest(page);
-      // the ground alone is measured first: without the words that stand on it, and without the mascot
-      const ground = await page.addStyleTag({
-        content:
-          '#respawn > :not(.dim-foot), #respawn .pal { visibility: hidden !important; }',
-      });
-      const foot = page.locator('#respawn .dim-foot');
-      const [join, title, band, bar] = await Promise.all([
-        page.locator('#respawn .join').boundingBox(),
-        // as far as the title may run: its box, whatever this language's words fill of it
-        page.locator('#respawn h2').evaluate((el) => {
-          const r = el.getBoundingClientRect();
-          return r.left + parseFloat(getComputedStyle(el).maxWidth);
-        }),
-        foot.boundingBox(),
-        page.locator('.dim-bar').boundingBox(),
-      ]);
-      const gutter = await page
-        .locator('#respawn')
-        .evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft));
-      // the rows of the screen between the bar and the footer's own band
-      const top = bar!.y + bar!.height + 40;
-      const rows = [0.1, 0.4, 0.7, 0.95].map(
-        (f) => top + f * (band!.y - 20 - top),
-      );
-      expect(band!.y - top).toBeGreaterThan(200);
-      // under the column of text: paper, whatever the photograph has there
-      const column: [number, number][] = rows.flatMap((y) =>
-        [join!.x, join!.x + join!.width / 2, join!.x + join!.width - 4].map(
-          (x) => [x, y] as [number, number],
-        ),
-      );
-      for (const [i, rgb] of (await colours(page, column, true)).entries())
-        for (const c of rgb)
-          expect(
-            c,
-            `paper at ${column[i].map(Math.round)}: ${rgb.map(Math.round)}`,
-          ).toBeGreaterThan(205);
-      // one gutter past the words (the list, or the title where it may run further) and on to the edge of the
-      // screen: the photograph as it is
-      const from = Math.max(join!.x + join!.width, title) + gutter + 4;
-      expect(from).toBeLessThan(0.75 * width);
-      const beside: [number, number][] = rows
-        .slice(0, 2)
-        .flatMap((y) =>
-          [from, (from + width) / 2, width - 6].map(
-            (x) => [x, y] as [number, number],
-          ),
-        );
-      const [veiled, bare] = [
-        await colours(page, beside, true),
-        await colours(page, beside, false),
-      ];
-      for (const [i, rgb] of veiled.entries())
-        for (const [c, v] of rgb.entries())
-          expect(
-            Math.abs(v - bare[i][c]),
-            `the photograph at ${beside[i].map(Math.round)}: ${rgb.map(Math.round)} under the veil, ${bare[i].map(Math.round)} without`,
-          ).toBeLessThanOrEqual(3);
-      await ground.evaluate((el) => (el as Element).remove());
-      await atRest(page);
-      // and the words can be read against what is really behind them
-      await expectLegible(
+  // the paper of this scene by day is the design's own: solid where the text begins, then a long fall
+  for (const locale of ['zh_TW', 'en'] as const)
+    for (const [width, height] of [
+      [1024, 768],
+      [1280, 720],
+      [1440, 900],
+      [1920, 1080],
+      [2560, 1440],
+    ] as const)
+      test(`by day at ${width}×${height} (${locale}) the paper of the respawn falls away gradually, the words can be read on it, and the far side of the photograph keeps its colour`, async ({
         page,
-        '#respawn h2, #respawn .depts [data-t], #respawn .dim-foot [data-t]',
-      );
-      // the footer has its own paper, from edge to edge
-      await expect(foot).toHaveCSS('background-image', /linear-gradient\(0deg/);
-      expect(band!.x).toBeLessThanOrEqual(0);
-      expect(band!.x + band!.width).toBeGreaterThanOrEqual(width);
-      await expectTextFits(page, { within: '#respawn .dim-foot' });
-      await expectNoHorizontalScroll(page);
-      // by night there is no band, and the scene keeps its wide veil
-      await page.locator('.dim-bar [data-action="theme"]').click();
-      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-      await expect(foot).toHaveCSS('background-image', 'none');
-      await expect(page.locator('.scene[data-scene="day1"] .veil')).toHaveClass(
-        /veil--wide/,
-      );
-    });
+      }) => {
+        await page.setViewportSize({ width, height });
+        await openPage(page, '/', { theme: 'light', locale });
+        await ready(page);
+        await page.evaluate(() =>
+          window.scrollTo(0, document.documentElement.scrollHeight),
+        );
+        await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
+        // the photograph itself has come
+        await expect
+          .poll(() =>
+            page
+              .locator('.scene[data-scene="day1"] img')
+              .evaluate(
+                (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+              ),
+          )
+          .toBe(true);
+        await atRest(page);
+        // the ground alone is measured first: without the words that stand on it, and without the mascot
+        const ground = await page.addStyleTag({
+          content:
+            '#respawn > :not(.dim-foot), #respawn .pal, .rail { visibility: hidden !important; }',
+        });
+        const foot = page.locator('#respawn .dim-foot');
+        const [join, band, bar] = await Promise.all([
+          page.locator('#respawn .join').boundingBox(),
+          foot.boundingBox(),
+          page.locator('.dim-bar').boundingBox(),
+        ]);
+        // a row of the screen between the bar and the footer's own band
+        const top = bar!.y + bar!.height + 40;
+        expect(band!.y - top).toBeGreaterThan(200);
+        const y = top + 0.4 * (band!.y - 20 - top);
+        // How much paper lies over the photograph at 41 points across that row: how far each has gone from the
+        // photograph's own colour (the veil taken away) towards the paper's. Where the photograph is nearly the
+        // colour of paper itself (sky, the white of the build) nothing can be told, and the point is left out.
+        const xs = Array.from(
+          { length: 41 },
+          (_, i) => 6 + (i / 40) * (width - 12),
+        );
+        const points = xs.map((x) => [x, y] as [number, number]);
+        const [veiled, bare] = [
+          await colours(page, points, true),
+          await colours(page, points, false),
+        ];
+        const PAPER = [238, 242, 245];
+        const paper = xs.flatMap((x, i) => {
+          const c = [0, 1, 2].reduce((best, k) =>
+            Math.abs(PAPER[k] - bare[i][k]) >
+            Math.abs(PAPER[best] - bare[i][best])
+              ? k
+              : best,
+          );
+          const room = PAPER[c] - bare[i][c];
+          if (Math.abs(room) < 40) return [];
+          return [{ at: x / width, alpha: (veiled[i][c] - bare[i][c]) / room }];
+        });
+        const profile = paper
+          .map((k) => `${k.at.toFixed(2)}:${k.alpha.toFixed(2)}`)
+          .join(' ');
+        expect(paper.length, profile).toBeGreaterThan(20);
+        // solid where the text begins
+        const solid = paper.filter((k) => k.at <= 0.3);
+        expect(solid.length, profile).toBeGreaterThan(3);
+        for (const k of solid) expect(k.alpha, profile).toBeGreaterThan(0.9);
+        expect(join!.x / width).toBeLessThan(0.3);
+        // the far side: the photograph as it is
+        const clear = paper.filter((k) => k.at >= 0.76);
+        expect(clear.length, profile).toBeGreaterThan(3);
+        for (const k of clear)
+          expect(Math.abs(k.alpha), profile).toBeLessThan(0.03);
+        // between the two it only ever falls
+        paper.forEach((k, i) => {
+          if (i)
+            expect(k.alpha, profile).toBeLessThanOrEqual(
+              paper[i - 1].alpha + 0.04,
+            );
+        });
+        // and the fall is a long one, not an edge: from nine tenths of paper to none takes at least three tenths of
+        // the screen's width
+        const from = paper.filter((k) => k.alpha >= 0.9).at(-1)!.at;
+        const to = paper.find((k) => k.alpha <= 0.03)!.at;
+        expect(to - from, profile).toBeGreaterThanOrEqual(0.3);
+        await ground.evaluate((el) => (el as Element).remove());
+        await atRest(page);
+        // and the words can be read against what is really behind them
+        await expectLegible(
+          page,
+          '#respawn h2, #respawn .depts [data-t], #respawn .dim-foot [data-t]',
+        );
+        // the footer has its own paper, from edge to edge
+        await expect(foot).toHaveCSS(
+          'background-image',
+          /linear-gradient\(0deg/,
+        );
+        expect(band!.x).toBeLessThanOrEqual(0);
+        expect(band!.x + band!.width).toBeGreaterThanOrEqual(width);
+        await expectTextFits(page, { within: '#respawn .dim-foot' });
+        await expectNoHorizontalScroll(page);
+        // by night there is no band, and the scene keeps its wide veil
+        await page.locator('.dim-bar [data-action="theme"]').click();
+        await expect(page.locator('html')).toHaveAttribute(
+          'data-theme',
+          'dark',
+        );
+        await expect(foot).toHaveCSS('background-image', 'none');
+        await expect(
+          page.locator('.scene[data-scene="day1"] .veil'),
+        ).toHaveClass(/veil--wide/);
+      });
 
   test('on a phone a department stacks: name, description, link', async ({
     page,
