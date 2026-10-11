@@ -17,6 +17,10 @@ import {
 import { STAR_DRIFT } from '../src/constants/starfield';
 import { readFileSync } from 'node:fs';
 
+/** The two portals of the page: one canvas each, filled with its own surface. */
+const NETHER_PORTAL = 'canvas.portal[data-surface="nether"]';
+const END_PORTAL = 'canvas.portal[data-surface="end"]';
+
 test.describe('home: spawn', () => {
   test('the loader gives way to the title over the spawn scene', async ({
     page,
@@ -522,7 +526,7 @@ test.describe('home: nether', () => {
   const expectPortalAtFull = async (page: Page) =>
     expect((await portalState(page)).opacity).toBeGreaterThan(0.98);
   const portalState = (page: Page) =>
-    page.locator('canvas.portal').evaluate((c) => {
+    page.locator(NETHER_PORTAL).evaluate((c) => {
       const s = getComputedStyle(c);
       return { visibility: s.visibility, opacity: +s.opacity };
     });
@@ -535,7 +539,7 @@ test.describe('home: nether', () => {
     await openPage(page, '/');
     await ready(page);
     await scrollToSection(page, '#nether', -0.5);
-    const portal = page.locator('canvas.portal');
+    const portal = page.locator(NETHER_PORTAL);
     await expect(portal).toBeVisible();
     await expectPortalAtFull(page);
     const box = (await portal.boundingBox())!;
@@ -563,7 +567,7 @@ test.describe('home: nether', () => {
     await scrollToSection(page, '#nether', -0.5);
     const sample = () =>
       page
-        .locator('canvas.portal')
+        .locator(NETHER_PORTAL)
         .evaluate((c: HTMLCanvasElement) =>
           Array.from(
             c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data,
@@ -599,7 +603,7 @@ test.describe('home: nether', () => {
     await scrollToSection(page, '#nether');
     expect(await visibleScenes(page)).toEqual(['nether']);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
-    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
     await expect(page.locator('#nether .tag')).toContainText('THE NETHER');
     await expect(page.locator('#nether .tag .acc')).toHaveCSS(
       'color',
@@ -636,7 +640,7 @@ test.describe('home: nether', () => {
     // and out the other side
     await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
     expect(await visibleScenes(page)).toEqual(['w3']);
-    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
     await expect(page.locator('#overworld .tag .acc')).toHaveCSS(
       'color',
@@ -727,7 +731,7 @@ test.describe('home: nether', () => {
     expect(await visibleScenes(page)).toEqual(['nether']);
     expect(await shownPictures(page)).toEqual(['5']);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
-    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
     // the statement stands clear of the pinned stage
     const [stage, rank] = await Promise.all([
       page.locator('.ledger-stage').boundingBox(),
@@ -929,7 +933,7 @@ test.describe('home: nether', () => {
     await ready(page);
     const frames = () =>
       page
-        .locator('canvas.portal')
+        .locator(NETHER_PORTAL)
         .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
     // at the hero: counted, and not moving
     expect(await frames()).toBe(0);
@@ -941,7 +945,7 @@ test.describe('home: nether', () => {
     await expect.poll(frames).toBeGreaterThan(mid + 3);
     // through to the other side: it stops again
     await scrollToSection(page, '#nether', 0.3);
-    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
     const after = await frames();
     await page.waitForTimeout(700);
     expect(await frames()).toBe(after);
@@ -1022,7 +1026,7 @@ test.describe('home: nether', () => {
     await openPage(page, '/', { reducedMotion: true });
     await ready(page);
     await scrollToSection(page, '#nether', -0.5);
-    await expect(page.locator('canvas.portal')).toBeHidden();
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
     await scrollToSection(page, '#nether');
     expect(await visibleScenes(page)).toEqual(['nether']);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
@@ -1228,40 +1232,225 @@ test.describe('home: the end', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
   });
 
-  test('the fall: the nether spins away and shrinks while the hall turns into place, and back', async ({
+  /** Visibility and opacity of the End's portal. */
+  const endPortal = (page: Page) =>
+    page.locator(END_PORTAL).evaluate((c) => {
+      const s = getComputedStyle(c);
+      return { visibility: s.visibility, opacity: +s.opacity };
+    });
+  const endFrames = (page: Page) =>
+    page
+      .locator(END_PORTAL)
+      .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
+
+  test('the End is entered through its portal: it rises over the nether, the scene changes behind it, it clears over the hall; and back', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
     await walkTheLedger(page);
-    // 60% of the way through the transition
-    await scrollToSection(page, '#end', -0.4);
-    expect(await visibleScenes(page)).toEqual(['nether', 'hall']);
+    // the first steps of the crossing: the nether begins to push in, and nothing is over the page yet
+    await scrollToSection(page, '#end', -0.8);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    expect((await pose(page, 'nether')).scale).toBeGreaterThan(1);
+    // partway in: the layer is rising, the nether is still under it, upright (it does not turn or shrink)
+    await scrollToSection(page, '#end', -0.6);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const rising = await endPortal(page);
+    expect(rising.visibility).toBe('visible');
+    expect(rising.opacity).toBeGreaterThan(0.1);
+    expect(rising.opacity).toBeLessThan(0.9);
     const leaving = await pose(page, 'nether');
-    expect(leaving.rotate).toBeGreaterThan(4);
-    expect(leaving.rotate).toBeLessThan(20);
-    expect(leaving.scale).toBeGreaterThan(0.6);
-    expect(leaving.scale).toBeLessThan(0.95);
-    const arriving = await pose(page, 'hall');
-    expect(arriving.rotate).toBeLessThan(-2);
-    expect(arriving.rotate).toBeGreaterThan(-30);
-    expect(arriving.scale).toBeGreaterThan(1.03);
-    expect(arriving.scale).toBeLessThan(1.6);
-    // landed: the hall is square and still
+    expect(Math.abs(leaving.rotate)).toBeLessThan(0.01);
+    expect(leaving.scale).toBeGreaterThan(1);
+    expect(leaving.scale).toBeLessThan(1.25);
+    // the midpoint: the layer is whole and covers the screen
+    await scrollToSection(page, '#end', -0.5);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.98);
+    const box = (await page.locator(END_PORTAL).boundingBox())!;
+    expect(box.x).toBeLessThanOrEqual(0);
+    expect(box.y).toBeLessThanOrEqual(0);
+    expect(box.x + box.width).toBeGreaterThanOrEqual(1440);
+    expect(box.y + box.height).toBeGreaterThanOrEqual(900);
+    // a step past it the scene behind the layer is the hall, and the layer is still all but whole
+    await scrollToSection(page, '#end', -0.48);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.8);
+    // partway out: it clears over the hall
+    await scrollToSection(page, '#end', -0.3);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    const clearing = await endPortal(page);
+    expect(clearing.visibility).toBe('visible');
+    expect(clearing.opacity).toBeGreaterThan(0.1);
+    expect(clearing.opacity).toBeLessThan(0.9);
+    // the nether's own portal has no part in it
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    // landed: the layer is gone, the hall is square and still
     await scrollToSection(page, '#end', 0);
     expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
     const landed = await pose(page, 'hall');
     expect(Math.abs(landed.rotate)).toBeLessThan(0.01);
     expect(landed.scale).toBeCloseTo(1, 3);
-    // and back: the nether is whole again, the hall is off
+    // and back: through the whole layer again, then the nether as it was, the hall off
+    await scrollToSection(page, '#end', -0.5);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.98);
     await scrollToSection(page, '.rank', -0.3);
     expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
     const back = await pose(page, 'nether');
     expect(Math.abs(back.rotate)).toBeLessThan(0.01);
     expect(back.scale).toBeCloseTo(1, 3);
     await expect(page.locator('.scene[data-scene="hall"]')).toBeHidden();
     await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
+  });
+
+  for (const [width, height] of [
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1440, 900],
+    [2560, 1440],
+  ] as const)
+    test(`at ${width}×${height} the rank statement at rest is not yet under the End's portal`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      // by day: there a dark layer over the paper is what would cost the statement its contrast
+      await openPage(page, '/', { theme: 'light' });
+      await ready(page);
+      await walkTheLedger(page);
+      // The statement's section is shorter than the screen: with the statement at the head of the screen the
+      // End's opening is already coming in at the foot of it, and its transition is under way.
+      await scrollToSection(page, '.rank', 0);
+      expect(await visibleScenes(page)).toEqual(['nether']);
+      expect(
+        await page
+          .locator('#end')
+          .evaluate((el) => el.getBoundingClientRect().top / innerHeight),
+        "the End's opening is in the screen",
+      ).toBeLessThan(0.95);
+      // the portal's layer is not: it begins once the opening is well into the screen
+      await expect(page.locator(END_PORTAL)).toBeHidden();
+      await scrollToSection(page, '#end', -0.6);
+      expect((await endPortal(page)).opacity).toBeGreaterThan(0.1);
+    });
+
+  test("the End's portal is a near-black field of teal, green and pale specks, generated: no image is asked for", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const images: string[] = [];
+    page.on('request', (r) => {
+      if (r.resourceType() === 'image') images.push(r.url());
+    });
+    await openPage(page, '/');
+    await ready(page);
+    await walkTheLedger(page);
+    await scrollToSection(page, '#end', -0.5);
+    await expect(page.locator(END_PORTAL)).toBeVisible();
+    const read = () =>
+      page.locator(END_PORTAL).evaluate((c: HTMLCanvasElement) => {
+        const d = c
+          .getContext('2d')!
+          .getImageData(0, 0, c.width, c.height).data;
+        const n = d.length / 4;
+        let opaque = 0,
+          ground = 0,
+          teal = 0,
+          pale = 0,
+          violet = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+          if (a === 255) opaque++;
+          if (r < 16 && g < 24 && b < 24) ground++;
+          // a pale speck, or one in teal or green: green well above red
+          else if (r > 150 && g > 180 && b > 170) pale++;
+          else if (g > r * 1.6) teal++;
+          if (b > 60 && b > g * 2) violet++;
+        }
+        return {
+          opaque: opaque / n,
+          ground: ground / n,
+          teal,
+          pale,
+          violet,
+          size: [c.width, c.height],
+          rendering: getComputedStyle(c).imageRendering,
+          data: Array.from(d).join(),
+        };
+      });
+    const first = await read();
+    expect(first.opaque).toBe(1);
+    // mostly the dark field, and in it specks of more than one kind; nothing of the nether's violet
+    expect(first.ground).toBeGreaterThan(0.9);
+    expect(first.ground).toBeLessThan(0.995);
+    expect(first.teal).toBeGreaterThan(80);
+    expect(first.pale).toBeGreaterThan(5);
+    expect(first.violet).toBe(0);
+    expect(first.size[0] / first.size[1]).toBeCloseTo(16 / 9, 2);
+    expect(first.rendering).toBe('pixelated');
+    // the specks drift
+    await page.waitForTimeout(1500);
+    const later = await read();
+    expect(later.data).not.toBe(first.data);
+    expect(later.ground).toBeGreaterThan(0.9);
+    // the pictures of the page are its scenes and its own assets; nothing of the game
+    expect(images.length).toBeGreaterThan(0);
+    expect(
+      images.filter(
+        (u) =>
+          /portal|\/mc\/|minecraft|textures?\//i.test(u) ||
+          !/^(https:\/\/mc-ctec\.org\/|http:\/\/localhost:\d+\/|https:\/\/mineskin\.eu\/|data:)/.test(
+            u,
+          ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("the End's portal draws only while it is on screen, and the stars behind the End do not move under it", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    // at the hero: counted, and not moving
+    expect(await endFrames(page)).toBe(0);
+    await walkTheLedger(page);
+    await page.waitForTimeout(700);
+    expect(await endFrames(page)).toBe(0);
+    await scrollToSection(page, '#end', -0.5);
+    await expect.poll(() => endFrames(page)).toBeGreaterThan(3);
+    const mid = await endFrames(page);
+    await expect.poll(() => endFrames(page)).toBeGreaterThan(mid + 3);
+    // the starfield belongs to the scene of the credits: it is not showing here and its layers stand still
+    await expect(page.locator('.scene[data-scene="end"]')).toBeHidden();
+    const stars = () =>
+      page
+        .locator('.scene[data-scene="end"] .starfield i')
+        .evaluateAll((els) =>
+          els.map((el) => getComputedStyle(el).transform).join('|'),
+        );
+    const still = await stars();
+    await page.waitForTimeout(500);
+    expect(await stars()).toBe(still);
+    // meanwhile the nether's portal draws nothing
+    const nether = () =>
+      page
+        .locator(NETHER_PORTAL)
+        .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
+    const netherAt = await nether();
+    // through to the other side: it stops again
+    await scrollToSection(page, '#end', 0.3);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    const after = await endFrames(page);
+    await page.waitForTimeout(700);
+    expect(await endFrames(page)).toBe(after);
+    expect(await nether()).toBe(netherAt);
   });
 
   test('the moon slides in from the right and the farm rises from the bottom, and both undo', async ({
@@ -1759,7 +1948,7 @@ test.describe('home: the end', () => {
       await expectNoHorizontalScroll(page);
     });
 
-  test('switching language inside the End keeps the fall, the builds and the credits working', async ({
+  test('switching language inside the End keeps the portal, the builds and the credits working', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -1805,10 +1994,12 @@ test.describe('home: the end', () => {
       await expect(line).toHaveCSS('opacity', '1');
     await expect(page.locator('#end p.body')).toHaveCSS('opacity', '1');
     await expect(page.locator('#end .vt')).toHaveText('THE END');
-    // the fall still runs, and the way back out still works
-    await scrollToSection(page, '#end', -0.4);
-    expect(await visibleScenes(page)).toEqual(['nether', 'hall']);
-    expect((await pose(page, 'nether')).rotate).toBeGreaterThan(4);
+    // the portal still runs, and the way back out still works
+    await scrollToSection(page, '#end', -0.5);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.98);
+    await scrollToSection(page, '#end', -0.6);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.1);
     await scrollToSection(page, '.rank', -0.3);
     expect(await visibleScenes(page)).toEqual(['nether']);
     // a second switch, from above the End
@@ -1827,7 +2018,7 @@ test.describe('home: the end', () => {
     await expectNoMissingKeys(page);
   });
 
-  test('reduced motion: the End scenes switch without the fall and the stars stand still', async ({
+  test('reduced motion: the End scenes switch without the portal and the stars stand still', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -1858,10 +2049,20 @@ test.describe('home: the end', () => {
     expect(await lines.count()).toBe(2);
     for (const line of await lines.all())
       await expect(line).toHaveCSS('opacity', '1');
-    // back up, with nothing left turned
+    // back up, with nothing left turned or enlarged
     await jumpTo(page, '#end', 0.3);
     await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
     expect(Math.abs((await pose(page, 'hall')).rotate)).toBeLessThan(0.01);
+    expect((await pose(page, 'hall')).scale).toBeCloseTo(1, 3);
+    // the portal has no part in it: one still frame, never shown, at the boundary itself as well
+    await expect(page.locator(END_PORTAL)).toHaveCount(1);
+    await jumpTo(page, '#end', -0.55);
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    await jumpTo(page, '#end', -0.45);
+    await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    expect(await endFrames(page)).toBe(0);
   });
 });
 

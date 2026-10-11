@@ -102,7 +102,8 @@ html.lenis {
     inset: 0 calc(-1 * var(--drift-x)) calc(-1 * var(--drift-y));
     background-repeat: repeat;
   }
-  /* nether portal: a generated swirl, drawn small and scaled up with hard pixels */
+  /* the portals (the Nether's swirl, the End's field of specks): generated, drawn small and scaled up with hard
+     pixels. One canvas each, in the same place; only the one that is being crossed is ever switched on. */
   .portal {
     position: fixed;
     inset: 0;

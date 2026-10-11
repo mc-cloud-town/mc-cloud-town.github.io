@@ -43,7 +43,7 @@ export interface Frame {
   /** opacity of the navigation cover (0 when it is not shown) */
   cover: number;
   dim: string | undefined;
-  /** opacity of the nether portal (0 when it is hidden) */
+  /** opacity of a portal, the Nether's or the End's, whichever shows more (0 when both are hidden) */
   portal: number;
   /** opacity of the white-out of the wake (0 when it is hidden) */
   flash: number;
@@ -131,7 +131,10 @@ export const record = (page: Page) =>
         y: Math.round(window.scrollY),
         cover: shown('.dim-cover'),
         dim: document.documentElement.dataset.dim,
-        portal: shown('canvas.portal'),
+        portal: Math.max(
+          shown('canvas.portal[data-surface="nether"]'),
+          shown('canvas.portal[data-surface="end"]'),
+        ),
         flash: shown('.flash'),
         sheet: shown('.dim-sheet'),
         tone: cover ? getComputedStyle(cover).backgroundColor : '',

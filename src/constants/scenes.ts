@@ -1,4 +1,5 @@
 import { STATIC_DATA_API } from '@/constants';
+import type { PortalSurface } from '@/lib/dimensions/portalSurfaces';
 
 export type SceneId =
   | 'spawn'
@@ -13,7 +14,7 @@ export type SceneId =
   | 'end'
   | 'day1';
 export type Veil = 'hero' | 'side' | 'side-flip' | 'wide' | 'foot' | 'none';
-export type Fx = 'push' | 'curtain' | 'slide' | 'portal' | 'fall' | 'wake';
+export type Fx = 'push' | 'curtain' | 'slide' | 'portal' | 'wake';
 
 export interface SceneDef {
   id: SceneId;
@@ -25,6 +26,13 @@ export interface TransitionDef {
   from: SceneId;
   to: SceneId;
   fx: Fx;
+  /** for a portal: which one covers the screen */
+  surface?: PortalSurface;
+  /**
+   * For a portal or a wake: how far into the crossing (0 to 0.5) the cover begins to rise; 0 if not given.
+   * It is whole at the middle either way.
+   */
+  coverFrom?: number;
 }
 
 const progress = (id: string) =>
@@ -53,7 +61,9 @@ export const NETHER_IMAGES = ['p4', 'p10', 'p12', 'p38', 'p49', 'p51'].map(
 );
 
 /**
- * One transition per section, in page order. Neighbours never share an effect.
+ * One transition per section, in page order. Neighbours never share an effect, with one exception that is the
+ * point of it: a dimension other than the first is entered through its portal, the Nether's and the End's alike,
+ * each with its own surface (the facilities and the rank statement lie between the two on the page).
  * `trigger` is a selector inside the home page root.
  */
 export const TRANSITIONS: TransitionDef[] = [
@@ -66,8 +76,25 @@ export const TRANSITIONS: TransitionDef[] = [
   },
   { trigger: '[data-work="overworld-1"]', from: 'w1', to: 'w2', fx: 'slide' },
   { trigger: '[data-work="overworld-2"]', from: 'w2', to: 'w3', fx: 'push' },
-  { trigger: '#nether', from: 'w3', to: 'nether', fx: 'portal' },
-  { trigger: '#end', from: 'nether', to: 'hall', fx: 'fall' },
+  {
+    trigger: '#nether',
+    from: 'w3',
+    to: 'nether',
+    fx: 'portal',
+    surface: 'nether',
+  },
+  {
+    trigger: '#end',
+    from: 'nether',
+    to: 'hall',
+    fx: 'portal',
+    surface: 'end',
+    // The rank statement above is shorter than a screen: when it stands at the head of the screen the End's
+    // opening is already up to a quarter of the way in at the foot of it (measured at 360px to 2560px), and
+    // the statement would be read under the rising layer, a dark one over the day's paper. The layer waits
+    // until the opening is three tenths in; the push of the old scene begins with the crossing, as ever.
+    coverFrom: 0.3,
+  },
   { trigger: '[data-work="end-0"]', from: 'hall', to: 'moon', fx: 'slide' },
   { trigger: '[data-work="end-1"]', from: 'moon', to: 'farm', fx: 'curtain' },
   { trigger: '#credits', from: 'farm', to: 'end', fx: 'push' },

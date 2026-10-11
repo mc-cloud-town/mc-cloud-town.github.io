@@ -193,7 +193,9 @@ export const HomePage = () => {
       <World first={first} all={ready}>
         {reduced !== null && <Starfield reduced={reduced} />}
       </World>
-      <PortalCanvas />
+      {/* one for each dimension that is entered through a portal (TRANSITIONS, scenes.ts) */}
+      <PortalCanvas surface='nether' />
+      <PortalCanvas surface='end' />
       <div className='flash' aria-hidden='true' />
       <Loader reduced={reduced} onDone={onDone} />
       {/* scripts off: nothing would ever lift the loader, so it is not shown at all */}
