@@ -25,17 +25,32 @@ const HOLD_S = 0.18;
 const REDUCED_FADE_S = 0.12;
 
 /**
- * The picture is in and decoded, so the frame that first shows it does not wait for it; or it failed, which is no
- * reason to wait. One that was given another address meanwhile (the hero's cover falling back to the site's own
- * picture: HeroVideo.tsx) is waited for anew: the browser reports the first wait as failed when the address changes.
+ * Which picture the hero stands on is decided by the hero (HeroVideo.tsx: YouTube's cover, or the site's own when
+ * that cannot be had) and published on the picture as `data-cover`: `pending` until it is decided. Resolves once
+ * it is; at once for any other picture.
  */
-const loaded = (img: HTMLImageElement): Promise<void> => {
-  const src = img.getAttribute('src');
-  return img.decode().then(
-    () => {},
-    () => (img.getAttribute('src') !== src ? loaded(img) : undefined),
+const decided = (img: HTMLImageElement) =>
+  new Promise<void>((done) => {
+    if (img.dataset.cover !== 'pending') return done();
+    const watch = new MutationObserver(() => {
+      if (img.dataset.cover === 'pending') return;
+      watch.disconnect();
+      done();
+    });
+    watch.observe(img, { attributes: true, attributeFilter: ['data-cover'] });
+  });
+
+/**
+ * The picture is in and decoded, so the frame that first shows it does not wait for it; or it failed, which is no
+ * reason to wait. For the hero's picture: the one the hero ends up with, not the one it started with.
+ */
+const loaded = (img: HTMLImageElement) =>
+  decided(img).then(() =>
+    img.decode().then(
+      () => {},
+      () => {},
+    ),
   );
-};
 
 /**
  * A map of the world being generated: chunks pass through their stages from the centre outward

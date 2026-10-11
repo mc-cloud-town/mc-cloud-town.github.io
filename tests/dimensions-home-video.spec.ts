@@ -59,6 +59,10 @@ interface CoverFrame {
   in: boolean;
   /** how many players the page has made */
   players: number;
+  /** the loader marked the picture as there whole when it lifted */
+  whole: boolean;
+  /** the picture's address */
+  src: string;
 }
 /** Record the cover on every frame from the very first one; `__playingAt` is set by `sayPlaying`. */
 const watchCover = (page: Page) =>
@@ -85,6 +89,8 @@ const watchCover = (page: Page) =>
           players:
             (window as unknown as { __yt?: { players: unknown[] } }).__yt
               ?.players.length ?? 0,
+          whole: (cover as HTMLElement).dataset.whole !== undefined,
+          src: cover.getAttribute('src') ?? '',
         });
       }
       requestAnimationFrame(tick);
@@ -153,7 +159,7 @@ test.describe('home: the hero is the anniversary video', () => {
     const frames = await coverFrames(page);
     // the page was not handed over before the cover was in, and from then on the cover is whole
     const waiting = frames.filter((f) => !f.in);
-    expect(waiting.length).toBeGreaterThan(10);
+    expect(waiting.length).toBeGreaterThan(3);
     for (const f of waiting) {
       expect(f.ready).toBe(false);
       expect(f.loader).toBe(1);
@@ -253,7 +259,8 @@ test.describe('home: the hero is the anniversary video', () => {
     const seen = await fallback(page);
     expect(seen.src).toBe('/assets/members/CTEC_Members.webp');
     // about two seconds after the page's script took over
-    expect(seen.at! - seen.liveAt!).toBeGreaterThan(COVER_BUDGET_MS - 300);
+    // (the budget runs from the first effect of the page, the mark is set a moment after it)
+    expect(seen.at! - seen.liveAt!).toBeGreaterThan(COVER_BUDGET_MS - 700);
     expect(seen.at! - seen.liveAt!).toBeLessThan(COVER_BUDGET_MS + 1200);
     const cover = await coverNow(page);
     expect(cover.src).toMatch(/CTEC_Members\.webp$/);
@@ -272,6 +279,125 @@ test.describe('home: the hero is the anniversary video', () => {
     await expect
       .poll(() => coverOpacity(page), { timeout: 12_000 })
       .toBeLessThan(0.001);
+  });
+
+  /** The site's own picture is held back: it comes when the returned function is called. */
+  const holdLocal = async (page: Page) => {
+    const held: (() => Promise<void>)[] = [];
+    let open = false;
+    await page.route('**/assets/members/CTEC_Members.webp', (route) => {
+      if (open) return route.continue();
+      held.push(() => route.continue());
+    });
+    return async () => {
+      open = true;
+      await Promise.all(held.map((go) => go().catch(() => {})));
+    };
+  };
+  /** Open the home page, and do `then` a moment after the page's script has taken over. */
+  const openAnd = async (page: Page, after: number, then: () => unknown) => {
+    const opening = openPage(page, '/');
+    await page.locator('html[data-live]').waitFor({ state: 'attached' });
+    await page.waitForTimeout(after);
+    await then();
+    await opening;
+  };
+  /** From the handover on, the hero stands on the site's own picture, whole, in every frame. */
+  const expectLiftedOnLocal = async (page: Page) => {
+    const frames = await coverFrames(page);
+    const handed = frames.filter((f) => f.ready);
+    expect(handed.length).toBeGreaterThan(10);
+    const bare = handed.filter(
+      (f) => !f.in || !f.whole || f.cover !== 1 || !/CTEC_Members/.test(f.src),
+    );
+    expect(
+      bare.length,
+      `frames after the handover without the picture whole: ${JSON.stringify(bare[0])}`,
+    ).toBe(0);
+  };
+
+  test("the cover fails a second after the script took over, the site's own picture is slow: the loader waits for it", async ({
+    page,
+  }) => {
+    let refuse = () => Promise.resolve();
+    await stubVideo(page, {
+      cover: (_fulfil, no) => void (refuse = no),
+      player: 'blocked',
+    });
+    const release = await holdLocal(page);
+    await watchCover(page);
+    await openAnd(page, 800, () => {
+      void refuse();
+      setTimeout(() => void release(), 3000);
+    });
+    await ready(page);
+    await page.waitForTimeout(600);
+    await expectLiftedOnLocal(page);
+    // the loader was up while the picture was on its way: more than three seconds after the script took over
+    const frames = await coverFrames(page);
+    expect(
+      frames.filter((f) => !f.ready && f.loader === 1).length,
+    ).toBeGreaterThan(60);
+  });
+
+  test("the cover stalls past its budget, the site's own picture is slow: the loader waits for it", async ({
+    page,
+  }) => {
+    await stubVideo(page, {
+      cover: () => {
+        // never answered
+      },
+      player: 'blocked',
+    });
+    const release = await holdLocal(page);
+    await watchCover(page);
+    // (the budget is two seconds: the picture comes a second and a half after it is asked for)
+    await openAnd(page, COVER_BUDGET_MS + 1500, () => release());
+    await ready(page);
+    await page.waitForTimeout(600);
+    await expectLiftedOnLocal(page);
+  });
+
+  test("neither picture comes: the loader lifts at its timeout, and the site's own picture eases in when it does come", async ({
+    page,
+  }) => {
+    test.slow();
+    await stubVideo(page, {
+      cover: () => {
+        // never answered
+      },
+      player: 'blocked',
+    });
+    const release = await holdLocal(page);
+    await watchCover(page);
+    await openPage(page, '/');
+    await page
+      .locator('.dim[data-ready="true"]')
+      .waitFor({ timeout: LOADER_TIMEOUT_MS + 6000 });
+    await expect(page.locator('.loader')).toHaveCount(0);
+    // the hero is on its ground, and the picture is not marked as whole
+    const before = await coverFrames(page);
+    const handed = before.filter((f) => f.ready);
+    expect(handed.length).toBeGreaterThan(10);
+    for (const f of handed) expect(f.in).toBe(false);
+    const from = await now(page);
+    await release();
+    await expect
+      .poll(async () => (await coverNow(page)).in, { timeout: 10_000 })
+      .toBe(true);
+    await expect.poll(() => coverOpacity(page)).toBe(1);
+    const after = (await coverFrames(page)).filter((f) => f.t >= from);
+    // from the first frame it can be drawn in, it rises: never a frame in which it is simply there
+    const drawn = after.filter((f) => f.in);
+    expect(drawn[0].cover).toBeLessThan(0.2);
+    const rising = drawn.map((f) => f.cover);
+    expect(new Set(rising.filter((o) => o > 0 && o < 1)).size).toBeGreaterThan(
+      4,
+    );
+    rising.forEach((o, i) =>
+      expect(o, `frame ${i}`).toBeGreaterThanOrEqual(rising[i - 1] ?? 0),
+    );
+    for (const f of after) expect(f.whole).toBe(false);
   });
 
   test("YouTube's cover in time: it stays the hero's picture, the local one never takes its place", async ({

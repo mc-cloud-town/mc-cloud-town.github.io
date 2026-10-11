@@ -121,8 +121,8 @@ const stubbed = new WeakSet<Page>();
 /**
  * Keep the page off YouTube. Called by `openPage` for every page it opens; a test that goes to the home page by
  * itself, or wants something else than the default, calls it first (the first call for a page stands).
- *   cover   'file': the still is served from this repository; 'blocked': it never comes; or a handler of the
- *           test's own (to hold it back)
+ *   cover   'file': the still is served from this repository; 'blocked': it is refused at once; or a handler of
+ *           the test's own, which is given the way to serve it and the way to refuse it (to do either later)
  *   player  'stub': the stand-in; 'blocked': the script never comes
  */
 export const stubVideo = async (
@@ -131,7 +131,10 @@ export const stubVideo = async (
     cover = 'file',
     player = 'stub',
   }: {
-    cover?: 'file' | 'blocked' | ((fulfil: () => Promise<void>) => void);
+    cover?:
+      | 'file'
+      | 'blocked'
+      | ((fulfil: () => Promise<void>, refuse: () => Promise<void>) => void);
     player?: 'stub' | 'blocked';
   } = {},
 ) => {
@@ -153,7 +156,7 @@ export const stubVideo = async (
       });
     if (cover === 'blocked') return route.abort();
     if (cover === 'file') return fulfil();
-    return cover(fulfil);
+    return cover(fulfil, () => route.abort());
   });
   await page.route(API_URL, (route) =>
     player === 'blocked'

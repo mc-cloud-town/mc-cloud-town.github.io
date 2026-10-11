@@ -33,6 +33,8 @@ export const COVER_BUDGET_MS = 2000;
  * team, should replace it here (put the file under public/assets/homePage/ and name it in this line).
  */
 export const LOCAL_COVER = '/assets/members/CTEC_Members.webp';
+/** A picture that comes after the page was handed over eases in: as long as anything that arrives late (--t-in). */
+const LATE_IN_S = 0.45;
 
 /** The player's state for "the picture is moving" (YT.PlayerState.PLAYING). */
 const PLAYING = 1;
@@ -115,6 +117,11 @@ export const HeroVideo = ({
   const name = useRef(title);
   /** What the player's effect needs of the arrival: whether it is over, and whom to tell when it is. */
   const arrival = useRef({ over: arrived, tell: () => {} });
+  /**
+   * What the picture's effect and the player's effect need of each other: the cover is clear for the video
+   * (`clear`), and the picture is awaited after the handover (`late`), clear until it eases in.
+   */
+  const hand = useRef({ clear: false, late: false });
 
   // the frame is named in the reader's language
   useEffect(() => {
@@ -122,28 +129,77 @@ export const HeroVideo = ({
     slot.current?.querySelector('iframe')?.setAttribute('title', title);
   }, [title]);
 
-  // YouTube's cover, or else the site's own picture: whatever the reader's motion, connection or kind
+  // Which picture is the hero's first picture: YouTube's cover, or else the site's own. Decided here and nowhere
+  // else, whatever the reader's motion, connection or kind, and published on the picture itself (`data-cover`):
+  // the loader waits until it is decided, and then for the picture it was decided for (Loader.tsx).
   useEffect(() => {
-    const still = cover.current;
-    if (!still) return;
+    const still = cover.current,
+      root = still?.closest<HTMLElement>('.dim');
+    if (!still || !root) return;
+    const state = hand.current;
+    let gone = false;
+    let timer: number | undefined;
+    let easing: gsap.core.Tween | undefined;
     const whole = () => still.complete && still.naturalWidth > 0;
-    if (whole()) return;
-    const fall = () => {
-      settle();
-      // (the cover may have come in the very last moment)
-      if (!whole()) still.src = LOCAL_COVER;
-    };
-    const timer = window.setTimeout(fall, COVER_BUDGET_MS);
-    const settle = () => {
+    const decided = () => still.dataset.cover !== 'pending';
+    const decide = (as: 'youtube' | 'local') => {
       window.clearTimeout(timer);
-      still.removeEventListener('load', settle);
-      still.removeEventListener('error', fall);
+      if (as === 'local') still.src = LOCAL_COVER;
+      // (after the address: whoever reads the decision finds the picture it is about)
+      still.dataset.cover = as;
     };
-    // refused before this script ran: known already
-    if (still.complete) return void fall();
-    still.addEventListener('load', settle);
-    still.addEventListener('error', fall);
-    return settle;
+    const onLoad = () => {
+      if (!decided()) return decide('youtube');
+      // A picture that comes after the page was handed over (the loader gave up waiting for it): it eases in, in
+      // the time and curve of anything that arrives late on this page. Unless the video is showing by now.
+      if (!state.late) return;
+      state.late = false;
+      if (state.clear) return;
+      const reduced = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches;
+      easing = gsap.to(still, {
+        opacity: 1,
+        duration: reduced ? 0.12 : LATE_IN_S,
+        ease: reduced ? 'none' : 'power3.out',
+      });
+    };
+    const onError = () => {
+      // (of the local picture: nothing more to try)
+      if (!decided()) decide('local');
+    };
+    // Handed over without its picture: until that comes the picture is clear, so that it has somewhere to ease
+    // in from (a picture that is not there yet draws nothing either way).
+    const onHandover = () => {
+      if (root.dataset.ready !== 'true') return;
+      watch.disconnect();
+      if (!decided() || whole() || state.clear) return;
+      state.late = true;
+      gsap.set(still, { opacity: 0 });
+    };
+    const watch = new MutationObserver(onHandover);
+    still.addEventListener('load', onLoad);
+    still.addEventListener('error', onError);
+    if (!decided()) {
+      // came, or was refused, before this script ran: known already
+      if (whole()) decide('youtube');
+      else if (still.complete) decide('local');
+      else
+        timer = window.setTimeout(() => {
+          // (the cover may have come in the very last moment)
+          if (!gone && !decided()) decide(whole() ? 'youtube' : 'local');
+        }, COVER_BUDGET_MS);
+    }
+    watch.observe(root, { attributes: true, attributeFilter: ['data-ready'] });
+    onHandover();
+    return () => {
+      gone = true;
+      window.clearTimeout(timer);
+      watch.disconnect();
+      easing?.kill();
+      still.removeEventListener('load', onLoad);
+      still.removeEventListener('error', onError);
+    };
   }, [id]);
 
   useEffect(() => {
@@ -160,6 +216,7 @@ export const HeroVideo = ({
     if (!wantsVideo()) return;
     // (the same object for as long as the component lives)
     const told = arrival.current;
+    const state = hand.current;
 
     // Where the reader arrives, in the order sectionJumps.ts lands by: until the page is handed over the scene
     // layers say nothing yet (the first one is simply there, under the loader).
@@ -195,6 +252,9 @@ export const HeroVideo = ({
         duration: DISSOLVE_S,
         ease: DISSOLVE_EASE,
         delay: Math.max(0, playingAt + SETTLE_MS - performance.now()) / 1000,
+        onStart: () => {
+          state.clear = true;
+        },
       });
     };
     told.tell = plan;
@@ -204,7 +264,9 @@ export const HeroVideo = ({
       returning?.kill();
       clearing = returning = undefined;
       playingAt = null;
-      if (atOnce) gsap.set(still, { opacity: 1 });
+      state.clear = false;
+      // (a picture that is still awaited stays clear until it comes and eases in)
+      if (atOnce) gsap.set(still, { opacity: state.late ? 0 : 1 });
       else
         returning = gsap.to(still, {
           opacity: 1,
@@ -343,6 +405,8 @@ export const HeroVideo = ({
       <img
         className='vid-cover'
         ref={cover}
+        // which picture this is to be is not decided yet (the effect above decides, and says so here)
+        data-cover='pending'
         src={coverOf(id)}
         alt=''
         fetchPriority='high'
