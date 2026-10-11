@@ -43,6 +43,12 @@ test.describe('home: respawn', () => {
       await expect(a).toHaveAttribute('target', '_blank');
       await expect(a).toHaveAttribute('rel', /noopener/);
     }
+    // and after them, the way to the full text: the join page, in this tab, as a step of the shell
+    const more = page.locator('#respawn > a.more');
+    await expect(more).toHaveCount(1);
+    await expect(more).toHaveAttribute('href', '/join/');
+    await expect(more).toContainText('完整的加入說明');
+    await expect(more).not.toHaveAttribute('target', /.*/);
     await expect(page.locator('#respawn .dim-foot')).toBeVisible();
     await expect(page.locator('.dim-foot')).toHaveCount(1);
     await expectNoMissingKeys(page);
@@ -152,7 +158,7 @@ test.describe('home: respawn', () => {
             floor: el.getAttribute('data-t') === 'note' ? 11 : 14,
           })),
       );
-      expect(floors.length).toBe(12);
+      expect(floors.length).toBe(13);
       for (const f of floors) expect(f.size).toBeGreaterThanOrEqual(f.floor);
       // the rail is for wide, tall screens only
       const rail = page.locator('.rail');
@@ -186,8 +192,9 @@ test.describe('home: respawn', () => {
               .map((r) => `${Math.round(r.width)}x${Math.round(r.height)}`),
       );
       expect(small).toEqual([]);
-      // the call to join, three ways to apply, and the footer's eleven: six pages of the site, five links out
-      expect(await page.locator('#respawn a').count()).toBe(15);
+      // the call to join, three ways to apply, the way to the join page, and the footer's eleven: six pages of
+      // the site, five links out
+      expect(await page.locator('#respawn a').count()).toBe(16);
       await expectNoHorizontalScroll(page);
       // by day the page is light again after the End
       if (theme === 'light')

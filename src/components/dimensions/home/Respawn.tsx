@@ -65,6 +65,11 @@ export const Respawn = () => {
           loading='lazy'
         />
       </div>
+      {/* the section is the short of it: the join page has every department's criteria in full */}
+      {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}
+      <a className='more rise' href='/join/' data-t='control'>
+        {t('dimensions.respawn.more')} <span aria-hidden='true'>→</span>
+      </a>
       <SiteFooter />
     </section>
   );
