@@ -23,7 +23,7 @@ import { holdPage } from '@/lib/dimensions/pageScroll';
 import { useDimension } from './DimensionProvider';
 import { LanguageMenu } from './LanguageMenu';
 
-type Current = 'progress' | 'members';
+type Current = 'progress' | 'members' | 'join';
 
 /** Same width as the bar's menu breakpoint in shell.css. */
 const BAR_BREAKPOINT = '(min-width: 1101px)';
@@ -73,6 +73,9 @@ export const SiteBar = ({
   const closedBy = useRef<'link' | 'wide' | null>(null);
 
   // On the home page the dimension links are in-page anchors; elsewhere they lead back to it.
+  // A link that has a page of its own leads to that page: the progress, the members, and the way in. The way in
+  // is also the last section of the home page, so there (and only there) its link is the jump to that section,
+  // which marks where the reader is and has its own link to the page.
   const anchor = (id: string) => (variant === 'home' ? `#${id}` : `/#${id}`);
   const links = [
     {
@@ -92,7 +95,12 @@ export const SiteBar = ({
       label: t('dimensions.nav.members'),
       key: 'members' as Current,
     },
-    { href: anchor('respawn'), label: t('dimensions.nav.join'), d: 'respawn' },
+    {
+      href: variant === 'home' ? anchor('respawn') : '/join/',
+      label: t('dimensions.nav.join'),
+      d: 'respawn',
+      key: 'join' as Current,
+    },
   ];
 
   /** Let the page go, before the sheet has closed: a jump moves the page while the sheet is still on its way out. */

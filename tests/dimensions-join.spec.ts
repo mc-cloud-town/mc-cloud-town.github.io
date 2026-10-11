@@ -44,6 +44,11 @@ test.describe('join page', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
     await expect(page.locator('.dim-bar')).toBeVisible();
     await expect(page.locator('[data-shell="legacy"]')).toHaveCount(0);
+    // the bar says this is the page the reader is on, and nothing else is
+    const current = page.locator('.dim-bar nav a[aria-current]');
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveAttribute('aria-current', 'page');
+    await expect(current).toHaveAttribute('href', '/join/');
     await expect(page.locator('.head h1')).toContainText('如何加入');
     await expect(page.locator('.head .bg img')).toHaveAttribute(
       'src',
@@ -143,4 +148,25 @@ test.describe('join page', () => {
       }
       await expectNoHorizontalScroll(page);
     });
+
+  test('the bar leads here from another page, and to the respawn section on the home page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    const onHome = page.locator('.dim-bar nav a[data-d="respawn"]');
+    await expect(onHome).toHaveAttribute('href', '#respawn');
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    const link = page.locator('.dim-bar nav a[data-d="respawn"]');
+    await expect(link).toHaveAttribute('href', '/join/');
+    await expect(link).not.toHaveAttribute('aria-current', /.*/);
+    await link.click();
+    await expect(page).toHaveURL(/\/join\/$/);
+    await expect(page.locator('.join-dept')).toHaveCount(3);
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await expect(
+      page.locator('.dim-bar nav a[data-d="respawn"]'),
+    ).toHaveAttribute('aria-current', 'page');
+  });
 });

@@ -12,7 +12,7 @@ export default function Page() {
   const { t } = useTranslation();
   return (
     <div className='dim'>
-      <SiteBar variant='inner' />
+      <SiteBar variant='inner' current='join' />
       <main>
         <InnerHeader
           image='/assets/join/CTEC_Lounge.webp'
