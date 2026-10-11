@@ -20,6 +20,23 @@ import {
   type ThemeName,
 } from './helpers/dimensions';
 import { arrived, jumpTo, ready, visibleScenes } from './helpers/home';
+import { COVER_URL } from './helpers/video';
+
+/**
+ * The hero is read on the cover of its video (the stand-in's file), never on the site's own picture, which takes
+ * the cover's place when the cover is over its budget: on a busy machine that would silently change what is
+ * measured. A case in which it happened fails here, by name, instead.
+ */
+const expectHeroOnItsCover = async (page: Page) => {
+  const cover = page.locator('.vid .vid-cover');
+  await expect(
+    cover,
+    'the hero stands on the cover of its video',
+  ).toHaveAttribute('data-cover', 'youtube');
+  expect(
+    await cover.evaluate((img: HTMLImageElement) => img.currentSrc),
+  ).toMatch(COVER_URL);
+};
 
 const THEMES: ThemeName[] = ['dark', 'light'];
 
@@ -561,6 +578,7 @@ for (const vp of VIEWPORTS) {
           await page.setViewportSize({ width: vp.width, height: vp.height });
           await openPage(page, '/', { locale: locale as Locale, theme });
           await arrived(page);
+          await expectHeroOnItsCover(page);
           // at every screen of the page where it stands: AA, as everything else
           let seen = 0;
           const read = async () => {
@@ -607,6 +625,7 @@ for (const vp of VIEWPORTS) {
         await page.setViewportSize({ width: vp.width, height: vp.height });
         await openPage(page, '/', { locale: locale as Locale, theme });
         await arrived(page);
+        await expectHeroOnItsCover(page);
         await expectNoMissingKeys(page);
         const found: string[] = [];
         const read = new Map<string, number>();
