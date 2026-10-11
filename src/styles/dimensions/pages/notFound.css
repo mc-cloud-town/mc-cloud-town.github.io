@@ -25,6 +25,11 @@
   --h4: 0.62;
   --h5: 0.78;
 }
+/* Behind the page, where it shows when pulled past its end: the void's ground by day too (shell.css gives the
+   day's paper to every page of the shell; the home page's End is dark behind in the same way). */
+html[data-theme='light']:has(.dim.dim--void) body {
+  background: #06080b;
+}
 
 .dim {
   .void {

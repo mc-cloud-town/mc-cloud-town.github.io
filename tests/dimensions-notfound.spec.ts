@@ -33,10 +33,30 @@ test.describe('not found page', () => {
       const dim = page.locator('.dim');
       await expect(dim).toHaveCSS('background-color', 'rgb(6, 8, 11)');
       await expect(dim).toHaveCSS('color', 'rgb(242, 244, 246)');
+      // and so is what is behind it, and the bar over it: nothing of the page is in the day's paper
+      await expect(page.locator('body')).toHaveCSS(
+        'background-color',
+        'rgb(6, 8, 11)',
+      );
+      await expect(page.locator('.dim-bar')).toHaveCSS(
+        'background-color',
+        'rgba(6, 8, 11, 0.86)',
+      );
       // the accent is neither the overworld's nor the Nether's nor the End's
       const accent = await dim.evaluate((el) =>
         getComputedStyle(el).getPropertyValue('--accent').trim().toLowerCase(),
       );
+      // (<html data-dim> says overworld here: there is no dimension for the void, and the page's own tokens
+      // stand in front of it for the bar, the sheet and the footer alike)
+      for (const part of ['.dim-bar', '.dim-sheet', '.dim-foot'])
+        expect(
+          await page
+            .locator(part)
+            .evaluate((el) =>
+              getComputedStyle(el).getPropertyValue('--accent').trim(),
+            ),
+          part,
+        ).toBe(accent);
       expect([
         '#86cdff',
         '#0b6fb5',
