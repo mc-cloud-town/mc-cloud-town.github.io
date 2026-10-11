@@ -1420,15 +1420,15 @@ test.describe('going to another page', () => {
   });
 });
 
-test.describe('going to a legacy page', () => {
-  /** The footer's own link to a legacy page. */
-  const LEGACY_LINK = '.dim-foot .pages a[href="/join/"]';
+test.describe('going to another page by the footer', () => {
+  /** The footer's own link to the join page. */
+  const FOOT_LINK = '.dim-foot .pages a[href="/join/"]';
   /**
    * Bring that link onto the screen, at its foot (so the page is far down, and still has a little way to go),
    * and wait until the page is at rest there.
    */
-  const legacyLink = async (page: Page) => {
-    await page.locator(LEGACY_LINK).evaluate((a) =>
+  const footLink = async (page: Page) => {
+    await page.locator(FOOT_LINK).evaluate((a) =>
       window.scrollTo({
         top:
           a.getBoundingClientRect().bottom +
@@ -1439,89 +1439,11 @@ test.describe('going to a legacy page', () => {
       }),
     );
     await atRest(page);
-    await expect(page.locator(LEGACY_LINK)).toBeInViewport();
+    await expect(page.locator(FOOT_LINK)).toBeInViewport();
   };
-  /** The legacy page, with nothing of the shell or of a step on it. */
-  const onLegacy = async (page: Page) => {
-    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-    await expect(page.locator('.dim-cover')).toHaveCount(0);
-    expect(
-      await page.evaluate(() => ({
-        nav: document.documentElement.getAttribute('data-nav'),
-        dim: document.documentElement.getAttribute('data-dim'),
-      })),
-    ).toEqual({ nav: null, dim: null });
-  };
-
-  for (const theme of ['dark', 'light'] as const)
-    test(`from an inner page: the leave half only, and back clears everything (${theme})`, async ({
-      page,
-    }) => {
-      skipIn(['webkit'], NOT_HERE.frames);
-      await page.setViewportSize({ width: 1440, height: 900 });
-      await watchNav(page);
-      await openPage(page, '/member/', { theme });
-      await page.locator('.person').first().waitFor();
-      await legacyLink(page);
-      const mark = await documentMark(page);
-      await navFrames(page);
-      await page.locator(LEGACY_LINK).click();
-      await onLegacy(page);
-      expect(await documentMark(page)).toBe(mark);
-      const { frames, runs } = await navFrames(page);
-      // the leave, as between two pages of the shell: content out, cover whole, page held, in the theme's ground
-      const change = expectLeave(frames, {
-        from: '/member/',
-        to: '/join/',
-        tone: theme === 'dark' ? NIGHT : DAY,
-        home: false,
-      });
-      // and no arrive half: the cover never lifts, it goes with the shell
-      expect(runs).toEqual(['opacity:280']);
-      for (const f of frames.slice(change)) {
-        expect(f.cover).toBe(0);
-        expect(f.nav).toBeNull();
-      }
-      // the legacy page is the reader's
-      await page.mouse.move(720, 450);
-      await page.mouse.wheel(0, 300);
-      await expect
-        .poll(() => page.evaluate(() => window.scrollY))
-        .toBeGreaterThan(0);
-
-      // back: the inner page plays its entrance, with no cover, and is free
-      await navFrames(page);
-      await page.goBack();
-      await arrived(page, '/member/');
-      const back = (await navFrames(page)).frames;
-      for (const f of back) expect(f.cover).toBe(0);
-      const there = back.filter((f) => f.path === '/member/' && f.line0);
-      expect(there[0].line0!.o).toBeLessThan(0.2);
-      expect(there.at(-1)!.line0).toEqual({ o: 1, y: 0 });
-      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
-      await page.locator('.person').first().waitFor();
-      await pageIsFree(page);
-      // and a step between pages of the shell is whole again afterwards
-      await page.evaluate(() =>
-        window.scrollTo({ top: 0, behavior: 'instant' }),
-      );
-      await navFrames(page);
-      await bar(page, '/survivalProgress/').click();
-      await arrived(page, '/survivalProgress/');
-      const next = (await navFrames(page)).frames;
-      expectArriveInner(
-        next,
-        expectLeave(next, {
-          from: '/member/',
-          to: '/survivalProgress/',
-          tone: theme === 'dark' ? NIGHT : DAY,
-          home: false,
-        }),
-      );
-    });
 
   for (const from of ['/member/', '/'] as const)
-    test(`from far down ${from}: the legacy page is at its top, and stays there`, async ({
+    test(`from far down ${from}: the page is held where it was for the leave, and the next page is at its top, and stays there`, async ({
       page,
     }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -1532,42 +1454,21 @@ test.describe('going to a legacy page', () => {
         await expect(page.locator('.loader')).toHaveCount(0);
       } else await page.locator('.person').first().waitFor();
       // the link is in the footer, at the foot of the page
-      await legacyLink(page);
+      await footLink(page);
       const y = await page.evaluate(() => window.scrollY);
       expect(y).toBeGreaterThan(800);
       const mark = await documentMark(page);
-      // The order under test: the router puts the legacy page at its top while it commits; the browser tells the
-      // page of that scroll a little later, and the shell's effects are cleaned up a little later too. Which of the
-      // two comes first is not ours to say, so the test says it: the moment the legacy page is in the document
-      // (a microtask after the commit, before any clean-up that was put off), the page is told of the scroll.
-      await page.evaluate(() => {
-        const seen = new MutationObserver(() => {
-          if (!document.querySelector('[data-shell="legacy"]')) return;
-          seen.disconnect();
-          const w = window as unknown as { __told: number; __held: boolean };
-          w.__told = window.scrollY;
-          window.dispatchEvent(new Event('scroll'));
-          // and is the page still held then? (a hold cancels the wheel)
-          w.__held = !document.dispatchEvent(
-            new WheelEvent('wheel', {
-              deltaY: 100,
-              bubbles: true,
-              cancelable: true,
-            }),
-          );
-        });
-        seen.observe(document.body, { childList: true, subtree: true });
-      });
       await navFrames(page);
-      await page.locator(LEGACY_LINK).click();
-      await onLegacy(page);
-      // the router had put the page at its top when the scroll was told of, and the step's hold had been let go
-      expect(
-        await page.evaluate(() => {
-          const w = window as unknown as { __told?: number; __held?: boolean };
-          return [w.__told, w.__held];
-        }),
-      ).toEqual([0, false]);
+      await page.locator(FOOT_LINK).click();
+      await expect.poll(() => new URL(page.url()).pathname).toBe('/join/');
+      await expect(page.locator('.dim .join-way')).toBeVisible();
+      await expect(page.locator('.dim-cover')).toHaveCSS(
+        'visibility',
+        'hidden',
+      );
+      await expect(page.locator('html')).not.toHaveAttribute('data-nav', /.*/);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
+      // the same document: a step of the shell, not a load
       expect(await documentMark(page)).toBe(mark);
       // a good many frames on: whatever was still to be dispatched has been
       await page.evaluate(
@@ -1580,94 +1481,16 @@ test.describe('going to a legacy page', () => {
           }),
       );
       const { frames } = await navFrames(page);
-      // held where it was for the whole leave
+      // held where it was for the whole leave, under a cover that came in whole
       const before = frames.filter((f) => f.path === from);
       expect(before.length).toBeGreaterThan(5);
       for (const f of before) expect(f.y).toBe(y);
-      // and at the top of the legacy page in every frame of it
+      expect(before.at(-1)!.cover).toBe(1);
+      // and at the top of the join page in every frame of it
       const there = frames.filter((f) => f.path === '/join/');
       expect(there.length).toBeGreaterThan(25);
       there.forEach((f, i) => expect(f.y, `frame ${i}`).toBe(0));
       expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await pageIsFree(page);
     });
-
-  test('a legacy page that is two seconds late: the cover stays whole with a sign of life, and goes with the shell', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.route(/\/join\/.*\.txt/, async (r) => {
-      await new Promise((done) => setTimeout(done, 2000));
-      await r.continue();
-    });
-    await watchNav(page);
-    await openPage(page, '/member/');
-    await page.locator('.person').first().waitFor();
-    await legacyLink(page);
-    const mark = await documentMark(page);
-    await navFrames(page);
-    await page.locator(LEGACY_LINK).click();
-    await expect(page.locator('.dim-cover .cover-wait canvas')).toBeVisible({
-      timeout: 5000,
-    });
-    await onLegacy(page);
-    expect(await documentMark(page)).toBe(mark);
-    const { frames, runs } = await navFrames(page);
-    const whole = frames.findIndex((f) => f.cover >= 0.99);
-    const there = frames.findIndex((f) => f.path === '/join/');
-    expect(there).toBeGreaterThan(whole);
-    expect(frames[there].t - frames[whole].t).toBeGreaterThan(1700);
-    // whole until the members page was gone; the members page is never seen under less
-    for (const f of frames.slice(whole))
-      if (f.path === '/member/') expect(f.cover).toBeGreaterThanOrEqual(0.99);
-    expect(frames.some((f) => f.wait === 1)).toBe(true);
-    // the cover never lifts: it goes with the shell, and the sign with it
-    expect(runs).toEqual(['opacity:280']);
-    for (const f of frames.slice(there)) expect(f.wait).toBeNull();
-  });
-
-  test('a legacy page that cannot be fetched is loaded the plain way, and stepping back leaves no cover and no hold', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.route(/\/join\/.*\.txt/, (r) => r.abort());
-    await watchNav(page);
-    await openPage(page, '/member/');
-    await page.locator('.person').first().waitFor();
-    await legacyLink(page);
-    const mark = await documentMark(page);
-    await page.locator(LEGACY_LINK).click();
-    await onLegacy(page);
-    // a new document this time
-    expect(await documentMark(page)).not.toBe(mark);
-    await page.goBack();
-    await arrived(page, '/member/');
-    await page.locator('.person').first().waitFor();
-    await pageIsFree(page);
-  });
-
-  test('the browser’s own clicks on a link to a legacy page are left alone', async ({
-    page,
-    context,
-  }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await watchNav(page);
-    await openPage(page, '/member/');
-    await page.locator('.person').first().waitFor();
-    await legacyLink(page);
-    await navFrames(page);
-    const opened = context
-      .waitForEvent('page', { timeout: 5000 })
-      .catch(() => null);
-    await page.locator(LEGACY_LINK).click({ modifiers: ['ControlOrMeta'] });
-    await page.bringToFront();
-    await page.waitForTimeout(500);
-    const { frames } = await navFrames(page);
-    expect(frames.length).toBeGreaterThan(3);
-    for (const f of frames) {
-      expect(f.cover).toBe(0);
-      expect(f.nav).toBeNull();
-      expect(f.path).toBe('/member/');
-    }
-    await (await opened)?.close();
-  });
 });

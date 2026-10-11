@@ -1,26 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready, scrollToSection } from './helpers/home';
 
-const LEGACY = [
-  '/join/',
-  '/openSource/',
-  '/partner/',
-  '/collaborative/',
-  '/redstoneCollection/',
-  '/architectureCollection/',
-];
-
-test.describe('legacy shell', () => {
-  for (const route of LEGACY) {
-    test(`${route} still renders inside the legacy shell`, async ({ page }) => {
-      const res = await page.goto(route);
-      expect(res?.status()).toBe(200);
-      await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-      await expect(page.locator('.dim')).toHaveCount(0);
-    });
-  }
-});
-
 import {
   atRest,
   expectFooterLines,
@@ -1150,7 +1130,7 @@ test.describe('dimensions shell: the dimension is on the document from the first
       w.__dim = log;
       const read = () => document.documentElement.getAttribute('data-dim');
       const hydrated = () => {
-        const bar = document.querySelector('.dim-bar, [data-shell="legacy"]');
+        const bar = document.querySelector('.dim-bar');
         return Boolean(
           bar && Object.keys(bar).some((k) => k.startsWith('__reactFiber')),
         );
@@ -1176,7 +1156,7 @@ test.describe('dimensions shell: the dimension is on the document from the first
     });
   const hydrated = (page: Page) =>
     page.waitForFunction(() => {
-      const bar = document.querySelector('.dim-bar, [data-shell="legacy"]');
+      const bar = document.querySelector('.dim-bar');
       return Boolean(
         bar && Object.keys(bar).some((k) => k.startsWith('__reactFiber')),
       );
@@ -1186,6 +1166,7 @@ test.describe('dimensions shell: the dimension is on the document from the first
 
   for (const [path, dim] of [
     ['/member/', 'end'],
+    ['/join/', 'respawn'],
     ['/survivalProgress/', 'overworld'],
     ['/survival/', 'overworld'],
     ['/', 'overworld'],
@@ -1213,43 +1194,22 @@ test.describe('dimensions shell: the dimension is on the document from the first
       await expect(page.locator('html')).toHaveAttribute('data-dim', dim);
     });
 
-  test('a legacy page never has it', async ({ page }) => {
-    await watchDim(page);
-    await page.goto('/join/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-    await hydrated(page);
-    const log = await dimLog(page);
-    expect(log.atParsed?.dim).toBeNull();
-    // the legacy pages keep the site's own smooth scrolling
-    expect(log.atParsed?.scroll).toBe('smooth');
-    expect(log.dims.filter((d) => d !== null)).toEqual([]);
-    expect(
-      await page.evaluate(() =>
-        document.documentElement.hasAttribute('data-dim'),
-      ),
-    ).toBe(false);
-  });
-
-  test('leaving the shell for a legacy page without a reload takes it away, and coming back brings the page’s own', async ({
+  test('a step to another page of the shell without a reload takes that page’s own, and coming back brings this one’s', async ({
     page,
   }) => {
     await openPage(page, '/member/');
     await hydrated(page);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
     await page.evaluate(() => {
-      // a client-side step to a legacy page, as Next's router makes it
+      // a client-side step, as Next's router makes it
       (
         window as unknown as { next: { router: { push: (u: string) => void } } }
       ).next.router.push('/join/');
     });
-    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-    expect(
-      await page.evaluate(() =>
-        document.documentElement.hasAttribute('data-dim'),
-      ),
-    ).toBe(false);
+    await expect(page.locator('.dim .join-way')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
     await page.goBack();
-    await expect(page.locator('.dim .head h1')).toBeVisible();
+    await expect(page.locator('.person').first()).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
   });
 });
@@ -1297,7 +1257,7 @@ test.describe('footer: the other pages of the site', () => {
     ['/survivalProgress/', '.entry'],
     ['/member/', '.person'],
   ] as const)
-    test(`${path} leads to every legacy page from its footer, as a labelled group`, async ({
+    test(`${path} leads to the other pages of the site from its footer, as a labelled group`, async ({
       page,
     }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -1315,9 +1275,6 @@ test.describe('footer: the other pages of the site', () => {
       expect(
         await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))),
       ).toEqual([...FOOTER_PAGES]);
-      // every legacy route is one of them, or the same page under its other address
-      const reachable = new Set<string>([...FOOTER_PAGES, '/collaborative/']);
-      for (const route of LEGACY) expect(reachable.has(route)).toBe(true);
     });
 
   for (const locale of LOCALES)
@@ -1454,29 +1411,18 @@ test.describe('the language of the document', () => {
         ).toEqual([]);
       });
 
-  test('a legacy page keeps the language tag it is served with, also when it is reached from the shell', async ({
+  test('a page reached from the shell by the footer keeps the reader’s language tag, and so does the way back', async ({
     page,
-    browser,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    // what a legacy page is served with, and keeps (a visit of its own: it would leave its language behind)
-    const visit = await browser.newContext();
-    const other = await visit.newPage();
-    await other.goto('/join/');
-    await expect(other.locator('[data-shell="legacy"]')).toBeVisible();
-    const served = await other.locator('html').getAttribute('lang');
-    expect(served).toBe('zh');
-    await visit.close();
-    // from a page of the shell that is in English, by the footer's link: the same document
     await openPage(page, '/member/', { locale: 'en' });
     await page.locator('.person').first().waitFor();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     const link = page.locator('.dim-foot .pages a[href="/join/"]');
     await link.scrollIntoViewIfNeeded();
     await link.click();
-    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('lang', served!);
-    // and back in the shell it is the reader's language again
+    await expect(page.locator('.dim .join-way')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await page.goBack();
     await page.locator('.person').first().waitFor();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -1502,32 +1448,19 @@ test.describe('behind the shell', () => {
         expect(await body(page)).toBe(ground);
       });
 
-    test(`a legacy page keeps its own ground (${theme}), also when it is reached from the shell, and the shell has its own again on the way back`, async ({
+    test(`a page reached from the shell by the footer has the shell's ground behind it (${theme}), and so has the way back`, async ({
       page,
-      browser,
     }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
-      // what a legacy page has by itself
-      const visit = await browser.newContext();
-      const other = await visit.newPage();
-      await other.addInitScript(
-        (t) => localStorage.setItem('ctec-theme-preference', t),
-        theme,
-      );
-      await other.goto('/join/');
-      await expect(other.locator('[data-shell="legacy"]')).toBeVisible();
-      const legacy = await body(other);
-      await visit.close();
-      expect(legacy).not.toBe(ground);
-
       await openPage(page, '/member/', { theme });
       await page.locator('.person').first().waitFor();
       expect(await body(page)).toBe(ground);
       const link = page.locator('.dim-foot .pages a[href="/join/"]');
       await link.scrollIntoViewIfNeeded();
       await link.click();
-      await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-      await expect.poll(() => body(page)).toBe(legacy);
+      await expect(page.locator('.dim .join-way')).toBeVisible();
+      await expect.poll(() => body(page)).toBe(ground);
+      expect(await shell(page)).toBe(ground);
       await page.goBack();
       await page.locator('.person').first().waitFor();
       await expect.poll(() => body(page)).toBe(ground);

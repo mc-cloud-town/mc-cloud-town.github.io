@@ -458,7 +458,7 @@ export const expectLegible = async (
   expect(problems, problems.join('\n')).toEqual([]);
 };
 
-/** The legacy pages the footer leads to, in its order. (`/collaborative/` is the same view as `/partner/`.) */
+/** The pages the footer's row leads to, in its order. (`/collaborative/` is the same view as `/partner/`.) */
 export const FOOTER_PAGES = [
   '/redstoneCollection/',
   '/architectureCollection/',

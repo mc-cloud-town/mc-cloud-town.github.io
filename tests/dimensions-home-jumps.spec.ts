@@ -1445,38 +1445,33 @@ test.describe('home: arriving, leaving and robustness', () => {
     await expect(page.locator('.pin-spacer')).toHaveCount(1);
   });
 
-  test('leaving for a legacy page cleans up, and coming back rebuilds', async ({
+  test('leaving for the join page cleans up, and coming back rebuilds', async ({
     page,
   }) => {
+    const lenis = () =>
+      page.evaluate(() =>
+        [...document.documentElement.classList].filter((c) =>
+          c.startsWith('lenis'),
+        ),
+      );
     await openPage(page, '/');
     await ready(page);
     await scrollToSection(page, '#nether');
-    expect(
-      await page.evaluate(() =>
-        document.documentElement.classList.contains('lenis'),
-      ),
-    ).toBe(true);
+    expect(await lenis()).toContain('lenis');
+    // by a load of its own
     await page.goto('/join/');
-    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
-    expect(
-      await page.evaluate(() =>
-        document.documentElement.hasAttribute('data-dim'),
-      ),
-    ).toBe(false);
-    expect(
-      await page.evaluate(() =>
-        document.documentElement.classList.contains('lenis'),
-      ),
-    ).toBe(false);
-    await expect(page.locator('.dim-cover')).toHaveCount(0);
+    await expect(page.locator('.dim .join-way')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
+    expect(await lenis()).toEqual([]);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
     await page.goBack();
     await ready(page);
     await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
     await scrollToSection(page, '#overworld');
     expect(await visibleScenes(page)).toEqual(['town']);
 
-    // The same by a link of the shell, the footer's: the leave half under the cover, then the legacy page, and
-    // nothing of the step on it.
+    // The same by a link of the shell, the footer's: the leave under the cover, then the join page, and
+    // nothing of the home page or of the step left on it.
     await expect(page.locator('.loader')).toHaveCount(0);
     const link = page.locator('.dim-foot .pages a[href="/join/"]');
     await link.evaluate((a) => {
@@ -1495,29 +1490,24 @@ test.describe('home: arriving, leaving and robustness', () => {
     const y = await page.evaluate(() => window.scrollY);
     await record(page);
     await link.click();
-    await expect(page.locator('[data-shell="legacy"]')).toBeVisible();
+    await expect(page.locator('.dim .join-way')).toBeVisible();
     // the cover came in whole over the page, which stayed where it was, before the page changed
     const frames = await recorded(page);
     expect(Math.max(...frames.map((f) => f.cover))).toBe(1);
     for (const f of frames.filter((f) => f.scenes.length > 0))
       expect(f.y).toBe(y);
-    // in the same document, and nothing of the shell or of the step is left on the legacy page
+    // in the same document, and nothing of the home page or of the step is left on the join page
     expect(
       await page.evaluate(() =>
         Boolean((window as unknown as { __same?: boolean }).__same),
       ),
     ).toBe(true);
-    await expect(page.locator('.dim-cover')).toHaveCount(0);
-    expect(
-      await page.evaluate(() => ({
-        nav: document.documentElement.getAttribute('data-nav'),
-        dim: document.documentElement.getAttribute('data-dim'),
-        lenis: [...document.documentElement.classList].filter((c) =>
-          c.startsWith('lenis'),
-        ),
-      })),
-    ).toEqual({ nav: null, dim: null, lenis: [] });
-    // the legacy page is not held: the wheel moves it
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    await expect(page.locator('html')).not.toHaveAttribute('data-nav', /.*/);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
+    expect(await lenis()).toEqual([]);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    // the join page is not held: the wheel moves it
     await page.mouse.move(720, 450);
     await page.mouse.wheel(0, 300);
     await expect

@@ -47,7 +47,7 @@ The development server will start at `http://localhost:3000` (or another availab
 | `yarn build`        | Build the static site into `out/`            |
 | `yarn start`        | Serve the built `out/` folder locally        |
 | `yarn typecheck`    | Run the TypeScript compiler without emitting |
-| `yarn test:e2e`     | Compare the build against mc-ctec.org        |
+| `yarn test:e2e`     | Run the Playwright tests against the build   |
 | `yarn lint`         | Run ESLint to check code quality             |
 | `yarn format`       | Format code with Prettier                    |
 | `yarn format:check` | Check code formatting without making changes |
@@ -57,7 +57,7 @@ The development server will start at `http://localhost:3000` (or another availab
 - **Framework:** Next.js 16 (App Router, static export) with React 19 and TypeScript
 - **Styling:** Styled Components with Ant Design
 - **Internationalization:** i18next
-- **Testing:** Playwright visual parity tests
+- **Testing:** Playwright end-to-end tests
 - **Package Manager:** Yarn 4.12.0 (Berry)
 
 ## 🌐 Internationalization
@@ -84,19 +84,16 @@ The website is automatically deployed to GitHub Pages via GitHub Actions when ch
 
 2. Deploy the `out` folder to your hosting service.
 
-## 🧪 Parity Tests
+## 🧪 End-to-end Tests
 
-`tests/parity.spec.ts` loads every route on the live site and on the local
-build (light and dark theme, desktop and mobile) and compares the visible text
-and full-page screenshots.
+`tests/dimensions-*.spec.ts` run against the local static export (they need
+network access to `mc-ctec.org` for the site's data).
 
 ```bash
 yarn build
 npx playwright install chromium
 yarn test:e2e
 ```
-
-Set `PARITY_LIVE_URL` to compare against a different deployment.
 
 ## 🔧 CI/CD
 
