@@ -24,12 +24,18 @@ const HOLD_S = 0.18;
 /** With reduced motion the finished map gives way in one brief fade. */
 const REDUCED_FADE_S = 0.12;
 
-/** The picture is in and decoded, so the frame that first shows it does not wait for it; or it failed, which is no reason to wait. */
-const loaded = (img: HTMLImageElement) =>
-  img.decode().then(
+/**
+ * The picture is in and decoded, so the frame that first shows it does not wait for it; or it failed, which is no
+ * reason to wait. One that was given another address meanwhile (the hero's cover falling back to the site's own
+ * picture: HeroVideo.tsx) is waited for anew: the browser reports the first wait as failed when the address changes.
+ */
+const loaded = (img: HTMLImageElement): Promise<void> => {
+  const src = img.getAttribute('src');
+  return img.decode().then(
     () => {},
-    () => {},
+    () => (img.getAttribute('src') !== src ? loaded(img) : undefined),
   );
+};
 
 /**
  * A map of the world being generated: chunks pass through their stages from the centre outward

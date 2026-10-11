@@ -29,6 +29,10 @@ import {
 /** Same as SETTLE_MS and DISSOLVE_S in src/components/dimensions/home/HeroVideo.tsx. */
 const SETTLE_MS = 4200;
 const DISSOLVE_MS = 1800;
+/** How long YouTube's cover is given before the site's own picture takes its place (COVER_BUDGET_MS there). */
+const COVER_BUDGET_MS = 2000;
+/** Same as LOADER_TIMEOUT_MS in src/components/dimensions/home/Loader.tsx. */
+const LOADER_TIMEOUT_MS = 6000;
 /** How long before the video's end the cover begins to come back (LAP_LEAD_S there). */
 const LAP_LEAD_MS = 2300;
 /** How long the hero's arrival lasts from the hand-over: the camera's move, its longest part (HomePage.tsx). */
@@ -128,9 +132,9 @@ test.describe('home: the hero is the anniversary video', () => {
   test('the loader waits for the cover and lifts on it whole; the player is made at once, under the loader', async ({
     page,
   }) => {
-    // a cover that takes its time: the loader is up for a good while
+    // a cover that takes its time, inside its budget: the loader is up meanwhile
     await stubVideo(page, {
-      cover: (fulfil) => void setTimeout(() => void fulfil(), 4500),
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 1200),
     });
     await watchCover(page);
     await openPage(page, '/');
@@ -149,7 +153,7 @@ test.describe('home: the hero is the anniversary video', () => {
     const frames = await coverFrames(page);
     // the page was not handed over before the cover was in, and from then on the cover is whole
     const waiting = frames.filter((f) => !f.in);
-    expect(waiting.length).toBeGreaterThan(30);
+    expect(waiting.length).toBeGreaterThan(10);
     for (const f of waiting) {
       expect(f.ready).toBe(false);
       expect(f.loader).toBe(1);
@@ -158,10 +162,130 @@ test.describe('home: the hero is the anniversary video', () => {
     expect(handed.length).toBeGreaterThan(0);
     for (const f of handed) expect(f.in).toBe(true);
     for (const f of frames) expect(f.cover).toBe(1);
-    // under the loader, the cover still on its way: the one player is there already
-    expect(waiting.filter((f) => f.players === 1).length).toBeGreaterThan(3);
+    // under the loader, before the page is handed over: the one player is there already
+    expect(
+      frames.filter((f) => f.players === 1 && !f.ready && f.loader === 1)
+        .length,
+    ).toBeGreaterThan(3);
     expect(Math.max(...frames.map((f) => f.players))).toBe(1);
     expect(await visibleScenes(page)).toEqual(['spawn']);
+  });
+
+  /** From the first frame: when the page's script took over, when the cover's address changed, and to what. */
+  const watchFallback = (page: Page) =>
+    page.addInitScript(() => {
+      const w = window as unknown as {
+        __fallback: { liveAt?: number; at?: number; src?: string };
+      };
+      w.__fallback = {};
+      const arm = () => {
+        const img = document.querySelector('.vid .vid-cover');
+        if (!img) return void requestAnimationFrame(arm);
+        new MutationObserver(() => {
+          w.__fallback.at ??= performance.now();
+          w.__fallback.src = img.getAttribute('src') ?? '';
+        }).observe(img, { attributes: true, attributeFilter: ['src'] });
+        const live = () => {
+          if (!document.documentElement.hasAttribute('data-live'))
+            return void requestAnimationFrame(live);
+          w.__fallback.liveAt = performance.now();
+        };
+        live();
+      };
+      arm();
+    });
+  const fallback = (page: Page) =>
+    page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            __fallback: { liveAt?: number; at?: number; src?: string };
+          }
+        ).__fallback,
+    );
+  /** The picture the hero stands on, as it is at this moment. */
+  const coverNow = (page: Page) =>
+    page.locator('.vid .vid-cover').evaluate((img: HTMLImageElement) => ({
+      in: img.complete && img.naturalWidth > 0,
+      opacity: +getComputedStyle(img).opacity,
+      src: img.currentSrc,
+    }));
+
+  test("YouTube refused (cover and player): the loader lifts on the site's own picture, not on bare ground", async ({
+    page,
+  }) => {
+    await stubVideo(page, { cover: 'blocked', player: 'blocked' });
+    await watchCover(page);
+    await watchFallback(page);
+    await openPage(page, '/');
+    await ready(page);
+    const cover = await coverNow(page);
+    expect(cover.src).toMatch(/\/assets\/members\/CTEC_Members\.webp$/);
+    expect(cover.in).toBe(true);
+    expect(cover.opacity).toBe(1);
+    // the page was not handed over before that picture was in: the loader waited for it in the cover's place
+    const frames = await coverFrames(page);
+    const handed = frames.filter((f) => f.ready);
+    expect(handed.length).toBeGreaterThan(0);
+    for (const f of handed) expect(f.in).toBe(true);
+    // refused is known at once: the local picture is asked for without waiting out the budget
+    const seen = await fallback(page);
+    expect(seen.src).toBe('/assets/members/CTEC_Members.webp');
+    expect(seen.at! - seen.liveAt!).toBeLessThan(COVER_BUDGET_MS - 500);
+    // and it stays: nothing plays
+    await page.waitForTimeout(1500);
+    expect((await coverNow(page)).opacity).toBe(1);
+    await expect(page.locator('.vid iframe')).toHaveCount(0);
+  });
+
+  test('a cover that never answers gets its budget, then the local picture; the loader does not wait out its six seconds', async ({
+    page,
+  }) => {
+    await stubVideo(page, {
+      cover: () => {
+        // never answered
+      },
+    });
+    await watchCover(page);
+    await watchFallback(page);
+    await openPage(page, '/');
+    await ready(page);
+    const seen = await fallback(page);
+    expect(seen.src).toBe('/assets/members/CTEC_Members.webp');
+    // about two seconds after the page's script took over
+    expect(seen.at! - seen.liveAt!).toBeGreaterThan(COVER_BUDGET_MS - 300);
+    expect(seen.at! - seen.liveAt!).toBeLessThan(COVER_BUDGET_MS + 1200);
+    const cover = await coverNow(page);
+    expect(cover.src).toMatch(/CTEC_Members\.webp$/);
+    expect(cover.in).toBe(true);
+    const frames = await coverFrames(page);
+    const handed = frames.filter((f) => f.ready);
+    for (const f of handed) expect(f.in).toBe(true);
+    // The picture is in soon after, long before the loader's own timeout: it is no longer what the loader waits
+    // for. (When the loader then lifts is the fonts' affair as well, which this test does not hold.)
+    const inAt = frames.find((f) => f.in)!.t;
+    expect(inAt - seen.liveAt!).toBeLessThan(COVER_BUDGET_MS + 1500);
+    expect(COVER_BUDGET_MS + 1500).toBeLessThan(LOADER_TIMEOUT_MS - 2000);
+    // the player is still tried, and if it plays the local picture gives way to it as the cover would
+    await arrived(page);
+    await sayPlaying(page);
+    await expect
+      .poll(() => coverOpacity(page), { timeout: 12_000 })
+      .toBeLessThan(0.001);
+  });
+
+  test("YouTube's cover in time: it stays the hero's picture, the local one never takes its place", async ({
+    page,
+  }) => {
+    await watchFallback(page);
+    await openPage(page, '/');
+    await arrived(page);
+    await page.waitForTimeout(COVER_BUDGET_MS + 500);
+    // (the address of the cover never changed)
+    expect((await fallback(page)).src).toBeUndefined();
+    const cover = await coverNow(page);
+    expect(cover.src).toMatch(COVER_URL);
+    expect(cover.in).toBe(true);
   });
 
   test("exactly one player, with the demo's settings, in a frame that takes neither the pointer nor the focus", async ({
@@ -465,7 +589,8 @@ test.describe('home: the hero is the anniversary video', () => {
     page,
   }) => {
     test.slow();
-    // the loader is held up by a slow cover, and the player plays under it all that time
+    // The loader is held up by a cover that does not come (until the site's own picture stands in for it, after
+    // the cover's budget), and the player plays under it all that time.
     await stubVideo(page, {
       cover: (fulfil) => void setTimeout(() => void fulfil(), 4500),
     });
@@ -482,7 +607,7 @@ test.describe('home: the hero is the anniversary video', () => {
         setTimeout(() => {
           w.__playingAt = performance.now();
           player.emit(1);
-        }, 300);
+        }, 0);
       };
       wait();
     });

@@ -268,6 +268,8 @@ test.describe('home: never stuck behind the loader', () => {
         // never answered
       },
     });
+    // (nor is the site's own picture, which would stand in for the cover after its budget: nothing comes)
+    await page.route('**/CTEC_Members.webp', () => {});
     await page.addInitScript(() => {
       const w = window as unknown as { __safe: SafeFrame[] };
       w.__safe = [];
@@ -618,6 +620,8 @@ test.describe('home: the loader is a map of the world being generated', () => {
         // never answered
       },
     });
+    // (nor is the site's own picture, which would stand in for the cover after its budget: nothing comes)
+    await page.route('**/CTEC_Members.webp', () => {});
     await watchLoader(page);
     await openPage(page, '/');
     await page
@@ -653,6 +657,8 @@ test.describe('home: the loader is a map of the world being generated', () => {
         // never answered
       },
     });
+    // (nor is the site's own picture, which would stand in for the cover after its budget: nothing comes)
+    await page.route('**/CTEC_Members.webp', () => {});
     await watchLoader(page);
     await openPage(page, '/', { locale: 'en' });
     await page
@@ -848,7 +854,8 @@ test.describe('home: the other pictures wait for the loader', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     // a first picture that takes its time: the loader is up for a good while
     await stubVideo(page, {
-      cover: (fulfil) => void setTimeout(() => void fulfil(), 2500),
+      // (inside the cover's own budget, after which the site's own picture would stand in for it)
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 1500),
     });
     await watchPictures(page);
     await openPage(page, '/');
@@ -862,11 +869,11 @@ test.describe('home: the other pictures wait for the loader', () => {
       .toEqual([]);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
     const log = await pictures(page);
-    expect(log.readyAt).toBeGreaterThan(2500);
-    expect(askedAt(log, SPAWN_PICTURE)).toBeLessThan(2000);
+    expect(log.readyAt).toBeGreaterThan(1500);
+    expect(askedAt(log, SPAWN_PICTURE)).toBeLessThan(1500);
     for (const p of OTHER_PICTURES) {
       expect(askedAt(log, p), `${p} waits for the loader`).toBeGreaterThan(
-        2500,
+        1500,
       );
       // at the lift: within a moment of the page being handed over (a frame is the grain of this clock)
       expect(

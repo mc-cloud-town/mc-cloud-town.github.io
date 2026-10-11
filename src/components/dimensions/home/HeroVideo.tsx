@@ -21,6 +21,19 @@ const DISSOLVE_EASE = 'power2.inOut';
  */
 const LAP_LEAD_S = DISSOLVE_S + 0.5;
 
+/**
+ * How long YouTube's cover is given, from the moment the page's script takes over, before the site's own picture
+ * takes its place. Where YouTube cannot be reached the request often does not fail, it hangs: without a budget the
+ * loader would wait out its whole timeout and then lift on the scene's bare ground.
+ */
+export const COVER_BUDGET_MS = 2000;
+/**
+ * The site's own picture for the hero, used only when YouTube's cover cannot be had (refused, or over its budget).
+ * It is the group photograph of the old hero, which is out of date: a frame of the video itself, supplied by the
+ * team, should replace it here (put the file under public/assets/homePage/ and name it in this line).
+ */
+export const LOCAL_COVER = '/assets/members/CTEC_Members.webp';
+
 /** The player's state for "the picture is moving" (YT.PlayerState.PLAYING). */
 const PLAYING = 1;
 
@@ -63,6 +76,8 @@ const wantsVideo = () =>
  * larger than the screen, so the player's title bar and controls fall outside it. The still is the first picture
  * of the page: it is in the served markup, the loader waits for it and lifts on it, and with scripts off, with
  * reduced motion, for a crawler, for a reader who saves data, or when the player never comes, it is all there is.
+ * Where YouTube's cover itself cannot be had, the site's own picture stands in its place (LOCAL_COVER), asked for
+ * only then; the loader waits for that one instead (Loader.tsx), so it lifts on a picture and in good time.
  *
  * The player is made in the browser only, when the hero is first shown: at once (under the loader) for a reader
  * who arrives at the top; for one who arrives further down the page (an address that names a section, a return
@@ -106,6 +121,30 @@ export const HeroVideo = ({
     name.current = title;
     slot.current?.querySelector('iframe')?.setAttribute('title', title);
   }, [title]);
+
+  // YouTube's cover, or else the site's own picture: whatever the reader's motion, connection or kind
+  useEffect(() => {
+    const still = cover.current;
+    if (!still) return;
+    const whole = () => still.complete && still.naturalWidth > 0;
+    if (whole()) return;
+    const fall = () => {
+      settle();
+      // (the cover may have come in the very last moment)
+      if (!whole()) still.src = LOCAL_COVER;
+    };
+    const timer = window.setTimeout(fall, COVER_BUDGET_MS);
+    const settle = () => {
+      window.clearTimeout(timer);
+      still.removeEventListener('load', settle);
+      still.removeEventListener('error', fall);
+    };
+    // refused before this script ran: known already
+    if (still.complete) return void fall();
+    still.addEventListener('load', settle);
+    still.addEventListener('error', fall);
+    return settle;
+  }, [id]);
 
   useEffect(() => {
     arrival.current.over = arrived;
