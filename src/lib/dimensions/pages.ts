@@ -11,6 +11,7 @@ const PAGE_DIMENSIONS: Record<string, Dimension> = {
   member: 'end',
   openSource: 'end',
   partner: 'end',
+  redstoneCollection: 'nether',
 };
 
 /** A path without its slashes: `/member/` and `/member` are the same page. */
@@ -39,7 +40,7 @@ const PAGES = new Map<string, PageKind>([
   ['openSource', 'inner'],
   ['partner', 'inner'],
   ['collaborative', 'inner'],
-  ['redstoneCollection', 'legacy'],
+  ['redstoneCollection', 'inner'],
   ['architectureCollection', 'legacy'],
 ]);
 

@@ -396,6 +396,53 @@
         }
       ]
     },
+    "collection": {
+      "redstone": {
+        "crumb": "Redstone works",
+        "title": ["Redstone works,", "taken apart."],
+        "lead": "Redstone designed by CTEC members: {{total}} works. Open one for its pictures, video and download link.",
+        "leadPlain": "Redstone designed by CTEC members. Open one for its pictures, video and download link.",
+        "next": "Now the builds"
+      },
+      "architecture": {
+        "crumb": "Builds",
+        "title": ["Builds,", "seen up close."],
+        "lead": "What CTEC members have built: {{total}} works. Open one to see every picture of it.",
+        "leadPlain": "What CTEC members have built. Open one to see every picture of it.",
+        "next": "Now the redstone"
+      },
+      "search": "Search by name, tag or creator",
+      "tags": "Tags",
+      "allTags": "All",
+      "count": "{{n}} / {{total}} works",
+      "empty": "No work matches. Try another tag or word.",
+      "none": "No works here yet.",
+      "loading": "Loading",
+      "error": "The works could not be loaded.",
+      "retry": "Try again",
+      "detail": {
+        "no": "No. {{n}}",
+        "close": "Close",
+        "pictures": "Pictures of this work",
+        "picture": "{{title}}, picture {{n}}",
+        "video": "Video of {{title}}",
+        "play": "Load the video",
+        "prev": "Previous",
+        "next": "Next",
+        "toPicture": "{{n}}: picture",
+        "toVideo": "{{n}}: video",
+        "creator": "Creators",
+        "intro": "About",
+        "credit": "Special thanks",
+        "download": "Download",
+        "watch": "Watch the video",
+        "share": "Share",
+        "copy": "Copy link",
+        "copied": "Copied",
+        "copyFail": "Could not copy",
+        "weibo": "Weibo"
+      }
+    },
     "nether": {
       "tag": "Dimension 02 / 03",
       "say": ["Through the portal", "is our factory."],
