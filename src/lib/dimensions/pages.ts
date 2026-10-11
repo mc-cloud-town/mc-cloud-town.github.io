@@ -5,6 +5,7 @@ import type { Dimension } from '#/dimensions/DimensionProvider';
  * is in the overworld (the home page starts there; its choreography reports where the reader is from then on).
  */
 const PAGE_DIMENSIONS: Record<string, Dimension> = {
+  architectureCollection: 'overworld',
   collaborative: 'end',
   hardware: 'nether',
   join: 'respawn',
@@ -41,7 +42,7 @@ const PAGES = new Map<string, PageKind>([
   ['partner', 'inner'],
   ['collaborative', 'inner'],
   ['redstoneCollection', 'inner'],
-  ['architectureCollection', 'legacy'],
+  ['architectureCollection', 'inner'],
 ]);
 
 /** What kind of page a path leads to; nothing if it is not a page of the site (a file, an unknown address). */
