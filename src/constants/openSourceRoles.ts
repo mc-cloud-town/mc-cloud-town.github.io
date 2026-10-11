@@ -2,8 +2,8 @@
 export const GITHUB_ORG_URL = 'https://github.com/mc-cloud-town';
 
 /**
- * The organisation's repositories by what they are for, each group in the order it is read in. The same table as
- * the home page's credits (`ROLES` in `home/Credits.tsx`); the names of the groups are `dimensions.end.credits.roles.*`.
+ * The organisation's repositories by what they are for, each group in the order it is read in: the one table of
+ * the home page's credits and of the open-source page. The names of the groups are `dimensions.end.credits.roles.*`.
  */
 export const OPEN_SOURCE_ROLES: [string, string[]][] = [
   [
