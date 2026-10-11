@@ -1,5 +1,5 @@
 // tests/dimensions-matrix.spec.ts
-// The acceptance matrix: nine viewports × three languages × two themes × three pages (162 cases), and the same
+// The acceptance matrix: nine viewports × three languages × two themes × ten pages (540 cases), and the same
 // structure in every language. Each case loads its page once and checks every stop of it at rest.
 // Text that stands on a photograph through its veil is not measured for contrast here: the veils are the approved
 // design's (docs/design-demos/dimensions-v3-video.html), and a measurement does not overrule them.
@@ -92,18 +92,29 @@ const HOME_STOPS: Stop[] = [
   { sel: '#respawn', off: 0, scene: 'day1', anchor: true, walk: true },
 ];
 
-/** The checks of one screen; what fails is returned, so one run names every defect of a case. */
+/**
+ * The checks of one screen; what fails is returned, so one run names every defect of a case.
+ * `through` names what lies over text without hiding it (a card's link, stretched over the whole card so that the
+ * picture opens the work as its name does): it paints nothing, so the text under it is not covered.
+ */
 const check = async (
   page: Page,
   where: string,
-  opts: { within?: string; passing?: string } = {},
+  {
+    through,
+    ...opts
+  }: { within?: string; passing?: string; through?: string } = {},
   more: (() => Promise<void>)[] = [],
 ) => {
   const found: string[] = [];
   for (const run of [
     () => expectNoHorizontalScroll(page),
     () => expectTextFits(page, opts),
-    () => expectNotCovered(page, opts),
+    () =>
+      expectNotCovered(page, {
+        ...opts,
+        passing: [opts.passing, through].filter(Boolean).join(', '),
+      }),
     () => expectTapTargets(page),
     ...more,
   ]) {
@@ -219,6 +230,94 @@ const walk = async (
     left = now;
   }
 };
+
+/**
+ * The organisation's repositories, for the open-source page: GitHub's API is unauthenticated and rate-limited, so
+ * the matrix never reaches it. Some of every role of the credits, and what a list can hold that is awkward: no
+ * description, no language, a long name, a fork that is archived.
+ */
+const repo = (name: string, more: Record<string, unknown> = {}) => ({
+  id: name.length * 1000 + name.charCodeAt(0),
+  name,
+  html_url: `https://github.com/mc-cloud-town/${name}`,
+  description: `About ${name}: what it does for the server, in a sentence of ordinary length.`,
+  language: 'Java',
+  stargazers_count: 12,
+  forks_count: 3,
+  fork: false,
+  archived: false,
+  topics: [],
+  pushed_at: '2025-03-04T05:06:07Z',
+  ...more,
+});
+const REPOS = [
+  repo('Carpet-CTEC-Addition', { stargazers_count: 1234, forks_count: 56 }),
+  repo('carpetmod112'),
+  repo('ChatBridgeE', { language: 'Python' }),
+  repo('MCDR-LocationMarker', { language: 'Python', fork: true }),
+  repo('static-data', { language: null, description: null }),
+  repo('dashboard-api', { language: 'Go' }),
+  repo('cloud-town-discord-bot', { language: 'TypeScript' }),
+  repo('mc-cloud-town.github.io', { language: 'TypeScript' }),
+  repo('a-tool-nobody-has-filed-under-a-role-yet-with-a-very-long-name', {
+    language: 'Kotlin',
+    fork: true,
+    archived: true,
+    pushed_at: '2024-11-09T00:00:00Z',
+  }),
+];
+
+/**
+ * The other inner pages: each is read from its top to its foot, a screen at a time, with the checks of the two
+ * above. (`/collaborative/` is `/partner/` under another address; a work's detail has its own specs.)
+ */
+/** A work of a collection is one link: its name's, stretched over the card. */
+const WORK_LINK = '.dim .work h2 a';
+const MORE_PAGES: {
+  name: string;
+  url: string;
+  /** what is in the page once it has its content */
+  first: string;
+  /** the page has the inner header, with its picture */
+  header: boolean;
+  setup?: (page: Page) => Promise<unknown>;
+  /** what lies over text without hiding it (see `check`) */
+  through?: string;
+}[] = [
+  { name: 'join', url: '/join/', first: '.join-dept', header: true },
+  {
+    name: 'openSource',
+    url: '/openSource/',
+    first: '.repo',
+    header: true,
+    setup: (page) =>
+      page.route(/api\.github\.com\/orgs\/mc-cloud-town\/repos/, (r) =>
+        r.fulfill({ json: REPOS }),
+      ),
+  },
+  { name: 'partner', url: '/partner/', first: '.partner', header: true },
+  { name: 'hardware', url: '/hardware/', first: '.spec', header: true },
+  {
+    name: 'redstone',
+    url: '/redstoneCollection/',
+    first: '.work',
+    header: true,
+    through: WORK_LINK,
+  },
+  {
+    name: 'architecture',
+    url: '/architectureCollection/',
+    first: '.work',
+    header: true,
+    through: WORK_LINK,
+  },
+  {
+    name: 'notFound',
+    url: '/this-page-does-not-exist/',
+    first: '.void h1',
+    header: false,
+  },
+];
 
 for (const vp of VIEWPORTS) {
   for (const locale of LOCALES) {
@@ -356,6 +455,80 @@ for (const vp of VIEWPORTS) {
             ])),
           );
           await shoot(page, info, `${name}-${tag}-foot`);
+          expect(found, found.join('\n')).toEqual([]);
+        });
+      }
+
+      for (const p of MORE_PAGES) {
+        test(`${p.name} ${tag}`, async ({ page }, info) => {
+          await page.setViewportSize({ width: vp.width, height: vp.height });
+          await p.setup?.(page);
+          await openPage(page, p.url, { locale: locale as Locale, theme });
+          await page.locator(p.first).first().waitFor();
+          // the entrance has played: everything stands where it belongs
+          await atRest(page);
+          await expectNoMissingKeys(page);
+          // the picture the header's words stand on
+          const picture = page.locator('.head .bg img');
+          await expect(picture).toHaveCount(p.header ? 1 : 0);
+          if (p.header)
+            await expect
+              .poll(() =>
+                picture.evaluate(
+                  (img: HTMLImageElement) =>
+                    img.complete && img.naturalWidth > 0,
+                ),
+              )
+              .toBe(true);
+          const found = await check(page, 'top', { through: p.through });
+          await shoot(page, info, `${p.name}-${tag}-top`);
+
+          // the menu, wherever the bar shows its button instead of its links
+          const menu = page.locator('.dim-bar [data-action="menu"]');
+          if (await menu.isVisible()) {
+            await menu.click();
+            await expect(page.locator('.dim-sheet')).toHaveCSS('opacity', '1');
+            await atRest(page);
+            found.push(
+              ...(await check(page, 'menu', { within: '.dim-sheet' })),
+            );
+            await shoot(page, info, `${p.name}-${tag}-menu`);
+            await menu.click();
+            await expect(page.locator('.dim-sheet')).toHaveCSS(
+              'visibility',
+              'hidden',
+            );
+          }
+
+          // read on to the end of the page's own content, a screen at a time
+          await walk(page, '.dim main', async (n) => {
+            found.push(
+              ...(await check(page, `↓${n}`, {
+                passing: OVER_LIST,
+                through: p.through,
+              })),
+            );
+            await shoot(page, info, `${p.name}-${tag}-down${n}`);
+          });
+
+          // the end of the page: the way on, and the footer
+          await page.evaluate(() =>
+            window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              behavior: 'instant',
+            }),
+          );
+          await atRest(page);
+          await expect(page.locator('.dim-foot')).toBeInViewport();
+          found.push(
+            ...(await check(
+              page,
+              'foot',
+              { passing: OVER_LIST, through: p.through },
+              [() => expectFooterLines(page)],
+            )),
+          );
+          await shoot(page, info, `${p.name}-${tag}-foot`);
           expect(found, found.join('\n')).toEqual([]);
         });
       }
