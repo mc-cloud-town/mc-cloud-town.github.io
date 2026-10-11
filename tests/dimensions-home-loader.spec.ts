@@ -1060,7 +1060,9 @@ test.describe('home: the other pictures wait for the loader', () => {
     const LIFT_MS = 1400;
     const lasted = gone.t - handover[0].t;
     expect(lasted).toBeGreaterThan(LIFT_MS - 100);
-    expect(lasted).toBeLessThan(LIFT_MS + 500);
+    // (read at four times throttling, from the handover to the first frame without the loader: one long frame
+    // anywhere in it is added whole, and the longest task at this throttle, the build, is about 0.8 s)
+    expect(lasted).toBeLessThan(LIFT_MS + 1000);
     // and both parts of it are seen on their way
     const lifting = after.filter((f) => f.t <= gone.t);
     const steps = (of: 'map' | 'loader') =>
