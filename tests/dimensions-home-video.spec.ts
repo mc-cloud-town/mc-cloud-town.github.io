@@ -25,18 +25,21 @@ import {
   videoClock,
   VIDEO,
 } from './helpers/video';
+import {
+  ARRIVAL_S,
+  COVER_BUDGET_MS,
+  DISSOLVE_S,
+  LAP_LEAD_S,
+  SETTLE_MS,
+} from '../src/constants/heroVideo';
 
-/** Same as SETTLE_MS and DISSOLVE_S in src/components/dimensions/home/HeroVideo.tsx. */
-const SETTLE_MS = 4200;
-const DISSOLVE_MS = 1800;
-/** How long YouTube's cover is given before the site's own picture takes its place (COVER_BUDGET_MS there). */
-const COVER_BUDGET_MS = 2000;
+/** The component's own times (src/constants/heroVideo.ts), in milliseconds. */
+const DISSOLVE_MS = DISSOLVE_S * 1000;
+const LAP_LEAD_MS = LAP_LEAD_S * 1000;
+/** How long the hero's arrival lasts from the hand-over. */
+const ARRIVAL_MS = ARRIVAL_S * 1000;
 /** Same as LOADER_TIMEOUT_MS in src/components/dimensions/home/Loader.tsx. */
 const LOADER_TIMEOUT_MS = 6000;
-/** How long before the video's end the cover begins to come back (LAP_LEAD_S there). */
-const LAP_LEAD_MS = 2300;
-/** How long the hero's arrival lasts from the hand-over: the camera's move, its longest part (HomePage.tsx). */
-const ARRIVAL_MS = 3100;
 
 /** Count the requests for the player's script. */
 const apiRequests = (page: Page) => {
@@ -165,7 +168,8 @@ test.describe('home: the hero is the anniversary video', () => {
     const frames = await coverFrames(page);
     // the page was not handed over before the cover was in, and from then on the cover is whole
     const waiting = frames.filter((f) => !f.in);
-    expect(waiting.length).toBeGreaterThan(3);
+    // (the cover was held for 1.2 s: it is not in before that)
+    expect(frames.find((f) => f.in)!.t).toBeGreaterThan(1100);
     for (const f of waiting) {
       expect(f.ready).toBe(false);
       expect(f.loader).toBe(1);
@@ -537,6 +541,11 @@ test.describe('home: the hero is the anniversary video', () => {
     const all = await players(page);
     expect(all).toHaveLength(1);
     expect(all[0].videoId).toBe(VIDEO.id);
+    expect(all[0].host).toBe('https://www.youtube-nocookie.com');
+    await expect(page.locator('.vid .vid-cover')).toHaveAttribute(
+      'referrerpolicy',
+      'no-referrer',
+    );
     expect(all[0].playerVars).toEqual(PLAYER_VARS);
     expect(all[0].connected).toBe(true);
     const frame = page.locator('.vid iframe');
@@ -830,10 +839,10 @@ test.describe('home: the hero is the anniversary video', () => {
     page,
   }) => {
     test.slow();
-    // The loader is held up by a cover that does not come (until the site's own picture stands in for it, after
-    // the cover's budget), and the player plays under it all that time.
+    // The loader is up for two seconds at the least (its map builds, finishes and holds), and the player plays
+    // under it all that time. (The cover takes a moment, inside its budget: this is not about the local picture.)
     await stubVideo(page, {
-      cover: (fulfil) => void setTimeout(() => void fulfil(), 4500),
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 800),
     });
     await watchCover(page);
     // it says so by itself, the moment it is ready: under the loader, whatever the pace of this test
@@ -864,11 +873,17 @@ test.describe('home: the hero is the anniversary video', () => {
     const handed = frames.find((f) => f.ready)!.t;
     const first = frames.find((f) => f.cover < 1)!;
     expect(at).toBeLessThan(handed - 1000);
+    // on YouTube's own cover throughout
+    for (const f of frames) expect(f.src).toMatch(COVER_URL);
     // the settle was over before the arrival was: by itself it would have begun the dissolve in the middle of it
     expect(at + SETTLE_MS).toBeLessThan(handed + ARRIVAL_MS - 300);
-    // not before the arrival has played out, and then at once: a beat of its own
+    // Not before the arrival has played out, and then at once: a beat of its own. (The arrival begins when the
+    // page has been built, which follows the hand-over by as long as the build takes: up to a second and more
+    // when the machine is busy. So the end of the arrival is no earlier than this, and not much later.)
     expect(first.t).toBeGreaterThan(handed + ARRIVAL_MS - 100);
-    expect(first.t).toBeLessThan(handed + ARRIVAL_MS + 700);
+    expect(first.t).toBeLessThan(handed + ARRIVAL_MS + 2000);
+    // by then the camera has long settled
+    expect(frames.find((f) => f.t >= first.t)!.cam).toBe(1);
     for (const f of frames.filter((f) => f.t < first.t))
       expect(f.cover).toBe(1);
     const gone = frames.find((f) => f.cover === 0)!;
@@ -982,6 +997,33 @@ test.describe('home: the hero is the anniversary video', () => {
     await playerState(page, 1);
     await page.waitForTimeout(1200);
     expect(await coverOpacity(page)).toBe(0);
+  });
+
+  test('a return to a remembered place below the hero: no player until the hero is shown', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await arrived(page);
+    await expect.poll(async () => (await players(page)).length).toBe(1);
+    // read on to the End, long enough for the place to be written down, and load the page again
+    await scrollToSection(page, '#end', 0.2);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await page.waitForTimeout(400);
+    const asked = apiRequests(page);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await ready(page);
+    await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(900);
+    await page.waitForTimeout(1500);
+    // (a new document: what the stand-in wrote down before is gone with the old one)
+    expect(asked).toEqual([]);
+    expect(await players(page)).toEqual([]);
+    await expect(page.locator('.vid iframe')).toHaveCount(0);
+    await jumpTo(page, '.hero');
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    await expect.poll(async () => (await players(page)).length).toBe(1);
+    expect(asked).toHaveLength(1);
   });
 
   test('arriving at #end: no player until the hero is shown', async ({

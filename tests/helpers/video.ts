@@ -37,6 +37,8 @@ export const PLAYER_VARS = {
 
 /** One player the page has made, as the stand-in recorded it. */
 export interface StubPlayer {
+  /** the domain the player was asked to come from */
+  host: string | undefined;
   videoId: string;
   playerVars: Record<string, unknown>;
   /** the frame stood in the document when the player was made, and stands there now */
@@ -67,6 +69,7 @@ const STUB = `(() => {
       this.opts = opts;
       this.state = -1;
       this.record = {
+        host: opts.host,
         videoId: opts.videoId,
         playerVars: { ...opts.playerVars },
         connected: frame.isConnected,

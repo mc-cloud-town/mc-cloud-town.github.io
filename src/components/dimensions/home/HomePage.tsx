@@ -22,6 +22,7 @@ import { hashId } from '@/lib/dimensions/navigation';
 import { markHomeVisit, recallHomePlace } from '@/lib/dimensions/homePlace';
 import { onNextTick } from '@/lib/dimensions/nextTick';
 import { picturesAt } from '@/constants/scenes';
+import { ARRIVAL_CAMERA } from '@/constants/heroVideo';
 import type { IMembers } from '@/types/IMember';
 import { World } from './World';
 import { HeroVideo } from './HeroVideo';
@@ -144,8 +145,8 @@ export const HomePage = () => {
           .fromTo(
             el.querySelector('.scene.is-first .cam'),
             { scale: 1.3 },
-            { scale: 1, duration: 2.6, ease: 'expo.out' },
-            0.5,
+            { scale: 1, duration: ARRIVAL_CAMERA.duration, ease: 'expo.out' },
+            ARRIVAL_CAMERA.at,
           )
           .from(
             el.querySelectorAll('.hero .vt b'),

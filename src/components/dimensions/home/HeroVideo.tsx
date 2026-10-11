@@ -4,29 +4,14 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { hashId } from '@/lib/dimensions/navigation';
 import { recallHomePlace } from '@/lib/dimensions/homePlace';
+import {
+  COVER_BUDGET_MS,
+  DISSOLVE_S,
+  LAP_LEAD_S,
+  SETTLE_MS,
+} from '@/constants/heroVideo';
 
-/**
- * How long the cover stays after the player says it is playing. YouTube's player shows its own buttons in the
- * middle of the picture for about three and a half seconds after it starts; the cover is over them all that time.
- * (The approved demo's value. Not to be shortened below what hides those buttons.)
- */
-export const SETTLE_MS = 4200;
-/** Then the still becomes the moving picture: opacity only. */
-export const DISSOLVE_S = 1.8;
 const DISSOLVE_EASE = 'power2.inOut';
-/**
- * How long before the video's end the cover begins to come back, in the dissolve's own time and ease: it is whole
- * half a second before the end. At its end the player shows a black frame and a spinner, and when it starts over
- * its buttons again, as at the first start.
- */
-const LAP_LEAD_S = DISSOLVE_S + 0.5;
-
-/**
- * How long YouTube's cover is given, from the moment the page's script takes over, before the site's own picture
- * takes its place. Where YouTube cannot be reached the request often does not fail, it hangs: without a budget the
- * loader would wait out its whole timeout and then lift on the scene's bare ground.
- */
-export const COVER_BUDGET_MS = 2000;
 /**
  * The site's own picture for the hero, used only when YouTube's cover cannot be had (refused, or over its budget).
  * It is the group photograph of the old hero, which is out of date: a frame of the video itself, supplied by the
@@ -48,6 +33,7 @@ interface Player {
   destroy(): void;
 }
 interface PlayerOptions {
+  host: string;
   videoId: string;
   playerVars: Record<string, string | number>;
   events: {
@@ -173,6 +159,7 @@ export const HeroVideo = ({
     const away = new MutationObserver(adopt);
     const askAgain = () => {
       const again = new Image();
+      again.referrerPolicy = 'no-referrer';
       again.onload = () =>
         void again
           .decode()
@@ -346,6 +333,8 @@ export const HeroVideo = ({
       const mount = document.createElement('div');
       host.replaceChildren(mount);
       player = new YT.Player(mount, {
+        // the player's own domain without cookies: the video is scenery, nobody is to be followed for it
+        host: 'https://www.youtube-nocookie.com',
         videoId: id,
         // the approved demo's settings
         playerVars: {
@@ -458,6 +447,8 @@ export const HeroVideo = ({
         ref={cover}
         // which picture this is to be is not decided yet (the effect above decides, and says so here)
         data-cover='pending'
+        // (YouTube need not be told which page asks for the picture)
+        referrerPolicy='no-referrer'
         src={coverOf(id)}
         alt=''
         fetchPriority='high'

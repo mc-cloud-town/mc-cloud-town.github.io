@@ -29,7 +29,7 @@ export interface TransitionDef {
   /** for a portal: which one covers the screen */
   surface?: PortalSurface;
   /**
-   * For a portal or a wake: how far into the crossing (0 to 0.5) the cover begins to rise; 0 if not given.
+   * For a portal or a wake: how far into the crossing (0 to 0.45) the cover begins to rise; 0 if not given.
    * It is whole at the middle either way.
    */
   coverFrom?: number;
