@@ -69,16 +69,21 @@ const Picture = ({
 
 /**
  * The fixed stage. Scenes are stacked layers; choreography.ts decides which one is showing.
- * The first picture is in the served page. `first` names the others that are needed before the loader lifts
- * (the picture of the place the reader arrives at), and `all` is set once it has lifted.
+ * The first picture is in the served page: the cover of the hero's video, which `spawn` brings (HeroVideo.tsx).
+ * `first` names the others that are needed before the loader lifts (the picture of the place the reader arrives
+ * at), and `all` is set once it has lifted.
  */
 export const World = ({
   first = [],
   all = false,
+  spawn,
   children,
 }: {
   first?: readonly string[];
   all?: boolean;
+  /** what the spawn scene shows: the hero's video */
+  spawn?: ReactNode;
+  /** what the End's last scene shows: the stars */
   children?: ReactNode;
 }) => (
   <div className='world' aria-hidden='true'>
@@ -90,11 +95,9 @@ export const World = ({
       >
         <div className='zoom'>
           <div className='cam'>
+            {s.id === 'spawn' && spawn}
             {s.src && (
-              <Picture
-                src={s.src}
-                now={i === 0 || all || first.includes(s.src)}
-              />
+              <Picture src={s.src} now={all || first.includes(s.src)} />
             )}
             {s.id === 'nether' &&
               NETHER_IMAGES.map((src, k) => (

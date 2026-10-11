@@ -349,6 +349,17 @@ const FLOORS_7: Floors = {
   'laptop zh_CN dark': 4.0,
   'laptop zh_TW dark': 4.0,
 };
+const FLOORS_8: Floors = {
+  'tablet-land en dark': 1.9,
+  'tablet-land zh_CN dark': 3.6,
+  'tablet-land zh_TW dark': 3.6,
+  'laptop en dark': 2.2,
+  'laptop zh_CN dark': 2.2,
+  'laptop zh_TW dark': 2.2,
+  'desktop en dark': 3.1,
+  'desktop zh_CN dark': 3.1,
+  'desktop zh_TW dark': 3.1,
+};
 /** A finding of the home page applies in the cases it has a floor for. */
 const onHome =
   (floors: Floors) =>
@@ -452,6 +463,20 @@ const PENDING: {
     family: 'dark',
     floors: FLOORS_7,
     applies: onHome(FLOORS_7),
+  },
+  {
+    // Needs a decision 8 (Task H1): the hero stands on the cover of the anniversary video, which carries its own
+    // large white lettering across the middle of the picture. By night, at 1024px to 1440px, the lead's lines end
+    // over those letters where the hero's veil has thinned: 2.12 to 3.83 : 1 on the cover (it passes at every
+    // other width, and by day on its paper). The hero is not to be restyled in that task. Read on the cover,
+    // which is what stands there until the player has settled; on bright frames of the video itself the same
+    // lines measure 3.3 to 7.3 : 1 at 1440px (task-h1-report.md).
+    entry:
+      "decision 8, the hero's lead over the lettering of the video's cover by night",
+    selector: '.hero-copy .lead',
+    family: 'dark',
+    floors: FLOORS_8,
+    applies: onHome(FLOORS_8),
   },
 ];
 

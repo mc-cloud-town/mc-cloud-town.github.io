@@ -1399,13 +1399,13 @@ test.describe('home: the end', () => {
     const later = await read();
     expect(later.data).not.toBe(first.data);
     expect(later.ground).toBeGreaterThan(0.9);
-    // the pictures of the page are its scenes and its own assets; nothing of the game
+    // the pictures of the page are its scenes, its own assets and the cover of its video; nothing of the game
     expect(images.length).toBeGreaterThan(0);
     expect(
       images.filter(
         (u) =>
           /portal|\/mc\/|minecraft|textures?\//i.test(u) ||
-          !/^(https:\/\/mc-ctec\.org\/|http:\/\/localhost:\d+\/|https:\/\/mineskin\.eu\/|data:)/.test(
+          !/^(https:\/\/mc-ctec\.org\/|http:\/\/localhost:\d+\/|https:\/\/mineskin\.eu\/|https:\/\/img\.youtube\.com\/vi\/|data:)/.test(
             u,
           ),
       ),

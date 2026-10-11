@@ -6,6 +6,7 @@ import {
   ready,
   watchLoader,
 } from './helpers/home';
+import { stubVideo } from './helpers/video';
 
 /** Same as LOADER_TIMEOUT_MS in src/components/dimensions/home/Loader.tsx. */
 const LOADER_TIMEOUT_MS = 6000;
@@ -95,6 +96,7 @@ test.describe('home: never stuck behind the loader', () => {
         viewport: { width, height },
       });
       const page = await context.newPage();
+      await stubVideo(page);
       await page.goto('/', { waitUntil: 'load' });
       // it is in the served page, and hidden at once
       await expect(page.locator('.loader')).toHaveCount(1);
@@ -153,6 +155,7 @@ test.describe('home: never stuck behind the loader', () => {
         viewport: { width, height },
       });
       const page = await context.newPage();
+      await stubVideo(page);
       await page.goto('/', { waitUntil: 'load' });
       // what is served is the stage, and nothing will ever step through it
       await expect(page.locator('html')).not.toHaveAttribute('data-live');
@@ -240,6 +243,7 @@ test.describe('home: never stuck behind the loader', () => {
       };
       requestAnimationFrame(tick);
     });
+    await stubVideo(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.loader')).toBeVisible();
     expect(await overTitle(page)).toBe('loader');
@@ -259,8 +263,10 @@ test.describe('home: never stuck behind the loader', () => {
   test('with script the fail-safe is called off at once: a loader that waits its full six seconds lifts in its own way', async ({
     page,
   }) => {
-    await page.route('**/CTEC_Members.webp', () => {
-      // never answered
+    await stubVideo(page, {
+      cover: () => {
+        // never answered
+      },
     });
     await page.addInitScript(() => {
       const w = window as unknown as { __safe: SafeFrame[] };
@@ -334,6 +340,7 @@ test.describe('home: never stuck behind the loader', () => {
       };
       requestAnimationFrame(tick);
     });
+    await stubVideo(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.loader')).toBeVisible();
     await expect(page.locator('.loader')).toBeHidden({ timeout: 14_000 });
@@ -375,6 +382,7 @@ test.describe('home: loader', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     // the script of the page never arrives: what is seen is the served HTML and its styles
     await page.route(PAGE_SCRIPT, (r) => r.abort());
+    await stubVideo(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     const loader = page.locator('.loader');
     await expect(loader).toBeVisible();
@@ -465,8 +473,10 @@ test.describe('home: loader', () => {
     page,
   }) => {
     let stalled = 0;
-    await page.route('**/CTEC_Members.webp', () => {
-      stalled++; // never answered
+    await stubVideo(page, {
+      cover: () => {
+        stalled++; // never answered
+      },
     });
     await openPage(page, '/');
     await page
@@ -511,6 +521,7 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     // the served page before any script of it has run (with scripts off there is no loader at all)
     await page.route(PAGE_SCRIPT, (r) => r.abort());
+    await stubVideo(page);
     await page.goto('/', { waitUntil: 'load' });
     const map = page.locator('.loader canvas');
     await expect(map).toHaveCount(1);
@@ -602,8 +613,10 @@ test.describe('home: the loader is a map of the world being generated', () => {
   test('with the first scene stalled the map creeps, the label says the world is being entered, and it still lifts at the timeout', async ({
     page,
   }) => {
-    await page.route('**/CTEC_Members.webp', () => {
-      // never answered
+    await stubVideo(page, {
+      cover: () => {
+        // never answered
+      },
     });
     await watchLoader(page);
     await openPage(page, '/');
@@ -635,8 +648,10 @@ test.describe('home: the loader is a map of the world being generated', () => {
   });
 
   test('in English the two stages are named in English', async ({ page }) => {
-    await page.route('**/CTEC_Members.webp', () => {
-      // never answered
+    await stubVideo(page, {
+      cover: () => {
+        // never answered
+      },
     });
     await watchLoader(page);
     await openPage(page, '/', { locale: 'en' });
@@ -676,8 +691,8 @@ test.describe('home: the loader is a map of the world being generated', () => {
   });
 });
 
-/** The pictures of the scenes, by the end of their address: the first one, and the fourteen others. */
-const SPAWN_PICTURE = 'CTEC_Members.webp';
+/** The pictures of the scenes, by the end of their address: the first one (the cover of the hero's video), and the fourteen others. */
+const SPAWN_PICTURE = 'maxresdefault.jpg';
 const OTHER_PICTURES = [
   'CTEC_Building.webp',
   ...[40, 33, 17, 4, 10, 12, 38, 49, 51, 21, 14, 6, 2].map(
@@ -712,7 +727,7 @@ const watchPictures = (page: Page) =>
     (window as unknown as { __pictures: PictureLog }).__pictures = log;
     new PerformanceObserver((list) => {
       for (const e of list.getEntries())
-        if (/\.webp$/.test(e.name)) log.asked[e.name] ??= e.startTime;
+        if (/\.(webp|jpg)$/.test(e.name)) log.asked[e.name] ??= e.startTime;
     }).observe({ type: 'resource', buffered: true });
     const tick = () => {
       const home = document.querySelector<HTMLElement>('.dim--home');
@@ -832,9 +847,8 @@ test.describe('home: the other pictures wait for the loader', () => {
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     // a first picture that takes its time: the loader is up for a good while
-    await page.route(`**/${SPAWN_PICTURE}`, async (r) => {
-      await new Promise((done) => setTimeout(done, 2500));
-      await r.continue();
+    await stubVideo(page, {
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 2500),
     });
     await watchPictures(page);
     await openPage(page, '/');
@@ -1056,6 +1070,7 @@ test.describe('home: the other pictures wait for the loader', () => {
       viewport: { width: 1440, height: 900 },
     });
     const page = await context.newPage();
+    await stubVideo(page);
     await page.goto('/', { waitUntil: 'load' });
     await expect
       .poll(() =>

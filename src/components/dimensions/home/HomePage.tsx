@@ -24,6 +24,7 @@ import { onNextTick } from '@/lib/dimensions/nextTick';
 import { picturesAt } from '@/constants/scenes';
 import type { IMembers } from '@/types/IMember';
 import { World } from './World';
+import { HeroVideo } from './HeroVideo';
 import { Loader } from './Loader';
 import { Hero } from './Hero';
 import { DimensionOpening } from './DimensionOpening';
@@ -63,6 +64,8 @@ export const HomePage = () => {
   const root = useRef<HTMLDivElement>(null);
   const { setDim } = useDimension();
   const [ready, setReady] = useState(false);
+  // the arrival that follows the loader has played out: the hero's video waits for it (HeroVideo.tsx)
+  const [arrived, setArrived] = useState(false);
   // null until the browser has been asked (the static export renders without it)
   const reduced = useSyncExternalStore<boolean | null>(
     noSubscription,
@@ -107,6 +110,11 @@ export const HomePage = () => {
     meta: string;
     name: string;
   }[];
+  // the same video as the old site's header, from the same data
+  const video = t('home.backgroundVideo', { returnObjects: true }) as {
+    youtubeId: string;
+    start: number;
+  };
 
   // Build once the loader is done, so measurements see the final fonts and layout.
   // The build is also the landing (a section named by the address, the place of a return: sectionJumps.ts) and the
@@ -132,7 +140,7 @@ export const HomePage = () => {
     const arrival = reduced
       ? null
       : gsap
-          .timeline({ paused: true })
+          .timeline({ paused: true, onComplete: () => setArrived(true) })
           .fromTo(
             el.querySelector('.scene.is-first .cam'),
             { scale: 1.3 },
@@ -190,7 +198,19 @@ export const HomePage = () => {
   return (
     <div className='dim dim--home' ref={root} data-ready={ready}>
       {/* every other picture is asked for when the loader lifts, not before (and not as late as the scroll) */}
-      <World first={first} all={ready}>
+      <World
+        first={first}
+        all={ready}
+        spawn={
+          <HeroVideo
+            id={video.youtubeId}
+            start={video.start}
+            title={t('dimensions.hero.video')}
+            reduced={reduced}
+            arrived={arrived}
+          />
+        }
+      >
         {reduced !== null && <Starfield reduced={reduced} />}
       </World>
       {/* one for each dimension that is entered through a portal (TRANSITIONS, scenes.ts) */}

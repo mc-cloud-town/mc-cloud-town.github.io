@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { stubVideo } from './video';
 
 /** The engines that are run on request beside Chromium (playwright.config.ts names their projects after them). */
 export type OtherEngine = 'webkit' | 'firefox';
@@ -60,6 +61,8 @@ export const openPage = async (
   await page.route(/googletagmanager|googlesyndication|google-analytics/, (r) =>
     r.abort(),
   );
+  // the hero's video never reaches YouTube (unless the test has said otherwise for this page already)
+  await stubVideo(page);
   if (reducedMotion) await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(
     ([t, l]) => {

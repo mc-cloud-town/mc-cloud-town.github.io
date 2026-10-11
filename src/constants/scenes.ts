@@ -40,7 +40,8 @@ const progress = (id: string) =>
 
 /** Stacking order is DOM order: later scenes sit above earlier ones. */
 export const SCENES: SceneDef[] = [
-  { id: 'spawn', src: '/assets/members/CTEC_Members.webp', veil: 'hero' },
+  // no picture of its own in this list: the anniversary video and its cover (HeroVideo.tsx), from the i18n data
+  { id: 'spawn', veil: 'hero' },
   { id: 'town', src: '/assets/homePage/CTEC_Building.webp', veil: 'side' },
   { id: 'w1', src: progress('p40'), veil: 'foot' }, // 瑪莉亞之牆
   { id: 'w2', src: progress('p33'), veil: 'side-flip' }, // 新出生點

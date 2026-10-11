@@ -363,7 +363,8 @@
       "cta": "Join us",
       "cue": "Scroll through three dimensions",
       "loading": "Building terrain",
-      "entering": "Entering the world"
+      "entering": "Entering the world",
+      "video": "CTEC anniversary video (background)"
     },
     "overworld": {
       "tag": "Dimension 01 / 03",
