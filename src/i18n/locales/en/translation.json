@@ -430,6 +430,11 @@
       "rank": ["1st in Asia"],
       "rankBody": "Several farms we designed hold certified world records."
     },
+    "hardware": {
+      "crumb": "Server hardware",
+      "title": ["What holds this world up", "is these few machines."],
+      "next": "The world they have run"
+    },
     "end": {
       "tag": "Dimension 03 / 03",
       "say": ["After the End", "come the credits."],
@@ -540,6 +545,14 @@
       "more": "More pages",
       "support": "Support us",
       "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
+    },
+    "notFound": {
+      "code": "404",
+      "label": "Void",
+      "title": ["Go any further,", "and it is the void."],
+      "body": "The page you wanted is not in this world. The address may be mistyped, or the page may have moved.",
+      "home": "Back to the home page",
+      "more": "Or go here"
     },
     "progress": {
       "crumb": "Survival progress",

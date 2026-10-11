@@ -1,0 +1,96 @@
+/* /hardware/: a specification list. Labels in the sans face, values in the mono face. Built on inner.css's .group. */
+.dim {
+  .specs {
+    max-width: 2200px;
+    margin-inline: auto;
+    padding-bottom: 8px;
+  }
+  .specs .group + .group {
+    padding-top: 80px;
+  }
+  .spec {
+    display: grid;
+    grid-template-columns: clamp(150px, 20vw, 320px) minmax(0, 1fr);
+    gap: 4px 5vw;
+    align-items: baseline;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    transition: border-color var(--t-theme);
+  }
+  .spec dt {
+    grid-column: 1;
+    grid-row: 1 / span 8;
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    font-weight: 500;
+    color: var(--fg);
+  }
+  .spec dt .mono,
+  .feature .mono {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    transition: color var(--t-state);
+  }
+  .spec dd {
+    grid-column: 2;
+    font: 500 clamp(15px, 1.5vw, 20px) / 1.7 var(--mono);
+    letter-spacing: 0;
+    color: var(--fg);
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  /* the first line is the thing itself (a model, a size); the lines under it say what it does */
+  .spec dd:not(:first-of-type) {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .spec:hover dt .mono {
+    color: var(--fg);
+  }
+  .feature {
+    display: flex;
+    gap: 18px;
+    align-items: baseline;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 17px;
+    transition: border-color var(--t-theme);
+  }
+  .feature .mono {
+    flex: none;
+  }
+
+  /* each row comes in after the one above it, as the entries of the log do */
+  .spec,
+  .feature {
+    animation: dim-rise-0 var(--t-list) var(--ease-rise)
+      calc(var(--wait, 0ms) + var(--i, 0) * 50ms) backwards;
+  }
+
+  @media (max-width: 860px) {
+    .spec {
+      grid-template-columns: 1fr;
+      gap: 2px;
+      padding: 20px 0;
+    }
+    .spec dt,
+    .spec dd {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .spec dt {
+      margin-bottom: 6px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spec,
+    .feature {
+      animation-name: dim-fade-0;
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+  }
+}

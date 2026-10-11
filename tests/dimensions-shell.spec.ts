@@ -3,7 +3,6 @@ import { ready, scrollToSection } from './helpers/home';
 
 const LEGACY = [
   '/join/',
-  '/hardware/',
   '/openSource/',
   '/partner/',
   '/collaborative/',

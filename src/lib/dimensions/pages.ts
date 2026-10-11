@@ -6,6 +6,7 @@ import type { Dimension } from '#/dimensions/DimensionProvider';
  */
 const PAGE_DIMENSIONS: Record<string, Dimension> = {
   collaborative: 'end',
+  hardware: 'nether',
   join: 'respawn',
   member: 'end',
   openSource: 'end',
@@ -34,7 +35,7 @@ const PAGES = new Map<string, PageKind>([
   ['survivalProgress', 'inner'],
   ['survival', 'inner'],
   ['join', 'inner'],
-  ['hardware', 'legacy'],
+  ['hardware', 'inner'],
   ['openSource', 'inner'],
   ['partner', 'inner'],
   ['collaborative', 'inner'],
