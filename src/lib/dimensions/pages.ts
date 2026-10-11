@@ -5,9 +5,11 @@ import type { Dimension } from '#/dimensions/DimensionProvider';
  * is in the overworld (the home page starts there; its choreography reports where the reader is from then on).
  */
 const PAGE_DIMENSIONS: Record<string, Dimension> = {
+  collaborative: 'end',
   join: 'respawn',
   member: 'end',
   openSource: 'end',
+  partner: 'end',
 };
 
 /** A path without its slashes: `/member/` and `/member` are the same page. */
@@ -34,8 +36,8 @@ const PAGES = new Map<string, PageKind>([
   ['join', 'inner'],
   ['hardware', 'legacy'],
   ['openSource', 'inner'],
-  ['partner', 'legacy'],
-  ['collaborative', 'legacy'],
+  ['partner', 'inner'],
+  ['collaborative', 'inner'],
   ['redstoneCollection', 'legacy'],
   ['architectureCollection', 'legacy'],
 ]);

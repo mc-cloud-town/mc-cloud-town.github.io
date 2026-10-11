@@ -485,6 +485,28 @@
       "retry": "Try again",
       "next": "The partners and teams beside us"
     },
+    "partner": {
+      "crumb": "Partners",
+      "title": ["The partners and teams", "beside us."],
+      "lead": "The teams and creators Cloud Town works with: their own words, their videos, and where to find them.",
+      "groups": {
+        "team": "Partner teams",
+        "longtime": "Long-term partner creators",
+        "creator": "Partner creators"
+      },
+      "groupCount": "{{n}}",
+      "site": "Website",
+      "play": "Play the introduction",
+      "videoTitle": "Introduction video of {{name}}",
+      "loading": "Loading",
+      "error": "Could not load the partners.",
+      "retry": "Try again",
+      "contact": {
+        "title": "Contact us",
+        "body": "If you would like to work with us, you are welcome to get in touch."
+      },
+      "next": "Want to build with us? Join"
+    },
     "respawn": {
       "label": "Respawn point: Cloud Town",
       "title": "The next milestone is waiting for you.",
