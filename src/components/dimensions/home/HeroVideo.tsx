@@ -119,9 +119,10 @@ export const HeroVideo = ({
   const arrival = useRef({ over: arrived, tell: () => {} });
   /**
    * What the picture's effect and the player's effect need of each other: the cover is clear for the video
-   * (`clear`), and the picture is awaited after the handover (`late`), clear until it eases in.
+   * (`clear`), the picture is awaited after the handover (`late`), clear until it eases in, and a cover that
+   * came late may take the local picture's place now that the video is showing (`adopt`).
    */
-  const hand = useRef({ clear: false, late: false });
+  const hand = useRef({ clear: false, late: false, adopt: () => {} });
 
   // the frame is named in the reader's language
   useEffect(() => {
@@ -134,9 +135,11 @@ export const HeroVideo = ({
   // the loader waits until it is decided, and then for the picture it was decided for (Loader.tsx).
   useEffect(() => {
     const still = cover.current,
-      root = still?.closest<HTMLElement>('.dim');
+      root = still?.closest<HTMLElement>('.dim'),
+      scene = still?.closest<HTMLElement>('.scene');
     if (!still || !root) return;
     const state = hand.current;
+    const own = coverOf(id);
     let gone = false;
     let timer: number | undefined;
     let easing: gsap.core.Tween | undefined;
@@ -147,6 +150,46 @@ export const HeroVideo = ({
       if (as === 'local') still.src = LOCAL_COVER;
       // (after the address: whoever reads the decision finds the picture it is about)
       still.dataset.cover = as;
+    };
+    // A cover that was only slow is not thrown away for good: it is asked for again behind the local picture,
+    // and takes that picture's place the next time the still is not what the reader is looking at (the video is
+    // showing, the scene is switched off, the tab is put away, or no picture has come at all yet). Never in
+    // sight: one still does not turn into another before the reader's eyes. From then on it stays.
+    let late: HTMLImageElement | null = null;
+    const unseen = () =>
+      document.hidden ||
+      state.late ||
+      (scene ? getComputedStyle(scene).visibility === 'hidden' : false) ||
+      (state.clear && +getComputedStyle(still).opacity === 0);
+    const adopt = () => {
+      if (gone || !late || still.dataset.cover !== 'local' || !unseen()) return;
+      late = null;
+      away.disconnect();
+      document.removeEventListener('visibilitychange', adopt);
+      state.adopt = () => {};
+      still.src = own;
+      still.dataset.cover = 'youtube';
+    };
+    const away = new MutationObserver(adopt);
+    const askAgain = () => {
+      const again = new Image();
+      again.onload = () =>
+        void again
+          .decode()
+          .catch(() => undefined)
+          .then(() => {
+            if (gone || again.naturalWidth === 0) return;
+            late = again;
+            if (scene)
+              away.observe(scene, {
+                attributes: true,
+                attributeFilter: ['style'],
+              });
+            document.addEventListener('visibilitychange', adopt);
+            state.adopt = adopt;
+            adopt();
+          });
+      again.src = own;
     };
     const onLoad = () => {
       if (!decided()) return decide('youtube');
@@ -186,8 +229,12 @@ export const HeroVideo = ({
       else if (still.complete) decide('local');
       else
         timer = window.setTimeout(() => {
+          if (gone || decided()) return;
           // (the cover may have come in the very last moment)
-          if (!gone && !decided()) decide(whole() ? 'youtube' : 'local');
+          if (whole()) return decide('youtube');
+          decide('local');
+          // over its budget is not refused: it may still come
+          askAgain();
         }, COVER_BUDGET_MS);
     }
     watch.observe(root, { attributes: true, attributeFilter: ['data-ready'] });
@@ -196,6 +243,9 @@ export const HeroVideo = ({
       gone = true;
       window.clearTimeout(timer);
       watch.disconnect();
+      away.disconnect();
+      document.removeEventListener('visibilitychange', adopt);
+      state.adopt = () => {};
       easing?.kill();
       still.removeEventListener('load', onLoad);
       still.removeEventListener('error', onError);
@@ -255,6 +305,7 @@ export const HeroVideo = ({
         onStart: () => {
           state.clear = true;
         },
+        onComplete: () => state.adopt(),
       });
     };
     told.tell = plan;

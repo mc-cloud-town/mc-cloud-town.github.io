@@ -63,6 +63,8 @@ interface CoverFrame {
   whole: boolean;
   /** the picture's address */
   src: string;
+  /** how much of the spawn scene's layer shows: 0 while it is switched off */
+  scene: number;
 }
 /** Record the cover on every frame from the very first one; `__playingAt` is set by `sayPlaying`. */
 const watchCover = (page: Page) =>
@@ -91,6 +93,10 @@ const watchCover = (page: Page) =>
               ?.players.length ?? 0,
           whole: (cover as HTMLElement).dataset.whole !== undefined,
           src: cover.getAttribute('src') ?? '',
+          scene: (() => {
+            const c = getComputedStyle(cover.closest('.scene')!);
+            return c.visibility === 'hidden' ? 0 : +c.opacity;
+          })(),
         });
       }
       requestAnimationFrame(tick);
@@ -241,6 +247,15 @@ test.describe('home: the hero is the anniversary video', () => {
     // and it stays: nothing plays
     await page.waitForTimeout(1500);
     expect((await coverNow(page)).opacity).toBe(1);
+    // a cover that was refused is not asked for again: away and back, the picture is still the site's own
+    await scrollToSection(page, '#overworld', 0);
+    await jumpTo(page, '.hero');
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    expect((await coverNow(page)).src).toMatch(/CTEC_Members\.webp$/);
+    await expect(page.locator('.vid .vid-cover')).toHaveAttribute(
+      'data-cover',
+      'local',
+    );
     await expect(page.locator('.vid iframe')).toHaveCount(0);
   });
 
@@ -398,6 +413,106 @@ test.describe('home: the hero is the anniversary video', () => {
       expect(o, `frame ${i}`).toBeGreaterThanOrEqual(rising[i - 1] ?? 0),
     );
     for (const f of after) expect(f.whole).toBe(false);
+  });
+
+  /** YouTube's cover is held back, however often it is asked for, until `release` is called; then it comes. */
+  const heldCover = () => {
+    const held: (() => Promise<void>)[] = [];
+    let open = false;
+    return {
+      handler: (fulfil: () => Promise<void>) => {
+        if (open) return void fulfil().catch(() => {});
+        held.push(fulfil);
+      },
+      release: () => {
+        open = true;
+        held.forEach((go) => void go().catch(() => {}));
+      },
+    };
+  };
+  /** No frame in which one still takes the place of another before the reader's eyes. */
+  const expectNoVisibleSwap = async (page: Page) => {
+    const frames = (await coverFrames(page)).filter((f) => f.ready);
+    const swaps = frames.filter((f, i) => i > 0 && f.src !== frames[i - 1].src);
+    for (const f of swaps)
+      expect(
+        f.scene === 0 || f.cover === 0,
+        `the picture changed in sight: ${JSON.stringify(f)}`,
+      ).toBe(true);
+    return swaps.length;
+  };
+
+  test("a cover that is only slow: the loader lifts on the site's own picture, and YouTube's cover takes over once the video is showing", async ({
+    page,
+  }) => {
+    test.slow();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the cover comes a second and a half after its budget has run out
+    const cover = heldCover();
+    await stubVideo(page, { cover: cover.handler });
+    await watchCover(page);
+    await openAnd(page, COVER_BUDGET_MS + 1500, cover.release);
+    await ready(page);
+    // lifted on the local picture, whole
+    const lifted = await coverNow(page);
+    expect(lifted.src).toMatch(/CTEC_Members\.webp$/);
+    expect(lifted.in).toBe(true);
+    await arrived(page);
+    // the cover has come by now, and the local picture is still what stands there: nothing changes in sight
+    await page.waitForTimeout(1500);
+    expect((await coverNow(page)).src).toMatch(/CTEC_Members\.webp$/);
+    expect(await coverOpacity(page)).toBe(1);
+    // the video takes over; under it, the cover becomes YouTube's
+    await sayPlaying(page);
+    await expect
+      .poll(() => coverOpacity(page), { timeout: 12_000 })
+      .toBeLessThan(0.001);
+    await expect
+      .poll(async () => (await coverNow(page)).src)
+      .toMatch(COVER_URL);
+    await expect(page.locator('.vid .vid-cover')).toHaveAttribute(
+      'data-cover',
+      'youtube',
+    );
+    // away and back: the still the reader returns to is YouTube's cover, and it stays
+    await scrollToSection(page, '#overworld', 0);
+    await expect.poll(() => coverOpacity(page)).toBe(1);
+    await jumpTo(page, '.hero');
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    const back = await coverNow(page);
+    expect(back.src).toMatch(COVER_URL);
+    expect(back.in).toBe(true);
+    expect(back.opacity).toBe(1);
+    expect(await expectNoVisibleSwap(page)).toBe(1);
+  });
+
+  test("a slow cover and no video: the site's own picture stays while it is looked at, and gives way to the cover behind the reader's back", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const cover = heldCover();
+    await stubVideo(page, { cover: cover.handler, player: 'blocked' });
+    await watchCover(page);
+    await openAnd(page, COVER_BUDGET_MS + 1500, cover.release);
+    await arrived(page);
+    await page.waitForTimeout(2500);
+    // the cover came long ago; the picture in front of the reader has not been changed for it
+    const there = await coverNow(page);
+    expect(there.src).toMatch(/CTEC_Members\.webp$/);
+    expect(there.opacity).toBe(1);
+    // the reader moves on: the scene is off, and now it is YouTube's
+    await scrollToSection(page, '#overworld', 0);
+    await expect(page.locator('.scene[data-scene="spawn"]')).toBeHidden();
+    await expect
+      .poll(async () => (await coverNow(page)).src)
+      .toMatch(COVER_URL);
+    await jumpTo(page, '.hero');
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    const back = await coverNow(page);
+    expect(back.src).toMatch(COVER_URL);
+    expect(back.in).toBe(true);
+    expect(back.opacity).toBe(1);
+    expect(await expectNoVisibleSwap(page)).toBe(1);
   });
 
   test("YouTube's cover in time: it stays the hero's picture, the local one never takes its place", async ({
