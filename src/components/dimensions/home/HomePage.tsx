@@ -202,6 +202,7 @@ export const HomePage = () => {
       <World
         first={first}
         all={ready}
+        ledger={ledger}
         spawn={
           <HeroVideo
             id={video.youtubeId}

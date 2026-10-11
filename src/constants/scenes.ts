@@ -20,6 +20,12 @@ export interface SceneDef {
   id: SceneId;
   src?: string;
   veil: Veil;
+  /**
+   * How much of the design's veil this picture is given by night: every stop of the veil is multiplied by it
+   * (the shape stays). 1 if not given. Under 1 only for a picture that is dark by itself, which the full veil
+   * leaves nearly black. To retune a picture, change this one number.
+   */
+  strength?: number;
 }
 export interface TransitionDef {
   trigger: string;
@@ -46,8 +52,8 @@ export const SCENES: SceneDef[] = [
   { id: 'w1', src: progress('p40'), veil: 'foot' }, // 瑪莉亞之牆
   { id: 'w2', src: progress('p33'), veil: 'side-flip' }, // 新出生點
   { id: 'w3', src: progress('p17'), veil: 'foot' }, // 全編碼全物品
-  { id: 'nether', veil: 'wide' }, // six stacked images, see NETHER_IMAGES
-  { id: 'hall', src: progress('p21'), veil: 'side' }, // 終界大廳
+  { id: 'nether', veil: 'wide' }, // six stacked images, see NETHER_IMAGES and NETHER_STRENGTHS
+  { id: 'hall', src: progress('p21'), veil: 'side', strength: 0.8 }, // 終界大廳 (a shader shot)
   { id: 'moon', src: progress('p14'), veil: 'foot' }, // 月宮
   { id: 'farm', src: progress('p6'), veil: 'side-flip' }, // 終界農業區
   { id: 'end', veil: 'none' }, // starfield
@@ -58,6 +64,9 @@ export const SCENES: SceneDef[] = [
 export const NETHER_IMAGES = ['p4', 'p10', 'p12', 'p38', 'p49', 'p51'].map(
   progress,
 );
+
+/** The veil's strength over each of them (as `strength` of a scene): all six are shader shots, dark by themselves. */
+export const NETHER_STRENGTHS = [0.8, 0.8, 0.8, 0.8, 0.8, 0.8];
 
 /**
  * One transition per section, in page order. Neighbours never share an effect, with one exception that is the

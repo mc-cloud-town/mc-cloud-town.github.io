@@ -39,6 +39,11 @@
   --h3: 0.12;
   --h4: 0.62;
   --h5: 0.78;
+  /* up to 860px, where the veil runs bottom-up under the whole screen. By night lower than the design's
+     0.96 / 0.8 / 0.5, under which no picture could be seen (user feedback); by day the design's. */
+  --n1: 0.9;
+  --n2: 0.62;
+  --n3: 0.3;
   --serif: 'Chiron Sung HK', 'Noto Serif TC', serif;
   --sans: 'Chiron Hei HK', 'Noto Sans TC', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -143,6 +148,9 @@
   --h3: 0;
   --h4: 0.9;
   --h5: 0.97;
+  --n1: 0.96;
+  --n2: 0.8;
+  --n3: 0.5;
 }
 [data-dim='nether'] .dim {
   --accent: #ff6a45;

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { NETHER_IMAGES, SCENES } from '@/constants/scenes';
+import { NETHER_IMAGES, NETHER_STRENGTHS, SCENES } from '@/constants/scenes';
 
 const VEIL: Record<string, string> = {
   hero: 'veil veil--hero',
@@ -76,11 +76,14 @@ const Picture = ({
 export const World = ({
   first = [],
   all = false,
+  ledger = 0,
   spawn,
   children,
 }: {
   first?: readonly string[];
   all?: boolean;
+  /** which facility of the ledger is showing: the Nether's veil has that picture's strength */
+  ledger?: number;
   /** what the spawn scene shows: the hero's video */
   spawn?: ReactNode;
   /** what the End's last scene shows: the stars */
@@ -110,7 +113,19 @@ export const World = ({
                 />
               ))}
             {s.id === 'end' && children}
-            {VEIL[s.veil] && <div className={VEIL[s.veil]} />}
+            {VEIL[s.veil] && (
+              <div
+                className={VEIL[s.veil]}
+                style={
+                  {
+                    '--strength':
+                      s.id === 'nether'
+                        ? NETHER_STRENGTHS[ledger] ?? 1
+                        : s.strength ?? 1,
+                  } as CSSProperties
+                }
+              />
+            )}
           </div>
         </div>
       </div>

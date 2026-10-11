@@ -10,6 +10,13 @@ html.lenis {
   scroll-behavior: auto !important;
 }
 
+/* a number, so that it can ease */
+@property --veil-k {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
 .dim.dim--home {
   /* how wide the departments of the respawn are (.join) */
   --join-w: min(720px, 54vw);
@@ -72,26 +79,31 @@ html.lenis {
   .cam .vid img.vid-cover {
     object-fit: cover;
   }
+  /* One veil per scene, of the design's shapes. A picture that is dark by itself (a shader shot) is given a
+     strength under 1 (scenes.ts): every stop of its veil is that much lower, the shape is the same. The strength
+     eases when it changes (from one facility of the ledger to the next), as anything else that changes. */
   .veil {
     position: absolute;
     inset: 0;
+    --veil-k: var(--strength, 1);
+    transition: --veil-k var(--t-in) var(--ease-rise);
   }
   .veil--side {
     background: linear-gradient(
       90deg,
-      rgba(var(--v), var(--s1)) 0%,
-      rgba(var(--v), var(--s2)) 40%,
-      rgba(var(--v), var(--s3)) 72%,
-      rgba(var(--v), var(--s4)) 100%
+      rgba(var(--v), calc(var(--s1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--s2) * var(--veil-k))) 40%,
+      rgba(var(--v), calc(var(--s3) * var(--veil-k))) 72%,
+      rgba(var(--v), calc(var(--s4) * var(--veil-k))) 100%
     );
   }
   .veil--wide {
     background: linear-gradient(
       90deg,
-      rgba(var(--v), var(--s1)) 0%,
-      rgba(var(--v), var(--s2)) 56%,
-      rgba(var(--v), var(--s3)) 84%,
-      rgba(var(--v), var(--s4)) 100%
+      rgba(var(--v), calc(var(--s1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--s2) * var(--veil-k))) 56%,
+      rgba(var(--v), calc(var(--s3) * var(--veil-k))) 84%,
+      rgba(var(--v), calc(var(--s4) * var(--veil-k))) 100%
     );
   }
   .veil--flip {
@@ -100,20 +112,20 @@ html.lenis {
   .veil--foot {
     background: linear-gradient(
       0deg,
-      rgba(var(--v), var(--f1)) 0%,
-      rgba(var(--v), var(--f2)) 34%,
-      rgba(var(--v), var(--f3)) 66%
+      rgba(var(--v), calc(var(--f1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--f2) * var(--veil-k))) 34%,
+      rgba(var(--v), calc(var(--f3) * var(--veil-k))) 66%
     );
   }
   .veil--hero {
     background: linear-gradient(
       90deg,
-      rgba(var(--v), var(--h1)) 0%,
-      rgba(var(--v), var(--h2)) 36%,
-      rgba(var(--v), var(--h3)) 56%,
-      rgba(var(--v), var(--h3)) 68%,
-      rgba(var(--v), var(--h4)) 82%,
-      rgba(var(--v), var(--h5)) 100%
+      rgba(var(--v), calc(var(--h1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--h2) * var(--veil-k))) 36%,
+      rgba(var(--v), calc(var(--h3) * var(--veil-k))) 56%,
+      rgba(var(--v), calc(var(--h3) * var(--veil-k))) 68%,
+      rgba(var(--v), calc(var(--h4) * var(--veil-k))) 82%,
+      rgba(var(--v), calc(var(--h5) * var(--veil-k))) 100%
     );
   }
   /* the end: one generated tile of specks at three depths, on a ground that reaches past the screen */
@@ -822,9 +834,9 @@ html.lenis {
       transform: none;
       background: linear-gradient(
         0deg,
-        rgba(var(--v), 0.96) 0%,
-        rgba(var(--v), 0.8) 55%,
-        rgba(var(--v), 0.5) 100%
+        rgba(var(--v), calc(var(--n1) * var(--veil-k))) 0%,
+        rgba(var(--v), calc(var(--n2) * var(--veil-k))) 55%,
+        rgba(var(--v), calc(var(--n3) * var(--veil-k))) 100%
       );
     }
     .hero .vt {
@@ -1094,6 +1106,10 @@ html[data-live]
   --accent: #6234c4;
 }
 
+/* day: the paper is as the design has it for every picture (a strength is for the night's dark veil) */
+[data-theme='light']:not([data-dim='end']) .dim.dim--home .veil {
+  --veil-k: 1;
+}
 /* day: the paper side is narrower, so more of the photograph stays untouched.
    Only where there is a side: on narrow screens the text runs the full width, and the bottom-up veil above stays. */
 @media (min-width: 861px) {
