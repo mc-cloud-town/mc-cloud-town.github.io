@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { serverLink } from '@/constants';
 
 /**
- * The pages of the site that are still in the old shell, with the words the old navigation and the pages
- * themselves already use for them. (`/collaborative/` is `/partner/` under another address: one link.)
- * A click on one is a step out of the shell: the leave half of a page transition (pageTransition.ts).
+ * The pages of the site the bar has no link for, with the words the site's navigation and the pages themselves
+ * already use for them. (`/collaborative/` is `/partner/` under another address: one link.)
+ * A click on one is a step to another page of the shell, like any other (pageTransition.ts).
  */
 const PAGES = [
   ['/redstoneCollection/', 'menu.redstone'],
