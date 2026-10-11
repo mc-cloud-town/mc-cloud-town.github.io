@@ -591,19 +591,11 @@ html.lenis {
     animation: ledger-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Reduced motion: no pin and no steps (NetherLedger.tsx). The facilities are a plain list in the flow of the
-     page, each with its own picture. The list stands on the page's ground, which rises under it and falls away
-     after it, so the words never depend on which part of the fixed picture happens to be behind them. */
+     page, each with its own picture, over the scene and its veil like everything else: no ground of its own. */
   .ledger-plain {
     display: grid;
     gap: clamp(56px, 10vh, 112px);
     padding: 22vh var(--gutter);
-    background: linear-gradient(
-      180deg,
-      rgba(var(--v), 0) 0,
-      rgba(var(--v), 0.92) 16vh,
-      rgba(var(--v), 0.92) calc(100% - 16vh),
-      rgba(var(--v), 0) 100%
-    );
   }
   .ledger-plain li {
     display: grid;
@@ -1114,115 +1106,6 @@ html[data-live]
       rgba(var(--v), 0) 72%
     );
   }
-}
-/* day, the hero: the paper reaches to the end of the column of text (.hero-copy: one gutter in, 460px wide) at
-   every width, not to a share of the screen, which a narrower screen's column outran; one gutter further it is
-   gone, and the photograph is untouched from there to the title's own paper on the right.
-   (`50% - 1100px`: where the page begins on a screen wider than its 2200px.) */
-@media (min-width: 861px) {
-  [data-theme='light']:not([data-dim='end']) .dim.dim--home .veil--hero {
-    --edge: calc(max(0px, 50% - 1100px) + var(--gutter) + 460px);
-    background: linear-gradient(
-      90deg,
-      rgba(var(--v), var(--h1)) 0,
-      rgba(var(--v), 0.94) var(--edge),
-      rgba(var(--v), 0) calc(var(--edge) + var(--gutter)),
-      rgba(var(--v), var(--h3)) 68%,
-      rgba(var(--v), var(--h4)) 82%,
-      rgba(var(--v), var(--h5)) 100%
-    );
-  }
-  /* day, the respawn: the design's own paper for a scene with its text on one side (the demo's day .veil--side,
-     stop for stop): solid where the text begins, then a long fall to nothing at 72% of the width, so that the
-     build, the crowd and the sea stay one picture. By night the scene keeps its wide veil. */
-  [data-theme='light']:not([data-dim='end'])
-    .dim.dim--home
-    .scene[data-scene='day1']
-    .veil {
-    background: linear-gradient(
-      90deg,
-      rgba(var(--v), 0.97) 0%,
-      rgba(var(--v), 0.94) 36%,
-      rgba(var(--v), 0.3) 54%,
-      rgba(var(--v), 0) 72%
-    );
-  }
-  /* That paper has thinned where the departments' descriptions end: they run to 56% of the screen at 1440px in
-     English and to 60% at 1024px and 1280px, where the veil is down to a quarter or less, and small grey words
-     measure 2.3 to 4.2 : 1 there (from 1920px up, and in Chinese at 1440px, they pass as the veil is).
-     Each description alone carries the least paper that makes up for it (0.66 at most; 0.6 left 4.6 : 1), as
-     wide as its words and no wider. It is the veil's own fall, mirrored: nothing where the veil is whole (up to
-     36% of the screen), growing as the veil thins, whole from 54% on, gone within a gutter of the last word, and
-     soft above and below. The title, the button, the departments' names and their links need none. */
-  [data-theme='light']:not([data-dim='end']) .dim.dim--home .depts li > span {
-    position: relative;
-    isolation: isolate;
-    /* as wide as its words: the paper is the words', not the column's; and a gutter of room after the last word
-       for the paper to end in, inside its own box (the words wrap where they did) */
-    justify-self: start;
-    padding-right: var(--gutter);
-    margin-right: calc(-1 * var(--gutter));
-  }
-  [data-theme='light']:not([data-dim='end'])
-    .dim.dim--home
-    .depts
-    li
-    > span::before {
-    /* where a description begins on the screen (gutter, name, gap): the veil's stops are shares of the screen,
-       and these are the same places */
-    --from: calc(var(--gutter) + max(0px, 50vw - 1100px) + 7em + 24px);
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset: -10px 0;
-    pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      rgba(var(--v), 0) calc(36vw - var(--from)),
-      rgba(var(--v), 0.66) calc(54vw - var(--from)),
-      rgba(var(--v), 0.66) calc(100% - var(--gutter)),
-      rgba(var(--v), 0) 100%
-    );
-    mask-image: linear-gradient(
-      180deg,
-      transparent 0,
-      #000 12px,
-      #000 calc(100% - 12px),
-      transparent 100%
-    );
-  }
-}
-/* day, the respawn on a narrow screen: the bottom-up veil, with more paper in the upper half, where the
-   departments are read over the dark of this picture (the sea) */
-@media (max-width: 860px) {
-  [data-theme='light']:not([data-dim='end'])
-    .dim.dim--home
-    .scene[data-scene='day1']
-    .veil {
-    background: linear-gradient(
-      0deg,
-      rgba(var(--v), 0.96) 0%,
-      rgba(var(--v), 0.88) 55%,
-      rgba(var(--v), 0.7) 100%
-    );
-  }
-}
-/* day: the footer runs the full width, across the clear side of the photograph, so paper rises under it
-   from the foot of the page (the bottom-up veil of the builds, over this one band). On a screen wider than the
-   page (2200px) the band goes on to the edges of the screen, as the photograph does. */
-[data-theme='light']:not([data-dim='end']) .dim.dim--home .respawn .dim-foot {
-  --bleed: calc(var(--gutter) + max(0px, 50vw - 1100px));
-  width: auto;
-  max-width: none;
-  align-self: stretch;
-  margin-inline: calc(-1 * var(--bleed));
-  padding-inline: var(--bleed);
-  background: linear-gradient(
-    0deg,
-    rgba(var(--v), 0.95) 0%,
-    rgba(var(--v), 0.9) 62%,
-    rgba(var(--v), 0) 100%
-  );
 }
 /* day: where the dimension name stands upright on the bare photograph (the layout with a clear side, above
    860px) it gets its own strip of paper, as wide as its words (the column it stands in is as wide as it is).

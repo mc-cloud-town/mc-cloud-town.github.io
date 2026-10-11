@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
   atRest,
-  expectLegible,
   expectNoHorizontalScroll,
   expectNoMissingKeys,
   expectTextFits,
@@ -470,7 +469,7 @@ test.describe('home: respawn', () => {
       [1920, 1080],
       [2560, 1440],
     ] as const)
-      test(`by day at ${width}×${height} (${locale}) the paper of the respawn falls away gradually, the words can be read on it, and the far side of the photograph keeps its colour`, async ({
+      test(`by day at ${width}×${height} (${locale}) the paper of the respawn is the design's side veil alone: it falls away gradually, no other ground lies under the words, and the far side of the photograph keeps its colour`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height });
@@ -558,21 +557,21 @@ test.describe('home: respawn', () => {
         expect(to - from, profile).toBeGreaterThanOrEqual(0.3);
         await ground.evaluate((el) => (el as Element).remove());
         await atRest(page);
-        // and the words can be read against what is really behind them
-        await expectLegible(
-          page,
-          '#respawn h2, #respawn .depts [data-t], #respawn .dim-foot [data-t]',
-        );
-        // the footer has its own paper, from edge to edge
-        await expect(foot).toHaveCSS(
-          'background-image',
-          /linear-gradient\(0deg/,
-        );
-        expect(band!.x).toBeLessThanOrEqual(0);
-        expect(band!.x + band!.width).toBeGreaterThanOrEqual(width);
+        // the veil is the only ground: the descriptions and the footer carry none of their own
+        await expect(foot).toHaveCSS('background-image', 'none');
+        const own = await page
+          .locator('#respawn .depts li > span')
+          .evaluateAll((els) =>
+            els.map((el) => [
+              getComputedStyle(el).backgroundImage,
+              getComputedStyle(el, '::before').content,
+            ]),
+          );
+        expect(own).toHaveLength(3);
+        for (const o of own) expect(o).toEqual(['none', 'none']);
         await expectTextFits(page, { within: '#respawn .dim-foot' });
         await expectNoHorizontalScroll(page);
-        // by night there is no band, and the scene keeps its wide veil
+        // by night as by day, the scene carries the design's side veil
         await page.locator('.dim-bar [data-action="theme"]').click();
         await expect(page.locator('html')).toHaveAttribute(
           'data-theme',
@@ -581,7 +580,7 @@ test.describe('home: respawn', () => {
         await expect(foot).toHaveCSS('background-image', 'none');
         await expect(
           page.locator('.scene[data-scene="day1"] .veil'),
-        ).toHaveClass(/veil--wide/);
+        ).toHaveClass(/veil--side/);
       });
 
   test('on a phone a department stacks: name, description, link', async ({

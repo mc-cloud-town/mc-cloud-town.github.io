@@ -51,9 +51,7 @@ export const SCENES: SceneDef[] = [
   { id: 'moon', src: progress('p14'), veil: 'foot' }, // 月宮
   { id: 'farm', src: progress('p6'), veil: 'side-flip' }, // 終界農業區
   { id: 'end', veil: 'none' }, // starfield
-  // wide by night: the departments and their descriptions reach past the middle of the screen
-  // (by day the paper is cut to the column of text instead: home.css)
-  { id: 'day1', src: progress('p2'), veil: 'wide' }, // 開服當天
+  { id: 'day1', src: progress('p2'), veil: 'side' }, // 開服當天
 ];
 
 /** In the order of nether.ledger in the translations. */
