@@ -1684,7 +1684,7 @@ test.describe('home: the end', () => {
       await page.setViewportSize({ width, height });
       await openPage(page, '/', { theme: 'light' });
       await ready(page);
-      // the openings carry the dimension name in the flow of the text here, on its strip of paper
+      // the openings carry the dimension name in the flow of the text here: as tall by day as in the dark
       const heights = () =>
         page.evaluate(() =>
           [...document.querySelectorAll<HTMLElement>('.open')].map(

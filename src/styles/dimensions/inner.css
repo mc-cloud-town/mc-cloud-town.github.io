@@ -96,9 +96,13 @@
       background-color var(--t-theme),
       padding var(--t-theme);
   }
-  [data-theme='light'] & .head .vt {
-    background: rgba(var(--v), 0.95);
-    padding: 0.4em 0.25em 0.3em;
+  /* Only where it stands upright on the bare photograph (above 860px). Below that the veil runs bottom-up under
+     the whole header and the name lies on it, like the title under it: no second ground there. */
+  @media (min-width: 861px) {
+    [data-theme='light'] & .head .vt {
+      background: rgba(var(--v), 0.95);
+      padding: 0.4em 0.25em 0.3em;
+    }
   }
 
   /* tools: filters and search stay reachable while the list scrolls */
@@ -254,7 +258,7 @@
       writing-mode: horizontal-tb;
       order: -1;
       font-size: 34px;
-      /* as wide as its words, as the upright one is: by day its strip of paper is the label's, not the row's */
+      /* as wide as its words, as the upright one is */
       justify-self: start;
     }
     .head .bg::before,

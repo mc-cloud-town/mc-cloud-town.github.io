@@ -1196,20 +1196,19 @@ html[data-live]
     rgba(var(--v), 0) 100%
   );
 }
-/* day: the vertical dimension name stands on the photograph, so it gets its own strip of paper */
-[data-theme='light']:not([data-dim='end']) .dim .open .vt {
-  background: rgba(var(--v), 0.95);
-  padding: 0.4em 0.25em 0.3em;
-  /* the strip has its own padding, so the label never overflows: keep the design's box */
-  line-height: 1;
-  margin-right: 0;
-}
-/* On narrow screens the name lies in the flow of the text, so the strip's padding is part of the height of every
-   opening. It stays when the page goes dark for the End and only the paper goes: without it each opening above
-   lost 28px at that moment, and the page jumped under the reader. */
-@media (max-width: 860px) {
-  [data-theme='light'][data-dim='end'] .dim .open .vt {
+/* day: where the dimension name stands upright on the bare photograph (the layout with a clear side, above
+   860px) it gets its own strip of paper, as wide as its words (the column it stands in is as wide as it is).
+   Not at 860px and below: there the bottom-up veil runs under the whole screen and the name lies on it, in the
+   flow of the text, like the statement under it. A second ground on the veil would be an opaque bar across the
+   column (the name is a row of the grid there). Without one, an opening is as tall by day as by night, so the
+   page does not move either when the day goes dark for the End. */
+@media (min-width: 861px) {
+  [data-theme='light']:not([data-dim='end']) .dim .open .vt {
+    background: rgba(var(--v), 0.95);
     padding: 0.4em 0.25em 0.3em;
+    /* the strip has its own padding, so the label never overflows: keep the design's box */
+    line-height: 1;
+    margin-right: 0;
   }
 }
 
