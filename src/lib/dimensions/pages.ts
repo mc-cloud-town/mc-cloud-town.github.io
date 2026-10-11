@@ -7,6 +7,7 @@ import type { Dimension } from '#/dimensions/DimensionProvider';
 const PAGE_DIMENSIONS: Record<string, Dimension> = {
   join: 'respawn',
   member: 'end',
+  openSource: 'end',
 };
 
 /** A path without its slashes: `/member/` and `/member` are the same page. */
@@ -32,7 +33,7 @@ const PAGES = new Map<string, PageKind>([
   ['survival', 'inner'],
   ['join', 'inner'],
   ['hardware', 'legacy'],
-  ['openSource', 'legacy'],
+  ['openSource', 'inner'],
   ['partner', 'legacy'],
   ['collaborative', 'legacy'],
   ['redstoneCollection', 'legacy'],

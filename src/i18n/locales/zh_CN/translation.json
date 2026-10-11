@@ -450,6 +450,33 @@
         "fin": "还没结束。"
       }
     },
+    "openSource": {
+      "crumb": "开源项目",
+      "title": ["我们写的工具，", "全部开源。"],
+      "lead": "为了给玩家更好的体验，我们开发了许多开源插件。这里是组织在 GitHub 上的全部项目，按用途分组，可以用名称或说明搜索。",
+      "search": "搜索项目名称、说明或标签",
+      "count": "{{n}} / {{total}} 个",
+      "groupCount": "{{n}} 个",
+      "other": "其他项目",
+      "stats": {
+        "total": "项目",
+        "languages": "语言",
+        "stars": "星数",
+        "forks": "分支"
+      },
+      "noDescription": "目前还没有补上项目说明。",
+      "unknownLanguage": "未标注语言",
+      "fork": "Fork",
+      "archived": "已归档",
+      "github": "前往 GitHub",
+      "empty": "找不到符合的项目，换个关键字试试。",
+      "clear": "清除搜索",
+      "none": "目前没有可显示的开源项目。",
+      "loading": "加载中",
+      "error": "项目列表加载失败。GitHub 的公开 API 对未登录的请求有次数限制，请稍后再试，或直接到 GitHub 看我们的组织。",
+      "retry": "重新加载",
+      "next": "一起走过来的伙伴与团队"
+    },
     "respawn": {
       "label": "重生点：云镇",
       "title": "下一个里程碑，等你一起盖。",

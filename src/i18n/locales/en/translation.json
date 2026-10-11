@@ -458,6 +458,33 @@
         "fin": "Not over yet."
       }
     },
+    "openSource": {
+      "crumb": "Open source",
+      "title": ["The tools we write", "are all open source."],
+      "lead": "We build tools to make the game better for our players, and publish them. These are all of the organisation's repositories on GitHub, grouped by what they are for. Search by name or description.",
+      "search": "Search by name, description or topic",
+      "count": "{{n}} / {{total}}",
+      "groupCount": "{{n}}",
+      "other": "Other projects",
+      "stats": {
+        "total": "Repositories",
+        "languages": "Languages",
+        "stars": "Stars",
+        "forks": "Forks"
+      },
+      "noDescription": "This repository does not have a description yet.",
+      "unknownLanguage": "No language",
+      "fork": "Fork",
+      "archived": "Archived",
+      "github": "View on GitHub",
+      "empty": "No repository matches. Try another word.",
+      "clear": "Clear the search",
+      "none": "No repositories are available right now.",
+      "loading": "Loading",
+      "error": "Could not load the list of projects. GitHub's public API limits the number of requests made without a sign-in. Try again later, or see our organisation on GitHub.",
+      "retry": "Try again",
+      "next": "The partners and teams beside us"
+    },
     "respawn": {
       "label": "Respawn point: Cloud Town",
       "title": "The next milestone is waiting for you.",

@@ -450,6 +450,33 @@
         "fin": "還沒結束。"
       }
     },
+    "openSource": {
+      "crumb": "開源專案",
+      "title": ["我們寫的工具，", "全部開源。"],
+      "lead": "為提供玩家更好的體驗，我們開發了許多開源插件。這裡是組織在 GitHub 上的全部專案，依用途分組，可以用名稱或說明搜尋。",
+      "search": "搜尋專案名稱、說明或標籤",
+      "count": "{{n}} / {{total}} 個",
+      "groupCount": "{{n}} 個",
+      "other": "其他專案",
+      "stats": {
+        "total": "專案",
+        "languages": "語言",
+        "stars": "星數",
+        "forks": "分支"
+      },
+      "noDescription": "目前還沒有補上專案說明。",
+      "unknownLanguage": "未標示語言",
+      "fork": "Fork",
+      "archived": "已封存",
+      "github": "前往 GitHub",
+      "empty": "找不到符合的專案，換個關鍵字試試。",
+      "clear": "清除搜尋",
+      "none": "目前沒有可顯示的開源專案。",
+      "loading": "載入中",
+      "error": "專案清單載入失敗。GitHub 的公開 API 對未登入的請求有次數限制，請稍後再試，或直接到 GitHub 看我們的組織。",
+      "retry": "重新載入",
+      "next": "一起走過來的夥伴與團隊"
+    },
     "respawn": {
       "label": "重生點：雲鎮",
       "title": "下一個里程碑，等你一起蓋。",
