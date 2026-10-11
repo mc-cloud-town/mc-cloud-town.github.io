@@ -5,6 +5,7 @@ import type { Dimension } from '#/dimensions/DimensionProvider';
  * is in the overworld (the home page starts there; its choreography reports where the reader is from then on).
  */
 const PAGE_DIMENSIONS: Record<string, Dimension> = {
+  join: 'respawn',
   member: 'end',
 };
 
@@ -29,7 +30,7 @@ const PAGES = new Map<string, PageKind>([
   ['member', 'inner'],
   ['survivalProgress', 'inner'],
   ['survival', 'inner'],
-  ['join', 'legacy'],
+  ['join', 'inner'],
   ['hardware', 'legacy'],
   ['openSource', 'legacy'],
   ['partner', 'legacy'],

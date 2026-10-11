@@ -1,0 +1,199 @@
+/* The join page: the full text of the home page's respawn. The header, the groups and their entrances are
+   inner.css; what is here is this page's own. */
+.dim {
+  /* how long the server has been running: a line where the other inner pages have their toolbar */
+  .join-since {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    align-items: baseline;
+    max-width: 2200px;
+    margin-inline: auto;
+    padding: 18px var(--gutter);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--t-theme);
+    animation: dim-fade-0 0.8s var(--ease-rise) 560ms backwards;
+  }
+  .join-clock {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    animation: dim-fade-0 var(--t-in) var(--ease-rise) backwards;
+  }
+  .join-clock b {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--fg);
+    transition: color var(--t-theme);
+  }
+
+  /* the call itself, as on the home page: the line, and the server's Discord */
+  .join-way {
+    max-width: 2200px;
+    margin-inline: auto;
+    padding: 72px var(--gutter) 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) 680ms backwards;
+  }
+  .join-way h2 {
+    font-size: clamp(30px, 4vw, 64px);
+    line-height: 1.2;
+    margin: 14px 0 20px;
+  }
+  .join-way p[data-t='body'] {
+    max-width: min(34em, var(--measure));
+    color: var(--muted);
+  }
+  /* the home page's button (.btn in home.css, which is the home page's alone) */
+  .join-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 32px;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 18px 30px;
+    background: var(--fg);
+    color: var(--bg);
+    border-radius: 100px;
+    transition:
+      background-color var(--t-state),
+      color var(--t-theme),
+      gap var(--t-state);
+  }
+  .join-cta:hover {
+    background: var(--accent);
+    gap: 22px;
+  }
+
+  /* a department: its picture beside what it asks for, in the columns of an entry of the world log */
+  .group.join-dept {
+    animation-delay: calc(760ms + var(--i, 0) * 80ms);
+  }
+  .group.join-dept header {
+    animation-delay: calc(760ms + var(--i, 0) * 80ms);
+  }
+  .join-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: clamp(28px, 4vw, 64px);
+    align-items: start;
+    padding-top: 32px;
+  }
+  .join-body figure {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .join-body img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s var(--ease-out);
+  }
+  .join-dept:hover .join-body img {
+    transform: scale(1.04);
+  }
+  .join-body > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+  .join-sub {
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .join-lines {
+    width: 100%;
+    max-width: var(--measure);
+  }
+  .join-lines li {
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    transition: border-color var(--t-theme);
+  }
+  .join-lines li:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  /* the people to write to: their names as they are on Discord */
+  .join-people {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding-top: 14px;
+    width: 100%;
+    max-width: var(--measure);
+    border-top: 1px solid var(--line);
+    transition: border-color var(--t-theme);
+  }
+  .join-people .mono {
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  .join-people .pill {
+    font-size: 14px;
+  }
+  /* the home page's text link (.more in home.css) */
+  .join-link {
+    display: inline-flex;
+    gap: 10px;
+    margin-top: 28px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    font-weight: 700;
+    transition:
+      gap var(--t-state),
+      border-color var(--t-state);
+  }
+  .join-link:hover {
+    gap: 16px;
+    border-bottom-color: var(--accent);
+  }
+
+  @media (max-width: 1024px) {
+    /* 44px tall to tap; the line stays right under the words */
+    .join-link {
+      align-items: flex-end;
+      margin-top: 12px;
+    }
+    .join-people .pill {
+      justify-content: center;
+    }
+  }
+  @media (max-width: 860px) {
+    .join-way {
+      padding-top: 48px;
+    }
+    .join-body {
+      grid-template-columns: 1fr;
+      gap: 22px;
+      padding-top: 22px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .join-since,
+    .join-clock,
+    .join-way,
+    .group.join-dept,
+    .group.join-dept header {
+      animation-name: dim-fade-0;
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+    .join-body img {
+      transition: none;
+    }
+  }
+}

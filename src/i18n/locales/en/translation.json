@@ -480,6 +480,13 @@
         }
       ]
     },
+    "join": {
+      "title": ["How to join", "Cloud Town."],
+      "lead": "Redstone, building, logistics: each department reviews in its own way. Find yours and apply as described below.",
+      "label": "RESPAWN",
+      "way": "All three departments live on Discord. To meet everyone first, or to ask anything about applying, find us there.",
+      "next": "See what we have built first"
+    },
     "footer": {
       "more": "More pages",
       "support": "Support us",
