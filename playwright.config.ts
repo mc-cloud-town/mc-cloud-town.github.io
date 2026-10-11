@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+const PORT = Number(process.env.PW_PORT) || 4173;
 
 /**
  * The other engines are run on request only: `--project=webkit`, `--project=firefox`. A run that names no
