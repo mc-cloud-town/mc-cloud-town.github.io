@@ -4,12 +4,23 @@ import {
   type LoaderFrame,
   arrived,
   afterLoaderFrames,
+  expectFullRun,
   loaderFrames,
   mapLifting,
   ready,
   watchLoader,
 } from './helpers/home';
 import { stubVideo } from './helpers/video';
+import {
+  MAP_FRONTIER,
+  MAP_GROUND,
+  MAP_SIZE,
+  MAP_TONES,
+  MAP_RUN_S,
+  drawMap,
+  planMap,
+  plannedRun,
+} from '../src/lib/dimensions/loaderMap';
 
 /** Same as LOADER_TIMEOUT_MS in src/components/dimensions/home/Loader.tsx. */
 const LOADER_TIMEOUT_MS = 6000;
@@ -558,7 +569,237 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await expect(page.locator('.loader img')).toHaveCount(0);
   });
 
-  test('chunks pass through their stages from the centre outward and settle into a finished square with a blue ring', async ({
+  /** The finished square: done inside to the last chunk, the frontier colour on the ring, the first grey around it. */
+  const finished = (f: LoaderFrame) =>
+    f.centre === DONE &&
+    f.inner === DONE &&
+    f.last === DONE &&
+    f.ring === FRONTIER &&
+    f.border === FIRST_GREY &&
+    f.corner === FIRST_GREY &&
+    f.colours === 3;
+  /** The frames in which the map is shown and the page is not handed over yet. */
+  const shownFrames = (frames: LoaderFrame[]) =>
+    frames.filter((f) => f.block > 0 && !f.ready);
+  /** No font is waited for: every request for one is refused at once. */
+  const fontsAtOnce = (page: Page) =>
+    page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+
+  test('what is drawn goes with the number over its whole range: every point of it changes the map, the last fifth as much as the first, and the finished square is there at 1 and not before', () => {
+    // the drawing itself, on a canvas of this test's own: every chunk as it was last filled
+    const draw = (p: number, plan: ReturnType<typeof planMap>, at?: number) => {
+      const grid: string[][] = Array.from({ length: MAP_SIZE }, () =>
+        Array.from({ length: MAP_SIZE }, () => ''),
+      );
+      const ctx = {
+        fillStyle: '',
+        fillRect(x: number, y: number, w: number, h: number) {
+          for (let j = y; j < y + h; j++)
+            for (let i = x; i < x + w; i++) grid[j][i] = this.fillStyle;
+        },
+      };
+      drawMap(ctx as unknown as CanvasRenderingContext2D, p, plan, at);
+      const all = grid.flat();
+      const square = grid.slice(2, 19).flatMap((row) => row.slice(2, 19));
+      const tone = (name: string) => all.filter((c) => c === name).length;
+      return {
+        all,
+        grid,
+        /** how far along each chunk is: the place of its colour among the stages */
+        stages: all.map((c) => Math.max(0, MAP_TONES.indexOf(c))),
+        /** chunks of the square (17 × 17, the ring included) that have been started, and that are done */
+        started: square.filter((c) => c !== MAP_GROUND).length,
+        done: tone(MAP_TONES[5]),
+        finished:
+          tone(MAP_TONES[5]) === 15 * 15 &&
+          tone(MAP_FRONTIER) === 17 * 17 - 15 * 15 &&
+          tone(MAP_TONES[1]) === 21 * 21 - 17 * 17,
+      };
+    };
+    const differ = (a: string[], b: string[]) =>
+      a.filter((c, i) => c !== b[i]).length;
+    const n = MAP_SIZE * MAP_SIZE;
+    // the chunks' lateness is random: the earliest, the latest, and a fixed mixture of both
+    const lots = [
+      Array.from({ length: n }, () => 0),
+      Array.from({ length: n }, () => 1),
+      Array.from({ length: n }, (_, i) => ((i * 7919) % 101) / 100),
+    ];
+    for (const late of lots) {
+      const plan = planMap(late);
+      // 225 chunks with five stages, 64 of the ring with four, 152 of the border with one
+      expect(plan.changes).toBe(225 * 5 + 64 * 4 + 152);
+      // nothing at 0; half of the square under way at half, its centre done and its ring not reached
+      expect(draw(0, plan).started).toBe(0);
+      const half = draw(0.5, plan);
+      expect(half.started).toBeGreaterThan(289 * 0.3);
+      expect(half.started).toBeLessThan(289 * 0.8);
+      expect(half.grid[10][10]).toBe(MAP_TONES[5]);
+      expect(half.grid[10][18]).not.toBe(MAP_FRONTIER);
+      // every point of the percentage changes the map, by about as many chunks anywhere from 0 to 100; it only
+      // ever goes forward; and the finished square is there at 100 and at nothing less
+      const perTenth = Array.from({ length: 10 }, () => 0);
+      let before = draw(0, plan);
+      for (let pct = 1; pct <= 100; pct++) {
+        const now = draw(pct / 100, plan);
+        const changed = differ(now.all, before.all);
+        expect(changed, `${pct - 1}% → ${pct}%`).toBeGreaterThanOrEqual(3);
+        expect(changed, `${pct - 1}% → ${pct}%`).toBeLessThanOrEqual(17);
+        expect(
+          now.stages.filter((k, i) => k < before.stages[i]),
+          'it only goes forward',
+        ).toEqual([]);
+        expect(now.finished, `${pct}%`).toBe(pct === 100);
+        perTenth[Math.floor((pct - 1) / 10)] += now.stages.reduce(
+          (sum, k, i) => sum + k - before.stages[i],
+          0,
+        );
+        before = now;
+      }
+      // the stage changes, tenth by tenth: even, the last two not fewer than the others
+      for (const count of perTenth) {
+        expect(count).toBeGreaterThanOrEqual(150);
+        expect(count).toBeLessThanOrEqual(157);
+      }
+      expect(perTenth.reduce((a, b) => a + b)).toBe(plan.changes);
+      expect(draw(0.999, plan).finished).toBe(false);
+      // the ring closes last, towards its corners: open at 98%, the border long laid by then
+      const ring = (p: number) =>
+        draw(p, plan).all.filter((c) => c === MAP_FRONTIER && true).length;
+      expect(draw(0.98, plan).grid[0][0]).toBe(MAP_TONES[1]);
+      expect(draw(0.8, plan).done).toBeLessThan(225 * 0.85);
+      expect(draw(0.98, plan).done + ring(0.98)).toBeLessThan(289);
+      expect(draw(1, plan).grid[2][2]).toBe(MAP_FRONTIER);
+
+      // at work while the number rests: over three seconds at one figure the picture changes about twelve times
+      // a second, a chunk or two at a time, never showing more than the number allows, and not at all at 100%
+      for (const p of [0.08, 0.5, 0.85, 0.97]) {
+        const still = draw(p, plan);
+        let changes = 0;
+        let longest = 0;
+        let rest = 0;
+        let wrong = 0;
+        let most = 0;
+        let last = draw(p, plan, 0);
+        for (let at = 16; at <= 3000; at += 16) {
+          const now = draw(p, plan, at);
+          const changed = differ(now.all, last.all);
+          most = Math.max(most, changed);
+          // never ahead of the number, never more than a stage behind it; a finished chunk stays finished,
+          // and one that has started does not go back to the ground
+          wrong += now.stages.filter(
+            (k, i) =>
+              k > still.stages[i] ||
+              k < still.stages[i] - 1 ||
+              (still.all[i] === MAP_TONES[5] && now.all[i] !== MAP_TONES[5]) ||
+              (still.stages[i] >= 1 && k < 1),
+          ).length;
+          rest = changed ? 0 : rest + 16;
+          longest = Math.max(longest, rest);
+          changes += changed;
+          last = now;
+        }
+        expect(changes / 3, `changes a second at ${p}`).toBeGreaterThanOrEqual(
+          8,
+        );
+        expect(changes / 3, `changes a second at ${p}`).toBeLessThanOrEqual(15);
+        expect(longest, `longest rest at ${p}`).toBeLessThanOrEqual(250);
+        expect(wrong, `chunks drawn out of their bounds at ${p}`).toBe(0);
+        expect(most, `chunks changed in one frame at ${p}`).toBeLessThanOrEqual(
+          2,
+        );
+      }
+      const done = draw(1, plan);
+      for (let at = 0; at <= 1000; at += 16)
+        expect(differ(draw(1, plan, at).all, done.all)).toBe(0);
+    }
+  });
+
+  test('while the number rests in the eighties for seconds the map is never still for 300 ms, and the finished square is not there before 100%', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await fontsAtOnce(page);
+    // the first visit: only to learn the addresses of six of the scenes' pictures
+    let hold = false;
+    await stubVideo(page, {
+      cover: (fulfil) => {
+        // (on the second visit: never answered)
+        if (!hold) void fulfil();
+      },
+    });
+    await openPage(page, '/');
+    await ready(page);
+    const six = await page.evaluate(() =>
+      ['w1', 'w2', 'w3', 'hall', 'moon', 'farm'].map(
+        (id) =>
+          document
+            .querySelector(`.scene[data-scene="${id}"] img`)!
+            .getAttribute('src')!,
+      ),
+    );
+    expect(six.every((src) => src.length > 0)).toBe(true);
+    // the second: a return to the top of a visit that remembers those six pictures (homePlace.ts). The loader
+    // waits for them and for the hero's picture, seven of a kind, and the hero's never comes: six sevenths
+    await page.addInitScript((pictures) => {
+      if (window.location.pathname !== '/') return;
+      window.history.replaceState({ __ctecHomeVisit: 'k1' }, '');
+      window.sessionStorage.setItem(
+        'ctec-home-place:k1',
+        JSON.stringify({ section: 0, into: 0, height: 900, pictures }),
+      );
+    }, six);
+    hold = true;
+    // (nor does the site's own picture, which would stand in for the cover after its budget)
+    await page.route('**/CTEC_Members.webp', () => {});
+    // (and the six come a second and a half on, when the map is up: missing when it appeared, so counted; and
+    // how long the rest lasts is then the loader's own time, not the network's)
+    const picture = await (
+      await page.request.get(new URL(six[0], page.url()).href)
+    ).body();
+    await page.route('**/survivalProgress/*.webp', (r) =>
+      setTimeout(
+        () => void r.fulfill({ contentType: 'image/webp', body: picture }),
+        1500,
+      ),
+    );
+    await watchLoader(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page
+      .locator('.dim[data-ready="true"]')
+      .waitFor({ timeout: LOADER_TIMEOUT_MS + 8000 });
+    const frames = await loaderFrames(page);
+    const shown = expectFullRun(frames);
+    const resting = shown.filter((f) => number(f) >= 80 && number(f) < 88);
+    expect(resting.at(-1)!.t - resting[0].t, 'the rest').toBeGreaterThan(3000);
+    // the number itself ticks now and then, without getting ahead: six sevenths, and a small drift
+    expect(Math.max(...resting.map(number))).toBeLessThanOrEqual(87);
+    expect(new Set(resting.map(number)).size).toBeGreaterThanOrEqual(2);
+    // the picture changes all the time: no 300 ms of the rest without a change
+    let since = resting[0].t;
+    let longest = 0;
+    let changes = 0;
+    resting.forEach((f, i) => {
+      if (i === 0) return;
+      if (f.picture !== resting[i - 1].picture) {
+        changes++;
+        since = f.t;
+      }
+      longest = Math.max(longest, f.t - since);
+    });
+    expect(longest, 'the longest the map was still').toBeLessThan(300);
+    expect(
+      changes / ((resting.at(-1)!.t - resting[0].t) / 1000),
+      'changes a second',
+    ).toBeGreaterThan(5);
+    // and it never looks done: the ring is not closed, the last chunk inside it not done, until 100%
+    for (const f of resting) expect(finished(f)).toBe(false);
+    for (const f of frames.filter((f) => f.pct !== '100%'))
+      expect(finished(f)).toBe(false);
+    expect(finished(shown.find((f) => f.pct === '100%')!)).toBe(true);
+  });
+
+  test('the map is the number: it starts at 0, at half it is half built, and the finished square is there at 100% and only then', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -575,31 +816,17 @@ test.describe('home: the loader is a map of the world being generated', () => {
     // before anything is drawn: one colour
     expect(frames[0].colours).toBe(1);
     expect(number(frames[0])).toBe(0);
-    // partway: several stages are on the map at once, the centre ahead of the rim
-    const mid = frames.filter((f) => number(f) >= 30 && number(f) <= 70);
-    expect(mid.length).toBeGreaterThan(5);
-    for (const f of mid) expect(f.colours).toBeGreaterThan(frames[0].colours);
-    expect(Math.max(...mid.map((f) => f.colours))).toBeGreaterThanOrEqual(5);
-    expect(mid.some((f) => f.centre === DONE && f.ring !== FRONTIER)).toBe(
-      true,
-    );
-    // the percentage only ever grows
-    frames.forEach((f, i) =>
-      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
-        number(frames[i - 1] ?? f),
-      ),
-    );
-    // finished: done inside, the frontier colour on the ring, the first grey on the border, to the very corner
+    // it is played in full: from nothing, whatever is in by then, to the whole, without a jump
+    const shown = expectFullRun(frames);
+    expect(shown[0].started).toBeLessThanOrEqual(12);
+    // partway several stages are on the map at once
+    expect(Math.max(...shown.map((f) => f.colours))).toBeGreaterThanOrEqual(5);
+    // the finished square: at 100%, and in no frame that says less
     const full = frames.filter((f) => f.pct === '100%');
     expect(full.length).toBeGreaterThan(5);
-    for (const f of full) {
-      expect(f.centre).toBe(DONE);
-      expect(f.inner).toBe(DONE);
-      expect(f.ring).toBe(FRONTIER);
-      expect(f.border).toBe(FIRST_GREY);
-      expect(f.corner).toBe(FIRST_GREY);
-      expect(f.colours).toBe(3);
-    }
+    for (const f of full) expect(finished(f), 'finished at 100%').toBe(true);
+    for (const f of frames.filter((f) => f.pct !== '100%'))
+      expect(finished(f), `not finished at ${f.pct}`).toBe(false);
     // the site's own greys and the overworld's blue, at every moment: no green, no other colour
     const allowed = [
       GROUND,
@@ -620,19 +847,16 @@ test.describe('home: the loader is a map of the world being generated', () => {
     for (const f of frames.filter((f) => f.ready)) expect(f.pct).toBe('100%');
     const held = frames.filter((f) => f.pct === '100%' && f.block === 1);
     expect(held.length).toBeGreaterThan(2);
-    // it builds while the picture is on its way, and enters once everything is in
-    expect(frames[0].label).toBe('正在建置地形');
-    for (const f of frames.filter((f) => !f.cover))
-      expect(f.label).toBe('正在建置地形');
-    expect(frames.at(-1)!.label).toBe('正在進入世界');
+    // one line under it, from the first frame to the last: there is no second phase
+    expect([...new Set(frames.map((f) => f.label))]).toEqual(['正在建置地形']);
   });
 
-  test('the map follows what is in: with the fonts in and the first picture on its way it waits short of the last third, moves on slowly, and is at 100% soon after the picture', async ({
+  test('the number is what has come: with the hero’s picture held back and nothing else missing it stays next to nothing, the map hardly begun, until the picture comes', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    // no font is waited for (every request for one is refused at once): the picture is the last of three things
-    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    // the fonts are in when the map appears (they are not counted): the picture is all that is missing
+    await fontsAtOnce(page);
     await stubVideo(page, {
       // it comes once the loader has been up for a good second (inside the cover's own budget of two)
       cover: (fulfil) => void afterLoaderFrames(page, 80, fulfil),
@@ -646,41 +870,42 @@ test.describe('home: the loader is a map of the world being generated', () => {
     const after = frames.filter((f) => f.cover);
     expect(waiting.length).toBeGreaterThanOrEqual(80);
     expect(after.length).toBeGreaterThan(10);
-    // never 100% before the picture is in, and the page is not handed over either
+    const run = expectFullRun(frames);
+    // held back by what has not come: well under the planned run from half a second on
+    for (const f of waiting.filter((f) => f.t - run[0].t > 500))
+      expect(number(f)).toBeLessThan(
+        plannedRun((f.t - run[0].t) / 1000) * 100 - 5,
+      );
+    // while the picture is held back nothing of what is missing has come: the number is a slow drift of a small
+    // part of it, so that it does not look frozen, and nowhere near what the picture is worth (all of it)
+    const values = waiting.filter((f) => f.block > 0).map(number);
+    expect(Math.max(...values)).toBeGreaterThan(1);
+    expect(Math.max(...values)).toBeLessThanOrEqual(12);
+    expect(new Set(values).size).toBeGreaterThan(2);
+    // and the map says the same: hardly begun, nothing of it done
     for (const f of waiting) {
-      expect(number(f)).toBeLessThan(100);
       expect(f.ready).toBe(false);
-      expect(f.label).toBe('正在建置地形');
+      expect(f.ring).not.toBe(FRONTIER);
+      expect(f.last).not.toBe(DONE);
+      expect(f.started).toBeLessThan(289 * 0.3);
+      expect(finished(f)).toBe(false);
     }
-    // two of three are in (the script, the fonts): the map eases there (many values on the way), and goes on
-    // slowly from there, by less than the third the picture is worth
-    const values = waiting.map(number);
-    expect(new Set(values).size).toBeGreaterThan(12);
-    expect(Math.max(...values)).toBeGreaterThan(67);
-    expect(Math.max(...values)).toBeLessThan(94);
-    expect(
-      new Set(values.filter((v) => v > 67)).size,
-      'values on the slow way',
-    ).toBeGreaterThan(2);
-    // it never goes back
-    frames.forEach((f, i) =>
-      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
-        number(frames[i - 1] ?? f),
-      ),
-    );
-    // 100% promptly once the picture is in (the finish is a third of a second), and then the page is handed over
+    // then it catches up to 100% without a jump, the square finished with it and not before,
+    // and then the page is handed over
     const full = after.find((f) => f.pct === '100%')!;
-    expect(full).toBeDefined();
-    expect(full.t - after[0].t).toBeLessThan(900);
-    expect(full.label).toBe('正在進入世界');
+    expect(full.t - after[0].t).toBeLessThan(MAP_RUN_S * 1000);
+    expect(finished(full)).toBe(true);
+    for (const f of frames.filter((f) => f.pct !== '100%'))
+      expect(finished(f)).toBe(false);
     const handed = frames.find((f) => f.ready)!;
-    expect(handed.t - after[0].t).toBeLessThan(1500);
+    expect(handed.t - after[0].t).toBeLessThan(MAP_RUN_S * 1000 + 1000);
     expect(handed.pct).toBe('100%');
   });
 
-  test('with the first scene stalled the map moves on slowly without claiming the picture, and at the timeout it finishes, says the world is being entered, and lifts', async ({
+  test('with the first scene stalled the number stays next to nothing, drifting a little, and at the timeout the map still runs up to 100% before the loader lifts', async ({
     page,
   }) => {
+    await fontsAtOnce(page);
     await stubVideo(page, {
       cover: () => {
         // never answered
@@ -696,54 +921,43 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await expect(page.locator('.loader')).toBeHidden();
     await expect(page.locator('.hero h1')).toBeVisible();
     const frames = await loaderFrames(page);
-    const labels = [...new Set(frames.map((f) => f.label))];
-    expect(labels).toEqual(['正在建置地形', '正在進入世界']);
-    // while it waits it never claims to be done, and it never stands still for long
-    const waiting = frames.filter((f) => f.label === '正在建置地形');
-    expect(waiting.length).toBeGreaterThan(200);
-    expect(waiting.at(-1)!.t - waiting[0].t).toBeGreaterThan(5000);
-    const values = waiting.map(number);
-    // one or two of three things are in (the script; the fonts, if they came): it moves on from there, short of
-    // what the picture is worth
-    expect(Math.max(...values)).toBeGreaterThanOrEqual(50);
-    expect(Math.max(...values)).toBeLessThan(95);
-    expect(new Set(values).size).toBeGreaterThan(12);
-    for (const f of waiting) expect(f.ready).toBe(false);
-    // the wait is given up: only then is the world entered, and the map does finish before the lift
-    const entering = frames.filter((f) => f.label === '正在進入世界');
-    expect(entering[0].t - frames[0].t).toBeGreaterThan(5000);
-    for (const f of frames.filter((f) => f.ready)) expect(f.pct).toBe('100%');
-    expect(frames.at(-1)!.pct).toBe('100%');
-    frames.forEach((f, i) =>
-      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
-        number(frames[i - 1] ?? f),
-      ),
+    expect([...new Set(frames.map((f) => f.label))]).toEqual(['正在建置地形']);
+    const shown = expectFullRun(frames);
+    // for the whole of the wait the picture, all that is missing, has not come: a small drift, never standing
+    // still for good, never claiming it
+    const waiting = shown.filter(
+      (f) => f.t - shown[0].t < LOADER_TIMEOUT_MS - 1000,
     );
+    expect(waiting.length).toBeGreaterThan(200);
+    expect(Math.max(...waiting.map(number))).toBeLessThanOrEqual(12);
+    expect(new Set(waiting.map(number)).size).toBeGreaterThan(4);
+    for (const f of waiting) expect(finished(f)).toBe(false);
+    // the wait is given up: the map is not taken away as it stands, it runs up to the whole first
+    const full = shown.find((f) => f.pct === '100%')!;
+    expect(full.t - frames.find((f) => f.live)!.t).toBeGreaterThan(
+      LOADER_TIMEOUT_MS - 200,
+    );
+    expect(finished(full)).toBe(true);
+    for (const f of mapLifting(frames)) expect(f.pct).toBe('100%');
   });
 
-  test('in English the two stages are named in English', async ({ page }) => {
+  test('in English the line under the map is in English', async ({ page }) => {
     await stubVideo(page, {
-      cover: () => {
-        // never answered
-      },
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 1500),
     });
-    // (nor is the site's own picture, which would stand in for the cover after its budget: nothing comes)
-    await page.route('**/CTEC_Members.webp', () => {});
     await watchLoader(page);
     await openPage(page, '/', { locale: 'en' });
-    await page
-      .locator('.dim[data-ready="true"]')
-      .waitFor({ timeout: LOADER_TIMEOUT_MS + 5000 });
-    const labels = [...new Set((await loaderFrames(page)).map((f) => f.label))];
-    // (the served HTML is in the default language until the reader's own is known)
-    expect(labels.slice(-2)).toEqual([
+    await ready(page);
+    const shown = shownFrames(await loaderFrames(page));
+    expect(shown.length).toBeGreaterThan(10);
+    // (the served HTML is in the default language until the reader's own is known; it is not shown then)
+    expect([...new Set(shown.map((f) => f.label))]).toEqual([
       'Building terrain',
-      'Entering the world',
     ]);
     await expectNoMissingKeys(page);
   });
 
-  test('reduced motion: the map stands at what is in, without the way between, then finished, and the loader goes', async ({
+  test('reduced motion: nothing builds up, the map that is shown is the finished one, and the loader goes', async ({
     page,
   }) => {
     await stubVideo(page, {
@@ -754,33 +968,22 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await ready(page);
     await expect(page.locator('.loader')).toHaveCount(0);
     const frames = await loaderFrames(page);
-    expect(frames.length).toBeGreaterThan(3);
-    // only whole steps of three (the script, the fonts, the picture): nothing builds up between them
-    const values = new Set(frames.map((f) => f.pct));
-    for (const v of values) expect(['0%', '33%', '66%', '100%']).toContain(v);
-    expect(values.has('66%')).toBe(true);
-    expect(values.has('100%')).toBe(true);
-    for (const f of frames.filter((f) => !f.cover))
-      expect(f.pct).not.toBe('100%');
-    const drawn = frames.filter((f) => f.pct === '100%');
-    for (const f of drawn) {
-      expect(f.centre).toBe(DONE);
-      expect(f.ring).toBe(FRONTIER);
-      expect(f.border).toBe(FIRST_GREY);
+    const shown = frames.filter((f) => f.block > 0);
+    expect(shown.length).toBeGreaterThan(3);
+    // never a part of a map: finished in every frame it is shown in
+    for (const f of shown) {
+      expect(f.pct).toBe('100%');
+      expect(finished(f)).toBe(true);
     }
+    for (const f of frames.filter((f) => !f.cover)) expect(f.ready).toBe(false);
     await expect(page.locator('.hero h1')).toBeVisible();
   });
 });
-
-/** Same as MAP_GRACE_MS and MAP_MIN_MS in src/components/dimensions/home/Loader.tsx. */
-const MAP_GRACE_MS = 200;
-const MAP_MIN_MS = 400;
 
 test.describe('home: no loading is shown when there is nothing to wait for', () => {
   /** Nothing of the page is slow: no font is waited for (every request for one is refused at once). */
   const fontsAtOnce = (page: Page) =>
     page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
-  const number = (f: LoaderFrame) => Number(f.pct.replace('%', ''));
 
   test('everything in at once: no map and no percentage in any frame from the first paint, the ground lifts straight onto the hero’s arrival', async ({
     page,
@@ -846,7 +1049,7 @@ test.describe('home: no loading is shown when there is nothing to wait for', () 
     await expect(page.locator('.hero h1')).toBeVisible();
   });
 
-  test('a picture that comes just after the loader has decided to show its map: the map stays for its minimum, finishes at 100%, and lifts in its own way', async ({
+  test('everything is in a moment after the map appeared: the map still plays its planned run in full, two seconds from 0 to 100% at an even pace, and then lifts in its own way', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -860,7 +1063,8 @@ test.describe('home: no loading is shown when there is nothing to wait for', () 
             ),
           )
           .catch(() => false);
-        if (shown) return;
+        // (and a third of a second more)
+        if (shown) return new Promise((done) => setTimeout(done, 300));
         await new Promise((done) => setTimeout(done, 15));
       }
     };
@@ -872,26 +1076,42 @@ test.describe('home: no loading is shown when there is nothing to wait for', () 
     await ready(page);
     await expect(page.locator('.loader')).toHaveCount(0);
     const frames = await loaderFrames(page);
-    // not shown before its grace is over
-    const live = frames.find((f) => f.live)!;
     const first = frames.find((f) => f.block > 0)!;
     expect(first).toBeDefined();
-    // (the frame before the script's first one may be up to a frame older than the script's start)
-    expect(first.t - live.t).toBeGreaterThan(MAP_GRACE_MS - 40);
-    // once shown it is whole, says 100%, and is read for its minimum before the lift begins
+    // once shown it is played in full: the planned run, not cut short by everything being in already
+    const run = expectFullRun(frames);
+    const building = run.filter((f) => !f.ready);
+    for (const f of building) {
+      const planned = plannedRun((f.t - run[0].t) / 1000) * 100;
+      const said = Number(f.pct.replace('%', ''));
+      // (never ahead of the plan by more than the frame it was read in, never far behind it)
+      expect(said, `at ${Math.round(f.t - run[0].t)} ms`).toBeLessThanOrEqual(
+        planned + 2,
+      );
+      // (for its first third of a second and more nothing had come, and it was held back: it has caught up soon after)
+      expect(
+        said,
+        `at ${Math.round(f.t - run[0].t)} ms`,
+      ).toBeGreaterThanOrEqual(planned - (f.t - run[0].t < 1400 ? 32 : 6));
+    }
+    // an even pace: each fifth of the range takes its share of the two seconds, the last no less than the first
+    const reached = (pct: number) =>
+      building.find((f) => Number(f.pct.replace('%', '')) >= pct)!.t - run[0].t;
+    for (const pct of [20, 40, 60, 80, 100]) {
+      const took = reached(pct) - (pct > 20 ? reached(pct - 20) : 0);
+      expect(took, `${pct - 20}% → ${pct}%`).toBeGreaterThan(
+        pct > 60 ? 280 : 120,
+      );
+      // (the first of them includes the wait for what had not come yet)
+      if (pct > 40) expect(took, `${pct - 20}% → ${pct}%`).toBeLessThan(720);
+    }
+    expect(reached(100)).toBeGreaterThan(MAP_RUN_S * 1000 - 100);
+    expect(reached(100)).toBeLessThan(MAP_RUN_S * 1000 + 400);
     const handed = frames.find((f) => f.ready)!;
-    expect(handed.t - first.t).toBeGreaterThan(MAP_MIN_MS - 20);
-    expect(handed.t - first.t).toBeLessThan(MAP_MIN_MS + 1500);
+    expect(handed.t - first.t).toBeLessThan(MAP_RUN_S * 1000 + 1500);
     const shown = frames.filter((f) => f.block > 0 && !f.ready);
-    expect(shown.some((f) => f.block === 1)).toBe(true);
     expect(shown.at(-1)!.pct).toBe('100%');
     expect(shown.at(-1)!.block).toBe(1);
-    for (const f of shown) expect(f.ground).toBe(1);
-    shown.forEach((f, i) =>
-      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
-        number(shown[i - 1] ?? f),
-      ),
-    );
     // and the lift is the map's own: it opens over several frames before the ground goes
     const lifting = mapLifting(frames);
     expect(
@@ -1111,8 +1331,11 @@ test.describe('home: the other pictures wait for the loader', () => {
       await r.continue();
     });
     await watchPictures(page);
+    await watchLoader(page);
     await openPage(page, '/#end');
     await ready(page);
+    // (the map of this arrival is played in full as on any other: from 0 to 100% before anything lifts)
+    expectFullRun(await loaderFrames(page));
     const log = await pictures(page);
     expect(log.readyAt).toBeGreaterThan(2500);
     expect(log.readyY).toBeGreaterThan(900);

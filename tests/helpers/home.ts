@@ -353,6 +353,12 @@ export interface LoaderFrame {
   centre: string;
   ring: string;
   inner: string;
+  /** the chunk just inside the ring: the last of the square to be done */
+  last: string;
+  /** how many chunks of the square (17 × 17, the ring included) have been started */
+  started: number;
+  /** every chunk of the map, a letter for its colour: two frames with the same picture have the same string */
+  picture: string;
   border: string;
   corner: string;
 }
@@ -400,6 +406,22 @@ export const watchLoader = (page: Page) =>
           palette: [...all],
           centre: at(10, 10),
           inner: at(13, 10),
+          last: at(17, 10),
+          picture: (() => {
+            let out = '';
+            for (let y = 0; y < map.height; y++)
+              for (let x = 0; x < map.width; x++)
+                out += String.fromCharCode(
+                  97 + (d[(y * map.width + x) * 4] % 26),
+                );
+            return out;
+          })(),
+          started: (() => {
+            let n = 0;
+            for (let y = 2; y <= 18; y++)
+              for (let x = 2; x <= 18; x++) if (at(x, y) !== '6,8,11') n++;
+            return n;
+          })(),
           ring: at(18, 10),
           border: at(19, 10),
           corner: at(0, 0),
@@ -429,6 +451,41 @@ export const afterLoaderFrames = async (
     await new Promise((done) => setTimeout(done, 40));
   }
   await serve();
+};
+
+/**
+ * A map that is shown is played in full, on every path: its first frame says 0 (or next to it), the number only
+ * ever grows and never by a jump (a few points a frame at the most; more only as a frame was longer: the quickest
+ * the map moves is under a tenth of a point a millisecond), it reaches 100, the finished map is seen whole on a ground
+ * that is still whole, and nothing is lifted or handed over while it says less. Returns the frames it is shown in.
+ */
+export const expectFullRun = (frames: LoaderFrame[]) => {
+  const number = (f: LoaderFrame) => Number(f.pct.replace('%', ''));
+  const first = frames.findIndex((f) => f.block > 0);
+  expect(first, 'the map is shown').toBeGreaterThanOrEqual(0);
+  const shown = frames.slice(first);
+  expect(number(shown[0]), 'it starts at 0').toBeLessThanOrEqual(2);
+  shown.forEach((f, i) => {
+    if (i === 0) return;
+    const step = number(f) - number(shown[i - 1]);
+    expect(step, `frame ${i}`).toBeGreaterThanOrEqual(0);
+    expect(step, `frame ${i}`).toBeLessThanOrEqual(
+      4 + 0.1 * (f.t - shown[i - 1].t),
+    );
+  });
+  const full = shown.find((f) => f.pct === '100%')!;
+  expect(full, 'it reaches 100%').toBeDefined();
+  expect(full.ground).toBe(1);
+  expect(full.block).toBe(1);
+  expect(full.ready).toBe(false);
+  // the run is a build that can be followed, never a blink: many values, over the planned two seconds at the least
+  expect(new Set(shown.map(number)).size).toBeGreaterThan(30);
+  expect(full.t - shown[0].t).toBeGreaterThan(1850);
+  for (const f of shown.filter((f) => f.pct !== '100%')) {
+    expect(f.ground, `whole at ${f.pct}`).toBe(1);
+    expect(f.ready, `not handed over at ${f.pct}`).toBe(false);
+  }
+  return shown;
 };
 
 /** The frames of the lift of a loader that showed its map: from the map having been whole to its going. */

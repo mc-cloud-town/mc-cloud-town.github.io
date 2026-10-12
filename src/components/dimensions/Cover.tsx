@@ -9,7 +9,12 @@ import {
   registerCover,
   registerCoverWait,
 } from '@/lib/dimensions/navigation';
-import { MAP_SIZE, drawMap, seedLateness } from '@/lib/dimensions/loaderMap';
+import {
+  MAP_SIZE,
+  drawMap,
+  planMap,
+  seedLateness,
+} from '@/lib/dimensions/loaderMap';
 
 /** The waiting map builds towards this, ever more slowly: it never looks finished, and never stands still. */
 const WAIT_TO = 0.95;
@@ -29,10 +34,10 @@ const CoverWait = ({ leaving }: { leaving: boolean }) => {
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
     // per-chunk lateness, seeded here and never during render (as the loader does)
-    const late = seedLateness();
+    const plan = planMap(seedLateness());
     let frames = 0;
-    const draw = (p: number) => {
-      drawMap(ctx, p, late);
+    const draw = (p: number, at?: number) => {
+      drawMap(ctx, p, plan, at);
       // for tests: how often it has been drawn
       canvas.dataset.frames = String(++frames);
     };
@@ -40,7 +45,7 @@ const CoverWait = ({ leaving }: { leaving: boolean }) => {
     const began = performance.now();
     let raf = 0;
     const tick = (now: number) => {
-      draw(WAIT_TO * (1 - Math.exp(-(now - began) / WAIT_PACE_MS)));
+      draw(WAIT_TO * (1 - Math.exp(-(now - began) / WAIT_PACE_MS)), now);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

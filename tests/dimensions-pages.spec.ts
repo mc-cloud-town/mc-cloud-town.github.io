@@ -658,9 +658,9 @@ test.describe('going to another page', () => {
         5,
       );
       expect(home.filter((f) => (f.map ?? 0) > 0)).toEqual([]);
-      // and soon: the night is on its way out within half a second of the page being there
+      // and soon: the night is on its way out within a second of the page being there (the page is built first)
       const lifting = home.find((f) => (f.loader ?? 0) < 1)!;
-      expect(lifting.t - home[0].t).toBeLessThan(500);
+      expect(lifting.t - home[0].t).toBeLessThan(1000);
       // one fade of the cover only: it never lifted, the home page's ground did
       expect(runs).toEqual(['opacity:280']);
       await expect(page.locator('.dim-cover')).toHaveCSS(
@@ -716,6 +716,23 @@ test.describe('going to another page', () => {
     // the ground stays whole until the map has been whole, and only lifts after
     const whole = home.findIndex((f) => f.map === 1);
     for (const f of home.slice(0, whole + 1)) expect(f.loader).toBe(1);
+    // and the map is played in full: from 0, only ever growing and never by a jump, to 100% on a ground that is
+    // still whole; nothing lifts while it says less
+    expect(shown[0].pct).toBeLessThanOrEqual(2);
+    shown.forEach((f, i) => {
+      if (i === 0) return;
+      const step = f.pct! - shown[i - 1].pct!;
+      expect(step, `frame ${i}`).toBeGreaterThanOrEqual(0);
+      expect(step, `frame ${i}`).toBeLessThanOrEqual(
+        4 + 0.1 * (f.t - shown[i - 1].t),
+      );
+    });
+    const full = shown.find((f) => f.pct === 100)!;
+    expect(full).toBeDefined();
+    expect(full.loader).toBe(1);
+    expect(full.map).toBe(1);
+    for (const f of home.filter((f) => f.loader !== null && f.pct! < 100))
+      expect(f.loader).toBe(1);
     expect(runs).toEqual(['opacity:280']);
     expect(asked).toBe(1);
   });

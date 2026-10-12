@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { useTranslation } from 'react-i18next';
-import { MAP_SIZE, drawMap, seedLateness } from '@/lib/dimensions/loaderMap';
+import {
+  MAP_RUN_S,
+  MAP_SIZE,
+  drawMap,
+  planMap,
+  plannedRun,
+  seedLateness,
+} from '@/lib/dimensions/loaderMap';
 import { onNextTick } from '@/lib/dimensions/nextTick';
 import { markWhole } from './World';
 
@@ -14,11 +21,12 @@ export const LOADER_TIMEOUT_MS = 6000;
 /**
  * A reader for whom everything is there already (a return to the site, a reload, a step back to the home page from
  * another page of it) is not shown a loading at all: the loader is only its ground, and lifts as soon as the page
- * can be handed over. The map is shown only if something is still awaited this long after the script took over, so
- * that a wait of a fraction of a second never flashes one…
+ * can be handed over. The map is shown only if something is still awaited this long after the script took over.
+ * A map that is shown is played in full (MAP_RUN_S, two seconds), so the grace is on the generous side: a wait of
+ * a third of a second on the bare ground is better than two seconds of a map nobody needed.
  */
-export const MAP_GRACE_MS = 200;
-/** …and a map that has been shown stays at least this long before the lift begins: a beat that can be read. */
+export const MAP_GRACE_MS = 350;
+/** With reduced motion the finished map, once shown, stays at least this long: a beat that can be read, not a flash. */
 export const MAP_MIN_MS = 400;
 /** It comes as a state changes (--t-state), in the ease of anything that arrives. */
 const MAP_IN_S = 0.3;
@@ -34,26 +42,41 @@ const GROUND_GOES_S = 0.9;
  */
 export const GROUND_GOES_AT_S = MAP_OPENS_S - 0.1;
 /**
- * What the map shows is how much of what the loader waits for is in: the page's script (in when the loader starts),
- * the fonts, and each picture the page is to be handed over on. A few things, so the progress comes in steps: the
- * map eases to each step in this long (--t-in, with the ease of anything that arrives)…
+ * What the map and the percentage show is one number: how much of what was still missing when the map appeared
+ * has come since, by what it costs to fetch. What was in by then was never waited for and is not counted, so the
+ * number starts at nothing and every point of it is something that arrived while the reader watched.
+ * The costs are the sizes measured on this site (2026-10): a font file is about 250 kB (a face of a Chinese
+ * typeface comes in slices; the first screen asks for about twenty, 5 MB in all), a picture the page is handed
+ * over on about 130 kB (the hero's first picture is 121 kB, the pictures of the places further down 140 kB and
+ * more). On a first visit the fonts are therefore nearly all of the number, and a picture a few points of it; on
+ * a visit that has the fonts already, the picture is all of it. The browser does not say how much of a file has
+ * come, so each counts when it is in (a picture: in and decoded).
  */
-const STEP_S = 0.45;
-const STEP_EASE = 'power3.out';
+const FONT_FILE_KB = 250;
+const PICTURE_KB = 130;
 /**
- * …and while the next thing is still on its way it moves on slowly, by this much of the step that thing is worth
- * at the most, so it never looks frozen and never says more than is in.
- */
-const CREEP_SHARE = 0.8;
-/**
- * The fonts are many files (a face of a Chinese typeface comes in slices), and most of a first visit's wait: their
- * step is filled by how many of the files asked for so far are in, looked up this often. Never quite all of it:
- * more may be asked for until the browser says the fonts are ready.
+ * Which font files are wanted is known only as the page is laid out: the fonts are counted by the files asked for
+ * so far, looked up this often, and never as quite all of them until the browser says the fonts are ready (more
+ * may still be asked for).
  */
 const FONT_POLL_MS = 150;
 const FONT_SHARE_MOST = 0.9;
-/** Once everything is in, it completes in this long, and the finished square holds for a beat. */
-const FINISH_S = 0.35;
+/**
+ * While something is on its way the number drifts on, so that it does not look frozen: by this small part of what
+ * is still missing at the most, approached in about this long. It never claims what has not come.
+ */
+const DRIFT_SHARE = 0.12;
+const DRIFT_MS = 2500;
+/**
+ * What the map shows is the lesser of two things: its planned run (loaderMap.ts: from nothing to the whole in
+ * MAP_RUN_S, starting when it appears) and what has really come. Loading that is slow holds it back; loading that
+ * is over early does not cut the run short. So it always starts at nothing, whatever is in by then, and is never
+ * taken away unfinished. And it never jumps: when it has been held back and the rest comes at once, it catches up
+ * at this many times the pace of the planned run at the most, easing into that pace.
+ */
+const CATCH_UP = 2;
+const EASE_INTO_PER_S = 10;
+/** The finished square holds for a beat before the lift. */
 const HOLD_S = 0.18;
 /** With reduced motion the finished map gives way in one brief fade. */
 const REDUCED_FADE_S = 0.12;
@@ -88,14 +111,18 @@ const loaded = (img: HTMLImageElement) =>
 
 /**
  * A map of the world being generated: chunks pass through their stages from the centre outward
- * (loaderMap.ts), with the percentage above the map and the stage below it. The map and the percentage are one
- * number: the share of what the loader waits for that is in (see STEP_S). The line below says which of two things
- * is going on: the world's parts are still arriving ("building terrain"), or they are all in and the page is being
- * built and handed over ("entering the world").
+ * (loaderMap.ts), with the percentage above the map and one line below it. The map and the percentage are one
+ * number: how much of what was missing when the map appeared has come since (see FONT_FILE_KB). What is drawn goes
+ * with the number over its whole range, and the finished square is there at 100% and at nothing less; 100% is
+ * said only when the wait is over.
  * The map, the percentage and the line are there only when there is something to wait for (MAP_GRACE_MS): the
  * served page shows the loader's ground alone (home.css), and so does a visit on which everything is in already.
- * Calls onDone once the fonts and the first pictures are in and the map, if it was shown, is finished: `plain` if
- * the loader lifts without having shown a map. It lifts off the page, then removes itself. It is part of the
+ * A map that is shown is always played in full: from 0, up to the finished square at 100%, which holds for a beat
+ * before the lift. Also when the wait is given up (LOADER_TIMEOUT_MS): the map then runs up to the whole and the
+ * page is handed over without what has not come. With reduced motion nothing builds up: the map shown is the
+ * finished one.
+ * Calls onDone once the fonts and the first pictures are in (or given up on) and the map, if it was shown, is
+ * finished: `plain` if the loader lifts without having shown a map. It lifts off the page, then removes itself. It is part of the
  * static markup, so it is the first thing painted; it starts once `reduced` is known.
  * Should this script never start, the served page is not left behind it: home.css takes the loader away after ten
  * seconds, and HomePage's `noscript` style at once where scripts are off.
@@ -111,8 +138,6 @@ export const Loader = ({
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<HTMLCanvasElement>(null);
   const [pct, setPct] = useState(0);
-  /** Everything is in (or given up on): the page is being built and handed over. */
-  const [entering, setEntering] = useState(false);
   const [gone, setGone] = useState(false);
 
   useEffect(() => {
@@ -130,24 +155,24 @@ export const Loader = ({
     }
     // from here on the loader is this script's: the fail-safe is called off
     document.documentElement.dataset.live = '';
-    const startedAt = performance.now();
     const ctx = map.current?.getContext('2d');
     // per-chunk lateness: what makes the fronts ragged while loading (seeded here, never during render)
-    const late = seedLateness();
-    const st = { p: 0 };
-    /** Everything is in, or the wait was given up. */
-    let all = false;
-    /** When the map was shown; null while it is not (and it may never be). */
-    let shownAt: number | null = null;
+    const plan = planMap(seedLateness());
+    /** What the map shows (0..1), and how fast it is moving (per second). */
+    const st = { p: 0, v: 0 };
     const paint = () => {
-      if (ctx) drawMap(ctx, st.p, late);
-      // (a hundred is said when everything is in, never by rounding up to it)
-      setPct(
-        all ? Math.round(st.p * 100) : Math.min(99, Math.floor(st.p * 100)),
-      );
+      // (with the time: the chunks under way are at work whether the number moves or not)
+      if (ctx)
+        drawMap(ctx, st.p, plan, reduced ? undefined : performance.now());
+      // (a hundred is the whole, never a rounding up to it)
+      setPct(Math.floor(st.p * 100 + 1e-9));
     };
 
     let cancelled = false;
+    /** The wait is over: everything is in, or it was given up. */
+    let over = false;
+    /** When the map was shown; null while it is not (and it may never be). */
+    let shownAt: number | null = null;
     /** Calls off a lift that has not begun yet. */
     let unstarted: (() => void) | undefined;
     const tweens: (gsap.core.Tween | gsap.core.Timeline)[] = [];
@@ -158,18 +183,11 @@ export const Loader = ({
         '.world img[src]',
       ) ?? []),
     ];
-    // What is waited for, each thing one step of the map. The script that runs this is the first, and it is in;
-    // the fonts are the second (`fontShare`).
-    const awaited: Promise<unknown>[] = [
-      document.fonts.ready,
-      ...pictures().map(loaded),
-    ];
-    const steps = awaited.length + 1;
-    let inNow = 1;
+    const awaited = pictures().map(loaded);
     let fontsIn = false;
-    /** How much of the fonts' step is in: the share of the font files asked for so far that have come. */
-    const fontShare = () => {
-      if (fontsIn || reduced) return 0;
+    let picturesIn = 0;
+    /** The font files asked for so far, and those of them that have come. */
+    const fontFiles = () => {
       let asked = 0;
       let came = 0;
       document.fonts.forEach((face) => {
@@ -177,13 +195,32 @@ export const Loader = ({
         asked++;
         if (face.status !== 'loading') came++;
       });
-      return asked ? (came / asked) * FONT_SHARE_MOST : 0;
+      return { asked, came };
     };
-    /** How far the map has been told to go: it is never told to go back. */
-    let told = 0;
+    let files = fontFiles();
+    /** What was in when the map appeared: that much is not counted. */
+    let was = { fontsIn, picturesIn, files };
+    /** How much of what was missing when the map appeared has come since, by cost. */
+    const real = () => {
+      // (the fonts are not ready: one file at the least is still to come, whether it has been asked for or not)
+      const wanted = was.fontsIn
+        ? 0
+        : Math.max(1, files.asked - was.files.came);
+      const came = fontsIn
+        ? wanted
+        : Math.min(files.came - was.files.came, wanted) * FONT_SHARE_MOST;
+      const missing = awaited.length - was.picturesIn;
+      const all = wanted * FONT_FILE_KB + missing * PICTURE_KB;
+      return all
+        ? (came * FONT_FILE_KB + (picturesIn - was.picturesIn) * PICTURE_KB) /
+            all
+        : 0;
+    };
 
     /** The page is handed over, built and put in its place in that same step, and then the loader lifts off it. */
     const lift = () => {
+      if (cancelled) return;
+      gsap.ticker.remove(follow);
       // What is in by now stands whole when the cover goes: the fade of a late picture (home.css) is for one that
       // comes after this. A picture the loader gave up waiting for is not in, and fades in when it comes.
       pictures().forEach(markWhole);
@@ -220,124 +257,112 @@ export const Loader = ({
         );
       });
     };
+    /** The lift, once the finished map has held for this long. */
+    const hold = (beat: number) => {
+      gsap.ticker.remove(follow);
+      tweens.push(gsap.delayedCall(beat, lift));
+    };
+    /** How far the number has been told to go (it is never told to go back), since when, and where it is aimed. */
+    let told = 0;
+    let toldAt = 0;
+    let aim = 0;
     /**
-     * The map eases to what is in now, then moves on slowly from there, for as long as the wait can last at the
-     * most: by a part of one step, and never to the end. With reduced motion it stands at each step, without the
-     * way between.
+     * Every tick while the map is shown: the lesser of the planned run and what has come (which drifts a little
+     * while it waits, and is the whole once the wait is over), approached without a jump. At the whole the
+     * square holds, then the lift.
      */
-    const advance = () => {
+    const follow = (_time: number, elapsed: number) => {
+      const now = performance.now();
       if (shownAt === null) return;
-      const at = Math.max(told, (inNow + fontShare()) / steps);
-      if (at === told) return;
-      told = at;
-      gsap.killTweensOf(st);
-      if (reduced) {
-        st.p = at;
-        return paint();
+      const at = Math.max(told, real());
+      if (at !== told || !toldAt) {
+        told = at;
+        toldAt = now;
       }
-      const creep = () =>
-        void tweens.push(
-          gsap.to(st, {
-            p: at + CREEP_SHARE * Math.min(1 / steps, 1 - at),
-            duration: Math.max(
-              1,
-              (LOADER_TIMEOUT_MS - (performance.now() - startedAt)) / 1000,
-            ),
-            ease: 'power2.out',
-            onUpdate: paint,
-          }),
-        );
-      tweens.push(
-        gsap.to(st, {
-          p: Math.max(st.p, at),
-          duration: STEP_S,
-          ease: STEP_EASE,
-          onUpdate: paint,
-          onComplete: creep,
-        }),
-      );
+      aim = over
+        ? 1
+        : Math.max(
+            aim,
+            at +
+              DRIFT_SHARE *
+                (1 - at) *
+                (1 - Math.exp(-(now - toldAt) / DRIFT_MS)),
+          );
+      const goal = Math.min(plannedRun((now - shownAt) / 1000), aim);
+      // (a long frame is not a long step)
+      const s = Math.min(elapsed, 50) / 1000;
+      const pace = Math.min(Math.max(0, goal - st.p) / s, CATCH_UP / MAP_RUN_S);
+      st.v += (pace - st.v) * Math.min(1, EASE_INTO_PER_S * s);
+      st.p = Math.min(goal, Math.max(st.p, st.p + st.v * s));
+      if (st.p === goal) st.v = Math.min(st.v, pace);
+      paint();
+      if (st.p === 1) hold(HOLD_S);
     };
     /**
-     * Something is still awaited after the grace: the map is shown, eased in, and builds up from nothing to what
-     * is in by now.
+     * Something is still awaited after the grace: the map is shown, eased in, empty, and its run begins. With reduced motion it is the finished map, and nothing builds up to it.
      */
     const show = () => {
-      if (cancelled || all) return;
+      if (cancelled || over) return;
       shownAt = performance.now();
+      files = fontFiles();
+      was = { fontsIn, picturesIn, files };
+      if (reduced) st.p = 1;
       paint();
       tweens.push(
         gsap.to(el.querySelector('.loader-in'), {
           autoAlpha: 1,
           duration: reduced ? REDUCED_FADE_S : MAP_IN_S,
-          ease: reduced ? 'none' : STEP_EASE,
+          ease: reduced ? 'none' : 'power3.out',
         }),
       );
-      advance();
+      if (!reduced) gsap.ticker.add(follow);
     };
     /**
-     * Everything is in, or the wait is given up. A loader that never showed its map lifts at once. Otherwise the
-     * last chunks finish and the square holds for a beat (and until the map has been there for its minimum), then
-     * the lift.
+     * The wait is over: everything is in, or it has lasted long enough and the page is handed over without what
+     * has not come. A loader that never showed its map lifts at once; one that did runs up to the whole first
+     * (`follow`).
      */
     const complete = () => {
-      if (cancelled || all) return;
-      all = true;
+      if (cancelled || over) return;
+      over = true;
       clearTimeout(giveUp);
       clearTimeout(grace);
       clearInterval(fonts);
       if (shownAt === null) return lift();
-      const since = shownAt;
-      setEntering(true);
-      gsap.killTweensOf(st);
-      const hold = () =>
-        void tweens.push(
-          gsap.delayedCall(
-            Math.max(
-              reduced ? 0 : HOLD_S,
-              (MAP_MIN_MS - (performance.now() - since)) / 1000,
-            ),
-            lift,
-          ),
-        );
-      if (reduced) {
-        // the finished map, and nothing builds up to it
-        st.p = 1;
-        paint();
-        return hold();
-      }
-      tweens.push(
-        gsap.to(st, {
-          p: 1,
-          duration: FINISH_S,
-          ease: 'power2.out',
-          onUpdate: paint,
-          onComplete: hold,
-        }),
-      );
+      if (reduced)
+        hold(Math.max(0, MAP_MIN_MS - (performance.now() - shownAt)) / 1000);
+    };
+    const one = (settle: () => void) => () => {
+      if (cancelled || over) return;
+      settle();
+      if (fontsIn && picturesIn === awaited.length) complete();
     };
 
     const grace = setTimeout(show, MAP_GRACE_MS);
-    const fonts = setInterval(() => {
-      if (!all && !fontsIn) advance();
-    }, FONT_POLL_MS);
-    awaited.forEach(
-      (one, i) =>
-        void one.then(() => {
-          if (cancelled || all) return;
-          if (i === 0) fontsIn = true;
-          inNow++;
-          if (inNow === steps) complete();
-          else advance();
-        }),
-    );
     const giveUp = setTimeout(complete, LOADER_TIMEOUT_MS);
+    const fonts = setInterval(() => {
+      files = fontFiles();
+    }, FONT_POLL_MS);
+    void document.fonts.ready.then(
+      one(() => {
+        fontsIn = true;
+      }),
+    );
+    awaited.forEach(
+      (picture) =>
+        void picture.then(
+          one(() => {
+            picturesIn++;
+          }),
+        ),
+    );
     return () => {
       cancelled = true;
       clearTimeout(giveUp);
       clearTimeout(grace);
       clearInterval(fonts);
       unstarted?.();
-      gsap.killTweensOf(st);
+      gsap.ticker.remove(follow);
       tweens.forEach((tween) => tween.kill());
     };
   }, [reduced, onDone]);
@@ -348,9 +373,7 @@ export const Loader = ({
       <div className='loader-in'>
         <p className='pct'>{pct}%</p>
         <canvas ref={map} width={MAP_SIZE} height={MAP_SIZE} />
-        <p className='stage'>
-          {t(entering ? 'dimensions.hero.entering' : 'dimensions.hero.loading')}
-        </p>
+        <p className='stage'>{t('dimensions.hero.loading')}</p>
       </div>
     </div>
   );

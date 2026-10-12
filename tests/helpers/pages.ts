@@ -117,6 +117,8 @@ export interface NavFrame {
   loader: number | null;
   /** opacity of the loader's map and percentage (0 while they are hidden); null when there is no loader */
   map: number | null;
+  /** the percentage the loader says; null when there is no loader */
+  pct: number | null;
   /** the page's content: how much of it shows, and how far it has been moved (its own `translate`) */
   main: Part | null;
   /** the first line of an inner page's title */
@@ -177,6 +179,9 @@ export const watchNav = (page: Page) =>
         dim: html.getAttribute('data-dim'),
         loader: loader ? shown(loader) : null,
         map: loader ? shown(loader.querySelector('.loader-in')) : null,
+        pct: loader
+          ? parseFloat(loader.querySelector('.pct')?.textContent ?? '0')
+          : null,
         main: mc
           ? {
               o: +mc.opacity,
