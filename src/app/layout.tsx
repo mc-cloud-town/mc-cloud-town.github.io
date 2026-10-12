@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { AntdRegistry } from '@ant-design/nextjs-registry';
 
-import StyledComponentsRegistry from '@/lib/StyledComponentsRegistry';
 import { ThemeProvider, themeInitScript } from '@/context/ThemeContext';
 
 const SITE_URL = 'https://mc-ctec.org/';
@@ -92,11 +90,7 @@ export default function RootLayout({
       </head>
       <body>
         <div id='root'>
-          <StyledComponentsRegistry>
-            <AntdRegistry>
-              <ThemeProvider>{children}</ThemeProvider>
-            </AntdRegistry>
-          </StyledComponentsRegistry>
+          <ThemeProvider>{children}</ThemeProvider>
         </div>
         <Script
           src='https://www.googletagmanager.com/gtag/js?id=G-091JNQ58E9'
