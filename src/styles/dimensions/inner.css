@@ -1,5 +1,23 @@
 /* Inner pages. Ported from docs/design-demos/inner.css and members.html. */
 .dim {
+  /* The header's veil, for every inner page alike: retune it here. Lighter than the design's (side 0.96 / 0.82 /
+     0.2 / 0.3 with a bottom fade over 40%; bottom-up 1 / 0.82 / 0.6), under which the picture could not be seen
+     (user feedback). The shapes are the design's: only the stops are lower.
+     Above 860px, from the text's side to the far one: */
+  --head-s1: 0.92;
+  --head-s2: 0.72;
+  --head-s3: 0.1;
+  --head-s4: 0.18;
+  /* and how far up the solid edge that joins the header to the page fades away */
+  --head-fade: 30%;
+  /* at 860px and below, bottom-up from that solid edge: at 60%, and at the top */
+  --head-n2: 0.64;
+  --head-n3: 0.3;
+  /* the day's veil there, a little stronger: the day's dark words stand on the picture's dark places, and the
+     small accent-coloured word of the crumb was hard to read on the members' crowd under the night's stops */
+  --head-day-n2: 0.77;
+  --head-day-n3: 0.48;
+
   /* header: half a screen, never a full one */
   .head {
     position: relative;
@@ -34,18 +52,25 @@
     transition: opacity var(--t-theme);
     background: linear-gradient(
         90deg,
-        rgba(var(--v), 0.96) 0%,
-        rgba(var(--v), 0.82) 42%,
-        rgba(var(--v), 0.2) 78%,
-        rgba(var(--v), 0.3) 100%
+        rgba(var(--v), var(--head-s1)) 0%,
+        rgba(var(--v), var(--head-s2)) 42%,
+        rgba(var(--v), var(--head-s3)) 78%,
+        rgba(var(--v), var(--head-s4)) 100%
       ),
-      linear-gradient(0deg, rgba(var(--v), 1) 0%, rgba(var(--v), 0) 40%);
+      linear-gradient(
+        0deg,
+        rgba(var(--v), 1) 0%,
+        rgba(var(--v), 0) var(--head-fade)
+      );
   }
   .head .bg::before {
     --v: var(--v-night);
   }
   .head .bg::after {
     --v: var(--v-day);
+    /* on the veil itself, not by theme: each veil keeps its own stops while the two cross-fade */
+    --head-n2: var(--head-day-n2);
+    --head-n3: var(--head-day-n3);
     opacity: 0;
   }
   [data-theme='light'] & .head .bg::before {
@@ -270,8 +295,8 @@
       background: linear-gradient(
         0deg,
         rgba(var(--v), 1) 0%,
-        rgba(var(--v), 0.82) 60%,
-        rgba(var(--v), 0.6) 100%
+        rgba(var(--v), var(--head-n2)) 60%,
+        rgba(var(--v), var(--head-n3)) 100%
       );
     }
     .tools .count {
