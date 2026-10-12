@@ -18,8 +18,10 @@ html.lenis {
 }
 
 .dim.dim--home {
-  /* how wide the departments of the respawn are (.join) */
-  --join-w: min(720px, 54vw);
+  /* how wide the call of the respawn is (.call: the mascot stands beside it), and its departments under it
+     (.join: nothing stands beside them, so they have more of the veiled side) */
+  --call-w: min(720px, 54vw);
+  --join-w: min(960px, 62vw);
 
   /* ───────── the world ───────── */
   .world {
@@ -52,15 +54,20 @@ html.lenis {
     height: 100%;
     object-fit: cover;
   }
-  /* spawn: the anniversary video. The cover and the player share one enlarged box, so the still and the moving
-     picture line up and the player's own interface (its title bar above, its controls below) falls outside the
-     screen. Scenery: it takes no pointer, and it is no part of the layout (the world is fixed and cuts it off). */
+  /* spawn: the anniversary video, in the box the old home page gave it: as tall as the screen, so the picture is
+     not enlarged, and much wider than the picture itself, so the player's own interface (its title at one end,
+     its mark at the other) lies in the empty ends of the frame, off the sides of the screen. Where the screen is
+     wider than about 3 : 2 the box grows by the width instead, so the picture still covers it. The cover is fitted
+     into the same box the same way (whole, centred), so the still and the moving picture line up. Scenery: it
+     takes no pointer, and it is no part of the layout (the world is fixed and cuts it off). */
   .vid {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: max(124vw, calc(124vh * 16 / 9));
-    aspect-ratio: 16 / 9;
+    width: calc(150vh * 16 / 9);
+    height: 100vh;
+    min-width: 100vw;
+    min-height: calc(120vw * 9 / 16);
     transform: translate(-50%, -50%);
     pointer-events: none;
   }
@@ -77,7 +84,7 @@ html.lenis {
     display: block;
   }
   .cam .vid img.vid-cover {
-    object-fit: cover;
+    object-fit: contain;
   }
   /* One veil per scene, of the design's shapes. A picture that is dark by itself (a shader shot) is given a
      strength under 1 (scenes.ts): every stop of its veil is that much lower, the shape is the same. The strength
@@ -754,15 +761,21 @@ html.lenis {
     margin: 18px 0 44px;
     max-width: 54vw;
   }
-  /* The departments and, beside them, the mascot. The list alone gives this block its size: the mascot is
+  /* The call (the label, the title, the way in) and, beside it, the mascot (user feedback: beside the call, not
+     beside the departments). The call alone gives its block its size, as wide as the list under it: the mascot is
      placed against it, one gutter to its right and centred on it, without taking part in the flow.
      Side by side the two always fit between the gutters: gutter 6vw + list 54vw + gutter 6vw + mascot 28vw
      + gutter 6vw = the screen (and on a wide screen each has reached its cap). What gives out first as the
      screen narrows is the list: a department is name (7em) | gap (24px) | description, and a description needs
      320px. The mascot is shown for as long as the layout holds that, and left out where it does not (the
      query at the foot of this block). */
-  .join {
+  .call {
     --pal: min(28vw, 400px);
+    position: relative;
+    width: 100%;
+    max-width: var(--call-w);
+  }
+  .join {
     position: relative;
     margin-top: 64px;
     width: 100%;
@@ -796,6 +809,30 @@ html.lenis {
     margin-top: 12px;
     justify-self: start;
     white-space: nowrap;
+  }
+  /* With the mascot beside the call, the departments stand side by side under it, three across (from 1101px:
+     under that a column would be too narrow for a description, and they stay one under another): the row is
+     short and as wide as the text side of the picture, so nothing is left hanging open beside a tall list. */
+  @media (min-width: 1101px) {
+    .depts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0 clamp(24px, 2.6vw, 44px);
+    }
+    .depts li,
+    .depts li:last-child {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px 0 0;
+      border-bottom: 0;
+    }
+    .depts b {
+      margin-bottom: 10px;
+    }
+    .depts .more {
+      margin-top: 14px;
+    }
   }
   .pal {
     position: absolute;
@@ -998,8 +1035,8 @@ html.lenis {
     .pal {
       display: none;
     }
-    /* the list takes some of the mascot's room, but stays on the veiled side of the picture */
-    --join-w: min(720px, 62vw);
+    /* the call has the width of the list under it */
+    --call-w: var(--join-w);
     .respawn h2 {
       max-width: none;
     }

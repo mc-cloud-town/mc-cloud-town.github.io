@@ -21,22 +21,32 @@ export const Respawn = () => {
   }[];
   return (
     <section className='respawn' id='respawn' data-dim='respawn'>
-      <p className='mono acc' data-t='note'>
-        {t('dimensions.respawn.label')}
-      </p>
-      <h2 className='serif rise' data-t='title' data-heading tabIndex={-1}>
-        {t('dimensions.respawn.title')}
-      </h2>
-      <a
-        className='btn'
-        href={serverLink.discord}
-        target='_blank'
-        rel='noopener noreferrer'
-        data-t='control'
-      >
-        {t('dimensions.respawn.cta')} <span aria-hidden='true'>→</span>
-      </a>
-      {/* the departments, and the mascot beside them where the screen is wide enough for both (home.css) */}
+      {/* the call, and the mascot beside it where the screen is wide enough for both (home.css) */}
+      <div className='call'>
+        <p className='mono acc' data-t='note'>
+          {t('dimensions.respawn.label')}
+        </p>
+        <h2 className='serif rise' data-t='title' data-heading tabIndex={-1}>
+          {t('dimensions.respawn.title')}
+        </h2>
+        <a
+          className='btn'
+          href={serverLink.discord}
+          target='_blank'
+          rel='noopener noreferrer'
+          data-t='control'
+        >
+          {t('dimensions.respawn.cta')} <span aria-hidden='true'>→</span>
+        </a>
+        {/* lazy: where it is not shown (narrow or short screens) it is not fetched either */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className='pal'
+          src='/assets/logo/512x512.png'
+          alt=''
+          loading='lazy'
+        />
+      </div>
       <div className='join'>
         <ul className='depts rise'>
           {depts.map((d, i) => (
@@ -56,14 +66,6 @@ export const Respawn = () => {
             </li>
           ))}
         </ul>
-        {/* lazy: where it is not shown (narrow or short screens) it is not fetched either */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className='pal'
-          src='/assets/logo/512x512.png'
-          alt=''
-          loading='lazy'
-        />
       </div>
       {/* the section is the short of it: the join page has every department's criteria in full */}
       {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}

@@ -589,7 +589,7 @@ test.describe('home: the hero is the anniversary video', () => {
     [390, 844],
     [844, 390],
   ] as const)
-    test(`at ${width}×${height} the box reaches beyond the screen on every side, and changes nothing of the layout`, async ({
+    test(`at ${width}×${height} the picture covers the screen without being enlarged more than a fifth, the frame's ends lie off its sides, and nothing of the layout changes`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -614,12 +614,17 @@ test.describe('home: the hero is the anniversary video', () => {
           inner,
         };
       });
-      // at least a tenth of the screen's height is cut off above and below, where the player keeps its own bars
-      expect(box.top).toBeLessThan(-height * 0.1);
-      expect(box.bottom).toBeLessThan(-height * 0.1);
+      // the frame covers the screen, and its ends, where the player keeps its title and its mark, are well off the sides
+      expect(box.top).toBeLessThanOrEqual(0.5);
+      expect(box.bottom).toBeLessThanOrEqual(0.5);
       expect(box.left).toBeLessThan(-width * 0.1);
       expect(box.right).toBeLessThan(-width * 0.1);
-      expect(box.ratio).toBeCloseTo(16 / 9, 2);
+      // the picture is 16 : 9, fitted whole into the frame: it covers the screen, and is at most a fifth larger than it needs to be
+      const [, , w, h] = box.own;
+      const picture = Math.min(h, (w * 9) / 16);
+      const needed = Math.max(height, (width * 9) / 16);
+      expect(picture).toBeGreaterThanOrEqual(needed - 1);
+      expect(picture).toBeLessThanOrEqual(needed * 1.21);
       // the still and the moving picture are the same box
       for (const b of box.inner) expect(b).toEqual(box.own);
       await expectNoHorizontalScroll(page);

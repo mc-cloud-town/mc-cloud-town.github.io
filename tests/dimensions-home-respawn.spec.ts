@@ -229,6 +229,8 @@ test.describe('home: respawn', () => {
                 text.height / parseFloat(getComputedStyle(span).lineHeight),
               );
               return {
+                nameBottom: name.bottom,
+                textTop: text.top,
                 nameRight: name.right,
                 textLeft: text.left,
                 textWidth: text.width,
@@ -242,24 +244,28 @@ test.describe('home: respawn', () => {
           );
         expect(rows).toHaveLength(3);
         for (const r of rows) {
-          // name | description, and the link on a line of its own beneath the description, flush with it
-          expect(r.textLeft).toBeGreaterThan(r.nameRight);
+          // from 1101px the departments stand three across: name, description, link, one under another in a column;
+          // under that it is name | description. Either way the link is on a line of its own beneath the
+          // description, flush with it
+          if (width >= 1101)
+            expect(r.textTop).toBeGreaterThanOrEqual(r.nameBottom);
+          else expect(r.textLeft).toBeGreaterThan(r.nameRight);
           expect(r.linkTop).toBeGreaterThanOrEqual(r.textBottom);
           expect(r.linkTop - r.textBottom).toBeLessThan(28);
           expect(Math.abs(r.linkLeft - r.textLeft)).toBeLessThanOrEqual(1);
-          expect(r.textWidth).toBeGreaterThanOrEqual(320);
-          expect(r.lines).toBeLessThanOrEqual(2);
+          expect(r.textWidth).toBeGreaterThanOrEqual(width >= 1101 ? 200 : 320);
+          expect(r.lines).toBeLessThanOrEqual(width >= 1101 ? 4 : 2);
           // a comfortable measure: Chinese never wraps after a handful of characters
           if (locale !== 'en' && r.lines > 1)
-            expect(r.perLine).toBeGreaterThanOrEqual(14);
+            expect(r.perLine).toBeGreaterThanOrEqual(width >= 1101 ? 8 : 14);
         }
         await expectTextFits(page, { within: '#respawn .depts' });
       });
 
-  /** The mascot and the department list, as boxes on the screen. */
+  /** The mascot and the block it stands beside (the call: label, title, way in), as boxes on the screen. */
   const mascotAndList = async (page: Page) => {
     const [list, mascot] = await Promise.all([
-      page.locator('#respawn .depts').boundingBox(),
+      page.locator('#respawn .call').boundingBox(),
       page.locator('#respawn .pal').boundingBox(),
     ]);
     return { list: list!, mascot: mascot! };
@@ -279,16 +285,14 @@ test.describe('home: respawn', () => {
       const gutter = parseFloat(
         getComputedStyle(document.querySelector('#respawn')!).paddingLeft,
       );
-      const row = getComputedStyle(
-        document.querySelector('#respawn .depts li')!,
-      );
-      const columns = row.gridTemplateColumns.split(' ').map(parseFloat);
-      const list = Math.min(720, 0.54 * width);
+      // the mascot stands beside the call (54% of the screen, 720px at most), where the side veil leaves it a side
+      // to stand on (above 860px) and the screen has the height
+      const call = Math.min(720, 0.54 * width);
       const mascot = Math.min(0.28 * width, 400);
       return (
-        columns.length === 2 &&
-        list - columns[0] - parseFloat(row.columnGap) >= least &&
-        3 * gutter + list + mascot <= width + 0.5 &&
+        width > 860 &&
+        least > 0 &&
+        3 * gutter + call + mascot <= width + 0.5 &&
         window.innerHeight > 480
       );
     }, MIN_DESCRIPTION);
@@ -303,7 +307,7 @@ test.describe('home: respawn', () => {
     [900, 700],
     [861, 700],
   ] as const)
-    test(`at ${width}×${height} the layout holds the mascot: it stands beside the departments, centred on them`, async ({
+    test(`at ${width}×${height} the layout holds the mascot: it stands beside the call, centred on it`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -338,7 +342,9 @@ test.describe('home: respawn', () => {
           els.map((el) => el.getBoundingClientRect().width),
         );
       expect(texts).toHaveLength(3);
-      for (const w of texts) expect(w).toBeGreaterThanOrEqual(MIN_DESCRIPTION);
+      // from 1101px the departments stand three across (a column each); under that, one under another
+      for (const w of texts)
+        expect(w).toBeGreaterThanOrEqual(width >= 1101 ? 200 : MIN_DESCRIPTION);
       // a column of its own to the right of the list, one gutter away
       const gutter = await page
         .locator('#respawn')
@@ -424,7 +430,7 @@ test.describe('home: respawn', () => {
       });
       // up to 860px the text has the whole width; above, it stays on the veiled side of the picture (62% of the screen)
       const room = width <= 860 ? m.column : Math.min(m.column, 0.62 * width);
-      expect(m.list).toBeGreaterThanOrEqual(Math.min(720, room) - 1);
+      expect(m.list).toBeGreaterThanOrEqual(Math.min(960, room) - 1);
       // more than it has beside the mascot (54% of the screen)
       if (width < 1161) expect(m.list).toBeGreaterThan(0.54 * width + 40);
       await scrollToSection(page, '#respawn .depts', -0.4);
@@ -683,7 +689,7 @@ test.describe('home: respawn', () => {
         await picture.evaluate((img: HTMLImageElement) => img.naturalWidth),
       ).toBe(0);
       // the side of the screen the day paper leaves clear, above the mascot: the paper's tone, not the stage's black
-      const clear: [number, number][] = [0.16, 0.3].flatMap((y) =>
+      const clear: [number, number][] = [0.12, 0.9].flatMap((y) =>
         [0.78, 0.86, 0.96].map((x) => [x * 1440, y * 900] as [number, number]),
       );
       for (const [i, rgb] of (await colours(page, clear, true)).entries())
@@ -748,7 +754,7 @@ test.describe('home: respawn', () => {
     await ready(page);
     await page.locator('.hero a.btn').click();
     await landedOn(page, '#respawn');
-    const far: [number, number][] = [[0.86 * 1440, 0.3 * 900]];
+    const far: [number, number][] = [[0.96 * 1440, 0.9 * 900]];
     // under the night veil the bare stage is nearly black
     for (const c of (await colours(page, far, true))[0])
       expect(c).toBeLessThan(40);
