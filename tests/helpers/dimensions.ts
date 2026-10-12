@@ -51,13 +51,51 @@ export const LOCALES = ['zh_TW', 'zh_CN', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 export type ThemeName = 'light' | 'dark';
 
-/** Open a page with a fixed theme and language, analytics and ads blocked. */
+/** Same as WARM_KEY in src/lib/dimensions/loaderCore.ts. */
+const WARM_KEY = 'ctec-home-loaded';
+let served: Promise<string> | undefined;
+/** Which build of the site is being served: the home page's own script says it (LoaderBoot.tsx). */
+export const buildId = (page: Page) =>
+  (served ??= page.request
+    .get('/')
+    .then((answer) => answer.text())
+    .then((html) => /"build":"([^"]*)"/.exec(html)?.[1] ?? ''));
+
+/**
+ * Open a page with a fixed theme and language, analytics and ads blocked.
+ * As a reader who has been here before, whose browser has the site's files: the home page's loader shows such a
+ * reader no map unless something turns out to be waited for. `cold` is the first visit: the map from the first
+ * frame, played in full.
+ */
 export const openPage = async (
   page: Page,
   path: string,
-  opts: { theme?: ThemeName; locale?: Locale; reducedMotion?: boolean } = {},
+  opts: {
+    theme?: ThemeName;
+    locale?: Locale;
+    reducedMotion?: boolean;
+    cold?: boolean;
+  } = {},
 ) => {
-  const { theme = 'dark', locale = 'zh_TW', reducedMotion = false } = opts;
+  const {
+    theme = 'dark',
+    locale = 'zh_TW',
+    reducedMotion = false,
+    cold = false,
+  } = opts;
+  if (!cold)
+    await page.addInitScript(
+      ([key, build]) => {
+        try {
+          if (!localStorage.getItem(key))
+            localStorage.setItem(
+              key,
+              JSON.stringify({ build, at: Date.now() }),
+            );
+        } catch {}
+      },
+      [WARM_KEY, await buildId(page)],
+    );
   await page.route(/googletagmanager|googlesyndication|google-analytics/, (r) =>
     r.abort(),
   );

@@ -70,7 +70,12 @@ const arrivesBelow = () => {
 };
 const atTheTop = () => false;
 
-export const HomePage = () => {
+export const HomePage = ({
+  boot,
+}: {
+  /** the script the served page runs behind its loader (LoaderBoot.tsx): made where the site is built */
+  boot?: React.ReactNode;
+}) => {
   const root = useRef<HTMLDivElement>(null);
   const { setDim } = useDimension();
   const [ready, setReady] = useState(false);
@@ -247,6 +252,8 @@ export const HomePage = () => {
         settled={!below || Boolean(members) || Boolean(noMembers)}
         onDone={onDone}
       />
+      {/* right behind the loader's markup: the served page shows and runs the map with this, before this script has come */}
+      {boot}
       {/* scripts off: nothing would ever lift the loader, so it is not shown at all */}
       <noscript>
         <style>{'.dim.dim--home .loader{display:none}'}</style>

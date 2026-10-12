@@ -26,6 +26,10 @@ import {
 const LOADER_TIMEOUT_MS = 6000;
 /** Every script file of the page (the inline ones in the HTML are not files). */
 const PAGE_SCRIPT = /\/_next\/static\/.*\.js(\?|$)/;
+/** The script the served home page carries behind its loader (LoaderBoot.tsx). */
+const BOOT_SCRIPT = /<script id="loader-boot">[\s\S]*?<\/script>/;
+/** Same as BOOT_LIMIT_MS in src/lib/dimensions/loaderCore.ts. */
+const BOOT_LIMIT_MS = 20_000;
 
 /** What is on top at the middle of the title: the loader, or the page. */
 const overTitle = (page: Page) =>
@@ -234,11 +238,24 @@ test.describe('home: never stuck behind the loader', () => {
       ).toBe(height);
     });
 
-  test('when the script of the page never arrives the loader gives way by itself after about ten seconds, with a fade', async ({
+  test('when no script of the page runs at all, not even the one behind the loader, the loader gives way by itself after about ten seconds, with a fade', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.route(PAGE_SCRIPT, (r) => r.abort());
+    // (the served page without the script it carries behind its loader: what is left is the stylesheet's fail-safe)
+    await page.route(
+      (url) => url.pathname === '/',
+      async (r) => {
+        const served = await r.fetch();
+        const html = await served.text();
+        expect(html).toMatch(BOOT_SCRIPT);
+        await r.fulfill({
+          response: served,
+          body: html.replace(BOOT_SCRIPT, ''),
+        });
+      },
+    );
     await page.addInitScript(() => {
       const w = window as unknown as { __fade: number[]; __t0?: number };
       w.__fade = [0, 0, 0];
@@ -314,13 +331,12 @@ test.describe('home: never stuck behind the loader', () => {
     );
     const live = frames.filter((f) => f.live);
     const before = frames.filter((f) => !f.live);
-    // the served page carries the fail-safe; the script calls it off within the first moments
+    // the served page carries the fail-safe; the script behind the loader has called it off before the first
+    // frame, and the page's script takes over within the first moments
     expect(before.length).toBeGreaterThan(0);
-    for (const f of before)
-      expect(f.name).toBe('loader-failsafe, loader-failsafe-gone');
     expect(live.length).toBeGreaterThan(200);
     expect(live[0].t - frames[0].t).toBeLessThan(3000);
-    for (const f of live) expect(f.name).toBe('none');
+    for (const f of frames) expect(f.name).toBe('none');
     // whole for the full wait, and the lift begins only when the page is handed over
     const waiting = live.filter((f) => !f.ready);
     expect(waiting.at(-1)!.t - frames[0].t).toBeGreaterThan(5000);
@@ -332,13 +348,13 @@ test.describe('home: never stuck behind the loader', () => {
     );
   });
 
-  test('a script that arrives after the fail-safe does not bring the loader back, and the page still works', async ({
+  test('a script that arrives after it was given up does not bring the loader back, and the page still works', async ({
     page,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.route(PAGE_SCRIPT, async (r) => {
-      await new Promise((done) => setTimeout(done, 11_500));
+      await new Promise((done) => setTimeout(done, BOOT_LIMIT_MS + 5000));
       await r.continue().catch(() => {});
     });
     await page.addInitScript(() => {
@@ -359,7 +375,13 @@ test.describe('home: never stuck behind the loader', () => {
     await stubVideo(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.loader')).toBeVisible();
-    await expect(page.locator('.loader')).toBeHidden({ timeout: 14_000 });
+    // (well past the stylesheet's ten seconds the loader is still there, at work: the served script is waiting)
+    await page.waitForTimeout(12_000);
+    await expect(page.locator('.loader')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.loader-in')).toBeVisible();
+    await expect(page.locator('.loader')).toBeHidden({
+      timeout: BOOT_LIMIT_MS - 12_000 + 4500,
+    });
     await page.locator('.dim[data-ready="true"]').waitFor({ timeout: 30_000 });
     await page.waitForTimeout(1500);
     expect(
@@ -396,8 +418,8 @@ test.describe('home: loader', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    // the script of the page never arrives: what is seen is the served HTML and its styles
-    await page.route(PAGE_SCRIPT, (r) => r.abort());
+    // the script of the page is not there yet: what is seen is the served HTML and its styles
+    await page.route(PAGE_SCRIPT, () => {});
     await stubVideo(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     const loader = page.locator('.loader');
@@ -535,10 +557,10 @@ test.describe('home: the loader is a map of the world being generated', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    // the served page before any script of it has run (with scripts off there is no loader at all)
-    await page.route(PAGE_SCRIPT, (r) => r.abort());
+    // the served page before the page's script has come (with scripts off there is no loader at all)
+    await page.route(PAGE_SCRIPT, () => {});
     await stubVideo(page);
-    await page.goto('/', { waitUntil: 'load' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     const map = page.locator('.loader canvas');
     await expect(map).toHaveCount(1);
     await expect(map).toHaveAttribute('width', '21');
@@ -554,13 +576,17 @@ test.describe('home: the loader is a map of the world being generated', () => {
     ]);
     expect(pct!.y + pct!.height).toBeLessThanOrEqual(box.y);
     expect(stage!.y).toBeGreaterThanOrEqual(box.y + box.height);
-    await expect(page.locator('.loader .pct')).toHaveText('0%');
+    await expect(page.locator('.loader .pct')).toHaveText(/^\d+%$/);
     await expect(page.locator('.loader .stage')).toHaveText('正在建置地形');
-    // …but none of it is shown: the served page is the loader's ground, and says nothing of a loading that may
-    // not happen (the script shows the map if there turns out to be something to wait for)
+    // …and all of it is shown, by the served page itself: a loader is there to be seen
     for (const part of ['.loader-in', '.loader .pct', '.loader canvas'])
-      await expect(page.locator(part)).toBeHidden();
-    await expect(page.locator('.loader-in')).toHaveCSS('opacity', '0');
+      await expect(page.locator(part)).toBeVisible();
+    await expect(page.locator('.loader-in')).toHaveCSS('opacity', '1');
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.hasAttribute('data-live'),
+      ),
+    ).toBe(false);
     // in a face of the system: the loader waits for no font of the web to be read
     await expect(page.locator('.loader .pct')).toHaveCSS(
       'font-family',
@@ -953,9 +979,10 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await watchLoader(page);
     await openPage(page, '/', { locale: 'en' });
     await ready(page);
-    const shown = shownFrames(await loaderFrames(page));
+    // (the served HTML is in the default language until the reader's own is known, which is when the page's
+    // script has come)
+    const shown = shownFrames(await loaderFrames(page)).filter((f) => f.live);
     expect(shown.length).toBeGreaterThan(10);
-    // (the served HTML is in the default language until the reader's own is known; it is not shown then)
     expect([...new Set(shown.map((f) => f.label))]).toEqual([
       'Building terrain',
     ]);
@@ -982,6 +1009,127 @@ test.describe('home: the loader is a map of the world being generated', () => {
     }
     for (const f of frames.filter((f) => !f.cover)) expect(f.ready).toBe(false);
     await expect(page.locator('.hero h1')).toBeVisible();
+  });
+});
+
+test.describe('home: the map does not wait for the script of the page', () => {
+  const number = (f: LoaderFrame) => Number(f.pct.replace('%', ''));
+
+  test('a first visit on a slow line: the map is there in the first frame and at work long before the page’s script has run, and that script takes the same run over', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const DELAY_MS = 4000;
+    await page.route(PAGE_SCRIPT, async (r) => {
+      await new Promise((done) => setTimeout(done, DELAY_MS));
+      await r.continue().catch(() => {});
+    });
+    // (no font is waited for: the script is the heaviest thing that is missing)
+    await page.route(/fonts.(googleapis|gstatic).com/, (r) => r.abort());
+    await watchLoader(page);
+    await openPage(page, '/', { cold: true });
+    await page.locator('.dim[data-ready="true"]').waitFor({ timeout: 30_000 });
+    const frames = await loaderFrames(page);
+    // the very first frame the loader is in the document for shows the block of the map
+    expect(frames[0].block).toBe(1);
+    expect(frames[0].ground).toBe(1);
+    // before the page's script: seconds of frames, the map in every one of them, and at work
+    const before = frames.filter((f) => !f.live);
+    const taken = frames.findIndex((f) => f.live);
+    expect(taken).toBeGreaterThan(0);
+    expect(before.at(-1)!.t - before[0].t).toBeGreaterThan(DELAY_MS - 1000);
+    for (const f of before) {
+      expect(f.block).toBe(1);
+      expect(f.ground).toBe(1);
+      expect(f.ready).toBe(false);
+      // (the script that is still to come is a good part of what is missing)
+      expect(number(f)).toBeLessThan(100);
+    }
+    expect(new Set(before.map((f) => f.picture)).size).toBeGreaterThan(20);
+    let since = before[0].t;
+    let longest = 0;
+    before.forEach((f, i) => {
+      if (i && f.picture !== before[i - 1].picture) since = f.t;
+      longest = Math.max(longest, f.t - since);
+    });
+    expect(longest, 'the longest the map was still').toBeLessThan(400);
+    // the number says what has come: it has left nothing, and with the script outstanding it is held well back
+    const waiting = before.filter((f) => f.t - before[0].t < DELAY_MS - 1000);
+    expect(Math.max(...waiting.map(number))).toBeGreaterThan(0);
+    expect(Math.max(...waiting.map(number))).toBeLessThan(60);
+    // the take-over: the same run, from where it stood (never back to nothing, never down), with the same map
+    const last = frames[taken - 1];
+    expect(number(last)).toBeGreaterThan(0);
+    expect(number(frames[taken])).toBeGreaterThanOrEqual(number(last));
+    expect(frames[taken].block).toBe(1);
+    expect(frames[taken].started).toBeGreaterThanOrEqual(last.started - 2);
+    // and the whole of it is one run: from 0, only ever up, without a jump, to the finished square and the handover
+    expectFullRun(frames);
+    await expect(page.locator('.loader')).toBeHidden();
+    await expect(page.locator('.hero h1')).toBeVisible();
+  });
+
+  test('a file of the page’s script fails to come: the map runs up to the whole, the loader gives way with a fade, and the served page can be read', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route(PAGE_SCRIPT, async (r) => {
+      await new Promise((done) => setTimeout(done, 800));
+      await r.abort();
+    });
+    await stubVideo(page);
+    await watchLoader(page);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.loader')).toBeHidden({ timeout: 10_000 });
+    const frames = await loaderFrames(page);
+    expect(frames[0].block).toBe(1);
+    // the map was not taken away as it stood: from 0 to the finished square, and only then the ground goes
+    const shown = frames.filter((f) => f.ground === 1);
+    expect(number(shown[0])).toBeLessThanOrEqual(2);
+    shown.forEach((f, i) => {
+      if (i) expect(number(f)).toBeGreaterThanOrEqual(number(shown[i - 1]));
+    });
+    expect(shown.at(-1)!.pct).toBe('100%');
+    const going = frames.filter((f) => f.ground < 1);
+    for (const f of going) expect(f.pct).toBe('100%');
+    expect(
+      new Set(going.map((f) => f.ground).filter((o) => o > 0)).size,
+      'frames of the fade',
+    ).toBeGreaterThan(5);
+    // no script of the page ever ran
+    for (const f of frames) expect(f.live).toBe(false);
+    await expectReadableWithoutScript(page);
+  });
+
+  test('a return: the first visit leaves its mark, and the reload shows no map in any frame', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    await watchLoader(page);
+    await openPage(page, '/', { cold: true });
+    await ready(page);
+    // the first visit showed its map from the first frame, and played it in full
+    const first = await loaderFrames(page);
+    expect(first[0].block).toBe(1);
+    expectFullRun(first);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const frames = await loaderFrames(page);
+    expect(frames.length).toBeGreaterThan(3);
+    // (a machine too busy to start the page's script within the grace shows the map after all, and is right to:
+    // such a run, known by the script having taken over later than that, is noted, not judged)
+    const late = frames.filter((f) => !f.live).length > 0.35 * 60;
+    if (late)
+      test.info().annotations.push({
+        type: 'slow machine',
+        description:
+          'the page’s script took over after the grace: whether the map showed was not judged',
+      });
+    else for (const f of frames) expect(f.block).toBe(0);
+    for (const f of frames.filter((f) => !f.ready)) expect(f.ground).toBe(1);
   });
 });
 

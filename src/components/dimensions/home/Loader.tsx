@@ -1,17 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { useTranslation } from 'react-i18next';
-import {
-  MAP_RUN_S,
-  MAP_SIZE,
-  drawMap,
-  planMap,
-  plannedRun,
-  seedLateness,
-} from '@/lib/dimensions/loaderMap';
+import { MAP_SIZE, core } from '@/lib/dimensions/loaderMap';
 import { onNextTick } from '@/lib/dimensions/nextTick';
 import { fontSheetIn } from '#/dimensions/FontSheet';
 import { markWhole } from './World';
@@ -23,14 +16,14 @@ export const LOADER_TIMEOUT_MS = 6000;
  * A reader for whom everything is there already (a return to the site, a reload, a step back to the home page from
  * another page of it) is not shown a loading at all: the loader is only its ground, and lifts as soon as the page
  * can be handed over. The map is shown only if something is still awaited this long after the script took over.
- * A map that is shown is played in full (MAP_RUN_S, two seconds), so the grace is on the generous side: a wait of
- * a third of a second on the bare ground is better than two seconds of a map nobody needed.
+ * A map that is shown is played in full (MAP_RUN_S, two seconds). (The number is the shared source's:
+ * loaderCore.ts, which says as well who is taken to be such a reader before this script has come.)
  */
-export const MAP_GRACE_MS = 350;
+export const MAP_GRACE_MS = core.MAP_GRACE_MS;
 /** With reduced motion the finished map, once shown, stays at least this long: a beat that can be read, not a flash. */
 export const MAP_MIN_MS = 400;
 /** It comes as a state changes (--t-state), in the ease of anything that arrives. */
-const MAP_IN_S = 0.3;
+const MAP_IN_S = core.MAP_IN_S;
 /**
  * The lift of a loader that showed its map: the map opens onto the world for this long, and the ground goes in
  * the last tenth of a second of that and after. A loader without a map lifts by its ground alone.
@@ -44,43 +37,16 @@ const GROUND_GOES_S = 0.9;
 export const GROUND_GOES_AT_S = MAP_OPENS_S - 0.1;
 /**
  * What the map and the percentage show is one number: how much of what was still missing when the map appeared
- * has come since, by what it costs to fetch. What was in by then was never waited for and is not counted, so the
- * number starts at nothing and every point of it is something that arrived while the reader watched.
- * The costs are the sizes measured on this site (2026-10): a font file is about 250 kB (a face of a Chinese
- * typeface comes in slices; the first screen asks for about twenty, 5 MB in all), a picture the page is handed
- * over on about 130 kB (the hero's first picture is 121 kB, the pictures of the places further down 140 kB and
- * more). On a first visit the fonts are therefore nearly all of the number, and a picture a few points of it; on
- * a visit that has the fonts already, the picture is all of it. The browser does not say how much of a file has
- * come, so each counts when it is in (a picture: in and decoded).
+ * has come since, by what it costs to fetch (loaderCore.ts, which has the rule, the costs of the script files and
+ * of the fonts, and how the number moves). What only this script knows is added to it here: the pictures the page
+ * is handed over on, about 130 kB each (the hero's first picture is 121 kB, the pictures of the places further
+ * down 140 kB and more), each counted when it is in and decoded…
  */
-const FONT_FILE_KB = 250;
 const PICTURE_KB = 130;
-/** The list of names the credits are made of (`settled`, below): a small file. */
+/** …and the list of names the credits are made of (`settled`, below): a small file. */
 const NAMES_KB = 20;
-/**
- * Which font files are wanted is known only as the page is laid out: the fonts are counted by the files asked for
- * so far, looked up this often, and never as quite all of them until the browser says the fonts are ready (more
- * may still be asked for).
- */
-const FONT_POLL_MS = 150;
-const FONT_SHARE_MOST = 0.9;
-/**
- * While something is on its way the number drifts on, so that it does not look frozen: by this small part of what
- * is still missing at the most, approached in about this long. It never claims what has not come.
- */
-const DRIFT_SHARE = 0.12;
-const DRIFT_MS = 2500;
-/**
- * What the map shows is the lesser of two things: its planned run (loaderMap.ts: from nothing to the whole in
- * MAP_RUN_S, starting when it appears) and what has really come. Loading that is slow holds it back; loading that
- * is over early does not cut the run short. So it always starts at nothing, whatever is in by then, and is never
- * taken away unfinished. And it never jumps: when it has been held back and the rest comes at once, it catches up
- * at this many times the pace of the planned run at the most, easing into that pace.
- */
-const CATCH_UP = 2;
-const EASE_INTO_PER_S = 10;
 /** The finished square holds for a beat before the lift. */
-const HOLD_S = 0.18;
+const HOLD_S = core.HOLD_S;
 /** With reduced motion the finished map gives way in one brief fade. */
 const REDUCED_FADE_S = 0.12;
 
@@ -141,8 +107,17 @@ const fontsAreIn = () => fontSheetIn().then(() => document.fonts.ready);
  * Calls onDone once the fonts and the first pictures are in (or given up on) and the map, if it was shown, is
  * finished: `plain` if the loader lifts without having shown a map. It lifts off the page, then removes itself. It is part of the
  * static markup, so it is the first thing painted; it starts once `reduced` is known.
- * Should this script never start, the served page is not left behind it: home.css takes the loader away after ten
- * seconds, and HomePage's `noscript` style at once where scripts are off.
+ *
+ * This script is the heaviest thing a reader on a slow line waits for, and the loader does not wait for it to
+ * begin: the served page shows the map and runs it by a small script of its own (LoaderBoot.tsx, loaderCore.ts),
+ * from the first frame that is painted. What this script finds on the loader it was served with is therefore a run
+ * under way, and it takes that run over as it stands: the same map, the same number, no second beginning. To what
+ * is counted it adds what only it knows, and it ends the run as it always did. Only a reader known to have
+ * everything is served the ground alone, and so is one who steps here from another page of the site (the served
+ * script does not run then).
+ * Should this script never start, the served page is not left behind the loader: the served script gives it up
+ * after a while (BOOT_LIMIT_MS), home.css takes the loader away after ten seconds where not even that has run,
+ * and HomePage's `noscript` style at once where scripts are off.
  */
 export const Loader = ({
   reduced,
@@ -161,7 +136,7 @@ export const Loader = ({
   const { t } = useTranslation();
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<HTMLCanvasElement>(null);
-  const [pct, setPct] = useState(0);
+  const said = useRef<HTMLParagraphElement>(null);
   const [gone, setGone] = useState(false);
   /** What the effect below needs of `settled`: how it is now, and whom to tell when it comes true. */
   const shape = useRef({ settled, tell: () => {} });
@@ -170,13 +145,26 @@ export const Loader = ({
     if (settled) shape.current.tell();
   }, [settled]);
 
+  // The block of the map is in the served page for all to see (home.css): a loader shows its map. Where the served
+  // script has not been at work on this very loader (a step here from another page of the site), nothing is known
+  // to be waited for, and the block is put away before the first frame, until it turns out to be needed.
+  useLayoutEffect(() => {
+    if (window.__ctecLoader?.el !== box.current)
+      gsap.set(box.current?.querySelector('.loader-in') ?? null, {
+        autoAlpha: 0,
+      });
+  }, []);
+
   useEffect(() => {
     const el = box.current;
     if (!el || reduced === null) return;
+    /** The run the served script began on this loader, if it did. */
+    const begun = window.__ctecLoader?.el === el ? window.__ctecLoader : null;
     // The fail-safe of the served page (home.css) has taken the loader away, or is doing so: this script came
     // too late to cover the page again. The page is handed over as it stands.
+    // (Or the served script has given this one up, and the loader is going: home.css, `data-boot`.)
     const served = getComputedStyle(el);
-    if (served.visibility === 'hidden' || +served.opacity < 1) {
+    if (begun?.gone || served.visibility === 'hidden' || +served.opacity < 1) {
       // This handover is not run through at once as the one in `lift` is: React builds the page when it next gets
       // round to it (`flushSync` cannot be used inside an effect). No cover is left to lift in step with it: the
       // script started ten seconds late, and the reader has the served page in front of them already.
@@ -186,25 +174,19 @@ export const Loader = ({
     // from here on the loader is this script's: the fail-safe is called off
     document.documentElement.dataset.live = '';
     const ctx = map.current?.getContext('2d');
-    // per-chunk lateness: what makes the fronts ragged while loading (seeded here, never during render)
-    const plan = planMap(seedLateness());
-    /** What the map shows (0..1), and how fast it is moving (per second). */
-    const st = { p: 0, v: 0 };
-    const paint = () => {
-      // (with the time: the chunks under way are at work whether the number moves or not)
-      if (ctx)
-        drawMap(ctx, st.p, plan, reduced ? undefined : performance.now());
-      // (a hundred is the whole, never a rounding up to it)
-      setPct(Math.floor(st.p * 100 + 1e-9));
-    };
+    const block = el.querySelector<HTMLElement>('.loader-in');
+    /**
+     * The run: the one the served script began, taken over as it stands (its map, its number, what it has
+     * counted), or a new one (its per-chunk lateness seeded here, never during render).
+     */
+    const run = begun ?? core.newRun(el, reduced);
+    run.taken = true;
+    run.reduced = reduced;
+    const paint = () => core.paint(run, ctx, said.current, performance.now());
 
     let cancelled = false;
     const startedAt = performance.now();
     let lastWait: ReturnType<typeof setTimeout> | undefined;
-    /** The wait is over: everything is in, or it was given up. */
-    let over = false;
-    /** When the map was shown; null while it is not (and it may never be). */
-    let shownAt: number | null = null;
     /** Calls off a lift that has not begun yet. */
     let unstarted: (() => void) | undefined;
     const tweens: (gsap.core.Tween | gsap.core.Timeline)[] = [];
@@ -226,38 +208,9 @@ export const Loader = ({
         kb: NAMES_KB,
       },
     ];
-    let fontsIn = false;
-    /** How many of them are in, and what they cost together. */
+    /** How many of them are in. (What they cost goes to the run's count, missing until each is in.) */
     let othersIn = 0;
-    let othersKb = 0;
-    /** The font files asked for so far, and those of them that have come. */
-    const fontFiles = () => {
-      let asked = 0;
-      let came = 0;
-      document.fonts.forEach((face) => {
-        if (face.status === 'unloaded') return;
-        asked++;
-        if (face.status !== 'loading') came++;
-      });
-      return { asked, came };
-    };
-    let files = fontFiles();
-    /** What was in when the map appeared: that much is not counted. */
-    let was = { fontsIn, othersKb, files };
-    /** How much of what was missing when the map appeared has come since, by cost. */
-    const real = () => {
-      // (the fonts are not ready: one file at the least is still to come, whether it has been asked for or not)
-      const wanted = was.fontsIn
-        ? 0
-        : Math.max(1, files.asked - was.files.came);
-      const came = fontsIn
-        ? wanted
-        : Math.min(files.came - was.files.came, wanted) * FONT_SHARE_MOST;
-      const missing =
-        awaited.reduce((sum, one) => sum + one.kb, 0) - was.othersKb;
-      const all = wanted * FONT_FILE_KB + missing;
-      return all ? (came * FONT_FILE_KB + (othersKb - was.othersKb)) / all : 0;
-    };
+    awaited.forEach((other) => (run.othersAll += other.kb));
 
     /** The page is handed over, built and put in its place in that same step, and then the loader lifts off it. */
     const lift = () => {
@@ -270,8 +223,20 @@ export const Loader = ({
       // and switched to its scene (HomePage's effect on `ready`: React runs the effects of a `flushSync` update
       // before it returns) before the first step of the lift. Otherwise the loader would already be going, over
       // the first scene, when the page is handed over.
-      const plain = shownAt === null;
+      const plain = run.shownAt === null;
       flushSync(() => onDone(plain));
+      // this browser has what the page is made of from here on: the next visit need not be shown a loading
+      try {
+        localStorage.setItem(
+          core.WARM_KEY,
+          JSON.stringify({
+            build: process.env.NEXT_PUBLIC_BUILD_ID ?? '',
+            at: Date.now(),
+          }),
+        );
+      } catch {
+        // (no storage: the next visit shows its map, which is never wrong)
+      }
       // The page is on its place now, and it is known for certain which scene the loader lifts on. Should a
       // picture of that scene not be in (the place a return remembers is written down while the reader scrolls,
       // and may name the scene before), the lift waits for it: never beyond the loader's own limit.
@@ -309,8 +274,10 @@ export const Loader = ({
             ease: 'none',
           });
         // the map, if there is one, opens onto the world
+        // (should the served script have eased the block in, that easing is not to follow this one)
+        if (block) block.style.transition = 'none';
         if (!plain)
-          going.to(el.querySelector('.loader-in'), {
+          going.to(block, {
             opacity: 0,
             scale: 1.6,
             duration: MAP_OPENS_S,
@@ -328,54 +295,25 @@ export const Loader = ({
       gsap.ticker.remove(follow);
       tweens.push(gsap.delayedCall(beat, lift));
     };
-    /** How far the number has been told to go (it is never told to go back), since when, and where it is aimed. */
-    let told = 0;
-    let toldAt = 0;
-    let aim = 0;
     /**
-     * Every tick while the map is shown: the lesser of the planned run and what has come (which drifts a little
-     * while it waits, and is the whole once the wait is over), approached without a jump. At the whole the
-     * square holds, then the lift.
+     * Every tick while the map is shown: one step of the run (loaderCore.ts). At the whole the square holds, then
+     * the lift.
      */
-    const follow = (_time: number, elapsed: number) => {
-      const now = performance.now();
-      if (shownAt === null) return;
-      const at = Math.max(told, real());
-      if (at !== told || !toldAt) {
-        told = at;
-        toldAt = now;
-      }
-      aim = over
-        ? 1
-        : Math.max(
-            aim,
-            at +
-              DRIFT_SHARE *
-                (1 - at) *
-                (1 - Math.exp(-(now - toldAt) / DRIFT_MS)),
-          );
-      const goal = Math.min(plannedRun((now - shownAt) / 1000), aim);
-      // (a long frame is not a long step)
-      const s = Math.min(elapsed, 50) / 1000;
-      const pace = Math.min(Math.max(0, goal - st.p) / s, CATCH_UP / MAP_RUN_S);
-      st.v += (pace - st.v) * Math.min(1, EASE_INTO_PER_S * s);
-      st.p = Math.min(goal, Math.max(st.p, st.p + st.v * s));
-      if (st.p === goal) st.v = Math.min(st.v, pace);
+    const follow = () => {
+      if (run.shownAt === null) return;
+      core.advance(run, performance.now());
       paint();
-      if (st.p === 1) hold(HOLD_S);
+      if (run.p === 1) hold(HOLD_S);
     };
     /**
      * Something is still awaited after the grace: the map is shown, eased in, empty, and its run begins. With reduced motion it is the finished map, and nothing builds up to it.
      */
     const show = () => {
-      if (cancelled || over) return;
-      shownAt = performance.now();
-      files = fontFiles();
-      was = { fontsIn, othersKb, files };
-      if (reduced) st.p = 1;
+      if (cancelled || run.over || run.shownAt !== null) return;
+      core.show(run, performance.now());
       paint();
       tweens.push(
-        gsap.to(el.querySelector('.loader-in'), {
+        gsap.to(block, {
           autoAlpha: 1,
           duration: reduced ? REDUCED_FADE_S : MAP_IN_S,
           ease: reduced ? 'none' : 'power3.out',
@@ -389,29 +327,31 @@ export const Loader = ({
      * (`follow`).
      */
     const complete = () => {
-      if (cancelled || over) return;
-      over = true;
+      if (cancelled || run.over) return;
+      run.over = true;
       clearTimeout(giveUp);
       clearTimeout(grace);
-      clearInterval(fonts);
-      if (shownAt === null) return lift();
+      if (run.shownAt === null) return lift();
       if (reduced)
-        hold(Math.max(0, MAP_MIN_MS - (performance.now() - shownAt)) / 1000);
+        hold(
+          Math.max(0, MAP_MIN_MS - (performance.now() - run.shownAt)) / 1000,
+        );
     };
     const one = (settle: () => void) => () => {
-      if (cancelled || over) return;
+      if (cancelled || run.over) return;
       settle();
-      if (fontsIn && othersIn === awaited.length) complete();
+      if (run.fontsIn && othersIn === awaited.length) complete();
     };
 
-    const grace = setTimeout(show, MAP_GRACE_MS);
+    // A run that is under way goes on from the next tick. Where no map is shown, it is if something is still
+    // awaited after the grace.
+    const grace =
+      run.shownAt === null ? setTimeout(show, MAP_GRACE_MS) : undefined;
+    if (run.shownAt !== null && !reduced) gsap.ticker.add(follow);
     const giveUp = setTimeout(complete, LOADER_TIMEOUT_MS);
-    const fonts = setInterval(() => {
-      files = fontFiles();
-    }, FONT_POLL_MS);
     void fontsAreIn().then(
       one(() => {
-        fontsIn = true;
+        run.fontsIn = true;
       }),
     );
     awaited.forEach(
@@ -419,7 +359,7 @@ export const Loader = ({
         void other.in.then(
           one(() => {
             othersIn++;
-            othersKb += other.kb;
+            run.othersIn += other.kb;
           }),
         ),
     );
@@ -428,7 +368,6 @@ export const Loader = ({
       clearTimeout(lastWait);
       clearTimeout(giveUp);
       clearTimeout(grace);
-      clearInterval(fonts);
       unstarted?.();
       gsap.ticker.remove(follow);
       tweens.forEach((tween) => tween.kill());
@@ -438,8 +377,11 @@ export const Loader = ({
   if (gone) return null;
   return (
     <div className='loader' aria-hidden='true' ref={box}>
-      <div className='loader-in'>
-        <p className='pct'>{pct}%</p>
+      {/* (the served script is at work on these two before this one has come: its styles and its number stand) */}
+      <div className='loader-in' suppressHydrationWarning>
+        <p className='pct' ref={said} suppressHydrationWarning>
+          0%
+        </p>
         <canvas ref={map} width={MAP_SIZE} height={MAP_SIZE} />
         <p className='stage'>{t('dimensions.hero.loading')}</p>
       </div>

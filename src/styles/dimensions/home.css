@@ -173,23 +173,23 @@ html.lenis {
     color: #f2f4f6;
     display: grid;
     place-items: center;
-    /* The fail-safe, which needs no script: if the page's script has not started after ten seconds (it is off,
-       it never arrived, it failed), the loader gives way by itself and the served page is read as it is.
-       Loader.tsx calls it off the moment it starts (`html[data-live]`, at the foot of this file). */
+    /* The fail-safe, which needs no script: if no script of the page has started after ten seconds, the loader
+       gives way by itself and the served page is read as it is. The script the served page runs behind the
+       loader calls it off the moment it starts (`html[data-boot]`, at the foot of this file), and sees to a
+       page whose own script never arrives itself; so does Loader.tsx (`html[data-live]`). */
     animation:
       loader-failsafe var(--t-list) var(--ease-rise) 10s forwards,
       loader-failsafe-gone 1ms linear calc(10s + var(--t-list)) forwards;
   }
-  /* a map of the world being generated: the percentage, the map (Loader.tsx draws it), the stage.
-     Not shown in the served page: whether there is anything to wait for is known only once the page's script
-     runs, and a reader for whom everything is in already sees the ground alone, lifting. Loader.tsx eases the
-     block in when a map is needed. */
+  /* a map of the world being generated: the percentage, the map, the stage.
+     Shown in the served page: a loader is there to be seen, from the first frame that is painted. The script
+     behind the loader's markup draws the map from that frame on (loaderCore.ts); only for a reader known to
+     have everything does it put the block away at once, and so does Loader.tsx on a step here from another
+     page of the site. */
   .loader-in {
     display: grid;
     justify-items: center;
     gap: 22px;
-    visibility: hidden;
-    opacity: 0;
   }
   /* in a face of the system, not the site's own monospace: the loader is painted before the fonts are in
      (FontSheet.tsx), and its two lines must not change face while it is read */
@@ -1031,8 +1031,19 @@ html.lenis {
 /* The page's script has started (Loader.tsx marks the document): the loader is the script's from here on, and the
    statements wait, dimmed, for the scroll that lights them. Without the mark (scripts off, or a script that never
    came) the loader gives way by itself and every statement stands whole. */
-html[data-live] .dim.dim--home .loader {
+html[data-live] .dim.dim--home .loader,
+html[data-boot] .dim.dim--home .loader {
   animation: none;
+}
+/* The served script has given the page's script up (it failed, or did not come in a long while: loaderCore.ts,
+   BOOT_LIMIT_MS): the loader gives way as the fail-safe has it, and the served page is read as it is. */
+html[data-boot='gone'] .dim.dim--home .loader {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--t-list) var(--ease-rise),
+    visibility 0s linear var(--t-list);
 }
 @media (prefers-reduced-motion: no-preference) {
   html[data-live] .dim.dim--home .say span {
