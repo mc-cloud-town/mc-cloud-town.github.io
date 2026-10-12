@@ -382,7 +382,7 @@
       "next": "See what we have built first"
     },
     "footer": {
-      "more": "More pages",
+      "groups": { "works": "Works", "team": "Team", "community": "Community" },
       "support": "Support us",
       "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
     },

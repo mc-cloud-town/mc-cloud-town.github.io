@@ -1413,7 +1413,7 @@ test.describe('going to another page', () => {
     await untouched('target=_blank');
     await (await tab)?.close();
     // another site, in this tab
-    await page.locator('.dim-foot a', { hasText: 'YouTube' }).click();
+    await page.locator('.dim-foot a[aria-label="YouTube"]').click();
     await untouched('another site');
     // a download
     await page.evaluate(() => {
@@ -1585,7 +1585,7 @@ test.describe('going to another page', () => {
 
 test.describe('going to another page by the footer', () => {
   /** The footer's own link to the join page. */
-  const FOOT_LINK = '.dim-foot .pages a[href="/join/"]';
+  const FOOT_LINK = '.dim-foot a[href="/join/"]';
   /**
    * Bring that link onto the screen, at its foot (so the page is far down, and still has a little way to go),
    * and wait until the page is at rest there.

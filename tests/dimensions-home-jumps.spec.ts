@@ -1473,7 +1473,7 @@ test.describe('home: arriving, leaving and robustness', () => {
     // The same by a link of the shell, the footer's: the leave under the cover, then the join page, and
     // nothing of the home page or of the step left on it.
     await expect(page.locator('.loader')).toHaveCount(0);
-    const link = page.locator('.dim-foot .pages a[href="/join/"]');
+    const link = page.locator('.dim-foot a[href="/join/"]');
     await link.evaluate((a) => {
       window.scrollTo({
         top:

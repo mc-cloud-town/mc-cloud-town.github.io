@@ -73,7 +73,8 @@ test.describe('dimensions shell', () => {
       await expectTextFits(page);
       // scrolled down, page text legitimately passes under the fixed bar: check the footer on its own
       await page.locator('.dim-foot').scrollIntoViewIfNeeded();
-      await expectTextFits(page, { within: '.dim-foot' });
+      // (on a short screen the footer is taller than the screen: its first rows pass under the bar too)
+      await expectTextFits(page, { within: '.dim-foot', passing: '.dim-bar' });
     });
   }
 
@@ -1217,35 +1218,41 @@ test.describe('footer: the other pages of the site', () => {
   /** The six links of the row, by language, in the footer's order. */
   const WORDS = {
     zh_TW: {
-      label: '其他頁面',
+      labels: ['作品', '團隊', '社群'],
       links: [
         '紅石作品',
         '建築作品',
+        '生存服進度',
         '開源項目',
-        '伺服器硬體',
+        '成員',
         '合作夥伴及團隊',
+        '伺服器硬體',
         '加入我們',
       ],
     },
     zh_CN: {
-      label: '其他页面',
+      labels: ['作品', '团队', '社群'],
       links: [
         '红石作品',
         '建筑作品',
+        '生存服进度',
         '开源项目',
-        '服务器硬件',
+        '成员',
         '合作伙伴及团队',
+        '服务器硬件',
         '加入我们',
       ],
     },
     en: {
-      label: 'More pages',
+      labels: ['Works', 'Team', 'Community'],
       links: [
         'Redstone',
         'Building',
+        'Survival progress',
         'Open Source',
-        'Server Hardware',
+        'Members',
         'Partners',
+        'Server Hardware',
         'Join Us',
       ],
     },
@@ -1263,14 +1270,19 @@ test.describe('footer: the other pages of the site', () => {
       await openPage(page, path);
       if (path === '/') await ready(page);
       await page.locator(first).first().waitFor();
-      const group = page.locator('.dim-foot nav.pages');
-      await expect(group).toHaveCount(1);
-      await expect(group).toHaveAccessibleName(WORDS.zh_TW.label);
-      await expect(
-        page.getByRole('navigation', { name: '其他頁面' }),
-      ).toHaveCount(1);
-      const links = group.locator('a');
+      // three named groups: what was built, who built it, where the community is
+      for (const name of WORDS.zh_TW.labels)
+        await expect(
+          page.locator('.dim-foot').getByRole('navigation', { name }),
+        ).toHaveCount(1);
+      const links = page.locator('.dim-foot .site a');
       await expect(links).toHaveText([...WORDS.zh_TW.links]);
+      // the community: marks, each with its name
+      await expect(page.locator('.dim-foot .icons a')).toHaveCount(4);
+      for (const name of ['Discord', 'YouTube', 'X', 'GitHub'])
+        await expect(
+          page.locator('.dim-foot').getByRole('link', { name, exact: true }),
+        ).toHaveCount(1);
       expect(
         await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))),
       ).toEqual([...FOOTER_PAGES]);
@@ -1284,7 +1296,7 @@ test.describe('footer: the other pages of the site', () => {
       [390, 844],
       [360, 740],
     ] as const)
-      test(`the row at ${width}×${height} in ${locale}: the footer's own type, its words evenly spaced, big enough to tap`, async ({
+      test(`the map at ${width}×${height} in ${locale}: its lists in line, its marks evenly spaced, big enough to tap`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height });
@@ -1292,29 +1304,12 @@ test.describe('footer: the other pages of the site', () => {
         await page.locator('.person').first().waitFor();
         await page.locator('.dim-foot').scrollIntoViewIfNeeded();
         await atRest(page);
-        const group = page.locator('.dim-foot nav.pages');
-        await expect(group.locator('.label')).toHaveText(WORDS[locale].label);
+        const group = page.locator('.dim-foot .site');
+        await expect(page.locator('.dim-foot .label')).toHaveText([
+          ...WORDS[locale].labels,
+        ]);
         await expect(group.locator('a')).toHaveText([...WORDS[locale].links]);
         await expectNoMissingKeys(page);
-        // the same type and the same hover as the links out of the site
-        const style = (sel: string) =>
-          page
-            .locator(sel)
-            .first()
-            .evaluate((el) => {
-              const c = getComputedStyle(el);
-              return [
-                c.fontFamily,
-                c.fontSize,
-                c.fontWeight,
-                c.color,
-                c.transitionProperty,
-                c.transitionDuration,
-              ];
-            });
-        expect(await style('.dim-foot .pages a')).toEqual(
-          await style('.dim-foot .links a'),
-        );
         await expectFooterLines(page);
         await expectTextFits(page, { within: '.dim-foot' });
         await expectTapTargets(page);
@@ -1330,7 +1325,7 @@ test.describe('footer: the other pages of the site', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
-    const link = page.locator('.dim-foot .pages a').first();
+    const link = page.locator('.dim-foot .site a').first();
     await link.scrollIntoViewIfNeeded();
     await atRest(page);
     const rest = await link.evaluate((el) => getComputedStyle(el).color);
@@ -1417,7 +1412,7 @@ test.describe('the language of the document', () => {
     await openPage(page, '/member/', { locale: 'en' });
     await page.locator('.person').first().waitFor();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    const link = page.locator('.dim-foot .pages a[href="/join/"]');
+    const link = page.locator('.dim-foot a[href="/join/"]');
     await link.scrollIntoViewIfNeeded();
     await link.click();
     await expect(page.locator('.dim .join-way')).toBeVisible();
@@ -1454,7 +1449,7 @@ test.describe('behind the shell', () => {
       await openPage(page, '/member/', { theme });
       await page.locator('.person').first().waitFor();
       expect(await body(page)).toBe(ground);
-      const link = page.locator('.dim-foot .pages a[href="/join/"]');
+      const link = page.locator('.dim-foot a[href="/join/"]');
       await link.scrollIntoViewIfNeeded();
       await link.click();
       await expect(page.locator('.dim .join-way')).toBeVisible();
@@ -1501,7 +1496,7 @@ test.describe('the year in the footer', () => {
     await page.clock.setFixedTime(new Date(`${built + 5}-03-01T12:00:00Z`));
     await openPage(page, '/member/');
     await page.locator('.person').first().waitFor();
-    await expect(page.locator('.dim-foot [data-t="note"]').last()).toHaveText(
+    await expect(page.locator('.dim-foot .brand [data-t="note"]')).toHaveText(
       `© 2022–${built + 5} Cloud Town Exquisite Craft`,
     );
     // React names a text that differs between the served page and the first render by these numbers
@@ -1516,7 +1511,7 @@ test.describe('the year in the footer', () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/member/');
-    await expect(page.locator('.dim-foot [data-t="note"]').last()).toHaveText(
+    await expect(page.locator('.dim-foot .brand [data-t="note"]')).toHaveText(
       /^© 2022–20\d\d Cloud Town Exquisite Craft$/,
     );
     await context.close();

@@ -500,78 +500,64 @@ export const expectLegible = async (
 export const FOOTER_PAGES = [
   '/redstoneCollection/',
   '/architectureCollection/',
+  '/survivalProgress/',
   '/openSource/',
-  '/hardware/',
+  '/member/',
   '/partner/',
+  '/hardware/',
   '/join/',
 ] as const;
 
 /**
- * The footer's two sets of links read as lines of words (measured on the words, not on the boxes that make them
- * big enough to tap). The links out: all on one row, the same space between each word and the next. The other
- * pages of the site: as many rows as the width asks for, each row beginning at the same edge, the same space
- * between its words as on the line of links out, and no row left with a scrap (the last is at least two fifths
- * as wide as the widest).
+ * The footer's map reads as lists (measured on the words, not on the boxes that make them big enough to tap):
+ * every list's links begin at the list's own edge, under its label, each on one line and one under another; the
+ * two lists of pages begin on the same line; and the community's marks stand in one row, evenly spaced.
  */
 export const expectFooterLines = async (page: Page) => {
-  const read = (selector: string) =>
-    page.locator(selector).evaluateAll((els) =>
-      els.map((el) => {
+  const lists = await page.locator('.dim-foot .site nav').evaluateAll((navs) =>
+    navs.map((nav) =>
+      [...nav.children].map((el) => {
         const range = document.createRange();
         range.selectNodeContents(el);
+        const rects = range.getClientRects();
         const r = range.getBoundingClientRect();
         return {
           left: r.left,
-          right: r.right,
-          mid: (r.top + r.bottom) / 2,
-          link: el.tagName === 'A',
+          top: r.top,
+          bottom: r.bottom,
+          lines: rects.length,
         };
       }),
-    );
+    ),
+  );
   const problems: string[] = [];
-  const uneven = (gaps: number[]) =>
-    gaps.length > 1 && Math.max(...gaps) - Math.min(...gaps) > 1.5;
-  const fmt = (gaps: number[]) => gaps.map((g) => g.toFixed(1)).join(', ');
-
-  const out = await read('.dim-foot .links a');
-  expect(out.length, 'links out of the site').toBeGreaterThan(2);
-  const outRows = new Set(out.map((w) => Math.round(w.mid)));
-  const outGaps = out.slice(1).map((w, i) => w.left - out[i].right);
-  if (outRows.size > 1) problems.push(`footer links on ${outRows.size} rows`);
-  else if (uneven(outGaps))
-    problems.push(`footer links unevenly spaced: ${fmt(outGaps)}`);
-
-  const pages = await read('.dim-foot .pages > *');
-  expect(pages.filter((w) => w.link).length, 'links to other pages').toBe(
+  const fmt = (n: number[]) => n.map((g) => g.toFixed(1)).join(', ');
+  expect(lists.length, 'lists of pages').toBe(2);
+  expect(lists.flat().length - lists.length, 'links to pages').toBe(
     FOOTER_PAGES.length,
   );
-  expect(pages[0].link, 'the group begins with its label').toBe(false);
-  const rows: (typeof pages)[] = [];
-  for (const w of pages) {
-    const row = rows.find((r) => Math.abs(r[0].mid - w.mid) < 8);
-    if (row) row.push(w);
-    else rows.push([w]);
+  for (const [i, list] of lists.entries()) {
+    const lefts = list.map((w) => w.left);
+    if (Math.max(...lefts) - Math.min(...lefts) > 1.5)
+      problems.push(`list ${i + 1} begins at ${fmt(lefts)}`);
+    if (list.some((w) => w.lines > 1))
+      problems.push(`list ${i + 1} has a broken link`);
+    for (const [k, w] of list.entries())
+      if (k && w.top < list[k - 1].bottom - 1)
+        problems.push(`list ${i + 1}: row ${k + 1} runs into the one above`);
   }
-  const lefts = rows.map((r) => r[0].left);
-  if (Math.max(...lefts) - Math.min(...lefts) > 1.5)
-    problems.push(`rows of pages begin at ${fmt(lefts)}`);
-  for (const [i, row] of rows.entries()) {
-    const gaps = row.slice(1).map((w, k) => w.left - row[k].right);
-    if (uneven(gaps))
-      problems.push(`pages row ${i + 1} unevenly spaced: ${fmt(gaps)}`);
-    if (outRows.size === 1 && gaps.length && outGaps.length)
-      if (Math.abs(gaps[0] - outGaps[0]) > 1.5)
-        problems.push(
-          `pages row ${i + 1} is spaced ${gaps[0].toFixed(1)}, the links out ${outGaps[0].toFixed(1)}`,
-        );
-  }
-  const linkRows = rows.filter((r) => r.some((w) => w.link));
-  if (linkRows.length > 1) {
-    const widths = linkRows.map((r) => r.at(-1)!.right - r[0].left);
-    if (widths.at(-1)! < 0.4 * Math.max(...widths))
-      problems.push(
-        `the last row of pages is a scrap: ${fmt(widths)} wide per row`,
-      );
-  }
+  const tops = lists.map((l) => l[0].top);
+  if (Math.max(...tops) - Math.min(...tops) > 1.5)
+    problems.push(`the lists begin at ${fmt(tops)}`);
+
+  const marks = await page
+    .locator('.dim-foot .icons a')
+    .evaluateAll((as) => as.map((a) => a.getBoundingClientRect().toJSON()));
+  expect(marks.length, 'marks of the community').toBe(4);
+  if (new Set(marks.map((m) => Math.round(m.top))).size > 1)
+    problems.push('the marks are not in one row');
+  const gaps = marks.slice(1).map((m, i) => m.left - marks[i].right);
+  if (Math.max(...gaps) - Math.min(...gaps) > 1.5)
+    problems.push(`the marks are unevenly spaced: ${fmt(gaps)}`);
   expect(problems, problems.join('\n')).toEqual([]);
 };

@@ -378,7 +378,7 @@
       "next": "先看看我們蓋了什麼"
     },
     "footer": {
-      "more": "其他頁面",
+      "groups": { "works": "作品", "team": "團隊", "community": "社群" },
       "support": "支持我們",
       "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
     },

@@ -1,21 +1,47 @@
 'use client';
 
+import {
+  DiscordFilled,
+  GithubFilled,
+  XOutlined,
+  YoutubeFilled,
+} from '@ant-design/icons';
 import { useId, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { serverLink } from '@/constants';
 
 /**
- * The pages of the site the bar has no link for, with the words the site's navigation and the pages themselves
- * already use for them. (`/collaborative/` is `/partner/` under another address: one link.)
+ * The site's map, in two lists: what was built, and who built it. Each page under the words the site's navigation
+ * and the pages themselves already use for it. (`/collaborative/` is `/partner/` under another address: one link.)
  * A click on one is a step to another page of the shell, like any other (pageTransition.ts).
  */
-const PAGES = [
-  ['/redstoneCollection/', 'menu.redstone'],
-  ['/architectureCollection/', 'menu.building'],
-  ['/openSource/', 'menu.openSource'],
-  ['/hardware/', 'hardware.title'],
-  ['/partner/', 'menu.partner'],
-  ['/join/', 'menu.join'],
+const GROUPS = [
+  [
+    'works',
+    [
+      ['/redstoneCollection/', 'menu.redstone'],
+      ['/architectureCollection/', 'menu.building'],
+      ['/survivalProgress/', 'dimensions.progress.crumb'],
+      ['/openSource/', 'menu.openSource'],
+    ],
+  ],
+  [
+    'team',
+    [
+      ['/member/', 'dimensions.nav.members'],
+      ['/partner/', 'menu.partner'],
+      ['/hardware/', 'hardware.title'],
+      ['/join/', 'menu.join'],
+    ],
+  ],
+] as const;
+
+/** Where the community is: marks, not words, each with its name for those who do not see it. */
+const COMMUNITY = [
+  ['Discord', serverLink.discord, DiscordFilled],
+  ['YouTube', serverLink.youtube, YoutubeFilled],
+  ['X', serverLink.x, XOutlined],
+  ['GitHub', 'https://github.com/mc-cloud-town', GithubFilled],
 ] as const;
 
 /** The year of the build (next.config.ts): what the served page says, and what the first render must say too. */
@@ -32,39 +58,46 @@ export const SiteFooter = () => {
   const year = useSyncExternalStore(noSubscription, thisYear, builtIn);
   return (
     <footer className='dim-foot'>
-      {/* a line of its own above the footer's: a named group, its words set like the links below (shell.css) */}
-      <nav className='pages' aria-labelledby={label}>
-        <span className='label mono' id={label} data-t='note'>
-          {t('dimensions.footer.more')}
-        </span>
-        {PAGES.map(([href, key]) => (
-          <a key={href} href={href} data-t='control'>
-            {t(key)}
-          </a>
-        ))}
-      </nav>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src='/assets/brand/brand1.webp' alt='雲鎮工藝 CTEC' />
-      {/* one line of words: the space between them is the line's own (shell.css) */}
-      <div className='links'>
-        <a href={serverLink.discord} data-t='control'>
-          Discord
-        </a>
-        <a href={serverLink.youtube} data-t='control'>
-          YouTube
-        </a>
-        {/* a single letter: narrower than the box a finger needs, so it says so (shell.css) */}
-        <a href={serverLink.x} data-t='control' data-short>
-          X
-        </a>
-        <a href='https://github.com/mc-cloud-town' data-t='control'>
-          GitHub
-        </a>
-        <a href={serverLink.paypal} data-t='control'>
-          {t('dimensions.footer.support')}
-        </a>
+      <div className='brand'>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src='/assets/brand/brand1.webp' alt='雲鎮工藝 CTEC' />
+        <span data-t='note'>{t('dimensions.footer.rights', { year })}</span>
       </div>
-      <span data-t='note'>{t('dimensions.footer.rights', { year })}</span>
+      <div className='map'>
+        <div className='site'>
+          {GROUPS.map(([group, pages]) => (
+            <nav key={group} aria-labelledby={`${label}-${group}`}>
+              <span
+                className='label mono'
+                id={`${label}-${group}`}
+                data-t='note'
+              >
+                {t(`dimensions.footer.groups.${group}`)}
+              </span>
+              {pages.map(([href, key]) => (
+                <a key={href} href={href} data-t='control'>
+                  {t(key)}
+                </a>
+              ))}
+            </nav>
+          ))}
+        </div>
+        <nav className='out' aria-labelledby={`${label}-out`}>
+          <span className='label mono' id={`${label}-out`} data-t='note'>
+            {t('dimensions.footer.groups.community')}
+          </span>
+          <div className='icons'>
+            {COMMUNITY.map(([name, href, Icon]) => (
+              <a key={name} href={href} aria-label={name} title={name}>
+                <Icon aria-hidden />
+              </a>
+            ))}
+          </div>
+          <a href={serverLink.paypal} data-t='control'>
+            {t('dimensions.footer.support')}
+          </a>
+        </nav>
+      </div>
     </footer>
   );
 };

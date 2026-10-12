@@ -91,66 +91,83 @@ html[data-theme='light'][data-dim='end']:has(.dim.dim--home) body {
     transform: scale(0.95);
   }
 
+  /* The footer is the site's map (docs/design-demos/respawn-lab.html). The mark at one edge, large enough to
+     carry that side by itself; the three lists at the other (what was built, who built it, where the community
+     is), each as wide as its longest word, with one space between them. The two edges are the gutters; between
+     them the footer is sized by what it holds, so no language squeezes it. */
   .dim-foot {
+    --foot-gap: clamp(32px, 4vw, 72px);
     margin-top: 120px;
     border-top: 1px solid var(--line);
-    padding: 32px var(--gutter) 48px;
+    padding: 56px var(--gutter) 64px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 14px 28px;
-    align-items: center;
-    font-size: 13px;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 48px var(--foot-gap);
+    font-size: 14px;
     color: var(--muted);
     transition:
       color var(--t-theme),
       border-color var(--t-theme);
   }
+  .dim-foot .brand {
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+    font-size: 13px;
+    /* the lists keep their width; where a language makes them wide, the line under the mark is what folds */
+    min-width: min-content;
+  }
   .dim-foot img {
-    height: 24px;
+    height: clamp(40px, 4.4vw, 64px);
     filter: var(--logo);
-    margin-right: auto;
     transition: filter var(--t-theme);
+  }
+  .dim-foot .map,
+  .dim-foot .site {
+    display: flex;
+    gap: var(--foot-gap);
+  }
+  .dim-foot nav {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .dim-foot .label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+    transition: color var(--t-theme);
   }
   /* its own colour, so the hover eases from a fixed value instead of trailing the footer's */
   .dim-foot a {
-    /* a control, not a note: the floor for anything that is read and used is 14px (the demo has 13) */
-    font-size: 14px;
-    color: var(--muted);
-    transition: color var(--t-state);
+    color: var(--fg);
+    transition:
+      color var(--t-state),
+      border-color var(--t-state);
   }
   .dim-foot a:hover {
     color: var(--accent);
   }
-  /* The links are one line of words with the same space between each and the next: the design's 28px, less on
-     a phone, where five words and four spaces of 28px are wider than the screen (from 18px at 360px wide, the
-     narrowest the five fit in every language, back to 28px at 500px). */
-  .dim-foot .links {
+  /* the community: marks, not words. Each is a round control a finger can hit, in the bar's own pill language */
+  .dim-foot .icons {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: var(--foot-gap);
+    gap: 10px;
+    margin: 2px 0 8px;
   }
-  .dim-foot {
-    --foot-gap: clamp(18px, 6vw - 2px, 28px);
+  .dim-foot .icons a {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    font-size: 19px;
   }
-  /* The other pages of the site (not in the design demos): a line of its own, above the footer's own line.
-     A run of words, each link one unbroken word, with the space of the line of links between them. Where the
-     line is too short for all of them they wrap like text and the rows are balanced, so none is left with a
-     scrap; the label then stands on a line of its own above them. */
-  .dim-foot .pages {
-    flex-basis: 100%;
-    text-wrap: balance;
-  }
-  .dim-foot .pages > * {
-    display: inline-block;
-    white-space: nowrap;
-    margin-inline-end: var(--foot-gap);
-  }
-  .dim-foot .pages > :last-child {
-    margin-inline-end: 0;
-  }
-  .dim-foot .pages .label {
-    transition: color var(--t-theme);
+  .dim-foot .icons a:hover {
+    border-color: var(--accent);
   }
 
   /* additions not in the design demos */
@@ -420,24 +437,31 @@ html[data-theme='light'][data-dim='end']:has(.dim.dim--home) body {
     }
   }
   @media (max-width: 1024px) {
-    /* Where fingers are used every link is a box of at least 44px (tokens.css). A word is wider than that; the
-       single letter is not, and its box would push its neighbours 18px further away on either side than the
-       words are from each other. So the letter stands in the middle of its box, and the box gives back what it
-       is wider than the letter: the space between the words stays the line's. */
-    .dim-foot a[data-short] {
-      justify-content: center;
-      margin-inline: calc((1ch - 44px) / 2);
+    /* where fingers are used every link is a box of at least 44px (tokens.css): the rows need no more space */
+    .dim-foot nav {
+      gap: 0;
+    }
+    .dim-foot .icons {
+      margin-top: 8px;
     }
   }
+  /* up to 860px the lists first: two side by side, the community under them; the mark and the rights at the foot */
   @media (max-width: 860px) {
-    .dim-foot .pages .label {
-      display: block;
+    .dim-foot {
+      flex-wrap: wrap;
+      padding-block: 40px;
+      gap: 40px;
     }
-    /* own row; contain keeps the logo from stretching to the row width */
-    .dim-foot img {
-      flex-basis: 100%;
-      object-fit: contain;
-      object-position: left;
+    .dim-foot .map {
+      order: -1;
+      width: 100%;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .dim-foot .site {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
     }
   }
   /* Less motion: the same end states, reached by a brief fade. No travel, no turning, no one-after-another. */
