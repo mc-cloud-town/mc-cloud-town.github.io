@@ -12,9 +12,6 @@ export const joinLink = {
   applicationForm: 'https://forms.gle/sGUxUtUaskchiTfG7',
 };
 
-// export const MEMBER_API =
-//   'https://raw.githubusercontent.com/mc-cloud-town/static-data/main/data/member.json';
-
 export const STATIC_DATA_API = 'https://mc-ctec.org/static-data';
 
 export const GITHUB_API = 'https://api.github.com/orgs/mc-cloud-town/repos';
