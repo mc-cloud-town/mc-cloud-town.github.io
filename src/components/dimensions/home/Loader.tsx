@@ -13,6 +13,7 @@ import {
   seedLateness,
 } from '@/lib/dimensions/loaderMap';
 import { onNextTick } from '@/lib/dimensions/nextTick';
+import { fontSheetIn } from '#/dimensions/FontSheet';
 import { markWhole } from './World';
 
 /** However slow the fonts or the first picture are, the loader lifts after this long. */
@@ -108,6 +109,12 @@ const loaded = (img: HTMLImageElement) =>
       () => {},
     ),
   );
+
+/**
+ * The fonts are in: their stylesheet (which the home page asks for without waiting for it, FontSheet.tsx), and
+ * then every file of them that the page as it is laid out asks for.
+ */
+const fontsAreIn = () => fontSheetIn().then(() => document.fonts.ready);
 
 /**
  * A map of the world being generated: chunks pass through their stages from the centre outward
@@ -343,7 +350,7 @@ export const Loader = ({
     const fonts = setInterval(() => {
       files = fontFiles();
     }, FONT_POLL_MS);
-    void document.fonts.ready.then(
+    void fontsAreIn().then(
       one(() => {
         fontsIn = true;
       }),

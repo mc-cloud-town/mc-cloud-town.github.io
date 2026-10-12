@@ -561,9 +561,14 @@ test.describe('home: the loader is a map of the world being generated', () => {
     for (const part of ['.loader-in', '.loader .pct', '.loader canvas'])
       await expect(page.locator(part)).toBeHidden();
     await expect(page.locator('.loader-in')).toHaveCSS('opacity', '0');
+    // in a face of the system: the loader waits for no font of the web to be read
     await expect(page.locator('.loader .pct')).toHaveCSS(
       'font-family',
-      /JetBrains Mono/,
+      /^ui-monospace/,
+    );
+    await expect(page.locator('.loader .pct')).not.toHaveCSS(
+      'font-family',
+      /JetBrains/,
     );
     // no picture of any kind in the loader
     await expect(page.locator('.loader img')).toHaveCount(0);
@@ -977,6 +982,125 @@ test.describe('home: the loader is a map of the world being generated', () => {
     }
     for (const f of frames.filter((f) => !f.cover)) expect(f.ready).toBe(false);
     await expect(page.locator('.hero h1')).toBeVisible();
+  });
+});
+
+test.describe('home: the loader is not held back by the fonts', () => {
+  /** The stylesheet links of a served page that block its first paint: to another origin, and not in a `noscript`. */
+  const blockingForeignSheets = async (page: Page, path: string) => {
+    const html = (await (await page.request.get(path)).text()).replace(
+      /<noscript>[\s\S]*?<\/noscript>/g,
+      '',
+    );
+    return (html.match(/<link [^>]*>/g) ?? []).filter(
+      (link) =>
+        /rel="stylesheet"/.test(link) &&
+        /href="https?:\/\//.test(link) &&
+        !/media="print"/.test(link),
+    );
+  };
+
+  test('the served home page has no stylesheet of another origin in the way of its first paint; an inner page keeps the fonts’ as it was', async ({
+    page,
+  }) => {
+    expect(await blockingForeignSheets(page, '/')).toEqual([]);
+    expect(await blockingForeignSheets(page, '/home/')).toEqual([]);
+    // (with scripts off the home page still asks for it, the plain way)
+    expect(await (await page.request.get('/')).text()).toMatch(
+      /<noscript><link[^>]*fonts\.googleapis\.com[^>]*><\/noscript>/,
+    );
+    for (const inner of ['/member/', '/survivalProgress/', '/join/']) {
+      const sheets = await blockingForeignSheets(page, inner);
+      expect(sheets.length, inner).toBe(1);
+      expect(sheets[0]).toMatch(/fonts\.googleapis\.com\/css2/);
+    }
+  });
+
+  test('with the fonts’ host not answering the loader is painted all the same, shows its map, and hands the page over at its own limit', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, () => {
+      // never answered
+    });
+    await stubVideo(page);
+    await watchLoader(page);
+    await page.goto('/', { waitUntil: 'commit' });
+    await page
+      .locator('.dim[data-ready="true"]')
+      .waitFor({ timeout: LOADER_TIMEOUT_MS + 15_000 });
+    const frames = await loaderFrames(page);
+    // painted from the start, before the script: its ground, whole
+    const served = frames.filter((f) => !f.live);
+    expect(served.length).toBeGreaterThan(2);
+    for (const f of frames.filter((f) => !f.ready)) expect(f.ground).toBe(1);
+    // the fonts are waited for, as a part of the loading: the map is shown, and played in full
+    expectFullRun(frames);
+    const live = frames.find((f) => f.live)!;
+    const handed = frames.find((f) => f.ready)!;
+    expect(handed.t - live.t).toBeGreaterThan(LOADER_TIMEOUT_MS - 300);
+    expect(handed.t - live.t).toBeLessThan(LOADER_TIMEOUT_MS + 2500);
+    await expect(page.locator('.hero h1')).toBeVisible();
+  });
+
+  test('the loader waits for the fonts when they do come: the page is not handed over before their stylesheet and their files are in', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the stylesheet takes a second and a half; the files are refused at once, which is an answer too
+    let sheetAt = 0;
+    await page.route(/fonts\.gstatic\.com/, (r) => r.abort());
+    await page.route(/fonts\.googleapis\.com/, async (r) => {
+      await new Promise((done) => setTimeout(done, 1500));
+      sheetAt = Date.now();
+      await r.continue();
+    });
+    await stubVideo(page);
+    await watchLoader(page);
+    const began = Date.now();
+    await page.goto('/', { waitUntil: 'commit' });
+    await ready(page);
+    const readyAt = Date.now();
+    expect(sheetAt - began).toBeGreaterThanOrEqual(1500);
+    expect(readyAt).toBeGreaterThan(sheetAt);
+    // and the faces are those of the page: the stylesheet is in the document, loaded
+    expect(
+      await page.evaluate(
+        () =>
+          [
+            ...document.querySelectorAll<HTMLLinkElement>(
+              'link[rel="stylesheet"][href*="fonts.googleapis.com"]',
+            ),
+          ].filter((link) => link.sheet).length,
+      ),
+    ).toBeGreaterThan(0);
+    const frames = await loaderFrames(page);
+    expect(frames.filter((f) => !f.live).length).toBeGreaterThan(2);
+    expectFullRun(frames);
+  });
+
+  test('from the home page to an inner page: the fonts’ stylesheet is there, loaded, when the page is shown', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await page.locator('.dim-bar nav a[href="/member/"]').click();
+    await page.locator('.person').first().waitFor();
+    await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
+    const sheets = await page.evaluate(() =>
+      [
+        ...document.querySelectorAll<HTMLLinkElement>(
+          'link[rel="stylesheet"][href*="fonts.googleapis.com"]',
+        ),
+      ].map((link) => Boolean(link.sheet)),
+    );
+    expect(sheets.length).toBeGreaterThan(0);
+    expect(sheets.every(Boolean)).toBe(true);
+    await expect(page.locator('.dim .head h1')).toHaveCSS(
+      'font-family',
+      /Chiron Sung HK/,
+    );
   });
 });
 

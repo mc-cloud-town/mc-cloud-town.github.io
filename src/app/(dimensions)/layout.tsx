@@ -8,6 +8,7 @@ import { dimensionInitScript, dimensionOfPath } from '@/lib/dimensions/pages';
 import { DimensionProvider } from '#/dimensions/DimensionProvider';
 import { Cover } from '#/dimensions/Cover';
 import { PageTransitions } from '#/dimensions/PageTransitions';
+import { FontSheet } from '#/dimensions/FontSheet';
 
 import '@/styles/dimensions/tokens.css';
 import '@/styles/dimensions/shell.css';
@@ -51,6 +52,7 @@ export default function DimensionsLayout({
     <DimensionProvider initial={dimensionOfPath(usePathname())}>
       {/* before anything of the shell is parsed: the page's dimension is on the document from the first paint */}
       <script dangerouslySetInnerHTML={{ __html: dimensionInitScript }} />
+      <FontSheet />
       {children}
       {/* over every page of the shell, and still there while one page gives way to the next */}
       <Cover />

@@ -81,11 +81,7 @@ export default function RootLayout({
           href='https://fonts.gstatic.com'
           crossOrigin='anonymous'
         />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href='https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+TC:wght@200..900&family=Chiron+Sung+HK:wght@700;900&family=Chiron+Hei+HK:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap'
-          rel='stylesheet'
-        />
+        {/* the fonts' stylesheet itself is asked for by the shell, page by page (FontSheet.tsx) */}
         <script
           type='application/ld+json'
           dangerouslySetInnerHTML={{
