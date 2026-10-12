@@ -1848,7 +1848,7 @@ test.describe('home: stepping back lands where the reader was', () => {
     // from the moment the home page is back: every frame in which its loader is no longer whole
     await page.evaluate(() => {
       const w = window as unknown as {
-        __lift: { y: number; scenes: string; decoded: boolean }[];
+        __lift: { what: string; y: number; scenes: string; decoded: boolean }[];
       };
       w.__lift = [];
       // (the map is not there at all unless the loader had something to wait for: only one that was whole lifts)
@@ -1869,6 +1869,15 @@ test.describe('home: stepping back lands where the reader was', () => {
             return sc.visibility !== 'hidden' && +sc.opacity > 0.5;
           });
           w.__lift.push({
+            // (for the message of a failure: what the loader was doing, and which picture was not there)
+            what: `loader ${loader ? o : 'gone'}, map ${map}, ready ${(home as HTMLElement).dataset.ready}: ${scenes
+              .flatMap((s) =>
+                [...s.querySelectorAll('img')].map(
+                  (i) =>
+                    `${i.getAttribute('src')?.split('/').pop()} ${i.complete && i.naturalWidth > 0 ? 'in' : 'not in'}`,
+                ),
+              )
+              .join(', ')}`,
             y: Math.round(window.scrollY),
             scenes: scenes.map((s) => s.dataset.scene).join('+'),
             decoded: scenes.every((s) =>
@@ -1887,7 +1896,12 @@ test.describe('home: stepping back lands where the reader was', () => {
       await page.waitForFunction(() => {
         const f = (
           window as unknown as {
-            __lift: { y: number; scenes: string; decoded: boolean }[];
+            __lift: {
+              what: string;
+              y: number;
+              scenes: string;
+              decoded: boolean;
+            }[];
           }
         ).__lift;
         return f.length >= 90 ? f : null;
@@ -1896,7 +1910,7 @@ test.describe('home: stepping back lands where the reader was', () => {
     for (const f of lift!) {
       expect(Math.abs(f.y - before.y)).toBeLessThanOrEqual(4);
       expect(f.scenes).toBe('farm');
-      expect(f.decoded).toBe(true);
+      expect(f.decoded, f.what).toBe(true);
     }
   });
 

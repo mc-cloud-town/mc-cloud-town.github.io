@@ -103,12 +103,20 @@ const decided = (img: HTMLImageElement) =>
 /**
  * The picture is in and decoded, so the frame that first shows it does not wait for it; or it failed, which is no
  * reason to wait. For the hero's picture: the one the hero ends up with, not the one it started with.
+ * (A picture that cannot be decoded yet is not one that failed: the browser may refuse to decode one that has
+ * only just been given its address. Such a picture is waited for until it has come, or has failed to.)
  */
 const loaded = (img: HTMLImageElement) =>
   decided(img).then(() =>
     img.decode().then(
       () => {},
-      () => {},
+      () =>
+        img.complete
+          ? undefined
+          : new Promise<void>((done) => {
+              img.addEventListener('load', () => done(), { once: true });
+              img.addEventListener('error', () => done(), { once: true });
+            }),
     ),
   );
 
@@ -191,6 +199,8 @@ export const Loader = ({
     };
 
     let cancelled = false;
+    const startedAt = performance.now();
+    let lastWait: ReturnType<typeof setTimeout> | undefined;
     /** The wait is over: everything is in, or it was given up. */
     let over = false;
     /** When the map was shown; null while it is not (and it may never be). */
@@ -262,27 +272,51 @@ export const Loader = ({
       // the first scene, when the page is handed over.
       const plain = shownAt === null;
       flushSync(() => onDone(plain));
+      // The page is on its place now, and it is known for certain which scene the loader lifts on. Should a
+      // picture of that scene not be in (the place a return remembers is written down while the reader scrolls,
+      // and may name the scene before), the lift waits for it: never beyond the loader's own limit.
+      const showing = pictures().filter((img) => {
+        if (img.complete) return false;
+        const scene = img.closest('.scene');
+        const c = scene && getComputedStyle(scene);
+        return Boolean(c && c.visibility !== 'hidden' && +c.opacity > 0.5);
+      });
+      const left = LOADER_TIMEOUT_MS - (performance.now() - startedAt);
+      if (showing.length && left > 0)
+        return void Promise.race([
+          Promise.all(showing.map(loaded)),
+          new Promise((done) => (lastWait = setTimeout(done, left))),
+        ]).then(() => {
+          if (cancelled) return;
+          clearTimeout(lastWait);
+          showing.forEach(markWhole);
+          away(plain);
+        });
+      away(plain);
+    };
+    /** The loader goes: the map, if there is one, opens onto the world, and the ground fades. */
+    const away = (plain: boolean) => {
       el.style.pointerEvents = 'none'; // the page underneath is live from here on
       // The lift itself begins on the next tick: building the page took this one a while (a good second on a slow
       // device), and a lift begun before it would be found that far along, or over, when the next frame comes.
       unstarted = onNextTick(() => {
-        const away = gsap.timeline({ onComplete: () => setGone(true) });
-        tweens.push(away);
+        const going = gsap.timeline({ onComplete: () => setGone(true) });
+        tweens.push(going);
         if (reduced)
-          return void away.to(el, {
+          return void going.to(el, {
             autoAlpha: 0,
             duration: REDUCED_FADE_S,
             ease: 'none',
           });
         // the map, if there is one, opens onto the world
         if (!plain)
-          away.to(el.querySelector('.loader-in'), {
+          going.to(el.querySelector('.loader-in'), {
             opacity: 0,
             scale: 1.6,
             duration: MAP_OPENS_S,
             ease: 'power3.in',
           });
-        away.to(
+        going.to(
           el,
           { autoAlpha: 0, duration: GROUND_GOES_S, ease: 'power2.out' },
           plain ? 0 : GROUND_GOES_AT_S,
@@ -391,6 +425,7 @@ export const Loader = ({
     );
     return () => {
       cancelled = true;
+      clearTimeout(lastWait);
       clearTimeout(giveUp);
       clearTimeout(grace);
       clearInterval(fonts);
