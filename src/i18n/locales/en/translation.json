@@ -1,31 +1,10 @@
 {
-  "loading": "Loading...",
-  "error": "Error, Something went wrong",
-  "download": "Download",
-  "share": "Share",
-  "copyLink": "Copy Link",
-  "copySuccess": "Copied Successfully",
-  "copyFail": "Copy Failed",
-  "creator": "Creator",
-  "credit": "Special Thanks",
-  "introduction": "Introduction",
-  "scroll": "Scroll",
   "menu": {
-    "home": "Home",
-    "survivalProgress": "Survival Progress",
-    "memberAndWork": "Members & Works",
-    "member": "Member",
     "redstone": "Redstone",
     "building": "Building",
     "join": "Join Us",
     "openSource": "Open Source",
     "partner": "Partners"
-  },
-  "footer": {
-    "donate": {
-      "description": "Support us",
-      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
-    }
   },
   "time": {
     "days": "days",
@@ -38,116 +17,9 @@
       "youtubeId": "FCtztiDl_rE",
       "start": 9
     },
-    "description": "The true work of art is but a shadow of the divine perfection",
-    "serverRunning": "Created for",
-    "joinButton": "Embark on Creativity",
-    "about": {
-      "imageUrl": "homePage/CTEC_Sort.webp",
-      "title": "Cloud Town Exquisite Craft",
-      "subTitle": "CTEC",
-      "features": [
-        "One of the top Technical Minecraft Communities in Asia",
-        "Active in Minecraft's vanilla environment for technical research",
-        "Optimized survival, redstone technologies and aesthetic builds",
-        "State-of-the-art server equipment that fosters creativity",
-        "Collaborative research in friendly forums with outstanding players from various countries",
-        "The farm holds the world record for being ranked sixth globally and first in Asia."
-      ],
-      "buttons": [
-        {
-          "text": "Latest Progress",
-          "link": "/survival"
-        }
-      ]
-    },
-    "feature": {
-      "title": "What We Offer",
-      "card": [
-        {
-          "imageUrl": "homePage/CTEC_Building.webp",
-          "title": "Top-tier Architectural Team",
-          "paragraph": "We strive to blend Redstone and architecture, showcasing unique creations in survival mode. Our architects hail from diverse fields, each a master of at least one style. We believe that only by standing on the shoulders of giants can we broaden our horizons. In learning from the masters, we also frequently engage with teams and servers deeply rooted in the architectural community, including the Ghost Whale server, Arthas Industries, and the LIF Frame Wood Production Group. CTEC also provides a comprehensive set of plugins and a creative environment for architects to showcase their talents.",
-          "buttons": [
-            {
-              "text": "View Architectural Works",
-              "link": "/architectureCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Redstone.webp",
-          "title": "Advanced Redstone Technology",
-          "paragraph": "Our community boasts strong technical capabilities, with numerous Redstone technology developers proficient in various tech tree research, maintaining friendly relations with multiple international Technical Minecraft Communities. Our team is dedicated to research and innovation, continuously rolling out various novel farms or components, providing more fun for community members. We have set up dedicated labs, including two creative servers and two mirror servers, allowing players who do not wish to play survival to join in the fun. Our farms hold the world record for being ranked sixth globally and first in Asia.",
-          "buttons": [
-            {
-              "text": "View Redstone Works",
-              "link": "/redstoneCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "Stable and Reliable Server Equipment",
-          "paragraph": "We possess excellent server equipment, capable of supporting a large number of players online simultaneously for development and play. We have low-latency connection proxy servers in various countries, providing an excellent gaming experience for players from different regions. Our equipment features an i9-13900K, 128G RAM, 6TB Gen 4 SSD, and a UPS uninterrupted power supply system. We also have amateur engineers maintaining the servers, ensuring their stable operation.",
-          "buttons": [
-            {
-              "text": "View Server Equipment",
-              "link": "/hardware"
-            }
-          ]
-        }
-      ]
-    },
-    "carousel": {
-      "title": "Server Content",
-      "subtitles": [
-        "Latest Survival Progress",
-        "Latest Redstone Creations",
-        "Latest Architectural Works"
-      ]
-    },
-    "frostPursuit": {
-      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
-      "title": "Frost Pursuit Christmas Special Map",
-      "subTitle": "The Ultimate Ice Boat Racing Map is Now Available!",
-      "features": [
-        "Immersive winter track designs",
-        "Meticulously Designed Redstone and festive atmosphere",
-        "Multiplayer racing mode support",
-        "Carefully crafted lighting and visual effects"
-      ],
-      "buttons": [
-        {
-          "text": "Explore the Map",
-          "href": "/frostpursuit"
-        }
-      ]
-    }
-  },
-  "notFound": {
-    "title": "404 Not Found",
-    "description": "Seems like it has already been burnt into ashes...",
-    "imageUrl": "notFoundPage/CTEC_Burning.webp",
-    "backButton": "Back to Home"
-  },
-  "members": {
-    "title": "Member List",
-    "imageUrl": "members/CTEC_Members.webp",
-    "description": "Excellent members in various fields create wonderful server records",
-    "searchPlaceholder": "Search for members",
-    "noResult": "No result",
-    "memberGroup": {
-      "title": "Member Group",
-      "subTitle": "Veteran members who have been with us for a long time"
-    },
-    "trialGroup": {
-      "title": "Trial Group",
-      "subTitle": "The rookie group is full of vitality"
-    }
+    "serverRunning": "Created for"
   },
   "join": {
-    "description": "How to Join Us",
-    "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "Redstone Team",
@@ -206,89 +78,9 @@
       ]
     }
   },
-  "survivalProgress": {
-    "title": "Survival Server Progress",
-    "description": "History is not meaningless. it's to leave traces of our journey through time.",
-    "storyMode": "Story Mode",
-    "pause": "Pause",
-    "continue": "Continue"
-  },
-  "opensource": {
-    "title": "Open Source",
-    "description": "To contribute to the community, we have open-sourced some of our projects",
-    "imageUrl": "openSource/CTEC_Development.webp",
-    "stats": {
-      "total": "Repos",
-      "languages": "Languages",
-      "stars": "Stars",
-      "forks": "Forks"
-    },
-    "noDescription": "This repository does not have a description yet.",
-    "unknownLanguage": "Unknown",
-    "archived": "Archived",
-    "noRepositories": "No repositories are available right now.",
-    "overviewTitle": "Open-sourcing the tools we build",
-    "viewOnGithub": "View on GitHub",
-    "languages": "Languages",
-    "searchPlaceholder": "Search by name, description or topic…",
-    "allLanguages": "All",
-    "sort": {
-      "label": "Sort",
-      "updated": "Recently updated",
-      "stars": "Stars",
-      "name": "Name"
-    },
-    "noMatch": "No repositories match your filters",
-    "clearFilters": "Clear filters",
-    "retry": "Retry",
-    "fork": "Fork",
-    "allProjects": "All projects"
-  },
-  "partner": {
-    "title": "Partners",
-    "team": {
-      "title": "Collaborative Team"
-    },
-    "longtime": {
-      "title": "Long-Term Collaborative Creators"
-    },
-    "creator": {
-      "title": "Collaborative Creators"
-    },
-    "contact": {
-      "title": "Contact Us",
-      "subTitle": "If you are interested in becoming our partner, we are welcome to contact us",
-      "imageUrl": "brand/brand1.webp",
-      "buttons": [
-        {
-          "text": "Email",
-          "link": "mailto:cloudtown0723@gmail.com"
-        },
-        {
-          "text": "Discord",
-          "link": "https://discordapp.com/users/525640608228966400"
-        },
-        {
-          "text": "YouTube",
-          "link": "https://www.youtube.com/@CTEC_"
-        }
-      ]
-    }
-  },
-  "architectureCollection": {
-    "title": "Building Collection",
-    "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "Search Tags/Name..."
-  },
-  "redstoneCollection": {
-    "title": "Redstone Collection",
-    "imageUrl": "redstoneCollection/p30.webp",
-    "searchPlaceholder": "Search Tags or Name"
-  },
   "hardware": {
     "title": "Server Hardware",
     "description": "State-of-the-art equipment powering our creative community",
-    "imageUrl": "homePage/CTEC_Hardware.webp",
     "specsTitle": "Server Specifications",
     "featuresTitle": "Key Features",
     "specs": [

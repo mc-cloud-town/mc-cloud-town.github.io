@@ -1,31 +1,10 @@
 {
-  "loading": "加载中...",
-  "error": "好像出了点问题...",
-  "download": "下载",
-  "share": "分享",
-  "copyLink": "复制链接",
-  "copySuccess": "复制成功",
-  "copyFail": "复制失败",
-  "creator": "创作者",
-  "credit": "特别鸣谢",
-  "introduction": "简介",
-  "scroll": "向下滚动",
   "menu": {
-    "home": "首页",
-    "survivalProgress": "生存服进度",
-    "memberAndWork": "成员与作品",
-    "member": "成员",
     "redstone": "红石作品",
     "building": "建筑作品",
     "join": "加入我们",
     "openSource": "开源项目",
     "partner": "合作伙伴及团队"
-  },
-  "footer": {
-    "donate": {
-      "description": "支持我们",
-      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
-    }
   },
   "time": {
     "days": "天",
@@ -38,112 +17,9 @@
       "youtubeId": "FCtztiDl_rE",
       "start": 9
     },
-    "description": "真正的艺术作品不过是神圣完美的倒影",
-    "serverRunning": "已创立",
-    "joinButton": "创意启航",
-    "about": {
-      "imageUrl": "homePage/CTEC_Sort.webp",
-      "title": "Cloud Town Exquisite Craft",
-      "subTitle": "云镇工艺",
-      "features": [
-        "为目前亚洲顶尖技术生存服务器之一",
-        "活跃于Minecraft原版环境下的技术研究",
-        "生存实践、红石科技、建筑创作",
-        "良好的创作环境与服务器设备",
-        "与各国优秀玩家共同研究交流",
-        "农场世界纪录持有量世界第六、亚洲第一"
-      ],
-      "buttons": [
-        {
-          "text": "最新进度",
-          "link": "/survival"
-        }
-      ]
-    },
-    "feature": {
-      "title": "我们拥有",
-      "card": [
-        {
-          "imageUrl": "homePage/CTEC_Building.webp",
-          "title": "顶尖建筑团队",
-          "paragraph": "极力于融合红石与建筑，呈现独有在生存模式的作品。云镇的建筑师来自各个领域，在至少一门风格脱颖而出的大师。我们相信只有站到巨人的肩膀才能够开阔自己的视野。在学习大佬的手法中也常跟在建筑圈深耕的团队和服务器交好，其中包含鬼鲸服务器，阿尔萨斯工业以及LIF框木的制作组。云镇也提供完善的插件和创作环境让建筑师尽显才华。",
-          "buttons": [
-            {
-              "text": "查看建筑作品",
-              "link": "/architectureCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Redstone.webp",
-          "title": "先进的红石技术",
-          "paragraph": "团队拥有前瞻红石技术实力，由各领域优秀开发者所组成，熟练掌握各种科技树研究，并与多个国际技术性服务器维持友好关系。致力于研究和创新，为社区研发各种高原创性的农场或原件，为社区成员提供更多的游戏乐趣。设置红石研究室，包括两个创造与两个生存镜像服务器，让创造设计的玩家也可以加入云镇工艺的行列。我们目前持有农场世界纪录认证排名世界第六、亚洲第一。",
-          "buttons": [
-            {
-              "text": "查看红石作品",
-              "link": "/redstoneCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "長效穩定的服务器设备",
-          "paragraph": "我们拥有优秀的服务器设备，能够支持大量的同时在线玩家开发与游玩。并在各国拥有低延迟连接代理服务器，为不同地区的玩家提供了极佳的游戏体验。设备拥有 i9-13900K, 128G RAM, 6TB SSD, UPS 不断电系统。并有专属工程师维护，保证服务器的稳定运行。",
-          "buttons": [
-            {
-              "text": "查看服务器设备",
-              "link": "/hardware"
-            }
-          ]
-        }
-      ]
-    },
-    "carousel": {
-      "title": "服务器内容",
-      "subtitles": ["最新生存进度", "最新红石作品", "最新建筑作品"]
-    },
-    "frostPursuit": {
-      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
-      "title": "Frost Pursuit 圣诞特别地图",
-      "subTitle": "全新冰船竞速地图正式发布！",
-      "features": [
-        "身临其境的冬季赛道设计",
-        "精心设计红石与节日氛围",
-        "支持多人竞速模式",
-        "精心设计的光影与视觉效果"
-      ],
-      "buttons": [
-        {
-          "text": "探索地图",
-          "href": "/frostpursuit"
-        }
-      ]
-    }
-  },
-  "notFound": {
-    "title": "404 未找到",
-    "description": "看起来这里已经化为灰烬了...",
-    "imageUrl": "notFoundPage/CTEC_Burning.webp",
-    "backButton": "返回首页"
-  },
-  "members": {
-    "title": "成员列表",
-    "imageUrl": "members/CTEC_Members.webp",
-    "description": "各领域优秀成员共创了服务器精彩纪录",
-    "searchPlaceholder": "搜索成员",
-    "noResult": "没有找到成员",
-    "memberGroup": {
-      "title": "正式成员",
-      "subTitle": "这些老司机们已经在服务器上留下了自己的痕迹"
-    },
-    "trialGroup": {
-      "title": "新秀成员",
-      "subTitle": "新鲜的肝，等待你的发掘"
-    }
+    "serverRunning": "已创立"
   },
   "join": {
-    "description": "如何加入我们",
-    "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "红石组",
@@ -202,89 +78,9 @@
       ]
     }
   },
-  "survivalProgress": {
-    "title": "生存服进度",
-    "description": "历史并非毫无意义，而是为了在时光中留下我们走过的痕迹",
-    "storyMode": "故事模式",
-    "pause": "暂停",
-    "continue": "继续"
-  },
-  "opensource": {
-    "title": "开源列表",
-    "description": "为了给玩家带来更好的体验，我们也将部分项目开放为开源作品。",
-    "imageUrl": "openSource/CTEC_Development.webp",
-    "stats": {
-      "total": "项目",
-      "languages": "语言",
-      "stars": "星数",
-      "forks": "分支"
-    },
-    "noDescription": "这个仓库暂时还没有说明。",
-    "unknownLanguage": "未标注语言",
-    "archived": "已归档",
-    "noRepositories": "目前没有可显示的开源项目。",
-    "overviewTitle": "将我们开发的工具开源",
-    "viewOnGithub": "前往 GitHub",
-    "languages": "语言",
-    "searchPlaceholder": "搜索项目名称、说明或标签…",
-    "allLanguages": "全部",
-    "sort": {
-      "label": "排序",
-      "updated": "最近更新",
-      "stars": "星数",
-      "name": "名称"
-    },
-    "noMatch": "找不到符合条件的项目",
-    "clearFilters": "清除筛选",
-    "retry": "重新加载",
-    "fork": "Fork",
-    "allProjects": "所有项目"
-  },
-  "partner": {
-    "title": "合作伙伴及团队",
-    "team": {
-      "title": "合作团队"
-    },
-    "longtime": {
-      "title": "长期合作创作者"
-    },
-    "creator": {
-      "title": "合作创作者"
-    },
-    "contact": {
-      "title": "联系我们",
-      "subTitle": "如果你有任何问题或者合作意向，欢迎与我们联系",
-      "imageUrl": "brand/brand1.webp",
-      "buttons": [
-        {
-          "text": "Email",
-          "link": "mailto:cloudtown0723@gmail.com"
-        },
-        {
-          "text": "Discord",
-          "link": "https://discordapp.com/users/525640608228966400"
-        },
-        {
-          "text": "YouTube",
-          "link": "https://www.youtube.com/@CTEC_"
-        }
-      ]
-    }
-  },
-  "architectureCollection": {
-    "title": "建筑作品集",
-    "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "搜索标签或名称"
-  },
-  "redstoneCollection": {
-    "title": "紅石作品集",
-    "imageUrl": "redstoneCollection/p30.webp",
-    "searchPlaceholder": "搜索标签或名称"
-  },
   "hardware": {
     "title": "服务器硬件",
     "description": "顶级设备驱动我们的创意社区",
-    "imageUrl": "homePage/CTEC_Hardware.webp",
     "specsTitle": "服务器规格",
     "featuresTitle": "核心特色",
     "specs": [

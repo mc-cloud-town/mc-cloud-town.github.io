@@ -1,31 +1,10 @@
 {
-  "loading": "加載中...",
-  "error": "好像有什麼錯誤發生了...",
-  "download": "下載",
-  "share": "分享",
-  "copyLink": "複製連結",
-  "copySuccess": "已複製",
-  "copyFail": "複製失敗",
-  "creator": "創作者",
-  "credit": "特別感謝",
-  "introduction": "簡介",
-  "scroll": "向下捲動",
   "menu": {
-    "home": "首頁",
-    "survivalProgress": "生存服進度",
-    "memberAndWork": "成員與作品",
-    "member": "成員",
     "redstone": "紅石作品",
     "building": "建築作品",
     "join": "加入我們",
     "openSource": "開源項目",
     "partner": "合作夥伴及團隊"
-  },
-  "footer": {
-    "donate": {
-      "description": "支持我們",
-      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
-    }
   },
   "time": {
     "days": "天",
@@ -38,112 +17,9 @@
       "youtubeId": "FCtztiDl_rE",
       "start": 9
     },
-    "description": "真正的藝術作品不過是神聖完美的倒影",
-    "serverRunning": "已創立",
-    "joinButton": "創意啟航",
-    "about": {
-      "imageUrl": "homePage/CTEC_Sort.webp",
-      "title": "Cloud Town Exquisite Craft",
-      "subTitle": "雲鎮工藝",
-      "features": [
-        "為目前亞洲頂尖技術生存伺服器之一",
-        "活躍於Minecraft原版環境下的技術研究",
-        "生存實踐、紅石科技、建築創作",
-        "良好的創作環境與伺服器設備",
-        "與各國優秀玩家共同研究交流",
-        "農場世界紀錄持有量世界第六、亞洲第一"
-      ],
-      "buttons": [
-        {
-          "text": "最新進度",
-          "link": "/survival"
-        }
-      ]
-    },
-    "feature": {
-      "title": "我們擁有",
-      "card": [
-        {
-          "imageUrl": "homePage/CTEC_Building.webp",
-          "title": "頂尖建築團隊",
-          "paragraph": "以高強度紅石工業基底支撐生存建築，以生存模式呈現頂尖作品。雲鎮工藝建築部門來自多方領域，以各方專業知識促進雙方成長。我們相信站在巨人的肩膀才能夠開闊自己的視野，所以我們的與多個頂尖建築團隊和伺服器互相合作與交流學習，其中包含鬼鯨伺服器，阿爾薩斯工業以及LIF幀木得製作組。雲鎮也提供完善的插件和創作環境讓建築師儘顯才華。",
-          "buttons": [
-            {
-              "text": "查看建築作品",
-              "link": "/architectureCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Redstone.webp",
-          "title": "紅石實力雄厚",
-          "paragraph": "團隊擁有前瞻紅石技術實力，由各領域優秀開發者所組成，熟練掌握各種科技樹研究，並與多個國際技術性伺服器維持友好關係。致力於研究和創新，為社群研發各種高原創性的農場或原件，為社群成員提供更多的遊戲樂趣。設置紅石研究室，包括兩個創造與兩個生存鏡像伺服器，讓創造設計的玩家也可以加入雲鎮工藝的行列。我們目前持有農場世界紀錄認證排名世界第六、亞洲第一。",
-          "buttons": [
-            {
-              "text": "查看紅石作品",
-              "link": "/redstoneCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "長效穩定伺服器",
-          "paragraph": "擁有優秀的伺服器設備，支持大量的同時在線玩家開發與遊玩。並在各國擁有低延遲連線代理伺服器，為不同地區的玩家提供了極佳的遊戲體驗。設備擁有 i9-13900K, 128G RAM, 6TB SSD, UPS 不斷電系統。並有專屬工程師維護，保證伺服器的穩定運行，為玩家提供優秀的紅石開發環境。",
-          "buttons": [
-            {
-              "text": "查看伺服器設備",
-              "link": "/hardware"
-            }
-          ]
-        }
-      ]
-    },
-    "carousel": {
-      "title": "伺服器內容",
-      "subtitles": ["最新生存進度", "最新紅石作品", "最新建築作品"]
-    },
-    "frostPursuit": {
-      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
-      "title": "Frost Pursuit 聖誕特別地圖",
-      "subTitle": "全新冰船競速地圖正式發布！",
-      "features": [
-        "身臨其境的冬季賽道設計",
-        "精心設計紅石與節日氛圍",
-        "支援多人競速模式",
-        "精心設計的光影與視覺效果"
-      ],
-      "buttons": [
-        {
-          "text": "探索地圖",
-          "href": "/frostpursuit"
-        }
-      ]
-    }
-  },
-  "notFound": {
-    "title": "404 找不到頁面",
-    "description": "看起來這裡已經化為灰燼了...",
-    "imageUrl": "notFoundPage/CTEC_Burning.webp",
-    "backButton": "返回首頁"
-  },
-  "members": {
-    "title": "成員列表",
-    "imageUrl": "members/CTEC_Members.webp",
-    "description": "各領域優秀成員，共創伺服器精彩紀錄",
-    "searchPlaceholder": "搜尋成員",
-    "noResult": "沒有找到成員",
-    "memberGroup": {
-      "title": "正式成員",
-      "subTitle": "這些老江湖們已經在伺服器上留下了自己的痕跡"
-    },
-    "trialGroup": {
-      "title": "新秀成員",
-      "subTitle": "新鮮肝臟，等待你的發掘"
-    }
+    "serverRunning": "已創立"
   },
   "join": {
-    "description": "如何加入我們",
-    "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "紅石組",
@@ -202,89 +78,9 @@
       ]
     }
   },
-  "survivalProgress": {
-    "title": "生存服進度",
-    "description": "歷史並非毫無意義，而是為了在時光中留下我們走過的痕跡",
-    "storyMode": "故事模式",
-    "pause": "暫停",
-    "continue": "繼續"
-  },
-  "opensource": {
-    "title": "開源專案",
-    "description": "為提供玩家更好的體驗，我們開發了許多開源插件",
-    "imageUrl": "openSource/CTEC_Development.webp",
-    "stats": {
-      "total": "專案",
-      "languages": "語言",
-      "stars": "星數",
-      "forks": "分支"
-    },
-    "noDescription": "目前還沒有補上專案說明。",
-    "unknownLanguage": "未標示語言",
-    "archived": "已封存",
-    "noRepositories": "目前沒有可顯示的開源專案。",
-    "overviewTitle": "將我們開發的工具開源",
-    "viewOnGithub": "前往 GitHub",
-    "languages": "語言",
-    "searchPlaceholder": "搜尋專案名稱、說明或標籤…",
-    "allLanguages": "全部",
-    "sort": {
-      "label": "排序",
-      "updated": "最近更新",
-      "stars": "星數",
-      "name": "名稱"
-    },
-    "noMatch": "找不到符合條件的專案",
-    "clearFilters": "清除篩選",
-    "retry": "重新載入",
-    "fork": "Fork",
-    "allProjects": "所有專案"
-  },
-  "partner": {
-    "title": "合作夥伴及團隊",
-    "team": {
-      "title": "合作團隊"
-    },
-    "longtime": {
-      "title": "長期合作創作者"
-    },
-    "creator": {
-      "title": "合作創作者"
-    },
-    "contact": {
-      "title": "聯繫我們",
-      "subTitle": "如果您有任何合作意向，歡迎與我們聯繫",
-      "imageUrl": "brand/brand1.webp",
-      "buttons": [
-        {
-          "text": "Email",
-          "link": "mailto:cloudtown0723@gmail.com"
-        },
-        {
-          "text": "Discord",
-          "link": "https://discordapp.com/users/525640608228966400"
-        },
-        {
-          "text": "YouTube",
-          "link": "https://www.youtube.com/@CTEC_"
-        }
-      ]
-    }
-  },
-  "architectureCollection": {
-    "title": "建築作品集",
-    "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "搜尋標籤或名稱"
-  },
-  "redstoneCollection": {
-    "title": "紅石作品集",
-    "imageUrl": "redstoneCollection/p30.webp",
-    "searchPlaceholder": "搜尋標籤或名稱"
-  },
   "hardware": {
     "title": "伺服器硬體",
     "description": "頂級設備驅動我們的創意社群",
-    "imageUrl": "homePage/CTEC_Hardware.webp",
     "specsTitle": "伺服器規格",
     "featuresTitle": "核心特色",
     "specs": [
