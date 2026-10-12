@@ -24,7 +24,6 @@ test.describe('dimensions shell', () => {
     await openPage(page, '/member/');
     await expect(page.locator('.dim-bar')).toBeVisible();
     await expect(page.locator('.dim-foot')).toBeVisible();
-    await expect(page.locator('[data-shell="legacy"]')).toHaveCount(0);
     const fonts = await page.evaluate(() =>
       [...document.fonts]
         .filter((f) => f.status === 'loaded')

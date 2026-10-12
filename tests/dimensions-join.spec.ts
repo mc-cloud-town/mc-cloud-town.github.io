@@ -43,7 +43,6 @@ test.describe('join page', () => {
     await openPage(page, '/join/');
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'respawn');
     await expect(page.locator('.dim-bar')).toBeVisible();
-    await expect(page.locator('[data-shell="legacy"]')).toHaveCount(0);
     // the bar says this is the page the reader is on, and nothing else is
     const current = page.locator('.dim-bar nav a[aria-current]');
     await expect(current).toHaveCount(1);

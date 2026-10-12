@@ -38,7 +38,7 @@ export const DimensionProvider = ({
     setDimState(d);
   }, []);
 
-  // <html data-dim> drives the accent colour; remove it when leaving for a legacy page.
+  // <html data-dim> drives the accent colour; removed again when the shell goes.
   useEffect(() => {
     document.documentElement.dataset.dim = dim;
   }, [dim]);

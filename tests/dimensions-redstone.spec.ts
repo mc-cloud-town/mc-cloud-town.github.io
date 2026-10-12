@@ -24,7 +24,6 @@ test.describe('redstone collection: the gallery', () => {
     await routeCollection(page, 'redstone');
     await openPage(page, PATH);
     await expect(page.locator('.dim-bar')).toBeVisible();
-    await expect(page.locator('[data-shell="legacy"]')).toHaveCount(0);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
     await expect(page.locator('.head h1')).toContainText('紅石作品');
 

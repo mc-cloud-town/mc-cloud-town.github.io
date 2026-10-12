@@ -21,7 +21,7 @@ const LANGUAGE_TAGS: Record<string, string> = {
   zh_CN: 'zh-Hans',
   en: 'en',
 };
-/** What the served page says, and what a legacy page keeps. */
+/** What the served page says. */
 const SERVED_LANGUAGE_TAG = 'zh';
 
 export default function DimensionsLayout({
@@ -33,7 +33,7 @@ export default function DimensionsLayout({
   // The document says which language it is in: the reader's, once it is known (a screen reader's voice, the
   // browser's offer to translate, the glyphs a fallback font picks all go by it). Set after hydration, so the
   // served page and the first render agree; and after the detection above, which reads this very attribute as
-  // its last resort. Given back as it was served when the shell goes (a step to a legacy page).
+  // its last resort. Given back as it was served when the shell goes.
   // (Listened for, not read while rendering: the i18n object is the same one whatever its language.)
   useEffect(() => {
     const say = (language: string) => {

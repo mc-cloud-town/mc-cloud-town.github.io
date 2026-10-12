@@ -23,11 +23,8 @@ export const samePath = (a: string, b: string) => bare(a) === bare(b);
 export const dimensionOfPath = (path: string): Dimension =>
   PAGE_DIMENSIONS[bare(path)] ?? 'overworld';
 
-/**
- * What a step arrives on. The home page's entrance is its loader; an inner page's is its header (inner.css);
- * a legacy page is outside the new shell and has none of ours: a step to it is the leave only.
- */
-export type PageKind = 'home' | 'inner' | 'legacy';
+/** What a step arrives on. The home page's entrance is its loader; an inner page's is its header (inner.css). */
+export type PageKind = 'home' | 'inner';
 
 /** The pages of the site a link of the shell may lead to, by bare path. */
 const PAGES = new Map<string, PageKind>([

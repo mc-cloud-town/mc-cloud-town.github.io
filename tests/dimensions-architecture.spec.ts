@@ -30,7 +30,6 @@ test.describe('architecture collection', () => {
     await routeCollection(page, 'architecture', WORKS.slice(2));
     await openPage(page, PATH);
     await expect(page.locator('.dim-bar')).toBeVisible();
-    await expect(page.locator('[data-shell="legacy"]')).toHaveCount(0);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
     await expect(page.locator('.head h1')).toContainText('建築作品');
     await expect(page.locator('.head .crumb')).toContainText('主世界');

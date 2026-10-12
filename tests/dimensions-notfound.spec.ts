@@ -18,7 +18,6 @@ test.describe('not found page', () => {
     await page.locator('.dim').waitFor();
     await expect(page.locator('.dim-bar')).toBeVisible();
     await expect(page.locator('.dim-foot')).toBeVisible();
-    await expect(page.locator('[data-shell="legacy"]')).toHaveCount(0);
     await expect(page.locator('.void h1')).toContainText('虛空');
     for (const href of ['/', '/survivalProgress/', '/member/', '/join/'])
       await expect(page.locator(`.void .ways a[href="${href}"]`)).toBeVisible();

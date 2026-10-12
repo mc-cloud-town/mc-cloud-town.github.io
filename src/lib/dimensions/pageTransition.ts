@@ -22,8 +22,6 @@ import { pageKind, samePath, type PageKind } from './pages';
  *  - Arrive: an inner page is mounted under the cover with its entrance held (`data-nav='covered'`), and the cover
  *    lifts onto that entrance. The home page's loader is its entrance: the cover is the loader's ground and is taken
  *    away the moment the loader is there, so the reader sees one cover, not two.
- *  - A legacy page gets the leave only. It is outside the shell: when the router shows it, the shell is taken down,
- *    and the cover, the hold and the step go with it (`resetPageTransition`, from `<PageTransitions />`).
  *
  *  - The page changes under the cover, always. A destination that is slow keeps the cover whole: it never lifts onto
  *    the page that was left. After a while the cover shows a sign of life (`<Cover />`), and past a hard limit the
@@ -224,7 +222,6 @@ export const pageArrived = (pathname: string) => {
   if (me.kind !== 'inner') {
     // The home page: its loader is there, whole, in the cover's own ground. The cover has done its part, and the
     // page is the home page's own from here (behind its loader it goes to the section a hash names).
-    // (A legacy page does not arrive here: the shell, and this with it, is gone by then.)
     step = null;
     setNav(null);
     clearCover();
