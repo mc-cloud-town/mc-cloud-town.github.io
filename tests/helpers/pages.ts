@@ -115,6 +115,8 @@ export interface NavFrame {
   dim: string | null;
   /** opacity of the home page's loader; null when there is none in the page */
   loader: number | null;
+  /** opacity of the loader's map and percentage (0 while they are hidden); null when there is no loader */
+  map: number | null;
   /** the page's content: how much of it shows, and how far it has been moved (its own `translate`) */
   main: Part | null;
   /** the first line of an inner page's title */
@@ -174,6 +176,7 @@ export const watchNav = (page: Page) =>
         nav: html.getAttribute('data-nav'),
         dim: html.getAttribute('data-dim'),
         loader: loader ? shown(loader) : null,
+        map: loader ? shown(loader.querySelector('.loader-in')) : null,
         main: mc
           ? {
               o: +mc.opacity,

@@ -1,3 +1,4 @@
+import { stubVideo } from './helpers/video';
 import { expect, test, type Page } from '@playwright/test';
 import { atRest, NOT_HERE, openPage, skipIn } from './helpers/dimensions';
 import { clickAt, clickedAt, ready } from './helpers/home';
@@ -628,7 +629,8 @@ test.describe('going to another page', () => {
         'overworld',
       );
 
-      // progress → home: the cover is the loader's night whatever the theme, and the loader takes over from it
+      // progress → home: the cover is the home page's night whatever the theme. Everything the home page waits
+      // for is in (this visit has had it already), so no map is shown: the night lifts onto the hero's arrival.
       await navFrames(page);
       await page.locator('.head .crumb a').first().click();
       await expect.poll(() => new URL(page.url()).pathname).toBe('/');
@@ -642,11 +644,24 @@ test.describe('going to another page', () => {
         home: false,
       });
       const home = frames.slice(change);
-      // from the first frame of the home page: its loader, whole, and no cover under or over it
-      expect(home.slice(0, 5).map((f) => f.loader)).toEqual([1, 1, 1, 1, 1]);
+      // from the first frame of the home page the night is the home page's own ground, whole, in the cover's
+      // place: no frame without it, no cover under or over it
+      expect(home[0].loader).toBe(1);
       for (const f of home) expect(f.cover).toBe(0);
       for (const f of home) expect(f.nav).toBeNull();
-      // one fade only: the cover never lifted, the loader did
+      // it only ever lifts, over many frames, and no map or percentage is ever shown on it
+      const night = home.map((f) => f.loader ?? 0);
+      night.forEach((o, i) =>
+        expect(o, `frame ${i}`).toBeLessThanOrEqual(night[i - 1] ?? 1),
+      );
+      expect(new Set(night.filter((o) => o > 0 && o < 1)).size).toBeGreaterThan(
+        5,
+      );
+      expect(home.filter((f) => (f.map ?? 0) > 0)).toEqual([]);
+      // and soon: the night is on its way out within half a second of the page being there
+      const lifting = home.find((f) => (f.loader ?? 0) < 1)!;
+      expect(lifting.t - home[0].t).toBeLessThan(500);
+      // one fade of the cover only: it never lifted, the home page's ground did
       expect(runs).toEqual(['opacity:280']);
       await expect(page.locator('.dim-cover')).toHaveCSS(
         'visibility',
@@ -656,6 +671,54 @@ test.describe('going to another page', () => {
       // all of it in one document
       expect(await documentMark(page)).toBe(mark);
     });
+
+  test('members → home with the hero’s picture not in: the loader takes the cover’s place with its map, without a gap and not for a flash', async ({
+    page,
+  }) => {
+    skipIn(['webkit'], NOT_HERE.frames);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // the picture of the hero takes a second and a half (this visit has not had it yet: it began on another page)
+    let asked = 0;
+    await stubVideo(page, {
+      cover: (fulfil) => {
+        asked++;
+        setTimeout(() => void fulfil(), 1500);
+      },
+    });
+    await watchNav(page);
+    await openPage(page, '/member/');
+    await page.locator('.person').first().waitFor();
+    await navFrames(page);
+    await page
+      .locator('.dim-bar a.brand, .dim-bar a[href="/"]')
+      .first()
+      .click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe('/');
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const { frames, runs } = await navFrames(page);
+    const change = frames.findIndex((f) => f.path === '/');
+    expect(change).toBeGreaterThan(3);
+    expect(frames[change - 1].cover).toBe(1);
+    const home = frames.slice(change);
+    // no gap: the loader's ground is whole from the first frame of the home page, in the cover's place
+    expect(home[0].loader).toBe(1);
+    for (const f of home) expect(f.cover).toBe(0);
+    // the map comes, eased in, and stays: one run of frames, a good second long, not a flash
+    const shown = home.filter((f) => (f.map ?? 0) > 0);
+    expect(shown.length).toBeGreaterThan(30);
+    expect(shown.at(-1)!.t - shown[0].t).toBeGreaterThan(1000);
+    const first = home.indexOf(shown[0]);
+    const last = home.indexOf(shown.at(-1)!);
+    expect(last - first + 1).toBe(shown.length);
+    expect(shown.some((f) => f.map! > 0 && f.map! < 1)).toBe(true);
+    expect(shown.some((f) => f.map === 1)).toBe(true);
+    // the ground stays whole until the map has been whole, and only lifts after
+    const whole = home.findIndex((f) => f.map === 1);
+    for (const f of home.slice(0, whole + 1)) expect(f.loader).toBe(1);
+    expect(runs).toEqual(['opacity:280']);
+    expect(asked).toBe(1);
+  });
 
   test('the leave is at most 300 ms of content settling out, in the site’s motion', async ({
     page,

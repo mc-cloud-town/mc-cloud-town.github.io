@@ -335,8 +335,17 @@ export interface LoaderFrame {
   cover: boolean;
   pct: string;
   label: string;
-  /** opacity of the block that holds the map: below 1 once the lift has begun */
+  /** the page's script has taken the loader over (`html[data-live]`) */
+  live: boolean;
+  /** opacity of the loader's ground (0 when it is hidden) */
+  ground: number;
+  /**
+   * opacity of the block that holds the map (0 while it is hidden): 0 until the loader has decided that a map is
+   * needed, and below 1 again once the lift has begun
+   */
   block: number;
+  /** scale of the first scene's camera: 1.3 before the hero's arrival, 1 after it */
+  cam: number;
   ready: boolean;
   colours: number;
   /** every colour on the map */
@@ -370,12 +379,20 @@ export const watchLoader = (page: Page) =>
         const cover = document.querySelector<HTMLImageElement>(
           '.scene.is-first img',
         );
+        const shown = (el: Element) => {
+          const c = getComputedStyle(el);
+          return c.visibility === 'hidden' ? 0 : +c.opacity;
+        };
+        const cam = document.querySelector('.scene.is-first .cam');
         w.__loader.push({
           t: performance.now(),
+          live: document.documentElement.hasAttribute('data-live'),
+          ground: shown(document.querySelector('.loader')!),
+          cam: cam ? new DOMMatrix(getComputedStyle(cam).transform).a : 1,
           cover: Boolean(cover?.complete && cover.naturalWidth > 0),
           pct: document.querySelector('.loader .pct')?.textContent ?? '',
           label: document.querySelector('.loader .stage')?.textContent ?? '',
-          block: +getComputedStyle(block).opacity,
+          block: shown(block),
           ready:
             document.querySelector<HTMLElement>('.dim--home')?.dataset.ready ===
             'true',
@@ -412,6 +429,12 @@ export const afterLoaderFrames = async (
     await new Promise((done) => setTimeout(done, 40));
   }
   await serve();
+};
+
+/** The frames of the lift of a loader that showed its map: from the map having been whole to its going. */
+export const mapLifting = (frames: LoaderFrame[]) => {
+  const whole = frames.findIndex((f) => f.block === 1);
+  return whole < 0 ? [] : frames.slice(whole).filter((f) => f.block < 1);
 };
 
 export const loaderFrames = (page: Page) =>

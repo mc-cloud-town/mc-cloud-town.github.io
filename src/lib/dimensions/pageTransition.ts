@@ -20,8 +20,11 @@ import { pageKind, samePath, type PageKind } from './pages';
  *  - Leave: the content of the page settles out (shell.css, `data-nav='leaving'`) while the cover comes in, in the
  *    ground of where it leads. Only under the whole cover does the router change the page.
  *  - Arrive: an inner page is mounted under the cover with its entrance held (`data-nav='covered'`), and the cover
- *    lifts onto that entrance. The home page's loader is its entrance: the cover is the loader's ground and is taken
- *    away the moment the loader is there, so the reader sees one cover, not two.
+ *    lifts onto that entrance. The home page brings its own cover, its loader, in the same ground: the step's cover
+ *    is taken away the moment the loader is there, so the reader sees one cover, not two. With everything the
+ *    home page waits for already in (the usual case inside one visit) that ground lifts at once onto the hero's
+ *    arrival, as the cover does on an inner page; only if something is still awaited does the loader show its map
+ *    (Loader.tsx).
  *
  *  - The page changes under the cover, always. A destination that is slow keeps the cover whole: it never lifts onto
  *    the page that was left. After a while the cover shows a sign of life (`<Cover />`), and past a hard limit the
@@ -221,7 +224,8 @@ export const pageArrived = (pathname: string) => {
   stopClocks(me);
   if (me.kind !== 'inner') {
     // The home page: its loader is there, whole, in the cover's own ground. The cover has done its part, and the
-    // page is the home page's own from here (behind its loader it goes to the section a hash names).
+    // page is the home page's own from here (behind its loader it goes to the section a hash names). The loader
+    // lifts as soon as the page can be handed over, and shows no map unless it has to wait (Loader.tsx).
     step = null;
     setNav(null);
     clearCover();

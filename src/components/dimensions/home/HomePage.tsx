@@ -26,7 +26,7 @@ import { ARRIVAL_CAMERA } from '@/constants/heroVideo';
 import type { IMembers } from '@/types/IMember';
 import { World } from './World';
 import { HeroVideo } from './HeroVideo';
-import { Loader } from './Loader';
+import { GROUND_GOES_AT_S, Loader } from './Loader';
 import { Hero } from './Hero';
 import { DimensionOpening } from './DimensionOpening';
 import { WorkSection } from './WorkSection';
@@ -65,6 +65,8 @@ export const HomePage = () => {
   const root = useRef<HTMLDivElement>(null);
   const { setDim } = useDimension();
   const [ready, setReady] = useState(false);
+  // the loader lifted without having shown its map: its ground began to go at once (Loader.tsx)
+  const plain = useRef(false);
   // the arrival that follows the loader has played out: the hero's video waits for it (HeroVideo.tsx)
   const [arrived, setArrived] = useState(false);
   // null until the browser has been asked (the static export renders without it)
@@ -134,7 +136,9 @@ export const HomePage = () => {
       onDim: setDim,
       onLedger: setLedger,
     });
-    // The arrival, timed against the loader lifting off (0.5s in): the camera settles, the title rises, the rest follows.
+    // The arrival, timed against the loader lifting off (its ground begins to go 0.5s into the lift, after the map
+    // has opened): the camera settles, the title rises, the rest follows. A loader that had no map to open lifts
+    // by its ground at once, and the arrival begins that far in, so the two keep their places to each other.
     // The camera move is on .cam so it never fights the scroll-driven moves on .zoom.
     // Its parts stand where they start from at once, and it plays from the next tick, as the lift does (Loader.tsx):
     // the two begin together, after the time this build takes.
@@ -172,7 +176,8 @@ export const HomePage = () => {
             1.2,
           );
     ScrollTrigger.refresh();
-    const unplayed = arrival ? onNextTick(() => arrival.play()) : null;
+    const from = plain.current ? GROUND_GOES_AT_S : 0;
+    const unplayed = arrival ? onNextTick(() => arrival.play(from)) : null;
     return () => {
       unplayed?.();
       arrival?.revert();
@@ -194,7 +199,10 @@ export const HomePage = () => {
     if (ready && members) ScrollTrigger.refresh();
   }, [ready, members]);
 
-  const onDone = useCallback(() => setReady(true), []);
+  const onDone = useCallback((withoutMap: boolean) => {
+    plain.current = withoutMap;
+    setReady(true);
+  }, []);
 
   return (
     <div className='dim dim--home' ref={root} data-ready={ready}>

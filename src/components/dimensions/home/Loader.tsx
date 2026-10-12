@@ -12,6 +12,28 @@ import { markWhole } from './World';
 export const LOADER_TIMEOUT_MS = 6000;
 
 /**
+ * A reader for whom everything is there already (a return to the site, a reload, a step back to the home page from
+ * another page of it) is not shown a loading at all: the loader is only its ground, and lifts as soon as the page
+ * can be handed over. The map is shown only if something is still awaited this long after the script took over, so
+ * that a wait of a fraction of a second never flashes one…
+ */
+export const MAP_GRACE_MS = 200;
+/** …and a map that has been shown stays at least this long before the lift begins: a beat that can be read. */
+export const MAP_MIN_MS = 400;
+/** It comes as a state changes (--t-state), in the ease of anything that arrives. */
+const MAP_IN_S = 0.3;
+/**
+ * The lift of a loader that showed its map: the map opens onto the world for this long, and the ground goes in
+ * the last tenth of a second of that and after. A loader without a map lifts by its ground alone.
+ */
+const MAP_OPENS_S = 0.6;
+const GROUND_GOES_S = 0.9;
+/**
+ * How far into the lift of a loader with its map the ground begins to go. The hero's arrival is timed against the
+ * ground (HomePage.tsx): after a lift without a map it begins this far in.
+ */
+export const GROUND_GOES_AT_S = MAP_OPENS_S - 0.1;
+/**
  * What the map shows is how much of what the loader waits for is in: the page's script (in when the loader starts),
  * the fonts, and each picture the page is to be handed over on. A few things, so the progress comes in steps: the
  * map eases to each step in this long (--t-in, with the ease of anything that arrives)…
@@ -70,8 +92,11 @@ const loaded = (img: HTMLImageElement) =>
  * number: the share of what the loader waits for that is in (see STEP_S). The line below says which of two things
  * is going on: the world's parts are still arriving ("building terrain"), or they are all in and the page is being
  * built and handed over ("entering the world").
- * Calls onDone once the fonts and the first pictures are in and the map is finished, lifts off the page, then
- * removes itself. It is part of the static markup, so it is the first thing painted; it starts once `reduced` is known.
+ * The map, the percentage and the line are there only when there is something to wait for (MAP_GRACE_MS): the
+ * served page shows the loader's ground alone (home.css), and so does a visit on which everything is in already.
+ * Calls onDone once the fonts and the first pictures are in and the map, if it was shown, is finished: `plain` if
+ * the loader lifts without having shown a map. It lifts off the page, then removes itself. It is part of the
+ * static markup, so it is the first thing painted; it starts once `reduced` is known.
  * Should this script never start, the served page is not left behind it: home.css takes the loader away after ten
  * seconds, and HomePage's `noscript` style at once where scripts are off.
  */
@@ -80,7 +105,7 @@ export const Loader = ({
   onDone,
 }: {
   reduced: boolean | null;
-  onDone: () => void;
+  onDone: (plain: boolean) => void;
 }) => {
   const { t } = useTranslation();
   const box = useRef<HTMLDivElement>(null);
@@ -100,7 +125,7 @@ export const Loader = ({
       // This handover is not run through at once as the one in `lift` is: React builds the page when it next gets
       // round to it (`flushSync` cannot be used inside an effect). No cover is left to lift in step with it: the
       // script started ten seconds late, and the reader has the served page in front of them already.
-      onDone();
+      onDone(false);
       return;
     }
     // from here on the loader is this script's: the fail-safe is called off
@@ -112,6 +137,8 @@ export const Loader = ({
     const st = { p: 0 };
     /** Everything is in, or the wait was given up. */
     let all = false;
+    /** When the map was shown; null while it is not (and it may never be). */
+    let shownAt: number | null = null;
     const paint = () => {
       if (ctx) drawMap(ctx, st.p, late);
       // (a hundred is said when everything is in, never by rounding up to it)
@@ -119,7 +146,6 @@ export const Loader = ({
         all ? Math.round(st.p * 100) : Math.min(99, Math.floor(st.p * 100)),
       );
     };
-    paint();
 
     let cancelled = false;
     /** Calls off a lift that has not begun yet. */
@@ -165,7 +191,8 @@ export const Loader = ({
       // and switched to its scene (HomePage's effect on `ready`: React runs the effects of a `flushSync` update
       // before it returns) before the first step of the lift. Otherwise the loader would already be going, over
       // the first scene, when the page is handed over.
-      flushSync(onDone);
+      const plain = shownAt === null;
+      flushSync(() => onDone(plain));
       el.style.pointerEvents = 'none'; // the page underneath is live from here on
       // The lift itself begins on the next tick: building the page took this one a while (a good second on a slow
       // device), and a lift begun before it would be found that far along, or over, when the next frame comes.
@@ -178,15 +205,19 @@ export const Loader = ({
             duration: REDUCED_FADE_S,
             ease: 'none',
           });
-        // the map opens onto the world
-        away
-          .to(el.querySelector('.loader-in'), {
+        // the map, if there is one, opens onto the world
+        if (!plain)
+          away.to(el.querySelector('.loader-in'), {
             opacity: 0,
             scale: 1.6,
-            duration: 0.6,
+            duration: MAP_OPENS_S,
             ease: 'power3.in',
-          })
-          .to(el, { autoAlpha: 0, duration: 0.9, ease: 'power2.out' }, '-=.1');
+          });
+        away.to(
+          el,
+          { autoAlpha: 0, duration: GROUND_GOES_S, ease: 'power2.out' },
+          plain ? 0 : GROUND_GOES_AT_S,
+        );
       });
     };
     /**
@@ -195,6 +226,7 @@ export const Loader = ({
      * way between.
      */
     const advance = () => {
+      if (shownAt === null) return;
       const at = Math.max(told, (inNow + fontShare()) / steps);
       if (at === told) return;
       told = at;
@@ -225,19 +257,53 @@ export const Loader = ({
         }),
       );
     };
-    /** Everything is in, or the wait is given up: the last chunks finish, the square holds for a beat, then the lift. */
+    /**
+     * Something is still awaited after the grace: the map is shown, eased in, and builds up from nothing to what
+     * is in by now.
+     */
+    const show = () => {
+      if (cancelled || all) return;
+      shownAt = performance.now();
+      paint();
+      tweens.push(
+        gsap.to(el.querySelector('.loader-in'), {
+          autoAlpha: 1,
+          duration: reduced ? REDUCED_FADE_S : MAP_IN_S,
+          ease: reduced ? 'none' : STEP_EASE,
+        }),
+      );
+      advance();
+    };
+    /**
+     * Everything is in, or the wait is given up. A loader that never showed its map lifts at once. Otherwise the
+     * last chunks finish and the square holds for a beat (and until the map has been there for its minimum), then
+     * the lift.
+     */
     const complete = () => {
       if (cancelled || all) return;
       all = true;
       clearTimeout(giveUp);
+      clearTimeout(grace);
       clearInterval(fonts);
+      if (shownAt === null) return lift();
+      const since = shownAt;
       setEntering(true);
       gsap.killTweensOf(st);
+      const hold = () =>
+        void tweens.push(
+          gsap.delayedCall(
+            Math.max(
+              reduced ? 0 : HOLD_S,
+              (MAP_MIN_MS - (performance.now() - since)) / 1000,
+            ),
+            lift,
+          ),
+        );
       if (reduced) {
         // the finished map, and nothing builds up to it
         st.p = 1;
         paint();
-        return lift();
+        return hold();
       }
       tweens.push(
         gsap.to(st, {
@@ -245,12 +311,12 @@ export const Loader = ({
           duration: FINISH_S,
           ease: 'power2.out',
           onUpdate: paint,
-          onComplete: () => void tweens.push(gsap.delayedCall(HOLD_S, lift)),
+          onComplete: hold,
         }),
       );
     };
 
-    advance();
+    const grace = setTimeout(show, MAP_GRACE_MS);
     const fonts = setInterval(() => {
       if (!all && !fontsIn) advance();
     }, FONT_POLL_MS);
@@ -268,6 +334,7 @@ export const Loader = ({
     return () => {
       cancelled = true;
       clearTimeout(giveUp);
+      clearTimeout(grace);
       clearInterval(fonts);
       unstarted?.();
       gsap.killTweensOf(st);

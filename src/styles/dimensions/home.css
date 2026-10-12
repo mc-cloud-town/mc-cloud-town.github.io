@@ -180,11 +180,16 @@ html.lenis {
       loader-failsafe var(--t-list) var(--ease-rise) 10s forwards,
       loader-failsafe-gone 1ms linear calc(10s + var(--t-list)) forwards;
   }
-  /* a map of the world being generated: the percentage, the map (Loader.tsx draws it), the stage */
+  /* a map of the world being generated: the percentage, the map (Loader.tsx draws it), the stage.
+     Not shown in the served page: whether there is anything to wait for is known only once the page's script
+     runs, and a reader for whom everything is in already sees the ground alone, lifting. Loader.tsx eases the
+     block in when a map is needed. */
   .loader-in {
     display: grid;
     justify-items: center;
     gap: 22px;
+    visibility: hidden;
+    opacity: 0;
   }
   .loader .pct {
     font: 500 15px var(--mono);

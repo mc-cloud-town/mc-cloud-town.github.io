@@ -2,8 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 import { expectNoMissingKeys, openPage } from './helpers/dimensions';
 import {
   type LoaderFrame,
+  arrived,
   afterLoaderFrames,
   loaderFrames,
+  mapLifting,
   ready,
   watchLoader,
 } from './helpers/home';
@@ -543,6 +545,11 @@ test.describe('home: the loader is a map of the world being generated', () => {
     expect(stage!.y).toBeGreaterThanOrEqual(box.y + box.height);
     await expect(page.locator('.loader .pct')).toHaveText('0%');
     await expect(page.locator('.loader .stage')).toHaveText('正在建置地形');
+    // …but none of it is shown: the served page is the loader's ground, and says nothing of a loading that may
+    // not happen (the script shows the map if there turns out to be something to wait for)
+    for (const part of ['.loader-in', '.loader .pct', '.loader canvas'])
+      await expect(page.locator(part)).toBeHidden();
+    await expect(page.locator('.loader-in')).toHaveCSS('opacity', '0');
     await expect(page.locator('.loader .pct')).toHaveCSS(
       'font-family',
       /JetBrains Mono/,
@@ -607,7 +614,7 @@ test.describe('home: the loader is a map of the world being generated', () => {
     for (const colour of used) expect(allowed).toContain(colour);
     expect(used.has(FRONTIER)).toBe(true);
     // 100% is reached before the lift begins, and before the page is handed over
-    const lifting = frames.filter((f) => f.block < 1);
+    const lifting = mapLifting(frames);
     expect(lifting.length).toBeGreaterThan(5);
     for (const f of lifting) expect(f.pct).toBe('100%');
     for (const f of frames.filter((f) => f.ready)) expect(f.pct).toBe('100%');
@@ -762,6 +769,135 @@ test.describe('home: the loader is a map of the world being generated', () => {
       expect(f.border).toBe(FIRST_GREY);
     }
     await expect(page.locator('.hero h1')).toBeVisible();
+  });
+});
+
+/** Same as MAP_GRACE_MS and MAP_MIN_MS in src/components/dimensions/home/Loader.tsx. */
+const MAP_GRACE_MS = 200;
+const MAP_MIN_MS = 400;
+
+test.describe('home: no loading is shown when there is nothing to wait for', () => {
+  /** Nothing of the page is slow: no font is waited for (every request for one is refused at once). */
+  const fontsAtOnce = (page: Page) =>
+    page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  const number = (f: LoaderFrame) => Number(f.pct.replace('%', ''));
+
+  test('everything in at once: no map and no percentage in any frame from the first paint, the ground lifts straight onto the hero’s arrival', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await fontsAtOnce(page);
+    await watchLoader(page);
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const frames = await loaderFrames(page);
+    const served = frames.filter((f) => !f.live);
+    const waiting = frames.filter((f) => f.live && !f.ready);
+    const after = frames.filter((f) => f.ready);
+    expect(served.length).toBeGreaterThan(2);
+    expect(after.length).toBeGreaterThan(10);
+    // the map and the percentage: never shown, never drawn
+    for (const f of frames) {
+      expect(f.block).toBe(0);
+      expect(f.colours).toBe(1);
+    }
+    // the ground is whole over the hero until the page is handed over…
+    for (const f of [...served, ...waiting]) expect(f.ground).toBe(1);
+    // …which is soon after the script took over (the old loader took two seconds at the least)
+    expect(after[0].t - served.at(-1)!.t).toBeLessThan(1000);
+    // then it lifts, over many frames, onto the arrival: the camera comes in from its start while the ground goes
+    const ground = after.map((f) => f.ground);
+    ground.forEach((o, i) =>
+      expect(o, `frame ${i}`).toBeLessThanOrEqual(ground[i - 1] ?? 1),
+    );
+    expect(new Set(ground.filter((o) => o > 0 && o < 1)).size).toBeGreaterThan(
+      8,
+    );
+    expect(after[0].cam).toBeGreaterThan(1.25);
+    expect(new Set(after.map((f) => f.cam.toFixed(3))).size).toBeGreaterThan(8);
+    expect(after.at(-1)!.cam).toBeLessThan(after[0].cam - 0.05);
+    await arrived(page);
+    await expect(page.locator('.hero h1')).toBeVisible();
+    // the picture it lifted on was in, and is marked as whole
+    await expect(page.locator('.scene.is-first img.vid-cover')).toHaveAttribute(
+      'data-cover',
+      'youtube',
+    );
+  });
+
+  test('reduced motion, everything in at once: no map, and the ground goes in a brief fade', async ({
+    page,
+  }) => {
+    await fontsAtOnce(page);
+    await watchLoader(page);
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const frames = await loaderFrames(page);
+    expect(frames.length).toBeGreaterThan(3);
+    for (const f of frames) expect(f.block).toBe(0);
+    for (const f of frames.filter((f) => !f.ready)) expect(f.ground).toBe(1);
+    const live = frames.find((f) => f.live)!;
+    const handed = frames.find((f) => f.ready)!;
+    expect(handed.t - live.t).toBeLessThan(1000);
+    // gone within a quarter of a second of the handover
+    expect(frames.at(-1)!.t - handed.t).toBeLessThan(400);
+    await expect(page.locator('.hero h1')).toBeVisible();
+  });
+
+  test('a picture that comes just after the loader has decided to show its map: the map stays for its minimum, finishes at 100%, and lifts in its own way', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await fontsAtOnce(page);
+    const mapShown = async () => {
+      for (;;) {
+        const shown = await page
+          .evaluate(() =>
+            (window as unknown as { __loader?: LoaderFrame[] }).__loader?.some(
+              (f) => f.block > 0,
+            ),
+          )
+          .catch(() => false);
+        if (shown) return;
+        await new Promise((done) => setTimeout(done, 15));
+      }
+    };
+    await stubVideo(page, {
+      cover: (fulfil) => void mapShown().then(fulfil),
+    });
+    await watchLoader(page);
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    const frames = await loaderFrames(page);
+    // not shown before its grace is over
+    const live = frames.find((f) => f.live)!;
+    const first = frames.find((f) => f.block > 0)!;
+    expect(first).toBeDefined();
+    // (the frame before the script's first one may be up to a frame older than the script's start)
+    expect(first.t - live.t).toBeGreaterThan(MAP_GRACE_MS - 40);
+    // once shown it is whole, says 100%, and is read for its minimum before the lift begins
+    const handed = frames.find((f) => f.ready)!;
+    expect(handed.t - first.t).toBeGreaterThan(MAP_MIN_MS - 20);
+    expect(handed.t - first.t).toBeLessThan(MAP_MIN_MS + 1500);
+    const shown = frames.filter((f) => f.block > 0 && !f.ready);
+    expect(shown.some((f) => f.block === 1)).toBe(true);
+    expect(shown.at(-1)!.pct).toBe('100%');
+    expect(shown.at(-1)!.block).toBe(1);
+    for (const f of shown) expect(f.ground).toBe(1);
+    shown.forEach((f, i) =>
+      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
+        number(shown[i - 1] ?? f),
+      ),
+    );
+    // and the lift is the map's own: it opens over several frames before the ground goes
+    const lifting = mapLifting(frames);
+    expect(
+      new Set(lifting.map((f) => f.block).filter((o) => o > 0)).size,
+    ).toBeGreaterThan(4);
+    for (const f of lifting) expect(f.pct).toBe('100%');
   });
 });
 
@@ -1116,6 +1252,11 @@ test.describe('home: the other pictures wait for the loader', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    // (the picture of the place takes its time, so the loader shows its map: it is that lift which is measured)
+    await page.route('**/survivalProgress/p21.webp', async (r) => {
+      await new Promise((done) => setTimeout(done, 1500));
+      await r.continue();
+    });
     await watchHandover(page);
     await openPage(page, '/#end');
     await ready(page);

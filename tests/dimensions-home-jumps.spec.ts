@@ -1851,16 +1851,17 @@ test.describe('home: stepping back lands where the reader was', () => {
         __lift: { y: number; scenes: string; decoded: boolean }[];
       };
       w.__lift = [];
+      // (the map is not there at all unless the loader had something to wait for: only one that was whole lifts)
+      let mapWasWhole = false;
       const tick = () => {
         const loader = document.querySelector('.dim--home .loader');
         const home = document.querySelector('.dim--home');
         const c = loader && getComputedStyle(loader);
         const o = !c || c.visibility === 'hidden' ? 0 : +c.opacity;
         const inner = loader?.querySelector('.loader-in');
-        if (
-          home &&
-          (o < 1 || (inner && +getComputedStyle(inner).opacity < 1))
-        ) {
+        const map = inner ? +getComputedStyle(inner).opacity : 0;
+        if (map === 1) mapWasWhole = true;
+        if (home && (o < 1 || (mapWasWhole && map < 1))) {
           const scenes = [
             ...document.querySelectorAll<HTMLElement>('.scene'),
           ].filter((s) => {
