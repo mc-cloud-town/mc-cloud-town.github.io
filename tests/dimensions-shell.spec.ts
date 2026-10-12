@@ -1360,7 +1360,7 @@ test.describe('headings inside the shell', () => {
       ['/survivalProgress/', '.entry', ['.head h1', '.entry h2']],
       ['/member/', '.person', ['.head h1', '.group h2']],
     ] as const)
-      test(`${path} (${theme}): its headings are in the shell's ink, not in the legacy pages' text colour`, async ({
+      test(`${path} (${theme}): its headings are in the shell's ink`, async ({
         page,
       }) => {
         await page.setViewportSize({ width: 1440, height: 900 });

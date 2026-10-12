@@ -5,10 +5,6 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import StyledComponentsRegistry from '@/lib/StyledComponentsRegistry';
 import { ThemeProvider, themeInitScript } from '@/context/ThemeContext';
 
-import 'antd/dist/reset.css';
-import 'react-lazy-load-image-component/src/effects/blur.css';
-import '@/app.css';
-
 const SITE_URL = 'https://mc-ctec.org/';
 const TITLE = 'CloudTown 雲鎮工藝 - Minecraft 技術向伺服器';
 const SITE_NAME = 'CloudTown 雲鎮工藝';

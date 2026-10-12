@@ -1,7 +1,7 @@
 /* Home page: the fixed world of stacked scenes, the loader and the spawn section.
    Ported from docs/design-demos/dimensions-v2.html. Scroll-driven motion uses transform and opacity only. */
 
-/* Lenis drives the scroll position itself; the site-wide smooth scrolling in app.css would fight it. */
+/* Lenis drives the scroll position itself, and the page grows with its content. */
 html.lenis,
 html.lenis body {
   height: auto;

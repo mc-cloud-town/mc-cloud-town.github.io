@@ -1,4 +1,96 @@
-/* Tokens for the "three dimensions" pages. Everything lives under .dim so legacy pages are untouched. */
+/* Tokens for the "three dimensions" pages. Everything below the document base lives under .dim. */
+
+/* Document base: what the page stands on, outside any one page. The shell is the whole site now. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+html {
+  font-family: sans-serif;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  margin: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+[hidden] {
+  display: none !important;
+}
+a,
+button,
+[role='button'],
+input:not([type='range']),
+label,
+select,
+summary,
+textarea {
+  touch-action: manipulation;
+}
+img {
+  vertical-align: middle;
+}
+[tabindex='-1']:focus {
+  outline: none;
+}
+dt {
+  font-weight: 500;
+}
+[type='search'] {
+  outline-offset: -2px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+[type='search']::-webkit-search-cancel-button,
+[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+button::-moz-focus-inner {
+  padding: 0;
+  border-style: none;
+}
+/* Colour changes ease everywhere unless a rule names its own transition (any such rule replaces this one). */
+* {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+/* The page's scrollbar where it takes room in the layout: thin, in the theme's greys. */
+html {
+  --scroll-track: #111827;
+  --scroll-thumb: #64748b;
+  --scroll-thumb-hover: #94a3b8;
+}
+html[data-theme='light'] {
+  --scroll-track: #f1f5f9;
+  --scroll-thumb: #94a3b8;
+  --scroll-thumb-hover: #64748b;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+}
 
 /* Shared with the navigation cover (.dim-cover), which stands in the shell, outside any one page. */
 .dim,
@@ -71,11 +163,6 @@
 .dim a {
   color: inherit;
   text-decoration: none;
-}
-/* app.css gives every heading the legacy pages' text colour: inside the shell a heading is in the shell's ink,
-   on every page of it (and changes with the theme as the text around it does) */
-.dim :is(h1, h2, h3, h4, h5, h6) {
-  color: inherit;
 }
 .dim img {
   display: block;

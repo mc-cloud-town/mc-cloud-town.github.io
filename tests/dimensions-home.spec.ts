@@ -190,7 +190,7 @@ test.describe('home: the outline', () => {
     expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
       'H2',
     );
-    // the statement's own type, not the legacy headings': serif 900, the design's size and leading, the page's colour
+    // the statement's own type: serif 900, the design's size and leading, the page's colour
     const say = page.locator('#nether .say');
     await expect(say).toHaveCSS('font-weight', '900');
     await expect(say).toHaveCSS('font-family', /Chiron Sung HK/);
@@ -206,7 +206,7 @@ test.describe('home: the outline', () => {
     for (const sel of ['.rank h3', '#credits h3'])
       await expect(page.locator(sel).first()).not.toHaveCSS(
         'color',
-        'rgb(241, 245, 249)', // the legacy --text-primary
+        'rgb(241, 245, 249)', // the old pages' text colour, which must not show
       );
   });
 });

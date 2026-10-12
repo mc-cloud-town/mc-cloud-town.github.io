@@ -153,7 +153,7 @@ test.describe('members page: state changes are transitions', () => {
         getComputedStyle(el).getPropertyValue('--t-theme').trim(),
       ]);
     expect(tokens.map(parseFloat)).toEqual([0.3, 0.4]);
-    // Exactly these lists: the legacy stylesheet gives every element `background-color, border-color, color`
+    // Exactly these lists: the base in tokens.css gives every element `background-color, border-color, color`
     // at 0.3s, so a looser check passes without the rule it is meant to cover.
     for (const [sel, properties, durations] of [
       ['.person', 'color, border-color', '0.3s, 0.4s'],
