@@ -18,11 +18,6 @@ html.lenis {
 }
 
 .dim.dim--home {
-  /* how wide the call of the respawn is (.call: the mascot stands beside it), and its departments under it
-     (.join: nothing stands beside them, so they have more of the veiled side) */
-  --call-w: min(720px, 54vw);
-  --join-w: min(960px, 62vw);
-
   /* ───────── the world ───────── */
   .world {
     position: fixed;
@@ -747,111 +742,143 @@ html.lenis {
     font-size: clamp(40px, 7vw, 120px);
   }
 
-  /* respawn: day one again, the call to join, and the footer of the site at the foot of the section */
+  /* respawn: day one again (docs/design-demos/respawn-lab.html). The scene is the call to join, whole: what to
+     do, the mascot beside it, and under both the three departments, each with its own way in. Under the scene
+     the picture sinks into the ground, as an inner page's header does, and on the ground stands the site's
+     footer. Everything runs from gutter to gutter. */
   .respawn {
     position: relative;
+  }
+  .call {
     min-height: 100vh;
-    padding: 20vh var(--gutter) 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 16vh var(--gutter) 14vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    align-content: center;
+    gap: 72px var(--gutter);
   }
   .respawn h2 {
     font-size: clamp(40px, 6vw, 108px);
+    line-height: 1.14;
     margin: 18px 0 44px;
-    max-width: 54vw;
+    text-wrap: balance;
   }
-  /* The call (the label, the title, the way in) and, beside it, the mascot (user feedback: beside the call, not
-     beside the departments). The call alone gives its block its size, as wide as the list under it: the mascot is
-     placed against it, one gutter to its right and centred on it, without taking part in the flow.
-     Side by side the two always fit between the gutters: gutter 6vw + list 54vw + gutter 6vw + mascot 28vw
-     + gutter 6vw = the screen (and on a wide screen each has reached its cap). What gives out first as the
-     screen narrows is the list: a department is name (7em) | gap (24px) | description, and a description needs
-     320px. The mascot is shown for as long as the layout holds that, and left out where it does not (the
-     query at the foot of this block). */
-  .call {
-    --pal: min(28vw, 400px);
-    position: relative;
-    width: 100%;
-    max-width: var(--call-w);
+  .acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px 32px;
   }
-  .join {
-    position: relative;
-    margin-top: 64px;
-    width: 100%;
-    max-width: var(--join-w);
+  .pal {
+    width: min(28vw, 400px);
+    height: auto;
+    aspect-ratio: 1;
+    filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.45));
+    /* floating around its place, on properties of its own: its rise (choreography.ts) owns the transform */
+    animation: pal-float 2.8s ease-in-out infinite alternate;
   }
-  /* name | description, with the way to apply on a line of its own under the description: beside it, the link
-     took a third of the row and the description wrapped after a few words (user feedback; not as the demo,
-     which has no link) */
-  .depts li {
+  /* The departments: a list, one row each. The name at one end, the way in at the other, what the department
+     looks for between them; the rule over each row runs from gutter to gutter. The rows share their columns
+     (the list's own): the names have the width of the longest in the language being read, and no less than
+     the design's. */
+  .depts {
+    grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 7em minmax(0, 1fr);
-    gap: 0 24px;
+    grid-template-columns: minmax(8em, auto) minmax(0, 1fr) auto;
+    column-gap: 32px;
+  }
+  .depts li {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
     align-items: baseline;
-    padding: 18px 0;
+    padding: 22px 0;
     border-top: 1px solid var(--line);
   }
   .depts li:last-child {
     border-bottom: 1px solid var(--line);
   }
   .depts b {
-    font: 900 22px var(--serif);
+    font: 900 24px/1.3 var(--serif);
   }
   .depts li > span {
     color: var(--muted);
   }
-  .depts li > :not(b) {
-    grid-column: 2;
-  }
-  /* a paragraph and its link, at the scale of a row of this list (the openings have 40px there, under 17px text) */
+  /* the ways in stand in a row of their own here, not under a paragraph */
+  .acts .more,
   .depts .more {
-    margin-top: 12px;
-    justify-self: start;
+    margin-top: 0;
+    line-height: 1.5;
     white-space: nowrap;
   }
-  /* With the mascot beside the call, the departments stand side by side under it, three across (from 1101px:
-     under that a column would be too narrow for a description, and they stay one under another): the row is
-     short and as wide as the text side of the picture, so nothing is left hanging open beside a tall list. */
-  @media (min-width: 1101px) {
+  .ground {
+    background: linear-gradient(
+      180deg,
+      rgba(var(--v), 0) 0,
+      rgba(var(--v), 0.86) 110px,
+      rgb(var(--v)) 200px
+    );
+    padding: 180px var(--gutter) 0;
+    transition: background var(--t-theme);
+  }
+  /* the footer of the site stands on the ground: the gutters are the ground's */
+  .respawn .dim-foot {
+    margin-top: 0;
+    padding-inline: 0;
+  }
+  /* 861–1100px: the same frame, a smaller mascot, a narrower name column */
+  @media (max-width: 1100px) {
+    .pal {
+      width: min(26vw, 300px);
+    }
+    .call {
+      row-gap: 56px;
+    }
     .depts {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0 clamp(24px, 2.6vw, 44px);
+      grid-template-columns: minmax(6em, auto) minmax(0, 1fr) auto;
+      column-gap: 24px;
     }
-    .depts li,
-    .depts li:last-child {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 20px 0 0;
-      border-bottom: 0;
+  }
+  /* up to 860px: one column (the veil runs bottom-up), no room for the mascot; a department is its name, what
+     it looks for and its way in, one under another */
+  @media (max-width: 860px) {
+    .call {
+      grid-template-columns: minmax(0, 1fr);
+      padding-top: 112px;
+      padding-bottom: 10vh;
+      row-gap: 48px;
     }
-    .depts b {
-      margin-bottom: 10px;
+    .pal {
+      display: none;
+    }
+    .respawn h2 {
+      margin-bottom: 32px;
+    }
+    .depts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .depts li {
+      row-gap: 6px;
+      padding: 20px 0 12px;
     }
     .depts .more {
-      margin-top: 14px;
+      justify-self: start;
+    }
+    .ground {
+      padding-top: 140px;
     }
   }
-  .pal {
-    position: absolute;
-    left: calc(100% + var(--gutter));
-    top: 50%;
-    width: var(--pal);
-    height: var(--pal);
-    max-width: none;
-    margin-top: calc(var(--pal) / -2);
-    filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.45));
-    /* floating around its place, on properties of its own: its rise (choreography.ts) owns the transform */
-    animation: pal-float 2.8s ease-in-out infinite alternate;
-  }
-  /* the footer of the site is the foot of this section: no rule above it, and the design's 64px under it */
-  .respawn .dim-foot {
-    margin-top: auto;
-    width: 100%;
-    padding: 82px 0 64px;
-    border-top: 0;
+  /* a phone on its side: the scene is as tall as what it holds */
+  @media (max-height: 480px) {
+    .call {
+      min-height: 0;
+      padding-top: 88px;
+      padding-bottom: 32px;
+    }
+    .pal {
+      display: none;
+    }
   }
   /* a section that was jumped to: the focus is on its heading, which is not a control */
   [data-heading]:focus:not(:focus-visible) {
@@ -859,10 +886,6 @@ html.lenis {
   }
 
   @media (max-width: 1024px) {
-    /* 44px tall to tap, its words at the foot of that box: the box itself is the gap to the description */
-    .depts .more {
-      margin-top: 0;
-    }
     /* a finger needs 44px around each stop of the rail */
     .rail a {
       width: 44px;
@@ -954,13 +977,6 @@ html.lenis {
     .rail {
       display: none;
     }
-    .depts li {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 2px;
-    }
-    .depts li > :not(b) {
-      grid-column: 1;
-    }
   }
   /* short landscape screens: the title would run off the bottom */
   @media (max-height: 480px) {
@@ -1013,38 +1029,6 @@ html.lenis {
     }
     .rail {
       display: none;
-    }
-    .respawn {
-      min-height: 0;
-      padding-top: 96px;
-    }
-    .respawn .dim-foot {
-      padding-bottom: 24px;
-    }
-  }
-  /* Where the layout cannot hold the mascot (see .join), there is none:
-     - up to 860px a department is stacked and the veil runs bottom-up: there is no side to stand on;
-     - the list beside it (54vw) would leave a description less than 320px: narrower than (7em + 24px + 320px)
-       / 0.54, which is 845px, so today the breakpoint above is reached first and this limit only speaks if
-       that one moves;
-     - or the screen has no height for it.
-     It is not the bar's breakpoint (1100px): at 1024px the list has 553px and the mascot 287px. */
-  @media (max-width: 860px),
-    (max-width: calc((7em + 24px + 320px) / 0.54)),
-    (max-height: 480px) {
-    .pal {
-      display: none;
-    }
-    /* the call has the width of the list under it */
-    --call-w: var(--join-w);
-    .respawn h2 {
-      max-width: none;
-    }
-  }
-  /* up to 860px the veil runs bottom-up under the full width, and so does the list */
-  @media (max-width: 860px) {
-    .join {
-      max-width: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {

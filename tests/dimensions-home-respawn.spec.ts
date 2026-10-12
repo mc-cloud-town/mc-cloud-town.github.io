@@ -43,8 +43,8 @@ test.describe('home: respawn', () => {
       await expect(a).toHaveAttribute('target', '_blank');
       await expect(a).toHaveAttribute('rel', /noopener/);
     }
-    // and after them, the way to the full text: the join page, in this tab, as a step of the shell
-    const more = page.locator('#respawn > a.more');
+    // and beside the call, the way to the full text: the join page, in this tab, as a step of the shell
+    const more = page.locator('#respawn .acts a.more');
     await expect(more).toHaveCount(1);
     await expect(more).toHaveAttribute('href', '/join/');
     await expect(more).toContainText('完整的加入說明');
@@ -172,16 +172,11 @@ test.describe('home: respawn', () => {
       await page.waitForTimeout(1500);
       expect(await visibleScenes(page)).toEqual(['day1']);
       await expect(page.locator('#respawn .dim-foot')).toBeInViewport();
-      await expect(
-        page.locator('#respawn .depts li a').last(),
-      ).toBeInViewport();
-      // (at the end of the page the list is read on from further up: on a short screen its first rows are
-      // passing behind the bar by now, the more so since the footer has a line more)
+      // (on a short screen the footer is taller than the screen: its first rows are passing behind the bar)
       await expectTextFits(page, {
-        within: '#respawn .depts',
+        within: '#respawn .dim-foot',
         passing: '.dim-bar',
       });
-      await expectTextFits(page, { within: '#respawn .dim-foot' });
       // The footer is the shell's own (13px links, as on the inner pages), so only the sizes to tap are checked here.
       const small = await page.evaluate(() =>
         window.innerWidth > 1024
@@ -192,9 +187,9 @@ test.describe('home: respawn', () => {
               .map((r) => `${Math.round(r.width)}x${Math.round(r.height)}`),
       );
       expect(small).toEqual([]);
-      // the call to join, three ways to apply, the way to the join page, and the footer's eleven: six pages of
-      // the site, five links out
-      expect(await page.locator('#respawn a').count()).toBe(16);
+      // the call to join, the way to the join page, three ways to apply, and the footer's thirteen: eight pages
+      // of the site, four marks of the community and the way to support it
+      expect(await page.locator('#respawn a').count()).toBe(18);
       await expectNoHorizontalScroll(page);
       // by day the page is light again after the End
       if (theme === 'light')
@@ -209,13 +204,13 @@ test.describe('home: respawn', () => {
       [1440, 900],
       [1070, 640],
     ] as const)
-      test(`each department's link stands under its description, which has the width of the column (${locale}, ${width}×${height})`, async ({
+      test(`a department is one row from gutter to gutter: its name, what it looks for, and its way in at the far end (${locale}, ${width}×${height})`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height });
         await openPage(page, '/', { locale });
         await ready(page);
-        await scrollToSection(page, '#respawn', 0.2);
+        await scrollToSection(page, '#respawn .depts', -0.3);
         await expect(page.locator('#respawn .depts')).toHaveCSS('opacity', '1');
         const rows = await page
           .locator('#respawn .depts li')
@@ -223,81 +218,62 @@ test.describe('home: respawn', () => {
             els.map((li) => {
               const box = (sel: string) =>
                 li.querySelector(sel)!.getBoundingClientRect();
-              const [name, text, link] = [box('b'), box('span'), box('a')];
+              const [row, name, text, link] = [
+                li.getBoundingClientRect(),
+                box('b'),
+                box('span'),
+                box('a'),
+              ];
               const span = li.querySelector('span')!;
-              const lines = Math.round(
-                text.height / parseFloat(getComputedStyle(span).lineHeight),
-              );
               return {
-                nameBottom: name.bottom,
-                textTop: text.top,
+                left: row.left,
+                right: row.right,
+                nameLeft: name.left,
                 nameRight: name.right,
                 textLeft: text.left,
-                textWidth: text.width,
-                textBottom: text.bottom,
+                textRight: text.right,
                 linkLeft: link.left,
-                linkTop: link.top,
-                lines,
-                perLine: span.textContent!.length / lines,
+                linkRight: link.right,
+                linkLines: li.querySelector('a')!.getClientRects().length,
+                lines: Math.round(
+                  text.height / parseFloat(getComputedStyle(span).lineHeight),
+                ),
               };
             }),
           );
         expect(rows).toHaveLength(3);
+        const gutter = await page
+          .locator('#respawn .call')
+          .evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft));
         for (const r of rows) {
-          // from 1101px the departments stand three across: name, description, link, one under another in a column;
-          // under that it is name | description. Either way the link is on a line of its own beneath the
-          // description, flush with it
-          if (width >= 1101)
-            expect(r.textTop).toBeGreaterThanOrEqual(r.nameBottom);
-          else expect(r.textLeft).toBeGreaterThan(r.nameRight);
-          expect(r.linkTop).toBeGreaterThanOrEqual(r.textBottom);
-          expect(r.linkTop - r.textBottom).toBeLessThan(28);
-          expect(Math.abs(r.linkLeft - r.textLeft)).toBeLessThanOrEqual(1);
-          expect(r.textWidth).toBeGreaterThanOrEqual(width >= 1101 ? 200 : 320);
-          expect(r.lines).toBeLessThanOrEqual(width >= 1101 ? 4 : 2);
-          // a comfortable measure: Chinese never wraps after a handful of characters
-          if (locale !== 'en' && r.lines > 1)
-            expect(r.perLine).toBeGreaterThanOrEqual(width >= 1101 ? 8 : 14);
+          // the rule over the row runs from gutter to gutter
+          expect(Math.abs(r.left - gutter)).toBeLessThanOrEqual(1);
+          expect(Math.abs(r.right - (width - gutter))).toBeLessThanOrEqual(1);
+          // name | description | way in
+          expect(Math.abs(r.nameLeft - r.left)).toBeLessThanOrEqual(1);
+          expect(r.textLeft).toBeGreaterThan(r.nameRight);
+          expect(r.linkLeft).toBeGreaterThan(r.textLeft);
+          expect(Math.abs(r.linkRight - r.right)).toBeLessThanOrEqual(1);
+          expect(r.linkLines).toBe(1);
+          expect(r.lines).toBeLessThanOrEqual(2);
+          // the descriptions begin on one line
+          expect(Math.abs(r.textLeft - rows[0].textLeft)).toBeLessThanOrEqual(
+            1,
+          );
         }
         await expectTextFits(page, { within: '#respawn .depts' });
       });
 
-  /** The mascot and the block it stands beside (the call: label, title, way in), as boxes on the screen. */
-  const mascotAndList = async (page: Page) => {
-    const [list, mascot] = await Promise.all([
-      page.locator('#respawn .call').boundingBox(),
+  /** The mascot and the block it stands beside (the call: label, title, ways in), as boxes on the screen. */
+  const mascotAndCall = async (page: Page) => {
+    const [call, mascot] = await Promise.all([
+      page.locator('#respawn .call > div').boundingBox(),
       page.locator('#respawn .pal').boundingBox(),
     ]);
-    return { list: list!, mascot: mascot! };
+    return { call: call!, mascot: mascot! };
   };
 
-  /**
-   * Whether the layout can hold the mascot on this screen, from the layout's own sizes as the page has them: the
-   * departments stand as name | description (two columns: only above the breakpoint); beside the mascot the list
-   * is 54% of the screen, 720px at most, and that leaves a description at least 320px; and gutter, list, gutter,
-   * mascot (28% of the screen, 400px at most), gutter are no wider than the screen. A screen 480px high or less
-   * has no room for it either.
-   */
-  const MIN_DESCRIPTION = 320;
-  const holdsMascot = (page: Page) =>
-    page.evaluate((least) => {
-      const width = document.documentElement.clientWidth;
-      const gutter = parseFloat(
-        getComputedStyle(document.querySelector('#respawn')!).paddingLeft,
-      );
-      // the mascot stands beside the call (54% of the screen, 720px at most), where the side veil leaves it a side
-      // to stand on (above 860px) and the screen has the height
-      const call = Math.min(720, 0.54 * width);
-      const mascot = Math.min(0.28 * width, 400);
-      return (
-        width > 860 &&
-        least > 0 &&
-        3 * gutter + call + mascot <= width + 0.5 &&
-        window.innerHeight > 480
-      );
-    }, MIN_DESCRIPTION);
-
-  // 1024 × 768 is the tablet on its side; 861 is the narrowest screen on which a department is name | description
+  // 1024 × 768 is the tablet on its side; 861 is the narrowest screen with a side for the mascot to stand on
   for (const [width, height] of [
     [1920, 1080],
     [1440, 900],
@@ -307,7 +283,7 @@ test.describe('home: respawn', () => {
     [900, 700],
     [861, 700],
   ] as const)
-    test(`at ${width}×${height} the layout holds the mascot: it stands beside the call, centred on it`, async ({
+    test(`at ${width}×${height} the mascot stands beside the call, at the far gutter and centred on it`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -315,7 +291,6 @@ test.describe('home: respawn', () => {
       await openPage(page, '/', { locale: 'en' });
       await ready(page);
       await scrollToSection(page, '#respawn', 0.25);
-      expect(await holdsMascot(page), 'the layout holds it').toBe(true);
       const pal = page.locator('#respawn .pal');
       await expect(pal).toBeVisible();
       await expect(pal).toHaveCSS('opacity', '1');
@@ -325,71 +300,38 @@ test.describe('home: respawn', () => {
         .toBeGreaterThan(0);
       // let its rise finish: from here on it only floats a few pixels around its place
       await page.waitForTimeout(1700);
-      const { list, mascot } = await mascotAndList(page);
-      // each at the size the layout gives it (the mascot's own box: on the screen it is turned a degree as it floats)
+      const { call, mascot } = await mascotAndCall(page);
+      // at the size the layout gives it (its own box: on the screen it is turned a degree as it floats)
+      const size =
+        width > 1100
+          ? Math.min(0.28 * width, 400)
+          : Math.min(0.26 * width, 300);
       expect(
         Math.abs(
-          (await pal.evaluate((el: HTMLElement) => el.offsetWidth)) -
-            Math.min(0.28 * width, 400),
+          (await pal.evaluate((el: HTMLElement) => el.offsetWidth)) - size,
         ),
       ).toBeLessThan(2);
-      expect(Math.abs(list.width - Math.min(720, 0.54 * width))).toBeLessThan(
-        2,
-      );
-      const texts = await page
-        .locator('#respawn .depts li > span')
-        .evaluateAll((els) =>
-          els.map((el) => el.getBoundingClientRect().width),
-        );
-      expect(texts).toHaveLength(3);
-      // from 1101px the departments stand three across (a column each); under that, one under another
-      for (const w of texts)
-        expect(w).toBeGreaterThanOrEqual(width >= 1101 ? 200 : MIN_DESCRIPTION);
-      // a column of its own to the right of the list, one gutter away
       const gutter = await page
-        .locator('#respawn')
+        .locator('#respawn .call')
         .evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft));
-      const gap = mascot.x - (list.x + list.width);
-      expect(gap).toBeGreaterThan(gutter - 16);
-      expect(gap).toBeLessThan(gutter + 16);
-      expect(mascot.x + mascot.width).toBeLessThanOrEqual(width);
-      // centred on the block of the three departments
+      // the call begins at one gutter, the mascot ends at the other, and they are a gutter apart at least
+      expect(Math.abs(call.x - gutter)).toBeLessThanOrEqual(1);
       expect(
-        Math.abs(mascot.y + mascot.height / 2 - (list.y + list.height / 2)),
+        Math.abs(mascot.x + mascot.width - (width - gutter)),
       ).toBeLessThanOrEqual(16);
-      // and clear of what is above and below it
-      const [button, foot] = await Promise.all([
-        page.locator('#respawn a.btn').boundingBox(),
-        page.locator('#respawn .dim-foot').boundingBox(),
-      ]);
-      const clear = (b: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-      }) =>
-        b.x + b.width <= mascot.x ||
-        b.y + b.height <= mascot.y ||
-        b.y >= mascot.y + mascot.height;
-      expect(clear(button!)).toBe(true);
-      // the footer's words (its box begins with its own padding, which the mascot may float into)
-      const words = await page
-        .locator('#respawn .dim-foot [data-t], #respawn .dim-foot img')
-        .evaluateAll((els) =>
-          els.map((el) => {
-            const r = el.getBoundingClientRect();
-            return { x: r.x, y: r.y, width: r.width, height: r.height };
-          }),
-        );
-      expect(words.length).toBeGreaterThan(5);
-      for (const w of words) expect(clear(w)).toBe(true);
-      expect(foot!.y + foot!.height).toBeGreaterThan(mascot.y);
-      await scrollToSection(page, '#respawn .depts', -0.4);
-      await expectTextFits(page, { within: '#respawn' });
+      expect(mascot.x - (call.x + call.width)).toBeGreaterThan(gutter - 16);
+      // centred on the call
+      expect(
+        Math.abs(mascot.y + mascot.height / 2 - (call.y + call.height / 2)),
+      ).toBeLessThanOrEqual(16);
+      // and clear of the departments under both
+      const depts = await page.locator('#respawn .depts').boundingBox();
+      expect(depts!.y).toBeGreaterThanOrEqual(mascot.y + mascot.height - 16);
+      await expectTextFits(page, { within: '#respawn .call' });
       await expectNoHorizontalScroll(page);
     });
 
-  // 860: the departments stack, there is no side to stand on. 1280 × 450: wide enough, not high enough.
+  // 860: one column, there is no side to stand on. 1280 × 450: wide enough, not high enough.
   for (const [width, height] of [
     [860, 700],
     [844, 390],
@@ -398,14 +340,13 @@ test.describe('home: respawn', () => {
     [360, 740],
     [1280, 450],
   ] as const)
-    test(`at ${width}×${height} the layout cannot hold the mascot: there is none, and the departments have its room`, async ({
+    test(`at ${width}×${height} the layout cannot hold the mascot: there is none, and the call has its room`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
       await openPage(page, '/', { locale: 'en' });
       await ready(page);
       await scrollToSection(page, '#respawn', 0.25);
-      expect(await holdsMascot(page), 'the layout holds it').toBe(false);
       const pal = page.locator('#respawn .pal');
       await expect(pal).toHaveCount(1);
       await expect(pal).toBeHidden();
@@ -417,8 +358,8 @@ test.describe('home: respawn', () => {
           el.naturalWidth,
         ]),
       ).toEqual(['lazy', 0]);
-      // the list is as wide as the column allows, up to its own measure
-      const m = await page.locator('#respawn').evaluate((el) => {
+      // the departments run from gutter to gutter
+      const m = await page.locator('#respawn .call').evaluate((el) => {
         const c = getComputedStyle(el);
         return {
           column:
@@ -428,11 +369,7 @@ test.describe('home: respawn', () => {
           list: el.querySelector('.depts')!.getBoundingClientRect().width,
         };
       });
-      // up to 860px the text has the whole width; above, it stays on the veiled side of the picture (62% of the screen)
-      const room = width <= 860 ? m.column : Math.min(m.column, 0.62 * width);
-      expect(m.list).toBeGreaterThanOrEqual(Math.min(960, room) - 1);
-      // more than it has beside the mascot (54% of the screen)
-      if (width < 1161) expect(m.list).toBeGreaterThan(0.54 * width + 40);
+      expect(Math.abs(m.list - m.column)).toBeLessThanOrEqual(1);
       await scrollToSection(page, '#respawn .depts', -0.4);
       await expectTextFits(page, { within: '#respawn .depts' });
       await expectNoHorizontalScroll(page);
@@ -505,18 +442,18 @@ test.describe('home: respawn', () => {
         await atRest(page);
         // the ground alone is measured first: without the words that stand on it, and without the mascot
         const ground = await page.addStyleTag({
-          content:
-            '#respawn > :not(.dim-foot), #respawn .pal, .rail { visibility: hidden !important; }',
+          content: '#respawn .call, .rail { visibility: hidden !important; }',
         });
         const foot = page.locator('#respawn .dim-foot');
+        // (the band under the row is the ground the footer stands on: the picture sinks into it)
         const [join, band, bar] = await Promise.all([
-          page.locator('#respawn .join').boundingBox(),
-          foot.boundingBox(),
+          page.locator('#respawn .call > div').boundingBox(),
+          page.locator('#respawn .ground').boundingBox(),
           page.locator('.dim-bar').boundingBox(),
         ]);
         // a row of the screen between the bar and the footer's own band
         const top = bar!.y + bar!.height + 40;
-        expect(band!.y - top).toBeGreaterThan(200);
+        expect(band!.y - top).toBeGreaterThan(100);
         const y = top + 0.4 * (band!.y - 20 - top);
         // How much paper lies over the photograph at 41 points across that row: how far each has gone from the
         // photograph's own colour (the veil taken away) towards the paper's. Where the photograph is nearly the
@@ -570,7 +507,7 @@ test.describe('home: respawn', () => {
         expect(to - from, profile).toBeGreaterThanOrEqual(0.3);
         await ground.evaluate((el) => (el as Element).remove());
         await atRest(page);
-        // the veil is the only ground: the descriptions and the footer carry none of their own
+        // on the picture the veil is the only ground: the descriptions and the footer carry none of their own
         await expect(foot).toHaveCSS('background-image', 'none');
         const own = await page
           .locator('#respawn .depts li > span')
