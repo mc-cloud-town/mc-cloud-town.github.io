@@ -55,10 +55,21 @@ The development server will start at `http://localhost:3000` (or another availab
 ## 🏗️ Tech Stack
 
 - **Framework:** Next.js 16 (App Router, static export) with React 19 and TypeScript
-- **Styling:** Styled Components with Ant Design
+- **Styling:** plain CSS under `src/styles/dimensions/`, every rule scoped under `.dim` (no CSS-in-JS, no component library)
+- **Motion:** GSAP (ScrollTrigger) and Lenis; the icons come from `@ant-design/icons`
 - **Internationalization:** i18next
 - **Testing:** Playwright end-to-end tests
 - **Package Manager:** Yarn 4.12.0 (Berry)
+
+## 🗂️ Structure
+
+Every page lives in one shell, the route group `src/app/(dimensions)/` (bar, footer, page transitions, i18n boot);
+the not-found page reuses the same layout.
+
+- `src/components/dimensions/`: the shell and every page's components (the home page's are in `home/`)
+- `src/lib/dimensions/`: choreography (the home page's scroll-driven scenes), page transitions, navigation
+- `src/styles/dimensions/`: `tokens.css` (document base and design tokens), `shell.css`, `inner.css`, `home.css`, `pages/`
+- `src/constants/`, `src/hooks/`, `src/context/`, `src/i18n/`, `src/types/`: shared data, the theme and the three locales
 
 ## 🌐 Internationalization
 
