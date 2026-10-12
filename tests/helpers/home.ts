@@ -329,6 +329,10 @@ export const shownPictures = (page: Page) =>
 
 /** One frame of the loader, as `watchLoader` records it. */
 export interface LoaderFrame {
+  /** on the page's own clock */
+  t: number;
+  /** the hero's first picture is in */
+  cover: boolean;
   pct: string;
   label: string;
   /** opacity of the block that holds the map: below 1 once the lift has begun */
@@ -363,7 +367,12 @@ export const watchLoader = (page: Page) =>
         const all = new Set<string>();
         for (let y = 0; y < map.height; y++)
           for (let x = 0; x < map.width; x++) all.add(at(x, y));
+        const cover = document.querySelector<HTMLImageElement>(
+          '.scene.is-first img',
+        );
         w.__loader.push({
+          t: performance.now(),
+          cover: Boolean(cover?.complete && cover.naturalWidth > 0),
           pct: document.querySelector('.loader .pct')?.textContent ?? '',
           label: document.querySelector('.loader .stage')?.textContent ?? '',
           block: +getComputedStyle(block).opacity,
@@ -383,6 +392,28 @@ export const watchLoader = (page: Page) =>
     };
     requestAnimationFrame(tick);
   });
+/**
+ * For a picture the loader waits for: answer it (`serve`) only once the loader has been recorded for `frames`
+ * frames. Counted on the page, not on a clock: how soon the page draws its first frame is the machine's affair.
+ */
+export const afterLoaderFrames = async (
+  page: Page,
+  frames: number,
+  serve: () => unknown,
+) => {
+  for (;;) {
+    const seen = await page
+      .evaluate(
+        () => (window as unknown as { __loader?: unknown[] }).__loader?.length,
+      )
+      // (the page is on its way)
+      .catch(() => 0);
+    if ((seen ?? 0) >= frames) break;
+    await new Promise((done) => setTimeout(done, 40));
+  }
+  await serve();
+};
+
 export const loaderFrames = (page: Page) =>
   page.evaluate(
     () => (window as unknown as { __loader: LoaderFrame[] }).__loader,

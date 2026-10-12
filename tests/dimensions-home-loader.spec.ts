@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { expectNoMissingKeys, openPage } from './helpers/dimensions';
 import {
   type LoaderFrame,
+  afterLoaderFrames,
   loaderFrames,
   ready,
   watchLoader,
@@ -554,6 +555,10 @@ test.describe('home: the loader is a map of the world being generated', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
+    // a first picture that takes its time (inside the cover's own budget): there is something to build up to
+    await stubVideo(page, {
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 1500),
+    });
     await watchLoader(page);
     await openPage(page, '/');
     await ready(page);
@@ -608,11 +613,65 @@ test.describe('home: the loader is a map of the world being generated', () => {
     for (const f of frames.filter((f) => f.ready)) expect(f.pct).toBe('100%');
     const held = frames.filter((f) => f.pct === '100%' && f.block === 1);
     expect(held.length).toBeGreaterThan(2);
-    // it starts by building; whether it also has to wait depends on the network of the moment
+    // it builds while the picture is on its way, and enters once everything is in
     expect(frames[0].label).toBe('正在建置地形');
+    for (const f of frames.filter((f) => !f.cover))
+      expect(f.label).toBe('正在建置地形');
+    expect(frames.at(-1)!.label).toBe('正在進入世界');
   });
 
-  test('with the first scene stalled the map creeps, the label says the world is being entered, and it still lifts at the timeout', async ({
+  test('the map follows what is in: with the fonts in and the first picture on its way it waits short of the last third, moves on slowly, and is at 100% soon after the picture', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // no font is waited for (every request for one is refused at once): the picture is the last of three things
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    await stubVideo(page, {
+      // it comes once the loader has been up for a good second (inside the cover's own budget of two)
+      cover: (fulfil) => void afterLoaderFrames(page, 80, fulfil),
+    });
+    await watchLoader(page);
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.loader')).toBeHidden();
+    const frames = await loaderFrames(page);
+    const waiting = frames.filter((f) => !f.cover);
+    const after = frames.filter((f) => f.cover);
+    expect(waiting.length).toBeGreaterThanOrEqual(80);
+    expect(after.length).toBeGreaterThan(10);
+    // never 100% before the picture is in, and the page is not handed over either
+    for (const f of waiting) {
+      expect(number(f)).toBeLessThan(100);
+      expect(f.ready).toBe(false);
+      expect(f.label).toBe('正在建置地形');
+    }
+    // two of three are in (the script, the fonts): the map eases there (many values on the way), and goes on
+    // slowly from there, by less than the third the picture is worth
+    const values = waiting.map(number);
+    expect(new Set(values).size).toBeGreaterThan(12);
+    expect(Math.max(...values)).toBeGreaterThan(67);
+    expect(Math.max(...values)).toBeLessThan(94);
+    expect(
+      new Set(values.filter((v) => v > 67)).size,
+      'values on the slow way',
+    ).toBeGreaterThan(2);
+    // it never goes back
+    frames.forEach((f, i) =>
+      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
+        number(frames[i - 1] ?? f),
+      ),
+    );
+    // 100% promptly once the picture is in (the finish is a third of a second), and then the page is handed over
+    const full = after.find((f) => f.pct === '100%')!;
+    expect(full).toBeDefined();
+    expect(full.t - after[0].t).toBeLessThan(900);
+    expect(full.label).toBe('正在進入世界');
+    const handed = frames.find((f) => f.ready)!;
+    expect(handed.t - after[0].t).toBeLessThan(1500);
+    expect(handed.pct).toBe('100%');
+  });
+
+  test('with the first scene stalled the map moves on slowly without claiming the picture, and at the timeout it finishes, says the world is being entered, and lifts', async ({
     page,
   }) => {
     await stubVideo(page, {
@@ -633,22 +692,26 @@ test.describe('home: the loader is a map of the world being generated', () => {
     const labels = [...new Set(frames.map((f) => f.label))];
     expect(labels).toEqual(['正在建置地形', '正在進入世界']);
     // while it waits it never claims to be done, and it never stands still for long
-    const waiting = frames.filter(
-      (f) => f.label === '正在進入世界' && !f.ready,
-    );
-    expect(waiting.length).toBeGreaterThan(30);
+    const waiting = frames.filter((f) => f.label === '正在建置地形');
+    expect(waiting.length).toBeGreaterThan(200);
+    expect(waiting.at(-1)!.t - waiting[0].t).toBeGreaterThan(5000);
     const values = waiting.map(number);
-    expect(values[0]).toBeGreaterThanOrEqual(82);
-    expect(new Set(values.filter((v) => v < 100)).size).toBeGreaterThan(4);
-    // it creeps up to 95% and stays there; only the last third of a second, once the wait is over, goes beyond
-    const creeping = values.filter((v) => v <= 95);
-    const finishing = values.filter((v) => v > 95 && v < 100);
-    expect(creeping.length).toBeGreaterThan(100);
-    expect(finishing.length).toBeLessThan(creeping.length / 4);
-    // and it does finish: 100% before the lift
-    for (const f of frames.filter((f) => f.block < 1))
-      expect(f.pct).toBe('100%');
+    // one or two of three things are in (the script; the fonts, if they came): it moves on from there, short of
+    // what the picture is worth
+    expect(Math.max(...values)).toBeGreaterThanOrEqual(50);
+    expect(Math.max(...values)).toBeLessThan(95);
+    expect(new Set(values).size).toBeGreaterThan(12);
+    for (const f of waiting) expect(f.ready).toBe(false);
+    // the wait is given up: only then is the world entered, and the map does finish before the lift
+    const entering = frames.filter((f) => f.label === '正在進入世界');
+    expect(entering[0].t - frames[0].t).toBeGreaterThan(5000);
+    for (const f of frames.filter((f) => f.ready)) expect(f.pct).toBe('100%');
     expect(frames.at(-1)!.pct).toBe('100%');
+    frames.forEach((f, i) =>
+      expect(number(f), `frame ${i}`).toBeGreaterThanOrEqual(
+        number(frames[i - 1] ?? f),
+      ),
+    );
   });
 
   test('in English the two stages are named in English', async ({ page }) => {
@@ -673,21 +736,26 @@ test.describe('home: the loader is a map of the world being generated', () => {
     await expectNoMissingKeys(page);
   });
 
-  test('reduced motion: the finished map at once, no build-up, and the loader goes', async ({
+  test('reduced motion: the map stands at what is in, without the way between, then finished, and the loader goes', async ({
     page,
   }) => {
+    await stubVideo(page, {
+      cover: (fulfil) => void setTimeout(() => void fulfil(), 1200),
+    });
     await watchLoader(page);
     await openPage(page, '/', { reducedMotion: true });
     await ready(page);
     await expect(page.locator('.loader')).toHaveCount(0);
     const frames = await loaderFrames(page);
     expect(frames.length).toBeGreaterThan(3);
-    // the static markup says 0% until the page starts; after that only the finished map
+    // only whole steps of three (the script, the fonts, the picture): nothing builds up between them
     const values = new Set(frames.map((f) => f.pct));
-    for (const v of values) expect(['0%', '100%']).toContain(v);
+    for (const v of values) expect(['0%', '33%', '66%', '100%']).toContain(v);
+    expect(values.has('66%')).toBe(true);
     expect(values.has('100%')).toBe(true);
+    for (const f of frames.filter((f) => !f.cover))
+      expect(f.pct).not.toBe('100%');
     const drawn = frames.filter((f) => f.pct === '100%');
-    expect(drawn.length).toBeGreaterThan(1);
     for (const f of drawn) {
       expect(f.centre).toBe(DONE);
       expect(f.ring).toBe(FRONTIER);
