@@ -1997,6 +1997,40 @@ test.describe('home: stepping back lands where the reader was', () => {
       .toBeGreaterThan(after.y);
   });
 
+  // The names of the credits are a good part of the page's height, and they come from the network. A loader with
+  // nothing else to wait for lifts at once: it must still not lift on a place that the names will move.
+  test('stepping back to the credits while the names are slow to come: the loader waits for them, and lifts on the credits', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    let slow = false;
+    let answered = 0;
+    await page.route('**/member.json', async (r) => {
+      if (slow) await new Promise((done) => setTimeout(done, 1500));
+      if (slow) answered++;
+      await r.continue();
+    });
+    await openPage(page, '/');
+    await ready(page);
+    await toTheRosterLink(page);
+    const before = await where(page);
+    expect(before.section).toBe('credits');
+    await toTheRoster(page, '#credits a.more');
+    slow = true;
+    await page.goBack();
+    await ready(page);
+    // at the moment the page is handed over: the names are in, and the place is the one that was left
+    expect(answered).toBeGreaterThan(0);
+    const handed = await where(page);
+    expect(handed.section).toBe('credits');
+    expect(Math.abs(handed.y - before.y)).toBeLessThanOrEqual(4);
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await still(page);
+    const after = await where(page);
+    expect(after.section).toBe('credits');
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+  });
+
   test('a step forward to the visit is a return to it as well: the remembered place, not the section its address names', async ({
     page,
   }) => {

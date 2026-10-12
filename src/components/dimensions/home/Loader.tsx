@@ -55,6 +55,8 @@ export const GROUND_GOES_AT_S = MAP_OPENS_S - 0.1;
  */
 const FONT_FILE_KB = 250;
 const PICTURE_KB = 130;
+/** The list of names the credits are made of (`settled`, below): a small file. */
+const NAMES_KB = 20;
 /**
  * Which font files are wanted is known only as the page is laid out: the fonts are counted by the files asked for
  * so far, looked up this often, and never as quite all of them until the browser says the fonts are ready (more
@@ -136,9 +138,16 @@ const fontsAreIn = () => fontSheetIn().then(() => document.fonts.ready);
  */
 export const Loader = ({
   reduced,
+  settled,
   onDone,
 }: {
   reduced: boolean | null;
+  /**
+   * The page has the shape it will be handed over in: false while something that changes the height of the page
+   * above the place the reader arrives at is still on its way (the names of the credits, on an arrival further
+   * down). The loader waits for it like for a picture, so that it never lifts on a place that is about to move.
+   */
+  settled: boolean;
   onDone: (plain: boolean) => void;
 }) => {
   const { t } = useTranslation();
@@ -146,6 +155,12 @@ export const Loader = ({
   const map = useRef<HTMLCanvasElement>(null);
   const [pct, setPct] = useState(0);
   const [gone, setGone] = useState(false);
+  /** What the effect below needs of `settled`: how it is now, and whom to tell when it comes true. */
+  const shape = useRef({ settled, tell: () => {} });
+  useEffect(() => {
+    shape.current.settled = settled;
+    if (settled) shape.current.tell();
+  }, [settled]);
 
   useEffect(() => {
     const el = box.current;
@@ -190,9 +205,21 @@ export const Loader = ({
         '.world img[src]',
       ) ?? []),
     ];
-    const awaited = pictures().map(loaded);
+    // what is waited for besides the fonts, each with what it costs: the pictures, and the page's shape
+    const awaited = [
+      ...pictures().map((img) => ({ in: loaded(img), kb: PICTURE_KB })),
+      {
+        in: new Promise<void>((done) => {
+          if (shape.current.settled) done();
+          else shape.current.tell = done;
+        }),
+        kb: NAMES_KB,
+      },
+    ];
     let fontsIn = false;
-    let picturesIn = 0;
+    /** How many of them are in, and what they cost together. */
+    let othersIn = 0;
+    let othersKb = 0;
     /** The font files asked for so far, and those of them that have come. */
     const fontFiles = () => {
       let asked = 0;
@@ -206,7 +233,7 @@ export const Loader = ({
     };
     let files = fontFiles();
     /** What was in when the map appeared: that much is not counted. */
-    let was = { fontsIn, picturesIn, files };
+    let was = { fontsIn, othersKb, files };
     /** How much of what was missing when the map appeared has come since, by cost. */
     const real = () => {
       // (the fonts are not ready: one file at the least is still to come, whether it has been asked for or not)
@@ -216,12 +243,10 @@ export const Loader = ({
       const came = fontsIn
         ? wanted
         : Math.min(files.came - was.files.came, wanted) * FONT_SHARE_MOST;
-      const missing = awaited.length - was.picturesIn;
-      const all = wanted * FONT_FILE_KB + missing * PICTURE_KB;
-      return all
-        ? (came * FONT_FILE_KB + (picturesIn - was.picturesIn) * PICTURE_KB) /
-            all
-        : 0;
+      const missing =
+        awaited.reduce((sum, one) => sum + one.kb, 0) - was.othersKb;
+      const all = wanted * FONT_FILE_KB + missing;
+      return all ? (came * FONT_FILE_KB + (othersKb - was.othersKb)) / all : 0;
     };
 
     /** The page is handed over, built and put in its place in that same step, and then the loader lifts off it. */
@@ -312,7 +337,7 @@ export const Loader = ({
       if (cancelled || over) return;
       shownAt = performance.now();
       files = fontFiles();
-      was = { fontsIn, picturesIn, files };
+      was = { fontsIn, othersKb, files };
       if (reduced) st.p = 1;
       paint();
       tweens.push(
@@ -342,7 +367,7 @@ export const Loader = ({
     const one = (settle: () => void) => () => {
       if (cancelled || over) return;
       settle();
-      if (fontsIn && picturesIn === awaited.length) complete();
+      if (fontsIn && othersIn === awaited.length) complete();
     };
 
     const grace = setTimeout(show, MAP_GRACE_MS);
@@ -356,10 +381,11 @@ export const Loader = ({
       }),
     );
     awaited.forEach(
-      (picture) =>
-        void picture.then(
+      (other) =>
+        void other.in.then(
           one(() => {
-            picturesIn++;
+            othersIn++;
+            othersKb += other.kb;
           }),
         ),
     );

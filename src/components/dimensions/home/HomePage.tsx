@@ -60,6 +60,15 @@ const picturesOfArrival = () => {
   return (back ? back.pictures : hash ? picturesAt(hash) : []).join('\n');
 };
 const noPictures = () => '';
+/** The reader arrives somewhere other than the top: at the place of a return, or at a section the address names. */
+const arrivesBelow = () => {
+  const back = recallHomePlace();
+  const hash = hashId(window.location.hash);
+  return back
+    ? back.section > 0 || back.into > 0
+    : Boolean(hash && hash !== 'top');
+};
+const atTheTop = () => false;
 
 export const HomePage = () => {
   const root = useRef<HTMLDivElement>(null);
@@ -82,11 +91,14 @@ export const HomePage = () => {
     noPictures,
   );
   const first = useMemo(() => (arrival ? arrival.split('\n') : []), [arrival]);
+  const below = useSyncExternalStore(noSubscription, arrivesBelow, atTheTop);
   // this visit has a name from here on, under which the reader's place is remembered (homePlace.ts)
   useEffect(markHomeVisit, []);
   const [ledger, setLedger] = useState(0);
   const { t, i18n } = useTranslation();
-  const { data: members } = useApi<IMembers>(`${STATIC_DATA_API}/member.json`);
+  const { data: members, error: noMembers } = useApi<IMembers>(
+    `${STATIC_DATA_API}/member.json`,
+  );
   const { data: repos } = useApi<{ name: string }[]>(
     `${GITHUB_API}?per_page=100`,
   );
@@ -227,7 +239,14 @@ export const HomePage = () => {
       <PortalCanvas surface='nether' />
       <PortalCanvas surface='end' />
       <div className='flash' aria-hidden='true' />
-      <Loader reduced={reduced} onDone={onDone} />
+      {/* On an arrival further down the page (a section named by the address, the place of a return) the names of
+          the credits are waited for as well: they are a good part of the page's height, and the place the loader
+          lifts on must not move when they come. At the top nothing above the reader can change. */}
+      <Loader
+        reduced={reduced}
+        settled={!below || Boolean(members) || Boolean(noMembers)}
+        onDone={onDone}
+      />
       {/* scripts off: nothing would ever lift the loader, so it is not shown at all */}
       <noscript>
         <style>{'.dim.dim--home .loader{display:none}'}</style>
