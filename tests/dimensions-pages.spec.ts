@@ -334,9 +334,80 @@ test.describe('inner pages: the entrance', () => {
         await expect(part, `${path} ${name}`).toHaveCSS('transform', 'none');
       }
       await expect(page.locator('.dim .head h1')).not.toBeEmpty();
+      // the picture is not kept back for a script to show
+      await expect(page.locator('.dim .head .bg img')).toHaveCSS(
+        'opacity',
+        '1',
+      );
     }
     await context.close();
   });
+
+  for (const theme of ['dark', 'light'] as const)
+    for (const late of ['nothing', 'the picture', 'the scripts'] as const)
+      test(`a direct load of /member/ by ${theme === 'dark' ? 'night' : 'day'} with ${late} late: the veil is whole from the first frame and the picture comes in under it`, async ({
+        page,
+      }) => {
+        skipIn(['webkit', 'firefox'], NOT_HERE.firstFrame);
+        await page.setViewportSize({ width: 1440, height: 900 });
+        const slow = (pattern: RegExp, ms: number) =>
+          page.route(pattern, async (r) => {
+            await new Promise((f) => setTimeout(f, ms));
+            await r.continue();
+          });
+        if (late === 'the picture') await slow(/CTEC_Members/, 700);
+        if (late === 'the scripts') await slow(/_next\/static\/.*\.js/, 900);
+        await page.addInitScript(() => {
+          const w = window as unknown as { __veil: unknown[] };
+          w.__veil = [];
+          const tick = () => {
+            const bg = document.querySelector('.dim .head .bg');
+            const img = bg?.querySelector('img');
+            if (bg && img) {
+              const [night, day] = ['::before', '::after'].map((p) =>
+                getComputedStyle(bg, p),
+              );
+              w.__veil.push({
+                theme: document.documentElement.getAttribute('data-theme'),
+                picture: +getComputedStyle(img).opacity,
+                night: +night.opacity,
+                day: +day.opacity,
+                over: [night.zIndex, day.zIndex, getComputedStyle(img).zIndex],
+              });
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+        await openPage(page, '/member/', { theme });
+        const picture = page.locator('.dim .head .bg img');
+        await expect(picture).toHaveCSS('opacity', '1');
+        await expect(picture).toHaveCSS('transform', 'none');
+        const frames = (await page.evaluate(
+          () => (window as unknown as { __veil: unknown[] }).__veil,
+        )) as {
+          theme: string | null;
+          picture: number;
+          night: number;
+          day: number;
+          over: string[];
+        }[];
+        expect(frames.length).toBeGreaterThan(10);
+        // the picture starts from nothing, and is whole at the end
+        expect(frames[0].picture).toBeLessThan(0.1);
+        expect(frames.at(-1)!.picture).toBe(1);
+        expect(
+          frames.filter((f) => f.picture > 0.02 && f.picture < 0.98).length,
+        ).toBeGreaterThan(5);
+        for (const [i, f] of frames.entries()) {
+          // the reader's theme from the first frame: no veil of the other theme fading away
+          expect(f.theme, `frame ${i}`).toBe(theme);
+          expect(theme === 'dark' ? f.night : f.day, `frame ${i}`).toBe(1);
+          expect(theme === 'dark' ? f.day : f.night, `frame ${i}`).toBe(0);
+          // both veils are painted over the picture, also while it is a layer of its own (it is, while it moves)
+          expect(f.over, `frame ${i}`).toEqual(['1', '1', 'auto']);
+        }
+      });
 
   test('reduced motion: a brief fade, nothing travels, nothing waits', async ({
     page,

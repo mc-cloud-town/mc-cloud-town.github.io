@@ -67,9 +67,14 @@ export default function RootLayout({
   return (
     <html lang='zh' suppressHydrationWarning>
       <head>
-        <Script id='theme-init' strategy='beforeInteractive'>
-          {themeInitScript}
-        </Script>
+        {/* A plain inline script, first in the head: it runs while the document is parsed, so the reader's theme
+            is on the document before anything is painted. (next/script's beforeInteractive only queues it for
+            the framework's own script, which comes later than the first paint on a slow line: the page was then
+            painted by night and cross-faded to the day.) */}
+        <script
+          id='theme-init'
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
         <link rel='preconnect' href='https://fonts.googleapis.com' />
         <link
           rel='preconnect'

@@ -21,12 +21,16 @@
     object-fit: cover;
   }
   /* Two veils, one for the night and one for the day, each in its own colour: a gradient cannot ease from
-     one colour to another, so the theme switch cross-fades them. */
+     one colour to another, so the theme switch cross-fades them.
+     Both over the picture, by a z-index of their own: while the picture moves or fades it is a layer of its own,
+     and in the order of the document that layer was painted over the night's veil (which comes before it) for as
+     long as its entrance ran. The picture was bare by night, and veiled at a stroke when it came to rest. */
   .head .bg::before,
   .head .bg::after {
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 1;
     transition: opacity var(--t-theme);
     background: linear-gradient(
         90deg,
@@ -533,7 +537,7 @@
   }
 
   /* ───────── the entrance ─────────
-     An inner page opens the way the home page does: the picture settles like the hero's camera, the title rises
+     An inner page opens the way the home page does: the picture develops under its veil (which is there from the first frame: it has no entrance) while it settles like the hero's camera, the title rises
      line by line (expo.out, a tenth of a second apart, as the hero's title), the upright label follows as the
      dimension names do, then the lede (power3.out, as the hero's captions), then the toolbar, then the list.
      It is CSS on purpose: it plays in the served page before any script, and with scripts off, and `backwards`
@@ -566,8 +570,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    /* the picture does not move: it fades in briefly, as everything else does */
     .head .bg img {
-      animation: none;
+      animation: dim-fade-0 0.12s linear backwards;
     }
     .head .crumb,
     .head h1 span,
@@ -687,6 +692,7 @@
 }
 @keyframes dim-enter-cam {
   from {
+    opacity: 0;
     transform: scale(1.08);
   }
 }
