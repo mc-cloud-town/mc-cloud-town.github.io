@@ -7,7 +7,6 @@ import {
 } from '@playwright/test';
 import {
   atRest,
-  expectLegible,
   expectNoMissingKeys,
   openPage,
   setLanguage,
@@ -593,33 +592,13 @@ test.describe('progress page: an address that names an entry', () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
 
-  /** A colour as hue (degrees) and relative luminance. */
-  const hueAndLight = (rgb: string) => {
-    const [r, g, b] = rgb.match(/[\d.]+/g)!.map((v) => +v / 255);
-    const max = Math.max(r, g, b),
-      d = max - Math.min(r, g, b);
-    const hue =
-      60 *
-      (max === r
-        ? ((g - b) / d + 6) % 6
-        : max === g
-          ? (b - r) / d + 2
-          : (r - g) / d + 4);
-    const lin = (v: number) =>
-      v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-    return {
-      hue,
-      light: 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b),
-    };
-  };
-
   // the page takes the dimension of the entry that is being read: its header can be seen in any of the three
   for (const [width, height] of [
     [1440, 900],
     [1024, 768],
     [390, 844],
   ] as const)
-    test(`by day at ${width}×${height} the current page of the crumb can be read over the header's picture in each dimension, in an ink of the accent's own hue`, async ({
+    test(`by day at ${width}×${height} the current page of the crumb is in the light accent of its dimension, over the header's picture`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -639,30 +618,25 @@ test.describe('progress page: an address that names an entry', () => {
         page.evaluate(() => ({
           text: getComputedStyle(document.querySelector('.head .crumb .acc')!)
             .color,
-          // the accent itself, which lines, marks and hovers go on using
-          mark: getComputedStyle(document.querySelector('.dim')!)
+          // the paper's accent, which what stands on paper goes on using
+          paper: getComputedStyle(document.querySelector('.dim')!)
             .getPropertyValue('--accent')
             .trim(),
         }));
-      for (const [dim, token, accent] of [
-        ['overworld', '#0b6fb5', 'rgb(11, 111, 181)'],
-        ['nether', '#c2330f', 'rgb(194, 51, 15)'],
-        ['end', '#6234c4', 'rgb(98, 52, 196)'],
+      for (const [dim, paper, accent] of [
+        ['overworld', '#0b6fb5', 'rgb(207, 234, 255)'],
+        ['nether', '#c2330f', 'rgb(255, 208, 192)'],
+        ['end', '#6234c4', 'rgb(230, 216, 255)'],
       ]) {
         await page.evaluate((d) => {
           document.documentElement.dataset.dim = d;
         }, dim);
         await atRest(page);
         await expect(here).toBeVisible();
-        await expectLegible(page, '.head .crumb .acc');
-        const { text, mark } = await colours();
-        // lines and marks keep the accent; the words are the same hue, never lighter
-        expect(mark, `${dim}: the accent`).toBe(token);
-        const [ink, own] = [hueAndLight(text), hueAndLight(accent)];
-        expect(Math.abs(ink.hue - own.hue), `${dim}: hue`).toBeLessThan(3);
-        expect(ink.light, `${dim}: no lighter`).toBeLessThanOrEqual(
-          own.light + 0.001,
-        );
+        const { text, paper: mark } = await colours();
+        // the words are light, in the dimension's picture accent; the paper under the header keeps its own
+        expect(text, `${dim}: the crumb`).toBe(accent);
+        expect(mark, `${dim}: the paper's accent`).toBe(paper);
       }
       // by night the words are in the accent itself
       await page.evaluate(() => {

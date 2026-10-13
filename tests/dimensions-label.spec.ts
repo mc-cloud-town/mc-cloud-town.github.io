@@ -1,16 +1,9 @@
 // tests/dimensions-label.spec.ts
-// The dimension name by day. On the home page it stands on the veil like every other word, in light ink with its
-// shade, and has no ground of its own in any layout. On an inner page, where the layout has a clear side (above
-// 860px) it still stands upright on the bare photograph, on a strip of paper as wide as its words; where it has
-// not, the veil runs bottom-up under the whole screen and the name lies on that veil.
+// The dimension name by day. It stands on the veil like every other word, in light ink with its shade, and has
+// no ground of its own in any layout, on the home page or in an inner page's header: upright on the bare
+// photograph where the layout has a clear side (above 860px), lying on the bottom-up veil where it has not.
 import { expect, test, type Page } from '@playwright/test';
-import {
-  atRest,
-  expectLegible,
-  LOCALES,
-  openPage,
-  type Locale,
-} from './helpers/dimensions';
+import { atRest, LOCALES, openPage, type Locale } from './helpers/dimensions';
 import { arrived, jumpTo } from './helpers/home';
 
 /** The layouts in which the name lies on the bottom-up veil, up to the last width of it. */
@@ -27,7 +20,6 @@ const ON_THE_PHOTO = [
   { width: 1024, height: 768 },
 ];
 const CLEAR = 'rgba(0, 0, 0, 0)';
-const PAPER = 'rgba(238, 242, 245, 0.95)';
 
 /** The label's painted box, its ground, and the box of its words alone. */
 const boxOf = (page: Page, selector: string) =>
@@ -49,6 +41,16 @@ const boxOf = (page: Page, selector: string) =>
       upright: s.writingMode === 'vertical-rl',
     };
   });
+
+/** Light ink with a shade of its own: what a word on the day's thin veil is. */
+const expectLight = async (page: Page, selector: string) => {
+  const ink = await page.locator(selector).evaluate((el) => ({
+    color: getComputedStyle(el).color,
+    shade: getComputedStyle(el).textShadow,
+  }));
+  expect(ink.color, 'light ink').toBe('rgb(255, 255, 255)');
+  expect(ink.shade, 'its own shade').not.toBe('none');
+};
 
 const INNER = [
   ['progress', '/survivalProgress/', '.entry'],
@@ -103,26 +105,13 @@ for (const vp of ON_THE_VEIL)
           expect(box.ground, 'no ground of its own').toBe(CLEAR);
           expect(box.image, 'no ground of its own').toBe('none');
           expect(box.padX + box.padY, 'no strip, so no padding').toBe(0);
-          await expectLegible(page, label);
+          await expectLight(page, label);
         });
     }
   });
 
 for (const vp of ON_THE_PHOTO)
   test.describe(`the dimension name by day at ${vp.width}×${vp.height}: on the photograph`, () => {
-    /** The strip is the label's: its words and its padding, never the row's or the column's. */
-    const hugs = (box: Awaited<ReturnType<typeof boxOf>>, what: string) => {
-      expect(box.upright, `${what}: upright`).toBe(true);
-      expect(box.ground, `${what}: on its strip of paper`).toBe(PAPER);
-      expect(box.padX, `${what}: the strip has its padding`).toBeGreaterThan(0);
-      expect(box.width, `${what}: as wide as its words`).toBeLessThanOrEqual(
-        box.wordsWidth + box.padX + 2,
-      );
-      expect(box.height, `${what}: as tall as its words`).toBeLessThanOrEqual(
-        box.wordsHeight + box.padY + 2,
-      );
-      expect(box.width, `${what}: never a bar`).toBeLessThan(vp.width / 4);
-    };
     for (const locale of LOCALES) {
       test(`home, ${locale}: the name stands upright on the veil, with no strip`, async ({
         page,
@@ -143,7 +132,7 @@ for (const vp of ON_THE_PHOTO)
       });
 
       for (const [name, url, first] of INNER)
-        test(`${name}, ${locale}: the strip hugs the words`, async ({
+        test(`${name}, ${locale}: upright, the words alone in light ink with their shade`, async ({
           page,
         }) => {
           await page.setViewportSize(vp);
@@ -153,8 +142,12 @@ for (const vp of ON_THE_PHOTO)
           });
           await page.locator(first).first().waitFor();
           await atRest(page);
-          hugs(await boxOf(page, '.head .vt'), name);
-          await expectLegible(page, '.head .vt');
+          const box = await boxOf(page, '.head .vt');
+          expect(box.upright, 'upright').toBe(true);
+          expect(box.ground, 'no strip of paper').toBe(CLEAR);
+          expect(box.image, 'no ground of its own').toBe('none');
+          expect(box.padX + box.padY, 'no strip, so no padding').toBe(0);
+          await expectLight(page, '.head .vt');
         });
     }
   });
