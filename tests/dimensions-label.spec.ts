@@ -1,7 +1,8 @@
 // tests/dimensions-label.spec.ts
-// The dimension name by day. Where the layout has a clear side (above 860px) it stands upright on the bare
-// photograph, on a strip of paper of its own, as wide as its words. Where it has not, the veil runs bottom-up under
-// the whole screen and the name lies on that veil: there it carries no ground of its own.
+// The dimension name by day. On the home page it stands on the veil like every other word, in light ink with its
+// shade, and has no ground of its own in any layout. On an inner page, where the layout has a clear side (above
+// 860px) it still stands upright on the bare photograph, on a strip of paper as wide as its words; where it has
+// not, the veil runs bottom-up under the whole screen and the name lies on that veil.
 import { expect, test, type Page } from '@playwright/test';
 import {
   atRest,
@@ -57,14 +58,14 @@ const INNER = [
 for (const vp of ON_THE_VEIL)
   test.describe(`the dimension name by day at ${vp.width}×${vp.height}: on the veil`, () => {
     for (const locale of LOCALES) {
-      test(`home, ${locale}: the words alone, and they can be read`, async ({
+      test(`home, ${locale}: the words alone, in light ink with their shade`, async ({
         page,
       }) => {
         test.slow();
         await page.setViewportSize(vp);
         await openPage(page, '/', { theme: 'light', locale: locale as Locale });
         await arrived(page);
-        // the End is dark whatever the theme: its name has no paper in any layout
+        // the Nether and the End have no daylight: there the name has no shade, as by night
         for (const id of ['overworld', 'nether', 'end']) {
           await jumpTo(page, `#${id}`, 0);
           await atRest(page);
@@ -75,7 +76,12 @@ for (const vp of ON_THE_VEIL)
           expect(box.ground, `${id}: no ground of its own`).toBe(CLEAR);
           expect(box.image, `${id}: no ground of its own`).toBe('none');
           expect(box.padX + box.padY, `${id}: no strip, so no padding`).toBe(0);
-          await expectLegible(page, label);
+          const ink = await page
+            .locator(label)
+            .evaluate((el) => getComputedStyle(el).textShadow);
+          if (id === 'overworld')
+            expect(ink, `${id}: its shade`).not.toBe('none');
+          else expect(ink, `${id}: night has none`).toBe('none');
         }
       });
 
@@ -118,21 +124,22 @@ for (const vp of ON_THE_PHOTO)
       expect(box.width, `${what}: never a bar`).toBeLessThan(vp.width / 4);
     };
     for (const locale of LOCALES) {
-      test(`home, ${locale}: the strip hugs the words`, async ({ page }) => {
+      test(`home, ${locale}: the name stands upright on the veil, with no strip`, async ({
+        page,
+      }) => {
         test.slow();
         await page.setViewportSize(vp);
         await openPage(page, '/', { theme: 'light', locale: locale as Locale });
         await arrived(page);
-        for (const id of ['overworld', 'nether']) {
+        for (const id of ['overworld', 'nether', 'end']) {
           await jumpTo(page, `#${id}`, 0);
           await atRest(page);
-          hugs(await boxOf(page, `#${id} .vt`), id);
-          await expectLegible(page, `#${id} .vt`);
+          const box = await boxOf(page, `#${id} .vt`);
+          expect(box.upright, `${id}: upright`).toBe(true);
+          expect(box.ground, `${id}: no strip of paper`).toBe(CLEAR);
+          expect(box.image, `${id}: no ground of its own`).toBe('none');
+          expect(box.padX + box.padY, `${id}: no padding`).toBe(0);
         }
-        // the End: dark, and so without paper
-        await jumpTo(page, '#end', 0);
-        await atRest(page);
-        expect((await boxOf(page, '#end .vt')).ground).toBe(CLEAR);
       });
 
       for (const [name, url, first] of INNER)

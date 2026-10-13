@@ -191,12 +191,17 @@ test.describe('home: respawn', () => {
       // of the site, four marks of the community and the way to support it
       expect(await page.locator('#respawn a').count()).toBe(18);
       await expectNoHorizontalScroll(page);
-      // by day the page is light again after the End
-      if (theme === 'light')
-        await expect(page.locator('.dim')).toHaveCSS(
+      // by day the ground under the respawn is paper again, with dark words
+      if (theme === 'light') {
+        await expect(page.locator('#respawn .ground')).toHaveCSS(
+          'color',
+          'rgb(15, 20, 24)',
+        );
+        await expect(page.locator('body')).toHaveCSS(
           'background-color',
           'rgb(238, 242, 245)',
         );
+      }
     });
 
   for (const locale of ['zh_TW', 'zh_CN', 'en'] as const)
@@ -419,7 +424,7 @@ test.describe('home: respawn', () => {
       [1920, 1080],
       [2560, 1440],
     ] as const)
-      test(`by day at ${width}×${height} (${locale}) the paper of the respawn is the design's side veil alone: it falls away gradually, no other ground lies under the words, and the far side of the photograph keeps its colour`, async ({
+      test(`by day at ${width}×${height} (${locale}) the veil of the respawn is the design's side veil alone: thin and black, it falls away gradually, and no other ground lies under the words`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height });
@@ -455,9 +460,9 @@ test.describe('home: respawn', () => {
         const top = bar!.y + bar!.height + 40;
         expect(band!.y - top).toBeGreaterThan(100);
         const y = top + 0.4 * (band!.y - 20 - top);
-        // How much paper lies over the photograph at 41 points across that row: how far each has gone from the
-        // photograph's own colour (the veil taken away) towards the paper's. Where the photograph is nearly the
-        // colour of paper itself (sky, the white of the build) nothing can be told, and the point is left out.
+        // How much black lies over the photograph at 41 points across that row: how far each has gone from the
+        // photograph's own colour (the veil taken away) towards black. Where the photograph is nearly black itself
+        // nothing can be told, and the point is left out.
         const xs = Array.from(
           { length: 41 },
           (_, i) => 6 + (i / 40) * (width - 12),
@@ -467,44 +472,39 @@ test.describe('home: respawn', () => {
           await colours(page, points, true),
           await colours(page, points, false),
         ];
-        const PAPER = [238, 242, 245];
-        const paper = xs.flatMap((x, i) => {
+        const black = xs.flatMap((x, i) => {
           const c = [0, 1, 2].reduce((best, k) =>
-            Math.abs(PAPER[k] - bare[i][k]) >
-            Math.abs(PAPER[best] - bare[i][best])
-              ? k
-              : best,
+            bare[i][k] > bare[i][best] ? k : best,
           );
-          const room = PAPER[c] - bare[i][c];
-          if (Math.abs(room) < 40) return [];
-          return [{ at: x / width, alpha: (veiled[i][c] - bare[i][c]) / room }];
+          if (bare[i][c] < 60) return [];
+          return [{ at: x / width, alpha: 1 - veiled[i][c] / bare[i][c] }];
         });
-        const profile = paper
+        const profile = black
           .map((k) => `${k.at.toFixed(2)}:${k.alpha.toFixed(2)}`)
           .join(' ');
-        expect(paper.length, profile).toBeGreaterThan(20);
-        // solid where the text begins
-        const solid = paper.filter((k) => k.at <= 0.3);
+        expect(black.length, profile).toBeGreaterThan(20);
+        // thin where the text begins: the day's side veil is 0.42 there, and never more
+        const solid = black.filter((k) => k.at <= 0.3);
         expect(solid.length, profile).toBeGreaterThan(3);
-        for (const k of solid) expect(k.alpha, profile).toBeGreaterThan(0.9);
+        for (const k of solid) {
+          expect(k.alpha, profile).toBeGreaterThan(0.25);
+          expect(k.alpha, profile).toBeLessThan(0.5);
+        }
         expect(join!.x / width).toBeLessThan(0.3);
-        // the far side: the photograph as it is
-        const clear = paper.filter((k) => k.at >= 0.76);
-        expect(clear.length, profile).toBeGreaterThan(3);
-        for (const k of clear)
-          expect(Math.abs(k.alpha), profile).toBeLessThan(0.03);
+        // the far side, where the departments' links stand: the veil is down to a fifth
+        const far = black.filter((k) => k.at >= 0.76);
+        expect(far.length, profile).toBeGreaterThan(3);
+        for (const k of far) {
+          expect(k.alpha, profile).toBeGreaterThan(0.1);
+          expect(k.alpha, profile).toBeLessThan(0.3);
+        }
         // between the two it only ever falls
-        paper.forEach((k, i) => {
+        black.forEach((k, i) => {
           if (i)
             expect(k.alpha, profile).toBeLessThanOrEqual(
-              paper[i - 1].alpha + 0.04,
+              black[i - 1].alpha + 0.04,
             );
         });
-        // and the fall is a long one, not an edge: from nine tenths of paper to none takes at least three tenths of
-        // the screen's width
-        const from = paper.filter((k) => k.alpha >= 0.9).at(-1)!.at;
-        const to = paper.find((k) => k.alpha <= 0.03)!.at;
-        expect(to - from, profile).toBeGreaterThanOrEqual(0.3);
         await ground.evaluate((el) => (el as Element).remove());
         await atRest(page);
         // on the picture the veil is the only ground: the descriptions and the footer carry none of their own
@@ -604,7 +604,7 @@ test.describe('home: respawn', () => {
   // The pictures of the scenes are asked for when the loader lifts; on a slow line the one the reader cuts to may
   // not be there yet when the cover lifts.
   for (const reducedMotion of [false, true])
-    test(`by day a cut to the respawn shows paper, never black, while its picture is on its way, and the picture fades in${reducedMotion ? ' (briefly, with reduced motion)' : ''}`, async ({
+    test(`by day a cut to the respawn shows the stage, never a flash of paper, while its picture is on its way, and the picture fades in${reducedMotion ? ' (briefly, with reduced motion)' : ''}`, async ({
       page,
     }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -625,7 +625,7 @@ test.describe('home: respawn', () => {
       expect(
         await picture.evaluate((img: HTMLImageElement) => img.naturalWidth),
       ).toBe(0);
-      // the side of the screen the day paper leaves clear, above the mascot: the paper's tone, not the stage's black
+      // the side of the screen the veil leaves nearly clear, above the mascot: the stage's black, as by night, not paper
       const clear: [number, number][] = [0.12, 0.9].flatMap((y) =>
         [0.78, 0.86, 0.96].map((x) => [x * 1440, y * 900] as [number, number]),
       );
@@ -634,7 +634,7 @@ test.describe('home: respawn', () => {
           expect(
             c,
             `the ground at ${clear[i].map(Math.round)}: ${rgb.map(Math.round)}`,
-          ).toBeGreaterThan(200);
+          ).toBeLessThan(40);
       // from here on, the picture's opacity in every frame
       await picture.evaluate((img) => {
         const w = window as unknown as { __fade: number[] };
@@ -672,7 +672,7 @@ test.describe('home: respawn', () => {
       // the photograph is there now
       const now = await colours(page, clear, true);
       expect(
-        now.some((rgb) => rgb.some((c) => c < 200)),
+        now.some((rgb) => rgb.some((c) => c > 60)),
         'the photograph has colour',
       ).toBe(true);
     });

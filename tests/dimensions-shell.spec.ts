@@ -1431,16 +1431,18 @@ test.describe('behind the shell', () => {
 
   for (const theme of ['dark', 'light'] as const) {
     const ground = theme === 'dark' ? 'rgb(6, 8, 11)' : 'rgb(238, 242, 245)';
+    // (the home page by day is not here: its film is dark, and the paper is the ground under the respawn, below)
     for (const path of ['/member/', '/survivalProgress/', '/'] as const)
-      test(`${path} (${theme}): what shows when the page is pulled past its end is the shell's own ground`, async ({
-        page,
-      }) => {
-        await openPage(page, path, { theme });
-        if (path === '/') await ready(page);
-        await atRest(page);
-        expect(await shell(page)).toBe(ground);
-        expect(await body(page)).toBe(ground);
-      });
+      if (path !== '/' || theme === 'dark')
+        test(`${path} (${theme}): what shows when the page is pulled past its end is the shell's own ground`, async ({
+          page,
+        }) => {
+          await openPage(page, path, { theme });
+          if (path === '/') await ready(page);
+          await atRest(page);
+          expect(await shell(page)).toBe(ground);
+          expect(await body(page)).toBe(ground);
+        });
 
     test(`a page reached from the shell by the footer has the shell's ground behind it (${theme}), and so has the way back`, async ({
       page,
@@ -1461,12 +1463,16 @@ test.describe('behind the shell', () => {
     });
   }
 
-  test('by day the home page is dark inside the End, and so is what is behind it; light again after it', async ({
+  test('by day the home page is dark in the Nether and the End, and so is what is behind it; the ground under the respawn is paper', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/', { theme: 'light' });
     await ready(page);
+    await scrollToSection(page, '#nether', 0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect.poll(() => shell(page)).toBe('rgb(6, 8, 11)');
+    await expect.poll(() => body(page)).toBe('rgb(6, 8, 11)');
     await scrollToSection(page, '#end', 0.3);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
     await expect.poll(() => shell(page)).toBe('rgb(6, 8, 11)');

@@ -375,7 +375,7 @@ test.describe('home: overworld', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
   });
 
-  test('on a phone in the day theme the text sits on paper, and nothing overflows', async ({
+  test('on a phone in the day theme the text sits on the thin veil, and nothing overflows', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -400,7 +400,7 @@ test.describe('home: overworld', () => {
     await expectTapTargets(page);
   });
 
-  test('on a wide screen in the day theme the paper is on the text side only', async ({
+  test('on a wide screen in the day theme the veil is on the text side only', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -411,10 +411,10 @@ test.describe('home: overworld', () => {
       .locator('.scene[data-scene="town"] .veil')
       .evaluate((el) => getComputedStyle(el).backgroundImage);
     expect(veil).toContain('linear-gradient(90deg');
-    // the label stands on the photograph, on its own strip of paper
+    // the label stands on the veil like the words under it: no strip of its own
     await expect(page.locator('#overworld .vt')).toHaveCSS(
       'background-color',
-      'rgba(238, 242, 245, 0.95)',
+      'rgba(0, 0, 0, 0)',
     );
     await expectTextFits(page, { within: '#overworld' });
   });
@@ -613,7 +613,7 @@ test.describe('home: nether', () => {
     await expectNoMissingKeys(page);
   });
 
-  test('in the day theme the nether accent is the darker red', async ({
+  test('in the day theme the Nether keeps the accent of night: it has no daylight', async ({
     page,
   }) => {
     await openPage(page, '/', { theme: 'light' });
@@ -622,7 +622,7 @@ test.describe('home: nether', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
     await expect(page.locator('#nether .tag .acc')).toHaveCSS(
       'color',
-      'rgb(194, 51, 15)',
+      'rgb(255, 106, 69)',
     );
   });
 
@@ -1320,7 +1320,7 @@ test.describe('home: the end', () => {
       page,
     }) => {
       await page.setViewportSize({ width, height });
-      // by day: there a dark layer over the paper is what would cost the statement its contrast
+      // by day too: the Nether and the End are read under the night's veil
       await openPage(page, '/', { theme: 'light' });
       await ready(page);
       await walkTheLedger(page);
@@ -1732,7 +1732,7 @@ test.describe('home: the end', () => {
     await expect.poll(() => visibleScenes(page)).toEqual(['end']);
   });
 
-  test('the day theme turns dark in the End and light again after it', async ({
+  test('the day theme is night in the Nether and the End, and the day again after them', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -1742,56 +1742,132 @@ test.describe('home: the end', () => {
       page.evaluate(() => {
         const dim = getComputedStyle(document.querySelector('.dim')!);
         return {
-          bg: dim.backgroundColor,
           fg: dim.color,
-          veil: dim.getPropertyValue('--v').trim(),
+          veil: dim.getPropertyValue('--v').replace(/\s/g, ''),
           accent: dim.getPropertyValue('--accent').trim(),
           bar: getComputedStyle(document.querySelector('.dim-bar')!).color,
         };
       });
-    const LIGHT = {
-      bg: 'rgb(238, 242, 245)',
-      fg: 'rgb(15, 20, 24)',
-      veil: '238, 242, 245',
-      accent: '#0b6fb5',
-      bar: 'rgb(15, 20, 24)',
+    const DAY = {
+      fg: 'rgb(255, 255, 255)',
+      veil: '0,0,0',
+      accent: '#cfeaff',
+      bar: 'rgb(255, 255, 255)',
     };
-    const DARK = {
-      bg: 'rgb(6, 8, 11)',
+    const NIGHT = {
       fg: 'rgb(242, 244, 246)',
-      veil: '6, 8, 11',
-      accent: '#cdb0ff',
+      veil: '6,8,11',
+      accent: '#ff6a45',
       bar: 'rgb(242, 244, 246)',
     };
     await scrollToSection(page, '#overworld');
-    expect(await look()).toEqual(LIGHT);
+    expect(await look()).toEqual(DAY);
+    // the Nether has no daylight: the night's veil, ink and accent
+    await scrollToSection(page, '.rank', -0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    expect(await look()).toEqual(NIGHT);
     for (const [sel, off] of STOPS) {
       await scrollToSection(page, sel, off);
       await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
-      expect(await look(), sel).toEqual(DARK);
+      expect(await look(), sel).toEqual({ ...NIGHT, accent: '#cdb0ff' });
     }
     // the theme itself has not changed
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    // the dimension name stands on the dark photograph without its strip of paper
+    // the dimension name stands on the dark photograph without a strip
     await scrollToSection(page, '#end', 0.1);
     await expect(page.locator('#end .vt')).toHaveCSS(
       'background-color',
       'rgba(0, 0, 0, 0)',
     );
-    // leaving upward: the nether in its day colours, then the overworld
+    // leaving upward: the Nether is still night, then the Overworld has its day again
     await scrollToSection(page, '.rank', -0.3);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
-    expect(await look()).toEqual({ ...LIGHT, accent: '#c2330f' });
+    expect(await look()).toEqual(NIGHT);
     await scrollToSection(page, '#overworld');
-    expect(await look()).toEqual(LIGHT);
+    expect(await look()).toEqual(DAY);
+  });
+
+  test('by day the words on a picture are light and carry a shade, and the veil is thin and black', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    const got = await page.evaluate(() => {
+      const dim = getComputedStyle(document.querySelector('.dim.dim--home')!);
+      const say = getComputedStyle(document.querySelector('#overworld .say')!);
+      const name = getComputedStyle(document.querySelector('#overworld .vt')!);
+      return {
+        v: dim.getPropertyValue('--v').replace(/\s/g, ''),
+        s1: dim.getPropertyValue('--s1').trim(),
+        ink: say.color,
+        shade: say.textShadow,
+        strip: name.backgroundColor,
+      };
+    });
+    expect(got.v).toBe('0,0,0');
+    expect(Number(got.s1)).toBeCloseTo(0.42);
+    expect(got.ink).toBe('rgb(255, 255, 255)');
+    expect(got.shade).not.toBe('none');
+    // no strip of paper under the dimension's name: it stands on the veil like every other word
+    expect(got.strip).toBe('rgba(0, 0, 0, 0)');
+  });
+
+  test('by day the Nether has no daylight: the night veil and ink, as in the End', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    const got = await page.evaluate(() => {
+      const dim = getComputedStyle(document.querySelector('.dim.dim--home')!);
+      return {
+        v: dim.getPropertyValue('--v').replace(/\s/g, ''),
+        s1: Number(dim.getPropertyValue('--s1')),
+        fg: dim.getPropertyValue('--fg').trim(),
+        accent: dim.getPropertyValue('--accent').trim(),
+        shade: getComputedStyle(document.querySelector('#nether .say')!)
+          .textShadow,
+      };
+    });
+    expect(got).toEqual({
+      v: '6,8,11',
+      s1: 0.92,
+      fg: '#f2f4f6',
+      accent: '#ff6a45',
+      shade: 'none',
+    });
+  });
+
+  test('by day the ground under the respawn is paper, with dark words and no shade', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await page.evaluate(() =>
+      scrollTo(0, document.documentElement.scrollHeight),
+    );
+    const got = await page.evaluate(() => {
+      const ground = getComputedStyle(document.querySelector('.ground')!);
+      return { ink: ground.color, shade: ground.textShadow };
+    });
+    expect(got.shade).toBe('none');
+    // dark ink: every channel under 128
+    expect(
+      got.ink
+        .match(/\d+/g)!
+        .slice(0, 3)
+        .every((n) => Number(n) < 128),
+    ).toBe(true);
   });
 
   for (const theme of ['dark', 'light'] as const)
     test(`the page moves on to the End as its opening takes over, and each section keeps its own accent (${theme})`, async ({
       page,
     }) => {
-      const NETHER =
-        theme === 'dark' ? 'rgb(255, 106, 69)' : 'rgb(194, 51, 15)';
+      // the Nether has no daylight: its accent is the night's in both themes
+      const NETHER = 'rgb(255, 106, 69)';
       const VIOLET = 'rgb(205, 176, 255)';
       await page.setViewportSize({ width: 1440, height: 900 });
       await openPage(page, '/', { theme });
@@ -1833,7 +1909,7 @@ test.describe('home: the end', () => {
         expect(s.rank, step).toBeGreaterThan(0);
         await expect(html, step).toHaveAttribute('data-dim', 'end');
         await expect(tag, step).toHaveCSS('color', VIOLET);
-        // what is left of the nether statement keeps the nether colour (the night one: the page is dark here)
+        // what is left of the nether statement keeps the nether colour (the page is dark here by day too)
         await expect(em, step).toHaveCSS('color', 'rgb(255, 106, 69)');
       };
       await stillNether('down');
@@ -2150,7 +2226,7 @@ test.describe('home: the rail', () => {
 });
 
 test.describe('home: the language list over the film', () => {
-  test('by day it is paper over the overworld and dark inside the End, and choosing from it re-measures the page', async ({
+  test('by day it is dark with light words over the film, in the Overworld as in the End, and choosing from it re-measures the page', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -2161,10 +2237,10 @@ test.describe('home: the language list over the film', () => {
     await scrollToSection(page, '#overworld', 0);
     await trigger.click();
     await expect(list).toHaveCSS('opacity', '1');
-    await expect(list).toHaveCSS('background-color', 'rgb(238, 242, 245)');
+    await expect(list).toHaveCSS('background-color', 'rgb(11, 15, 19)');
     await expect(list.locator('[aria-selected="true"]')).toHaveCSS(
       'color',
-      'rgb(11, 111, 181)',
+      'rgb(207, 234, 255)',
     );
     await page.keyboard.press('Escape');
     await expect(list).toHaveCSS('visibility', 'hidden');
