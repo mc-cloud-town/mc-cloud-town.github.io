@@ -41,7 +41,8 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) body {
     border-bottom: 1px solid var(--line);
     transition:
       background-color var(--t-theme),
-      border-color var(--t-theme);
+      border-color var(--t-theme),
+      text-shadow var(--t-theme);
   }
   .dim-bar .logo {
     margin-right: auto;
@@ -597,7 +598,8 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) body {
 .dim main {
   transition:
     opacity var(--t-out) var(--ease-rise),
-    translate var(--t-out) var(--ease-rise);
+    translate var(--t-out) var(--ease-rise),
+    text-shadow var(--t-theme);
 }
 .dim > .dim-foot {
   transition:
