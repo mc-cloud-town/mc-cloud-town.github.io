@@ -15,8 +15,14 @@
    The candidates share one paper (below) for what has no picture under it. Without data-day the page is the
    day theme as it is now. The pages say what they are on <html>: lab-home, lab-inner, lab-respawn. */
 
-/* ───────── the paper: all candidates ───────── */
+/* ───────── the paper: what has no picture under it ─────────
+   A new paper is proposed with the candidates (nearer white, darker ink, deeper accents, larger small words).
+   <html data-paper='now'> keeps the paper as it is today, to compare. */
 html[data-theme='light'][data-day] {
+  --paper-v: 238, 242, 245;
+  --line-strong: rgba(15, 20, 24, 0.4);
+}
+html[data-theme='light'][data-day]:not([data-paper='now']) {
   --bg: #f6f7f9;
   --panel: #e9ecf0;
   --fg: #0b0f13;
@@ -28,22 +34,24 @@ html[data-theme='light'][data-day] {
   --logo: none;
   --accent: #0a5a96;
 }
-html[data-theme='light'][data-day][data-dim='nether'] {
+html[data-theme='light'][data-day]:not([data-paper='now'])[data-dim='nether'] {
   --accent: #b02c0b;
 }
-html[data-theme='light'][data-day][data-dim='end'] {
+html[data-theme='light'][data-day]:not([data-paper='now'])[data-dim='end'] {
   --accent: #5a2fb8;
 }
 /* a part of a page that names its own dimension takes that dimension's day accent, where it stands on paper */
-html.lab-inner[data-theme='light'][data-day] [data-dim='nether'] {
+html.lab-inner[data-theme='light'][data-day]:not([data-paper='now'])
+  [data-dim='nether'] {
   --accent: #b02c0b;
 }
-html.lab-inner[data-theme='light'][data-day] [data-dim='end'] {
+html.lab-inner[data-theme='light'][data-day]:not([data-paper='now'])
+  [data-dim='end'] {
   --accent: #5a2fb8;
 }
 
 /* small words and controls on paper */
-html[data-theme='light'][data-day] {
+html[data-theme='light'][data-day]:not([data-paper='now']) {
   .mono {
     font-size: 13px;
   }
@@ -67,7 +75,7 @@ html[data-theme='light'][data-day] {
   }
 }
 /* an inner page's bars are paper, whole: nothing shows through them */
-html.lab-inner[data-theme='light'][data-day] {
+html.lab-inner[data-theme='light'][data-day]:not([data-paper='now']) {
   .bar,
   .tools {
     background: var(--bg);
@@ -372,4 +380,9 @@ html.lab-inner[data-theme='light'][data-pic] .head .bg::after {
 .day-lab button[aria-pressed='true'] {
   background: #f2f4f6;
   color: #0b0f13;
+}
+/* the lab's second switches: one open question each */
+.day-lab button[data-opt] {
+  margin-left: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
