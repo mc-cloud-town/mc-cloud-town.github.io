@@ -334,7 +334,7 @@ test.describe('home: jumping to a section', () => {
       .toBeGreaterThan(y);
   });
 
-  test('the cover takes the tone of where it leads: night for the End, even by day', async ({
+  test('by day every jump on the home page covers with the night, whatever it leads to', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -352,13 +352,13 @@ test.describe('home: jumping to a section', () => {
     expect(tones(frames)).toEqual(['rgb(6, 8, 11)']);
     expect(await visibleScenes(page)).toEqual(['hall']);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
-    // the End → the top of the page, by the logo: the paper of the day theme
+    // the End → the top of the page, by the logo: the film is dark by day, so the cover is the night's here too
     await record(page);
     await page.locator('.dim-bar .logo').click();
     await landedOn(page, '.hero');
     frames = await recorded(page);
     expect(await coverAtLanding(page)).toBe(1);
-    expect(tones(frames)).toEqual(['rgb(238, 242, 245)']);
+    expect(tones(frames)).toEqual(['rgb(6, 8, 11)']);
     expect(await visibleScenes(page)).toEqual(['spawn']);
     await expect(page.locator('.hero h1')).toBeFocused();
     expect(new URL(page.url()).hash).toBe('');

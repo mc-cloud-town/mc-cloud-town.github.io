@@ -266,9 +266,9 @@ export const mountSectionJumps = (
     try {
       // Only under a whole cover does the page move: a cover that is still lifting from the jump before turns round
       // first. One that was taken away meanwhile (the page was restored from the cache) covers nothing: no jump.
-      // The ground of where it leads: the End is dark whatever the theme.
-      if (!(await coverIn({ tone: dimOf(el) === 'end' ? 'night' : 'theme' })))
-        return;
+      // The film of the home page is dark by day as by night (only the ground under the respawn is paper), so the
+      // cover is the night's whatever the target.
+      if (!(await coverIn({ tone: 'night' }))) return;
       // overtaken by a later jump, or the place itself has gone from the page: nowhere to take the reader
       if (stale() || !el.isConnected) return;
       const gone = go();

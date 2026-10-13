@@ -524,7 +524,7 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) body {
   pointer-events: none;
   transition: opacity 0.28s var(--ease-rise);
 }
-/* by day it is the paper, unless it leads to the End, which has no daylight */
+/* by day it is the paper, unless it covers the home page, whose film is dark (a jump within it, or a step to it) */
 [data-theme='light'] .dim-cover:not([data-tone='night']) {
   background: rgb(var(--v-day));
 }
