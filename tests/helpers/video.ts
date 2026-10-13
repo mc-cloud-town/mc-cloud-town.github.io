@@ -57,6 +57,8 @@ export interface StubPlayer {
 const STUB = `(() => {
   const log = (window.__yt = window.__yt || { players: [], live: [], loads: 0 });
   log.loads++;
+  // asked for a second time in the same document, the real script does nothing: nobody is told it is ready again
+  if (window.YT) return;
   class Player {
     constructor(el, opts) {
       const host = typeof el === 'string' ? document.getElementById(el) : el;

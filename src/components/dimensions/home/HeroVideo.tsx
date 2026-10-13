@@ -398,7 +398,10 @@ export const HeroVideo = ({
       if (seen && !asked) {
         asked = true;
         // youtube-iframe touches window when it is loaded: in the browser only, never during the export
-        void import('youtube-iframe').then((loader) =>
+        // Its `load` is called on the module itself (`default`), not on what `import()` hands out around it:
+        // the loader keeps on itself that the script has come, and what is handed out is made anew each time.
+        // Asked on a new one, a return to this page asked for YouTube's script again, which answers only once.
+        void import('youtube-iframe').then(({ default: loader }) =>
           loader.load((YT: YouTube) => create(YT)),
         );
       }
