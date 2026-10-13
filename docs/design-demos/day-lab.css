@@ -1,23 +1,19 @@
-/* Day lab. Candidates for the day theme, side by side on the same demos (the switch is day-lab.js).
+/* Day lab. The day theme, tried on the demos before the product (the switch is day-lab.js).
 
-   What no candidate may change is what the design is by night: the picture from edge to edge, the words on the
-   scene's veil, the veil's shape, the layout. A candidate chooses three things only:
-     the veil's colour, how the veil acts on the picture, and the ink of the words on it.
+   What the day may not change is what the design is by night: the picture from edge to edge, the words on the
+   scene's veil, the veil's shape, the layout. It chooses three things only: the veil's colour, how heavy the
+   veil is, and the ink of the words on it. The ink is light in every candidate: a picture is never washed
+   toward paper (the candidates that did so, and the one that split the page, were turned down).
 
-   Light ink (the picture stays as dark as its veil makes it):
-     cinema    the night's veil and the night's ink, by day as by night
-     tint      a thinner veil in the dimension's own colour (deep sea, ember), its far side left clear
-     subtitle  almost no veil: the words carry their own shade, as a film's subtitles do
-   Dark ink (the picture is lifted toward the paper where the words are):
-     sky       a veil the colour of the dimension's sky, not of paper, and ink of the same hue
-     glass     the veil blurs and brightens the picture instead of covering it
-     print     the veil turns the picture under the words into a pale print, without blur
-     halo      a thin veil, and the words carry a halo of paper
+     tint      chosen. A thinner veil in the dimension's own colour (deep sea for the Overworld), its far side
+               left clear.
+     subtitle  the reserve. Almost no veil: the words carry their own shade, as a film's subtitles do.
+     cinema    the night's veil and the night's ink. On the home page it is what the Nether and the End have
+               by day under either candidate: neither has daylight.
 
-   <html data-day> is the candidate chosen; <html data-pic> is the one in force where the visitor is now (the End
-   has no daylight and is always cinema; so is the Nether when the lab's second switch says it has none).
-   All candidates share one paper (below) for what has no picture under it. Without data-day the page is the day
-   theme as it is now. The pages say what they are on <html>: lab-home, lab-inner, lab-respawn. */
+   <html data-day> is the candidate chosen; <html data-pic> is the one in force where the visitor is now.
+   The candidates share one paper (below) for what has no picture under it. Without data-day the page is the
+   day theme as it is now. The pages say what they are on <html>: lab-home, lab-inner, lab-respawn. */
 
 /* ───────── the paper: all candidates ───────── */
 html[data-theme='light'][data-day] {
@@ -237,106 +233,6 @@ html.lab-home[data-theme='light'][data-pic='subtitle'] .bar::before {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
 }
 
-/* ── sky ── */
-html.lab-home[data-theme='light'][data-pic='sky'],
-html.lab-inner[data-theme='light'][data-pic='sky'] .head,
-html.lab-respawn[data-theme='light'][data-pic='sky'] :is(.world, .call, .bar) {
-  --bg: #deecf8;
-  --fg: #071a2b;
-  --muted: #2c4257;
-  --v: 222, 236, 248;
-  --line: rgba(7, 26, 43, 0.26);
-  --line-strong: rgba(7, 26, 43, 0.44);
-  --s1: 0.95;
-  --s2: 0.88;
-  --s3: 0.2;
-  --s4: 0;
-  --f1: 0.95;
-  --f2: 0.6;
-  --f3: 0;
-  --h1: 0.94;
-  --h2: 0.7;
-  --h3: 0;
-  --h4: 0.85;
-  --h5: 0.95;
-  --n1: 0.96;
-  --n2: 0.86;
-  --n3: 0.6;
-  --r3: 0.9;
-  --r4: 0.84;
-  --sink: 40%;
-  color: var(--fg);
-}
-html.lab-home[data-theme='light'][data-pic='sky'][data-dim='nether'],
-html.lab-inner[data-theme='light'][data-pic='sky'][data-dim='nether'] .head {
-  --bg: #fae2d6;
-  --fg: #2a0d06;
-  --muted: #5a2a1e;
-  --v: 250, 226, 214;
-  --line: rgba(42, 13, 6, 0.26);
-}
-html.lab-inner[data-theme='light'][data-pic='sky'][data-dim='end'] .head {
-  --bg: #e9e2f8;
-  --fg: #170c33;
-  --muted: #40345e;
-  --v: 233, 226, 248;
-}
-
-/* ── glass, print: the veil is a pane, shaped by a mask (further down); the stops are not used ── */
-html.lab-home[data-theme='light'][data-pic='glass'],
-html.lab-inner[data-theme='light'][data-pic='glass'] .head,
-html.lab-respawn[data-theme='light'][data-pic='glass']
-  :is(.world, .call, .bar) {
-  --pane: rgba(var(--v), 0.8);
-  --frost: blur(26px) saturate(1.35) brightness(1.12);
-  --sink: 40%;
-}
-html.lab-home[data-theme='light'][data-pic='print'],
-html.lab-inner[data-theme='light'][data-pic='print'] .head,
-html.lab-respawn[data-theme='light'][data-pic='print']
-  :is(.world, .call, .bar) {
-  --pane: rgba(var(--v), 0.62);
-  --frost: grayscale(1) contrast(0.45) brightness(1.55);
-  --sink: 40%;
-}
-
-/* ── halo ── */
-html.lab-home[data-theme='light'][data-pic='halo'],
-html.lab-inner[data-theme='light'][data-pic='halo'] .head,
-html.lab-respawn[data-theme='light'][data-pic='halo'] :is(.world, .call, .bar) {
-  --s1: 0.55;
-  --s2: 0.42;
-  --s3: 0.06;
-  --s4: 0;
-  --f1: 0.6;
-  --f2: 0.3;
-  --f3: 0;
-  --h1: 0.55;
-  --h2: 0.3;
-  --h3: 0;
-  --h4: 0.35;
-  --h5: 0.5;
-  --n1: 0.62;
-  --n2: 0.46;
-  --n3: 0.3;
-  --r3: 0.5;
-  --r4: 0.42;
-  --sink: 40%;
-  --shade: 0 0 2px rgb(var(--v)), 0 0 10px rgba(var(--v), 0.95),
-    0 0 26px rgba(var(--v), 0.9), 0 0 48px rgba(var(--v), 0.7);
-}
-
-/* the dark-ink candidates on the home page: a part that names the Nether takes its day accent */
-html.lab-home[data-theme='light']:is(
-    [data-pic='sky'],
-    [data-pic='glass'],
-    [data-pic='print'],
-    [data-pic='halo']
-  )
-  [data-dim='nether'] {
-  --accent: #b02c0b;
-}
-
 /* ═════════ what every candidate does with those ═════════ */
 
 /* the words' own shade or halo, where a candidate has one */
@@ -350,37 +246,13 @@ html.lab-respawn[data-theme='light'][data-pic] :is(.call, .bar) {
   }
 }
 
-/* The dimension's name stands on the veil's clear side, on the bare picture. No strip of paper under it (that is
-   a patch): where the ink is dark, the name alone is light and carries a shade. */
+/* The dimension's name stands on the veil's clear side, on the bare picture, in the same light ink as the rest.
+   No strip of paper under it: that is a patch. */
 html.lab-home[data-theme='light'][data-pic] .open .vt,
 html.lab-inner[data-theme='light'][data-pic] .head .vt {
   background: none;
   padding: 0;
 }
-@media (min-width: 861px) {
-  html.lab-home[data-theme='light']:is(
-      [data-pic='sky'],
-      [data-pic='glass'],
-      [data-pic='print'],
-      [data-pic='halo']
-    )
-    .open
-    .vt,
-  html.lab-inner[data-theme='light']:is(
-      [data-pic='sky'],
-      [data-pic='glass'],
-      [data-pic='print'],
-      [data-pic='halo']
-    )
-    .head
-    .vt {
-    color: #fff;
-    text-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.35),
-      0 0 28px rgba(0, 0, 0, 0.45);
-  }
-}
-
 /* ── home: the side veil in the night's shape, from the candidate's stops ── */
 @media (min-width: 861px) {
   html.lab-home[data-theme='light'][data-pic] .veil--side {
@@ -459,95 +331,6 @@ html.lab-inner[data-theme='light'][data-pic] .head .bg::after {
   }
 }
 
-/* ═════════ glass and print: the veil is a pane ═════════
-   Not a wash of colour: it changes the picture behind it (blurs and brightens it, or bleaches it to a print) and
-   lays a little paper over that. Its shape is the veil's, as a mask, so the effect itself fades toward the clear
-   side. */
-html.lab-home[data-theme='light']:is([data-pic='glass'], [data-pic='print']) {
-  .veil {
-    background: var(--pane);
-    backdrop-filter: var(--frost);
-    -webkit-backdrop-filter: var(--frost);
-  }
-  .veil--side {
-    mask-image: linear-gradient(90deg, #000 0%, #000 44%, transparent 72%);
-  }
-  .veil--wide {
-    mask-image: linear-gradient(90deg, #000 0%, #000 60%, transparent 86%);
-  }
-  .veil--foot {
-    mask-image: linear-gradient(0deg, #000 0%, #000 30%, transparent 58%);
-  }
-  .veil--hero {
-    mask-image: linear-gradient(
-      90deg,
-      #000 0%,
-      #000 32%,
-      transparent 52%,
-      transparent 72%,
-      #000 88%
-    );
-  }
-  @media (max-width: 860px) {
-    .veil--side,
-    .veil--wide,
-    .veil--hero {
-      mask-image: linear-gradient(0deg, #000 0%, #000 58%, rgba(0, 0, 0, 0.5));
-    }
-  }
-  /* the bar's fog is a pane too, fading downward as the fog does */
-  .bar::before {
-    background: var(--pane);
-    backdrop-filter: var(--frost);
-    -webkit-backdrop-filter: var(--frost);
-    mask-image: linear-gradient(180deg, #000 45%, transparent);
-  }
-}
-html.lab-inner[data-theme='light']:is([data-pic='glass'], [data-pic='print']) {
-  .head .bg::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--pane);
-    backdrop-filter: var(--frost);
-    -webkit-backdrop-filter: var(--frost);
-    mask-image: linear-gradient(90deg, #000 0%, #000 44%, transparent 76%);
-  }
-  .head .bg::after {
-    background: linear-gradient(
-      0deg,
-      rgb(var(--paper-v)) 0,
-      rgba(var(--paper-v), 0) var(--sink)
-    );
-  }
-  @media (max-width: 860px) {
-    .head .bg::before {
-      mask-image: linear-gradient(0deg, #000 0%, #000 62%, rgba(0, 0, 0, 0.5));
-    }
-  }
-}
-html.lab-respawn[data-theme='light']:is(
-    [data-pic='glass'],
-    [data-pic='print']
-  ) {
-  .world::after {
-    background: var(--pane);
-    backdrop-filter: var(--frost);
-    -webkit-backdrop-filter: var(--frost);
-    mask-image: linear-gradient(
-      90deg,
-      #000 0%,
-      #000 44%,
-      rgba(0, 0, 0, 0.82) 72%
-    );
-  }
-  @media (max-width: 860px) {
-    .world::after {
-      mask-image: linear-gradient(0deg, #000 0%, #000 58%, rgba(0, 0, 0, 0.6));
-    }
-  }
-}
-
 /* ───────── the lab's own switch ───────── */
 .day-lab {
   position: fixed;
@@ -589,9 +372,4 @@ html.lab-respawn[data-theme='light']:is(
 .day-lab button[aria-pressed='true'] {
   background: #f2f4f6;
   color: #0b0f13;
-}
-/* the second switch: whether the Nether has a day */
-.day-lab button[data-nether] {
-  margin-left: 8px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
