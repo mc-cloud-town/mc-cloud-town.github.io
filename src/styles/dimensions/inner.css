@@ -13,10 +13,6 @@
   /* at 860px and below, bottom-up from that solid edge: at 60%, and at the top */
   --head-n2: 0.64;
   --head-n3: 0.3;
-  /* the day's veil there, a little stronger: the day's dark words stand on the picture's dark places, and the
-     small accent-coloured word of the crumb was hard to read on the members' crowd under the night's stops */
-  --head-day-n2: 0.77;
-  --head-day-n3: 0.48;
 
   /* header: half a screen, never a full one */
   .head {
@@ -67,10 +63,21 @@
     --v: var(--v-night);
   }
   .head .bg::after {
-    --v: var(--v-day);
-    /* on the veil itself, not by theme: each veil keeps its own stops while the two cross-fade */
-    --head-n2: var(--head-day-n2);
-    --head-n3: var(--head-day-n3);
+    /* The day's: black and thin across the picture, as the home page's, and the picture's last 56px sink into
+       the paper under it (every word of a header stands above its 56px of padding). Each veil keeps its own
+       stops while the two cross-fade. */
+    background: linear-gradient(
+        0deg,
+        rgb(var(--v-day)) 0,
+        rgba(var(--v-day), 0) 56px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.42) 0%,
+        rgba(0, 0, 0, 0.28) 42%,
+        rgba(0, 0, 0, 0) 78%,
+        rgba(0, 0, 0, 0) 100%
+      );
     opacity: 0;
   }
   [data-theme='light'] & .head .bg::before {
@@ -120,18 +127,29 @@
     font: 900 clamp(40px, 5.2vw, 88px) / 1 var(--serif);
     letter-spacing: 0.12em;
     align-self: start;
-    /* the strip of paper it stands on by day arrives with the theme */
-    transition:
-      background-color var(--t-theme),
-      padding var(--t-theme);
   }
-  /* Only where it stands upright on the bare photograph (above 860px). Below that the veil runs bottom-up under
-     the whole header and the name lies on it, like the title under it: no second ground there. */
-  @media (min-width: 861px) {
-    [data-theme='light'] & .head .vt {
-      background: rgba(var(--v), 0.95);
-      padding: 0.4em 0.25em 0.3em;
-    }
+  /* By day a header's picture keeps its daylight under a thin black veil, and the words on it are light and
+     carry their own shade, as on the home page (spec 4.2). The accent is the dimension's, in its picture ink.
+     The paper's own tokens are untouched: they still serve what stands on paper, such as a partner's tag. */
+  [data-theme='light'] & .head {
+    --fg: #ffffff;
+    --muted: #eef2f5;
+    --line: rgba(255, 255, 255, 0.45);
+    --accent: #cfeaff;
+    --accent-ink: #cfeaff;
+    color: var(--fg);
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.75),
+      0 0 14px rgba(0, 0, 0, 0.55),
+      0 0 40px rgba(0, 0, 0, 0.4);
+  }
+  [data-theme='light'][data-dim='nether'] & .head {
+    --accent: #ffd0c0;
+    --accent-ink: #ffd0c0;
+  }
+  [data-theme='light'][data-dim='end'] & .head {
+    --accent: #e6d8ff;
+    --accent-ink: #e6d8ff;
   }
 
   /* tools: filters and search stay reachable while the list scrolls */
@@ -299,6 +317,20 @@
         rgba(var(--v), var(--head-n3)) 100%
       );
     }
+    /* and the day's, after it so that it wins: the paper at the foot, then the thin black veil from below */
+    .head .bg::after {
+      background: linear-gradient(
+          0deg,
+          rgb(var(--v-day)) 0,
+          rgba(var(--v-day), 0) 56px
+        ),
+        linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.5) 0%,
+          rgba(0, 0, 0, 0.3) 60%,
+          rgba(0, 0, 0, 0.12) 100%
+        );
+    }
     .tools .count {
       display: none;
     }
@@ -354,11 +386,6 @@
       line-height: 1.2;
       margin-right: -0.1em;
     }
-  }
-  /* the light panel has its own padding, so it never overflows: keep the demo's box */
-  [data-theme='light'] & .head .vt {
-    line-height: 1;
-    margin-right: 0;
   }
   @media (max-width: 1024px) {
     /* 44px tap height and width, but the visual rhythm stays the demo's */

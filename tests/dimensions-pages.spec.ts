@@ -1657,3 +1657,38 @@ test.describe('going to another page by the footer', () => {
       await pageIsFree(page);
     });
 });
+
+for (const [path, accent] of [
+  ['/survivalProgress/', 'rgb(207, 234, 255)'],
+  ['/member/', 'rgb(230, 216, 255)'],
+] as const)
+  test(`by day the header of ${path} is read in light words with a shade, on a thin black veil that sinks into the paper`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, path, { theme: 'light' });
+    const got = await page.evaluate(() => {
+      const head = document.querySelector('.dim .head')!;
+      const veil = getComputedStyle(head.querySelector('.bg')!, '::after');
+      const name = getComputedStyle(head.querySelector('.vt')!);
+      return {
+        ink: getComputedStyle(head.querySelector('h1')!).color,
+        shade: getComputedStyle(head.querySelector('h1')!).textShadow,
+        crumb: getComputedStyle(head.querySelector('.crumb .acc')!).color,
+        veilOn: veil.opacity,
+        veil: veil.backgroundImage,
+        strip: name.backgroundColor,
+        nameInk: name.color,
+      };
+    });
+    expect(got.ink).toBe('rgb(255, 255, 255)');
+    expect(got.shade).not.toBe('none');
+    expect(got.crumb).toBe(accent);
+    expect(got.veilOn).toBe('1');
+    // black, never paper, across the picture; paper only where the picture sinks into the page
+    expect(got.veil).toContain('rgba(0, 0, 0, 0.42)');
+    expect(got.veil).toContain('rgb(238, 242, 245)');
+    expect(got.veil).toContain('56px');
+    expect(got.strip).toBe('rgba(0, 0, 0, 0)');
+    expect(got.nameInk).toBe('rgb(255, 255, 255)');
+  });
