@@ -11,13 +11,10 @@ const LATER_ID = 'ctec-fonts';
 
 /**
  * Runs while the served home page is parsed: asks for the stylesheet with a link made by script, which the
- * browser does not hold the first paint for. Not if the document has the stylesheet already.
+ * browser does not hold the first paint for. Not if the document has the stylesheet already. The address and
+ * the mark are read from the script's own attributes: no value is written into the source.
  */
-const laterScript = `(function(){try{var h=${JSON.stringify(
-  FONTS_HREF,
-)},d=document,a=d.querySelectorAll('link[rel="stylesheet"]'),i=0;for(;i<a.length;i++)if(a[i].getAttribute('href')===h)return;var l=d.createElement('link');l.rel='stylesheet';l.href=h;l.id=${JSON.stringify(
-  LATER_ID,
-)};d.head.appendChild(l)}catch(e){}})();`;
+const laterScript = `(function(){try{var d=document,s=d.currentScript,h=s.getAttribute('data-href'),a=d.querySelectorAll('link[rel="stylesheet"]'),i=0;for(;i<a.length;i++)if(a[i].getAttribute('href')===h)return;var l=d.createElement('link');l.rel='stylesheet';l.href=h;l.id=s.getAttribute('data-id');d.head.appendChild(l)}catch(e){}})();`;
 
 /**
  * The stylesheet of the site's faces, asked for page by page.
@@ -38,7 +35,11 @@ const laterScript = `(function(){try{var h=${JSON.stringify(
 export const FontSheet = () =>
   pageKind(usePathname()) === 'home' ? (
     <>
-      <script dangerouslySetInnerHTML={{ __html: laterScript }} />
+      <script
+        data-href={FONTS_HREF}
+        data-id={LATER_ID}
+        dangerouslySetInnerHTML={{ __html: laterScript }}
+      />
       <noscript>
         <link rel='stylesheet' href={FONTS_HREF} />
       </noscript>
