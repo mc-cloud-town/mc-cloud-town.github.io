@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant" data-theme="dark">
+<html class="lab-respawn" lang="zh-Hant" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -414,6 +414,7 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="day-lab.css" />
   </head>
   <body>
     <div class="world">
@@ -602,5 +603,6 @@
       if (new URLSearchParams(location.search).get('theme') === 'light')
         root.dataset.theme = 'light';
     </script>
+    <script src="day-lab.js"></script>
   </body>
 </html>
