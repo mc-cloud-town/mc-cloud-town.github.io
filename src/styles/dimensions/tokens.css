@@ -254,16 +254,68 @@ html[data-theme='light'] {
   --accent: #6234c4;
   --accent-ink: #6234c4;
 }
-/* The End has no daylight: on the home page the interface goes dark for this one dimension. */
-[data-theme='light'][data-dim='end'] .dim.dim--home {
+/* By day the home page is still the film: the pictures keep their daylight under a thin black veil, and the
+   words on them are light and carry their own shade, as subtitles do (spec 4.2). Only the ground under the
+   respawn is paper (home.css gives it the paper's tokens back). */
+[data-theme='light'] .dim.dim--home {
+  --bg: #0b0f13;
+  --panel: #151b21;
+  --fg: #ffffff;
+  --muted: #eef2f5;
+  --v: 0, 0, 0;
+  --line: rgba(255, 255, 255, 0.45);
+  --logo: invert(1);
+  --accent: #cfeaff;
+  --accent-ink: #cfeaff;
+  --s1: 0.42;
+  --s2: 0.28;
+  --s3: 0;
+  --s4: 0;
+  --f1: 0.5;
+  --f2: 0.25;
+  --f3: 0;
+  --h1: 0.4;
+  --h2: 0.2;
+  --h3: 0;
+  --h4: 0.2;
+  --h5: 0.35;
+  --n1: 0.5;
+  --n2: 0.3;
+  --n3: 0.12;
+  --shade: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 14px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(0, 0, 0, 0.4);
+}
+/* The Nether and the End have no daylight: there the home page is as it is by night, veil, ink and accent. */
+[data-theme='light']:is([data-dim='nether'], [data-dim='end']) .dim.dim--home {
   --bg: #06080b;
+  --panel: #0e1217;
   --fg: #f2f4f6;
   --muted: #a3adb8;
   --v: 6, 8, 11;
   --line: rgba(242, 244, 246, 0.18);
   --logo: invert(1);
+  --accent: #ff6a45;
+  --accent-ink: #ff6a45;
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+  --h1: 0.82;
+  --h2: 0.4;
+  --h3: 0.12;
+  --h4: 0.62;
+  --h5: 0.78;
+  --n1: 0.9;
+  --n2: 0.62;
+  --n3: 0.3;
+  --shade: none;
+}
+[data-theme='light'][data-dim='end'] .dim.dim--home {
   --accent: #cdb0ff;
-  /* (the veil's stops stay the day's, as in the design: only its colour goes dark) */
+  --accent-ink: #cdb0ff;
 }
 
 /* touch sizes: every control is at least 44 × 44 up to tablet landscape */

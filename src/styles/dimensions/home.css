@@ -1122,70 +1122,46 @@ html[data-live]
     transition: opacity 0.12s linear;
   }
 }
-/* Until then the scene stands on its ground. By night that is the stage's black, under a dark veil. By day the
-   scenes of the Overworld are read on paper, and their veils leave a side of the picture clear: there the ground
-   is paper too, so that no scene of the day ever comes in from black. (The Nether's and the End's stay dark.) */
-[data-theme='light']:not([data-dim='end'])
-  .dim.dim--home
-  .scene:is(
-    [data-scene='spawn'],
-    [data-scene='town'],
-    [data-scene='w1'],
-    [data-scene='w2'],
-    [data-scene='w3'],
-    [data-scene='day1']
-  )
-  .cam {
-  background: rgb(var(--v));
-}
-
 /* Each section keeps the accent of its own dimension, so the text of the one that is leaving the screen
    does not change colour when the page (<html data-dim>: bar, veil, theme) moves on to the next.
-   In the day theme the page is dark while it is in the End, and so the night accents apply to everything on it. */
+   By day the page is read under the night's veil in the Nether and the End, and so the night accents apply there too. */
 .dim.dim--home [data-dim='nether'] {
   --accent: #ff6a45;
 }
 .dim.dim--home [data-dim='end'] {
   --accent: #cdb0ff;
 }
-[data-theme='light']:not([data-dim='end']) .dim.dim--home [data-dim='nether'] {
-  --accent: #c2330f;
+/* day: the words on a picture carry their shade (--shade, tokens.css; none by night and in the Nether and the
+   End). A solid button has its own ground and carries none. */
+.dim.dim--home :is(main, .dim-bar) {
+  text-shadow: var(--shade, none);
 }
-[data-theme='light']:not([data-dim='end']) .dim.dim--home [data-dim='end'] {
-  --accent: #6234c4;
+.dim.dim--home :is(.btn, .ground) {
+  text-shadow: none;
 }
-
-/* day: the paper is as the design has it for every picture (a strength is for the night's dark veil) */
-[data-theme='light']:not([data-dim='end']) .dim.dim--home .veil {
-  --veil-k: 1;
+/* day: the bar's fog is as thin as the veil */
+[data-theme='light']:not([data-dim='nether'], [data-dim='end'])
+  .dim.dim--home
+  .dim-bar::before {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
 }
-/* day: the paper side is narrower, so more of the photograph stays untouched.
-   Only where there is a side: on narrow screens the text runs the full width, and the bottom-up veil above stays. */
-@media (min-width: 861px) {
-  [data-theme='light']:not([data-dim='end']) .dim .veil--side {
-    background: linear-gradient(
-      90deg,
-      rgba(var(--v), 0.97) 0%,
-      rgba(var(--v), 0.94) 36%,
-      rgba(var(--v), 0.3) 54%,
-      rgba(var(--v), 0) 72%
-    );
-  }
+/* day: the departments' links stand on the far side of the respawn's picture, which the side veil leaves clear */
+[data-theme='light'] .dim.dim--home .scene[data-scene='day1'] .veil {
+  --s3: 0.2;
+  --s4: 0.2;
 }
-/* day: where the dimension name stands upright on the bare photograph (the layout with a clear side, above
-   860px) it gets its own strip of paper, as wide as its words (the column it stands in is as wide as it is).
-   Not at 860px and below: there the bottom-up veil runs under the whole screen and the name lies on it, in the
-   flow of the text, like the statement under it. A second ground on the veil would be an opaque bar across the
-   column (the name is a row of the grid there). Without one, an opening is as tall by day as by night, so the
-   page does not move either when the day goes dark for the End. */
-@media (min-width: 861px) {
-  [data-theme='light']:not([data-dim='end']) .dim .open .vt {
-    background: rgba(var(--v), 0.95);
-    padding: 0.4em 0.25em 0.3em;
-    /* the strip has its own padding, so the label never overflows: keep the design's box */
-    line-height: 1;
-    margin-right: 0;
-  }
+/* day: the ground under the respawn is paper, and what stands on it is read in the paper's ink */
+[data-theme='light'] .dim.dim--home .ground {
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --fg: #0f1418;
+  --muted: #414c57;
+  --v: 238, 242, 245;
+  --line: rgba(15, 20, 24, 0.24);
+  --logo: none;
+  --accent: #0b6fb5;
+  --accent-ink: #095b95;
+  color: var(--fg);
 }
 
 /* It fades, then it is taken away: two animations, the second beginning when the first has ended. Hidden from
