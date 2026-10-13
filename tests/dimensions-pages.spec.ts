@@ -1692,3 +1692,28 @@ for (const [path, accent] of [
     expect(got.strip).toBe('rgba(0, 0, 0, 0)');
     expect(got.nameInk).toBe('rgb(255, 255, 255)');
   });
+
+test('by day the picture of a header lies on the night’s ground, so the light words never stand on paper while it arrives', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openPage(page, '/survivalProgress/', { theme: 'light' });
+  await expect(page.locator('.dim .head .bg')).toHaveCSS(
+    'background-color',
+    'rgb(6, 8, 11)',
+  );
+});
+
+test('by day the veil of a header at 390px is bottom-up, and its last 56px still sink into the paper', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openPage(page, '/survivalProgress/', { theme: 'light' });
+  const veil = await page.evaluate(
+    () =>
+      getComputedStyle(document.querySelector('.dim .head .bg')!, '::after')
+        .backgroundImage,
+  );
+  expect(veil).toContain('rgba(0, 0, 0, 0.5)');
+  expect(veil).toContain('56px');
+});

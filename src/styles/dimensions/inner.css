@@ -25,9 +25,12 @@
     padding: 140px var(--gutter) 56px;
     overflow: hidden;
   }
+  /* The night's ground, in both themes: the picture enters from nothing, and until it is in, the thin veil of the
+     day would lie over the paper and the header's light words would stand on it. */
   .head .bg {
     position: absolute;
     inset: 0;
+    background: rgb(var(--v-night));
   }
   .head .bg img {
     width: 100%;
