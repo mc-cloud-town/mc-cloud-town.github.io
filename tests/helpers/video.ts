@@ -94,6 +94,9 @@ const STUB = `(() => {
     mute() {
       this.record.calls.push('mute');
     }
+    unloadModule(name) {
+      this.record.calls.push('unloadModule:' + name);
+    }
     getIframe() {
       return this.frame;
     }

@@ -31,6 +31,8 @@ interface Player {
   getDuration(): number;
   getCurrentTime(): number;
   destroy(): void;
+  /** (not in YouTube's documentation, though long in its player: asked for only if it is there) */
+  unloadModule?(name: string): void;
 }
 interface PlayerOptions {
   host: string;
@@ -38,6 +40,7 @@ interface PlayerOptions {
   playerVars: Record<string, string | number>;
   events: {
     onReady: () => void;
+    onApiChange: () => void;
     onStateChange: (e: { data: number }) => void;
   };
 }
@@ -327,6 +330,18 @@ export const HeroVideo = ({
       frame.setAttribute('aria-hidden', 'true');
       frame.setAttribute('title', name.current);
     };
+    /**
+     * No captions over the scenery. A muted player may switch them on by itself where the video has any (those
+     * YouTube makes from the sound count), and no variable of the player says "off": the module that draws them
+     * is put away instead, when the player is ready and each time it says its modules have changed.
+     */
+    const uncaption = () => {
+      try {
+        player?.unloadModule?.('captions');
+      } catch {
+        // a player without the module has nothing to put away
+      }
+    };
     const create = (YT: YouTube) => {
       if (gone || player) return;
       // the player puts its frame in the place of the element it is given: one of our own making, not React's
@@ -356,8 +371,12 @@ export const HeroVideo = ({
             if (gone) return;
             usable = true;
             dress();
+            uncaption();
             // it starts by itself (autoplay); not for a reader who has moved on meanwhile
             if (!seen) player?.pauseVideo();
+          },
+          onApiChange: () => {
+            if (!gone) uncaption();
           },
           onStateChange: ({ data }) => {
             if (gone || data !== PLAYING) return;

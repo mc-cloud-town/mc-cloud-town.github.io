@@ -636,6 +636,16 @@ test.describe('home: the hero is the anniversary video', () => {
       ).toEqual([width, width]);
     });
 
+  test('the player is told to put its captions away as soon as it is ready', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await expect
+      .poll(async () => (await players(page))[0]?.calls ?? [])
+      .toContain('unloadModule:captions');
+  });
+
   test('the cover stays whole until the player has played for its settle time, then dissolves over frames', async ({
     page,
   }) => {
