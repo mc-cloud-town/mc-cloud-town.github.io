@@ -25,7 +25,9 @@ before changing anything a visitor sees.
 - **Veils, not patches.** Text stands on the scene's veil, the way `dimensions-v3-video.html` does it. Every scene
   keeps its veil, and none is veiled so heavily that the picture is lost. Never put a ground or a strip under one
   block of text. If a picture reads too dark, lower that scene's `strength` in `src/constants/scenes.ts` and keep
-  the veil's shape.
+  the veil's shape. By day as by night the words on a picture are light ink on a black veil: the day's veil is thin
+  and the words carry their own shade (spec 4.2). A picture is never washed toward paper, its veil is never
+  coloured, and on the home page the Nether and the End have no day.
 - **Design for the reader's comfort, not to fill space.** An empty side is not a problem to solve by spreading
   content across it. Judge a section as part of the whole page, with what stands above and below it.
 - **Alignment follows the content's shape.** A list reads from the left, and its rules run from gutter to gutter.
