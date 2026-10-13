@@ -21,7 +21,7 @@ export interface SceneDef {
   src?: string;
   veil: Veil;
   /**
-   * How much of the design's veil this picture is given by night: every stop of the veil is multiplied by it
+   * How much of the design's veil this picture is given, by night and by day: every stop of the veil is multiplied by it
    * (the shape stays). 1 if not given. Under 1 only for a picture that is dark by itself, which the full veil
    * leaves nearly black. To retune a picture, change this one number.
    */

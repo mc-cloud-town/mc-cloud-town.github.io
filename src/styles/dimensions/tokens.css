@@ -77,6 +77,12 @@ html[data-theme='light'] {
   --scroll-thumb: #94a3b8;
   --scroll-thumb-hover: #64748b;
 }
+/* By day the home page is dark, except at the respawn (shell.css says what is behind it): the scrollbar is the night's. */
+html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) {
+  --scroll-track: #111827;
+  --scroll-thumb: #64748b;
+  --scroll-thumb-hover: #94a3b8;
+}
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -131,8 +137,8 @@ html[data-theme='light'] {
   --h3: 0.12;
   --h4: 0.62;
   --h5: 0.78;
-  /* up to 860px, where the veil runs bottom-up under the whole screen. By night lower than the design's
-     0.96 / 0.8 / 0.5, under which no picture could be seen (user feedback); by day the design's. */
+  /* up to 860px, where the veil runs bottom-up under the whole screen. Lower than the design's
+     0.96 / 0.8 / 0.5, under which no picture could be seen (user feedback); by day lower still (below). */
   --n1: 0.9;
   --n2: 0.62;
   --n3: 0.3;
@@ -218,26 +224,11 @@ html[data-theme='light'] {
   --line: rgba(15, 20, 24, 0.24);
   --logo: none;
   --accent: #0b6fb5;
-  /* The accent as the colour of small words that stand over a picture (the current page of an inner header's
-     crumb). The day accents have 4.7 : 1 on bare paper at best, and no veil leaves bare paper: the same hue,
-     deeper, has 4.5 : 1 and more on the palest ground a header gives it. Lines, marks and hovers stay on --accent.
-     By night there is none, and the words are in the accent itself. */
+  /* The accent as the colour of small words that stand on the paper (a partner's tag). The day accents have
+     4.7 : 1 on bare paper at best: the same hue, deeper, has 4.5 : 1 and more on the palest ground such a tag
+     is given. Lines, marks and hovers stay on --accent. By night there is none, and the words are in the
+     accent itself. A header's picture takes the light accents instead (inner.css), and the home page its own. */
   --accent-ink: #095b95;
-  --s1: 0.97;
-  --s2: 0.92;
-  --s3: 0.22;
-  --s4: 0;
-  --f1: 0.97;
-  --f2: 0.6;
-  --f3: 0;
-  --h1: 0.96;
-  --h2: 0.74;
-  --h3: 0;
-  --h4: 0.9;
-  --h5: 0.97;
-  --n1: 0.96;
-  --n2: 0.8;
-  --n3: 0.5;
 }
 [data-dim='nether'] .dim {
   --accent: #ff6a45;
