@@ -1813,6 +1813,29 @@ test.describe('home: the end', () => {
     expect(got.strip).toBe('rgba(0, 0, 0, 0)');
   });
 
+  test('by day what has a solid ground of its own carries no shade: the button, the open language pill and its list', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#overworld', 0);
+    await page.locator('.dim-bar [data-action="language"]').click();
+    const list = page.locator('.dim-bar .lang-list');
+    await expect(list).toHaveCSS('opacity', '1');
+    const shade = (selector: string) =>
+      page
+        .locator(selector)
+        .first()
+        .evaluate((el) => getComputedStyle(el).textShadow);
+    // a word on the picture has its shade
+    expect(await shade('#overworld .say')).not.toBe('none');
+    expect(await shade('.btn')).toBe('none');
+    expect(await shade('.dim-bar .lang-list')).toBe('none');
+    expect(await shade('.dim-bar .lang-list li')).toBe('none');
+    expect(await shade('.dim-bar [data-action="language"]')).toBe('none');
+  });
+
   test('by day the Nether has no daylight: the night veil and ink, as in the End', async ({
     page,
   }) => {

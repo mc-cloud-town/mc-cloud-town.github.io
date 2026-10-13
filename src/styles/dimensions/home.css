@@ -1132,12 +1132,25 @@ html[data-live]
   --accent: #cdb0ff;
 }
 /* day: the words on a picture carry their shade (--shade, tokens.css; none by night and in the Nether and the
-   End). A solid button has its own ground and carries none. */
+   End). Whatever has a solid ground of its own carries none: the button and the respawn's ground, the bar's pills
+   when they are filled (open, and under a pointer), the language list and the phone menu's sheet. */
 .dim.dim--home :is(main, .dim-bar) {
   text-shadow: var(--shade, none);
 }
-.dim.dim--home :is(.btn, .ground) {
+.dim.dim--home
+  :is(
+    .btn,
+    .ground,
+    .lang-list,
+    .dim-sheet,
+    .dim-bar .pill[aria-expanded='true']
+  ) {
   text-shadow: none;
+}
+@media (hover: hover) {
+  .dim.dim--home .dim-bar .pill:hover {
+    text-shadow: none;
+  }
 }
 /* day: the bar's fog is as thin as the veil */
 [data-theme='light']:not([data-dim='nether'], [data-dim='end'])
