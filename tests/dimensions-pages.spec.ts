@@ -755,11 +755,15 @@ test.describe('going to another page', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/member/');
     const main = page.locator('.dim main');
-    await expect(main).toHaveCSS('transition-property', 'opacity, translate');
-    await expect(main).toHaveCSS('transition-duration', '0.22s, 0.22s');
+    // the leave is opacity and translate; the third is the day's shade easing with the theme (home page only)
+    await expect(main).toHaveCSS(
+      'transition-property',
+      'opacity, translate, text-shadow',
+    );
+    await expect(main).toHaveCSS('transition-duration', '0.22s, 0.22s, 0.4s');
     await expect(main).toHaveCSS(
       'transition-timing-function',
-      'cubic-bezier(0.215, 0.61, 0.355, 1), cubic-bezier(0.215, 0.61, 0.355, 1)',
+      'cubic-bezier(0.215, 0.61, 0.355, 1), cubic-bezier(0.215, 0.61, 0.355, 1), ease',
     );
     await expect(page.locator('.dim-foot')).toHaveCSS(
       'transition-duration',
