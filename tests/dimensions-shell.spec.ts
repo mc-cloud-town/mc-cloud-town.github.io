@@ -1367,7 +1367,12 @@ test.describe('headings inside the shell', () => {
         await expect(page.locator('.dim')).toHaveCSS('color', ink);
         for (const sel of headings) {
           expect(await page.locator(sel).count(), sel).toBeGreaterThan(0);
-          await expect(page.locator(sel).first(), sel).toHaveCSS('color', ink);
+          // the header stands on the dimension's picture: its words are light by day too (spec 4.2)
+          const onPicture = theme === 'light' && sel === '.head h1';
+          await expect(page.locator(sel).first(), sel).toHaveCSS(
+            'color',
+            onPicture ? 'rgb(255, 255, 255)' : ink,
+          );
         }
       });
 });
