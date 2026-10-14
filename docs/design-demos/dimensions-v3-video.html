@@ -587,10 +587,11 @@
       }
 
       /* a dimension opens */
+      /* its words reach the foot of the screen only as the change into the dimension ends, and come in after it */
       .open {
         position: relative;
         min-height: 140vh;
-        padding: 28vh var(--gutter) 18vh;
+        padding: 100vh var(--gutter) 18vh;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 6vw;
@@ -923,7 +924,6 @@
         }
         .open {
           grid-template-columns: 1fr;
-          padding-top: 20vh;
         }
         .open > div:first-child,
         .ledger-now,
@@ -1092,6 +1092,13 @@
     <canvas
       class="portal"
       id="portal"
+      width="256"
+      height="144"
+      aria-hidden="true"
+    ></canvas>
+    <canvas
+      class="portal"
+      id="portalEnd"
       width="256"
       height="144"
       aria-hidden="true"
@@ -1372,6 +1379,7 @@
       integrity="sha384-B2WBjDzEjJpYvhmi2UyEn7rektqkf5suS6sNoyyrf0EBAwBHdkiXxIlU0V5Ru2ed"
       crossorigin="anonymous"
     ></script>
+    <script src="portal-surfaces.js"></script>
     <script>
       (() => {
         'use strict';
@@ -1539,36 +1547,24 @@
           });
         })();
 
-        /* ── nether portal: 32-frame strip from the game, tiled 16 x 9, redrawn only while it is on screen ── */
-        const portal = $('#portal');
-        (() => {
-          const ctx = portal.getContext('2d'),
-            strip = new Image();
+        /* ── the portals: the product's surfaces, generated in code (portal-surfaces.js), advanced only while on screen ── */
+        const portal = $('#portal'),
+          portalEnd = $('#portalEnd');
+        [
+          [portal, 'nether'],
+          [portalEnd, 'end'],
+        ].forEach(([canvas, name]) => {
+          const def = window.PORTAL_SURFACES[name],
+            ctx = canvas.getContext('2d'),
+            paint = def.prepare();
+          if (!paint) return;
           let frame = 0;
-          strip.src = 'mc/nether_portal.png';
+          paint(ctx, 0);
           setInterval(() => {
-            if (
-              !strip.complete ||
-              !strip.naturalWidth ||
-              +gsap.getProperty(portal, 'opacity') === 0
-            )
-              return;
-            frame = (frame + 1) % 32;
-            for (let y = 0; y < 9; y++)
-              for (let x = 0; x < 16; x++)
-                ctx.drawImage(
-                  strip,
-                  0,
-                  frame * 16,
-                  16,
-                  16,
-                  x * 16,
-                  y * 16,
-                  16,
-                  16,
-                );
-          }, 50);
-        })();
+            if (+gsap.getProperty(canvas, 'opacity') === 0) return;
+            paint(ctx, ++frame);
+          }, def.frameMs);
+        });
 
         /* ── theme ── */
         const setTheme = (l) => {
@@ -1659,13 +1655,29 @@
                 0,
               )
               .set(A.el, { autoAlpha: 0 }, 1);
-          } else if (type === 'portal' || type === 'wake') {
-            const cover = type === 'portal' ? portal : '.flash';
+          } else if (
+            type === 'portal' ||
+            type === 'portal-end' ||
+            type === 'wake'
+          ) {
+            const cover =
+              type === 'portal'
+                ? portal
+                : type === 'portal-end'
+                  ? portalEnd
+                  : '.flash';
+            // the End's cover waits until its opening is three tenths in, as in the product
+            const from = type === 'portal-end' ? 0.3 : 0;
             tl.fromTo(
               cover,
               { autoAlpha: 0, scale: 1 },
-              { autoAlpha: 1, scale: 1.25, duration: 0.5, ease: 'power2.in' },
-              0,
+              {
+                autoAlpha: 1,
+                scale: 1.25,
+                duration: 0.5 - from,
+                ease: 'power2.in',
+              },
+              from,
             )
               .fromTo(
                 A.zoom,
@@ -1995,19 +2007,53 @@
           { xPercent: 1.5, scale: 1.12 },
         );
 
-        $$('[data-say]').forEach((el) =>
-          gsap.to($$('span', el), {
-            opacity: 1,
-            stagger: 0.5,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: el,
-              start: 'top 72%',
-              end: 'bottom 40%',
-              scrub: true,
-            },
-          }),
-        );
+        // A dimension's opening: its words come in only once the change into it has played out (the opening
+        // begins a screen lower than the change: see .open in the stylesheet). They do not stop. Over a stretch of
+        // the page they are carried down as the page goes up, by an ease that begins and ends at nothing: they slow
+        // down near the head of the screen, stand almost still while the statement lights up line by line, dark to
+        // bright, and gather speed again. The section is that much longer at its foot, so nothing after it moves.
+        const narrow = () => matchMedia('(max-width: 860px)').matches;
+        $$('.open').forEach((sec) => {
+          const lines = $$('span', $('[data-say]', sec)),
+            words = [sec.children[0], $('.vt', sec)];
+          // what the reader meets first: the name, which leads the opening up to 860px; above that the tag
+          const title = () => (narrow() ? $('.vt', sec) : $('.tag', sec));
+          const run = () => innerHeight * (0.5 * lines.length + 0.6);
+          const carry = () => run() * 0.62;
+          const pad = () =>
+            (sec.style.paddingBottom = 'calc(18vh + ' + carry() + 'px)');
+          pad();
+          addEventListener('resize', pad);
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: sec,
+                // the slowing begins where it will leave the title a fifth of the way down the screen at its
+                // slowest, half way through the stretch
+                start: () =>
+                  'top+=' +
+                  (title().getBoundingClientRect().top -
+                    sec.getBoundingClientRect().top -
+                    innerHeight * 0.2 -
+                    (run() - carry()) / 2) +
+                  ' top',
+                end: () => '+=' + run(),
+                scrub: true,
+                invalidateOnRefresh: true,
+              },
+            })
+            .fromTo(
+              words,
+              { y: 0 },
+              { y: () => carry(), duration: 1, ease: 'sine.inOut' },
+              0,
+            )
+            .to(
+              lines,
+              { opacity: 1, duration: 0.24, stagger: 0.24, ease: 'none' },
+              0.22,
+            );
+        });
         $$('.open .vt').forEach((v) =>
           gsap.from(v, {
             yPercent: 12,
@@ -2123,8 +2169,8 @@
           });
         })();
 
-        // the end: the overworld spins away; the credits simply scroll over the stars
-        changeOn('#end', 'nether', 'hall', 'fall');
+        // the end: through the End's portal, as in the product; the credits simply scroll over the stars
+        changeOn('#end', 'nether', 'hall', 'portal-end');
         drift(
           '#end',
           'hall',
@@ -2138,6 +2184,11 @@
 
         // respawn: wake up on day one
         changeOn('#respawn', 'end', 'day1', 'wake');
+        // The openings' stretches are made with the statements, before the ledger's hold that stands above the End:
+        // put every trigger back in the order of the page, so each is measured after what stands above it has taken
+        // its room.
+        ScrollTrigger.sort();
+        ScrollTrigger.refresh();
         gsap.from('.pal', {
           y: 160,
           rotate: 8,
@@ -2159,6 +2210,5 @@
       })();
     </script>
     <script src="day-lab.js"></script>
-    <script src="entry-lab.js"></script>
   </body>
 </html>
