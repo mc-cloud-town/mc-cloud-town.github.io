@@ -153,22 +153,10 @@ export const buildChoreography = (
         0,
       );
 
-    // The text reveals of one section: the statement lights up line by line, the label and the blocks rise.
+    // The text reveals of one section: the name and the blocks rise. (The statement of a dimension's opening lights
+    // up line by line in `opening`, below.)
     const reveals = (section: HTMLElement | null) => {
       if (!section) return;
-      gsap.utils.toArray<HTMLElement>('[data-say]', section).forEach((el) =>
-        gsap.to(el.querySelectorAll('span'), {
-          opacity: 1,
-          stagger: 0.5,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 72%',
-            end: 'bottom 40%',
-            scrub: true,
-          },
-        }),
-      );
       gsap.utils.toArray<HTMLElement>('.vt', section).forEach((el) =>
         gsap.from(el, {
           yPercent: 12,
@@ -187,6 +175,87 @@ export const buildChoreography = (
           scrollTrigger: { trigger: el, start: 'top 86%' },
         }),
       );
+    };
+
+    /**
+     * A dimension's opening: its words come in only once the change into it has played out (the opening begins a
+     * screen lower than the change, see .open in home.css). They do not stop. Over a stretch of the page they are
+     * carried down as the page goes up, by an ease that begins and ends at nothing: they slow down near the head of
+     * the screen, stand almost still while the statement lights up line by line, dark to bright, and gather speed
+     * again. The section is that much longer at its foot, so nothing after it moves. The ScrollTrigger carries an
+     * id (`open-nether`): a jump to the section lands in the middle of its stretch (sectionJumps.ts).
+     */
+    const opening = (section: HTMLElement | null) => {
+      const lines = section
+        ? gsap.utils.toArray<HTMLElement>('[data-say] span', section)
+        : [];
+      const text = section?.firstElementChild as HTMLElement | null;
+      if (!section || !text || !lines.length) return;
+      const name = section.querySelector<HTMLElement>('.vt');
+      const tag = section.querySelector<HTMLElement>('.tag');
+      // up to 860px the name leads the opening, written across, and is carried with the words
+      const narrow = () => window.matchMedia('(max-width: 860px)').matches;
+      // what the reader meets first: the name where it leads, above 860px the tag
+      const title = () => (narrow() ? name : tag) ?? text;
+      // a third of a screen of scroll a line, and a little more
+      const run = () => window.innerHeight * (0.33 * lines.length + 0.4);
+      // (whole pixels: the layout below stays on whole pixels, as the pinned ledger's place is read)
+      const carry = () => Math.round(run() * 0.62);
+      // The section's own bottom padding (home.css) and, over it, the length it carries. Set again before every
+      // refresh measures anything (another language has another number of lines, a resize another screen): the
+      // sections below move with it.
+      const room = () => {
+        section.style.paddingBottom = '';
+        const own = getComputedStyle(section).paddingBottom;
+        section.style.paddingBottom = `calc(${own} + ${carry()}px)`;
+      };
+      room();
+      gsap
+        .timeline({
+          scrollTrigger: {
+            id: `open-${section.id}`,
+            trigger: section,
+            // the slowing begins where it will leave the title a fifth of the way down the screen at its slowest,
+            // half way through the stretch
+            start: () =>
+              `top+=${
+                title().getBoundingClientRect().top -
+                section.getBoundingClientRect().top -
+                window.innerHeight * 0.2 -
+                (run() - carry()) / 2
+              } top`,
+            end: () => `+=${run()}`,
+            scrub: true,
+            invalidateOnRefresh: true,
+            onRefreshInit: room,
+            // Measured after every other trigger, so after the holds above it (the ledger's) have taken their room.
+            // Not by sorting the triggers again: that measured the wake a pin's length too early.
+            refreshPriority: -1,
+          },
+        })
+        .fromTo(
+          text,
+          { y: 0 },
+          { y: () => carry(), duration: 1, ease: 'sine.inOut' },
+          0,
+        )
+        // Above 860px the name stands upright beside the words and holds by the stylesheet (position: sticky):
+        // carried as well, it would be moved twice, and jump where its hold begins and ends.
+        .fromTo(
+          name,
+          { y: 0 },
+          {
+            y: () => (narrow() ? carry() : 0),
+            duration: 1,
+            ease: 'sine.inOut',
+          },
+          0,
+        )
+        .to(
+          lines,
+          { opacity: 1, duration: 0.24, stagger: 0.24, ease: 'none' },
+          0.22,
+        );
     };
 
     // each build drifts its own way while it is on screen
@@ -257,11 +326,13 @@ export const buildChoreography = (
       { xPercent: -1.5, scale: 1.05 },
       { xPercent: 1.5, scale: 1.12 },
     );
+    opening(q('#overworld'));
     reveals(q('#overworld'));
     TRANSITIONS.slice(1, 4).forEach(work);
 
     // ── nether ──
     change(TRANSITIONS[4]);
+    opening(q('#nether'));
     reveals(q('#nether'));
     const stage = q('.ledger-stage');
     if (stage) {
@@ -310,6 +381,7 @@ export const buildChoreography = (
       { scale: 1.1, yPercent: 2 },
       { scale: 1.02, yPercent: -2 },
     );
+    opening(q('#end'));
     reveals(q('#end'));
     // the second and third camera moves: the first one belongs to the build before them on the page
     TRANSITIONS.slice(6, 8).forEach((def, i) => work(def, i + 1));
@@ -355,6 +427,10 @@ export const buildChoreography = (
     if (lenis) gsap.ticker.lagSmoothing(500, 33); // back to GSAP's default
     lenis?.destroy();
     ctx.revert();
+    // the length each opening was given at its foot (the stylesheet's own is back)
+    root
+      .querySelectorAll<HTMLElement>('.open')
+      .forEach((el) => (el.style.paddingBottom = ''));
     // whatever Lenis left on the document: the next page scrolls natively
     document.documentElement.classList.remove(
       'lenis',

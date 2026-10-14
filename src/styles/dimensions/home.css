@@ -431,10 +431,13 @@ html.lenis {
   }
 
   /* ───────── a dimension opens ───────── */
+  /* Its words reach the foot of the screen only as the change into the dimension ends: the section begins a screen
+     lower than the change, and the words come in after it. choreography.ts carries them down the page as it goes up,
+     and lengthens the foot of the section by what they are carried. */
   .open {
     position: relative;
     min-height: 140vh;
-    padding: 28vh var(--gutter) 18vh;
+    padding: 100vh var(--gutter) 18vh;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 6vw;
@@ -929,7 +932,8 @@ html.lenis {
     }
     .open {
       grid-template-columns: 1fr;
-      padding-top: 20vh;
+      /* a screen lower here too: the words come in after the change into the dimension */
+      padding-top: 100vh;
     }
     .open > div:first-child,
     .ledger-now,
@@ -999,7 +1003,8 @@ html.lenis {
     }
     .open {
       min-height: 0;
-      padding-block: 96px 64px;
+      /* (its words come in a screen lower, as everywhere: the change into the dimension plays out first) */
+      padding-block: 100vh 64px;
     }
     .work {
       padding-block: 72px 24px;
