@@ -120,20 +120,22 @@ export const buildChoreography = (
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
+    /**
+     * One scene change, scrubbed over the screen of scroll in which its section comes up from the foot of the screen
+     * to the head. The timeline is returned (it is normalised to length 1) for whatever else belongs to the change.
+     */
     const change = (def: TransitionDef) => {
-      if (!has(def)) return;
-      addTransition(
-        gsap.timeline({
-          scrollTrigger: {
-            trigger: q(def.trigger),
-            start: 'top bottom',
-            end: 'top top',
-            scrub: true,
-          },
-        }),
-        root,
-        def,
-      );
+      if (!has(def)) return null;
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: q(def.trigger),
+          start: 'top bottom',
+          end: 'top top',
+          scrub: true,
+        },
+      });
+      addTransition(tl, root, def);
+      return tl;
     };
 
     // ── spawn ──
@@ -389,20 +391,59 @@ export const buildChoreography = (
     // the credits simply scroll over the stars
     change(TRANSITIONS[8]);
 
-    // ── respawn ── the white-out, then the first day again; the mascot rises with the title
-    change(TRANSITIONS[9]);
-    reveals(q('#respawn'));
-    const pal = q('.pal');
-    if (pal)
-      // its floating is a CSS animation on `translate` and `rotate` (home.css), so this rise owns the transform alone
-      gsap.from(pal, {
-        y: 160,
-        rotate: 8,
-        opacity: 0,
-        duration: 1.5,
-        ease: 'expo.out',
-        scrollTrigger: { trigger: q('.respawn h2'), start: 'top 80%' },
-      });
+    // ── respawn ── the white-out, then the first day again
+    // The respawn stands in its own place: its words are under the white while it rises, and come up, rising a
+    // little, one after another, as it clears. The mascot comes with them; its floating is a CSS animation
+    // (home.css). They are part of the wake's own timeline, which is normalised to length 1: they end by 1, or the
+    // wake itself would be squeezed.
+    const wake = change(TRANSITIONS[9]);
+    const blocks = root.querySelectorAll('.respawn .call > *');
+    wake?.set(blocks, { autoAlpha: 0 }, 0).fromTo(
+      blocks,
+      { autoAlpha: 0, y: 40 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.36,
+        stagger: 0.02,
+        ease: 'power2.out',
+        immediateRender: false,
+      },
+      0.5,
+    );
+    // The credits' last line stays where it stands on the screen while the white rises over it (the words of the
+    // section that is leaving may stand over its change), and is gone under the white when that is whole. It is
+    // carried by half a screen over the first half of the wake, which is half a screen of scroll: the window's
+    // size, so measured again with every refresh. (On a timeline of its own, over the same range: invalidating the
+    // wake's, which holds the scenes, on every refresh left the last build's caption showing.)
+    const fin = q('.credits .fin');
+    if (wake && fin) {
+      const held: gsap.core.Timeline = gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: q(TRANSITIONS[9].trigger),
+            start: 'top bottom',
+            end: 'top top',
+            scrub: true,
+            // the half screen is read again at the next render
+            onRefreshInit: () => held.invalidate(),
+          },
+        })
+        .fromTo(
+          fin,
+          { y: 0 },
+          {
+            y: () => window.innerHeight * 0.5,
+            duration: 0.5,
+            ease: 'none',
+            immediateRender: false,
+          },
+          0,
+        )
+        .set(fin, { autoAlpha: 0 }, 0.5)
+        // as long as the change itself: the set above is half way through it
+        .set({}, {}, 1);
+    }
 
     // ── later tasks append here, in page order ──
     // Rule: one section at a time, top to bottom, and everything a section needs (its scene change, its drift,

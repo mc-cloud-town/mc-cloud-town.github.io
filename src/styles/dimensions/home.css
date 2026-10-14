@@ -779,7 +779,7 @@ html.lenis {
     height: auto;
     aspect-ratio: 1;
     filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.45));
-    /* floating around its place, on properties of its own: its rise (choreography.ts) owns the transform */
+    /* floating around its place, on properties of its own: its coming up out of the wake (choreography.ts) owns the transform */
     animation: pal-float 2.8s ease-in-out infinite alternate;
   }
   /* The departments: a list, one row each. The name at one end, the way in at the other, what the department
