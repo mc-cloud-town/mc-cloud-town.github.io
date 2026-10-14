@@ -19,7 +19,7 @@ import {
   type HomePlace,
 } from './homePlace';
 import { holdPage, type PageHold } from './pageScroll';
-import { picturesAt } from '@/constants/scenes';
+import { picturesAt, TRANSITIONS } from '@/constants/scenes';
 
 /**
  * Going to a section of the home page: the jumps asked for by a link (travel or cut), the place the reader is kept
@@ -107,11 +107,30 @@ export const mountSectionJumps = (
       : root.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) ?? null;
 
   /**
+   * The scroll position at which the next scene change after `el` begins (its section's top at the foot of the
+   * screen), or no limit. A jump never lands inside a scene change: on a tall screen the middle of an opening's
+   * stretch can be past the point where the change into the next picture has begun, and the reader would arrive on
+   * the old scene with the new one already sliding over it.
+   */
+  const beforeNextChange = (el: HTMLElement) => {
+    const at = top(el);
+    let limit = Infinity;
+    for (const def of TRANSITIONS) {
+      const next = root.querySelector<HTMLElement>(def.trigger);
+      if (!next || next === el) continue;
+      const start = top(next) - window.innerHeight;
+      if (top(next) > at && start < limit) limit = start;
+    }
+    return limit;
+  };
+
+  /**
    * Where a jump to a section lands. At its top, except where the top is a screen of scene alone (the words of a
    * dimension's opening and of the credits come in a screen lower, after the change into them): there the reader is
    * put on the words. An opening: the middle of its slow stretch, the title a fifth of the way down and the
    * statement lit (choreography.ts). With no stretch (reduced motion carries nothing) the title stands there all
-   * the same. The credits: their first heading a fifth of the way down.
+   * the same. The credits: their first heading a fifth of the way down. Never later than where the next scene
+   * change begins (`beforeNextChange`).
    */
   const landing = (el: HTMLElement) => {
     const words = el.matches('.open')
@@ -132,6 +151,7 @@ export const mountSectionJumps = (
     return Math.min(
       Math.max(0, Math.round(y)),
       ScrollTrigger.maxScroll(window),
+      beforeNextChange(el),
     );
   };
 

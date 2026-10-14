@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { TRANSITIONS } from '../../src/constants/scenes';
 
 /** Ids of the scene layers that are actually on screen. */
 export const visibleScenes = (page: Page) =>
@@ -288,30 +289,59 @@ export const topOf = (page: Page, selector: string) =>
   );
 
 /**
- * How far, in pixels, the title of `selector` stands from the fifth of the way down the screen where a jump to it
- * lands on words: the title of a dimension's opening (the tag, or at 860px and below the name) and the first heading
- * of the credits (their top is a screen of scene alone: spec 5.3). Null for a place that is landed on at its top.
+ * Where a jump to `selector` lands, as a scroll position worked out from the layout alone; null for a place that is
+ * landed on at its top (the section's own top is then what is read). An opening: the middle of its slow stretch (its
+ * title a fifth of the way down), or, with reduced motion, which carries nothing, the place that puts the title
+ * there; but never later than where the scene change after it begins (on a tall screen the middle can be past it).
+ * The credits: their first heading a fifth of the way down (their top is a screen of scene alone: spec 5.3).
  */
-const offTheFifth = (page: Page, selector: string) =>
-  page.evaluate((sel) => {
-    const el = document.querySelector(sel)!;
-    const words = el.matches('.open')
-      ? el.querySelector(
-          matchMedia('(max-width: 860px)').matches ? '.vt' : '.tag',
+export const landingOf = (page: Page, selector: string) =>
+  page.evaluate(
+    ([sel, triggers]) => {
+      const el = document.querySelector<HTMLElement>(sel)!;
+      const topOfEl = (e: Element) => e.getBoundingClientRect().top + scrollY;
+      const offset = (words: HTMLElement) => {
+        let o = 0;
+        for (
+          let e: HTMLElement | null = words;
+          e && e !== el;
+          e = e.offsetParent as HTMLElement | null
         )
-      : el.matches('.credits')
-        ? el.querySelector('.cast')
-        : null;
-    return words ? words.getBoundingClientRect().top - innerHeight * 0.2 : null;
-  }, selector);
+          o += e.offsetTop;
+        return o;
+      };
+      if (el.matches('.credits'))
+        return Math.round(
+          topOfEl(el.querySelector('.cast')!) - innerHeight * 0.2,
+        );
+      if (!el.matches('.open')) return null;
+      const narrow = matchMedia('(max-width: 860px)').matches;
+      const title = el.querySelector<HTMLElement>(narrow ? '.vt' : '.tag')!;
+      const lines = el.querySelectorAll('[data-say] span').length;
+      const carry = Math.round(innerHeight * (0.33 * lines + 0.4) * 0.62);
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let y =
+        topOfEl(el) +
+        offset(title) -
+        innerHeight * 0.2 +
+        (still ? 0 : carry / 2);
+      for (const t of triggers) {
+        const next = document.querySelector(t);
+        if (next && next !== el && topOfEl(next) > topOfEl(el))
+          y = Math.min(y, topOfEl(next) - innerHeight);
+      }
+      return Math.round(y);
+    },
+    [selector, TRANSITIONS.map((t) => t.trigger)] as const,
+  );
 
 /**
- * The page has come to rest where a jump to `selector` lands, and no cover is over it: with the section's top at the
- * top of the screen, except for an opening and the credits, whose top is a screen of scene alone before their words:
- * there, with their title a fifth of the way down (the middle of an opening's slow stretch).
+ * The page has come to rest where a jump to `selector` lands (`landingOf`, to within a few pixels; the section's top
+ * to within one), and no cover is over it.
  */
 export const landedOn = async (page: Page, selector: string) => {
-  if ((await offTheFifth(page, selector)) === null) {
+  const to = await landingOf(page, selector);
+  if (to === null) {
     await expect
       .poll(async () => Math.abs(await topOf(page, selector)), {
         message: `${selector} at the top`,
@@ -319,10 +349,10 @@ export const landedOn = async (page: Page, selector: string) => {
       .toBeLessThanOrEqual(1);
   } else {
     await expect
-      .poll(async () => Math.abs((await offTheFifth(page, selector)) ?? 9e9), {
-        message: `the title of ${selector} a fifth of the way down`,
+      .poll(async () => Math.abs((await page.evaluate(() => scrollY)) - to), {
+        message: `the page at ${to}, where a jump to ${selector} lands`,
       })
-      .toBeLessThanOrEqual(2);
+      .toBeLessThanOrEqual(3);
   }
   await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
 };

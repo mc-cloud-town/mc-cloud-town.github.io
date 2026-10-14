@@ -2241,3 +2241,39 @@ test.describe('home: a jump to an opening lands on its words', () => {
     expect(now.lines).toEqual(now.lines.map(() => 1));
   });
 });
+
+test.describe('home: a jump never lands inside a scene change', () => {
+  for (const d of ['nether', 'end'])
+    test(`on a 2560×1440 screen the bar's link to the ${d} lands on the opening's scene alone: the next change has not begun`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 2560, height: 1440 });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      await page.locator(`.dim-bar nav a[data-d="${d}"]`).click();
+      await landedOn(page, `#${d}`);
+      const next = d === 'end' ? '[data-work="end-0"]' : '#end';
+      const room = await page.evaluate(
+        (sel) =>
+          document.querySelector(sel)!.getBoundingClientRect().top -
+          innerHeight,
+        next,
+      );
+      // the change into the next scene begins at its top reaching the foot of the screen: not yet
+      expect(room).toBeGreaterThanOrEqual(-1);
+      expect(await visibleScenes(page)).toEqual([
+        d === 'end' ? 'hall' : 'nether',
+      ]);
+    });
+
+  test('arriving with #end on a 2560×1440 screen is arriving before the next change as well', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await openPage(page, '/#end');
+    await ready(page);
+    await landedOn(page, '#end');
+    expect(await visibleScenes(page)).toEqual(['hall']);
+  });
+});
