@@ -21,7 +21,8 @@ before changing anything a visitor sees.
   opening, a step to another page, a jump to a section, a picture arriving. Nothing appears, disappears or moves
   abruptly. This holds for everything, including what the demos do not show. A scene change may play over the words
   of the section that is leaving, never over those of the section that is coming: they appear only once it has
-  played out.
+  played out. The one exception is the wake, a cover of solid white: the respawn's words come up out of it as it
+  clears.
 - **The demos are the design.** Where a demo covers something, the product matches it. Do not replace an approved
   design because a measurement disagrees with it: an automated contrast number is not a defect.
 - **Veils, not patches.** Text stands on the scene's veil, the way `dimensions-v3-video.html` does it. Every scene
