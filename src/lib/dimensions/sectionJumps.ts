@@ -106,6 +106,35 @@ export const mountSectionJumps = (
       ? root.querySelector<HTMLElement>('.hero')
       : root.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) ?? null;
 
+  /**
+   * Where a jump to a section lands. At its top, except where the top is a screen of scene alone (the words of a
+   * dimension's opening and of the credits come in a screen lower, after the change into them): there the reader is
+   * put on the words. An opening: the middle of its slow stretch, the title a fifth of the way down and the
+   * statement lit (choreography.ts). With no stretch (reduced motion carries nothing) the title stands there all
+   * the same. The credits: their first heading a fifth of the way down.
+   */
+  const landing = (el: HTMLElement) => {
+    const words = el.matches('.open')
+      ? el.querySelector<HTMLElement>(
+          window.matchMedia('(max-width: 860px)').matches ? '.vt' : '.tag',
+        )
+      : el.matches('.credits')
+        ? el.querySelector<HTMLElement>('.cast')
+        : null;
+    if (!words) return top(el);
+    const stretch = ScrollTrigger.getById(`open-${el.id}`);
+    const y = stretch
+      ? (stretch.start + stretch.end) / 2
+      : top(el) +
+        words.getBoundingClientRect().top -
+        el.getBoundingClientRect().top -
+        window.innerHeight * 0.2;
+    return Math.min(
+      Math.max(0, Math.round(y)),
+      ScrollTrigger.maxScroll(window),
+    );
+  };
+
   // Whoever was taken to a section and has not scrolled since stays on it when the page is measured again
   // (the names of the credits arrive, the language changes, the window is resized). A reader who came back to
   // where they were is kept the same way, at their distance into the section (`back`).
@@ -170,7 +199,9 @@ export const mountSectionJumps = (
   };
   const onRefresh = () => {
     if (!anchor) return;
-    const y = anchor.back ? placeOf(anchor.el, anchor.back) : top(anchor.el);
+    const y = anchor.back
+      ? placeOf(anchor.el, anchor.back)
+      : landing(anchor.el);
     anchor.y = y;
     if (Math.abs(window.scrollY - y) > 1) moveTo(y);
   };
@@ -272,13 +303,13 @@ export const mountSectionJumps = (
       // overtaken by a later jump, or the place itself has gone from the page: nowhere to take the reader
       if (stale() || !el.isConnected) return;
       const gone = go();
-      moveTo(top(el));
+      moveTo(landing(el));
       opts.settle();
       await Promise.all([gone, wait(COVER_HOLD_MS)]);
       await nextFrame();
       if (stale() || !el.isConnected) return;
       // the dimension has changed under the cover, and with it possibly the layout: measured once more
-      moveTo(top(el));
+      moveTo(landing(el));
       opts.settle();
       arrive(el, id);
       me.landed = true;
@@ -326,10 +357,11 @@ export const mountSectionJumps = (
     if (cutting?.el === el && (!cutting.landed || anchor?.el === el))
       return true;
     const to = ORDER.indexOf(dimOf(el) ?? opts.here());
-    const y = top(el);
-    // in scroll pixels, as the page is now: the spacer of the pinned ledger is part of the way
+    const y = landing(el);
+    // In scroll pixels, as the page is now: the spacer of the pinned ledger is part of the way. The reach is to the
+    // section's own top, where the change into it ends (the boundary that is ridden), not to where its words are.
     const near =
-      Math.abs(y - window.scrollY) <= TRAVEL_REACH * window.innerHeight;
+      Math.abs(top(el) - window.scrollY) <= TRAVEL_REACH * window.innerHeight;
     if (
       lenis &&
       !covered &&
@@ -371,12 +403,12 @@ export const mountSectionJumps = (
   } else {
     // Nothing remembered (a fresh load, a shared link, a new entry): an address that names a section says where.
     const hash = hashId(window.location.hash);
-    const landing = hash && place(hash);
-    if (landing) {
+    const target = hash && place(hash);
+    if (target) {
       ScrollTrigger.refresh();
-      moveTo(top(landing));
+      moveTo(landing(target));
       opts.settle();
-      anchor = { el: landing, y: window.scrollY };
+      anchor = { el: target, y: window.scrollY };
     }
   }
 

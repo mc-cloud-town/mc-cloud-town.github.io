@@ -287,13 +287,43 @@ export const topOf = (page: Page, selector: string) =>
     selector,
   );
 
-/** The page has come to rest with `selector` at the top of the screen and no cover over it. */
+/**
+ * How far, in pixels, the title of `selector` stands from the fifth of the way down the screen where a jump to it
+ * lands on words: the title of a dimension's opening (the tag, or at 860px and below the name) and the first heading
+ * of the credits (their top is a screen of scene alone: spec 5.3). Null for a place that is landed on at its top.
+ */
+const offTheFifth = (page: Page, selector: string) =>
+  page.evaluate((sel) => {
+    const el = document.querySelector(sel)!;
+    const words = el.matches('.open')
+      ? el.querySelector(
+          matchMedia('(max-width: 860px)').matches ? '.vt' : '.tag',
+        )
+      : el.matches('.credits')
+        ? el.querySelector('.cast')
+        : null;
+    return words ? words.getBoundingClientRect().top - innerHeight * 0.2 : null;
+  }, selector);
+
+/**
+ * The page has come to rest where a jump to `selector` lands, and no cover is over it: with the section's top at the
+ * top of the screen, except for an opening and the credits, whose top is a screen of scene alone before their words:
+ * there, with their title a fifth of the way down (the middle of an opening's slow stretch).
+ */
 export const landedOn = async (page: Page, selector: string) => {
-  await expect
-    .poll(async () => Math.abs(await topOf(page, selector)), {
-      message: `${selector} at the top`,
-    })
-    .toBeLessThanOrEqual(1);
+  if ((await offTheFifth(page, selector)) === null) {
+    await expect
+      .poll(async () => Math.abs(await topOf(page, selector)), {
+        message: `${selector} at the top`,
+      })
+      .toBeLessThanOrEqual(1);
+  } else {
+    await expect
+      .poll(async () => Math.abs((await offTheFifth(page, selector)) ?? 9e9), {
+        message: `the title of ${selector} a fifth of the way down`,
+      })
+      .toBeLessThanOrEqual(2);
+  }
   await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
 };
 
@@ -627,3 +657,60 @@ export const arrived = async (page: Page) => {
     )
     .toBe(true);
 };
+
+/**
+ * The sections whose words come in after the change into them (TRANSITIONS in scenes.ts), in page order. Not the
+ * respawn: its words come up out of the white of the wake.
+ */
+export const WORDED = [
+  '#overworld',
+  '[data-work="overworld-0"]',
+  '[data-work="overworld-1"]',
+  '[data-work="overworld-2"]',
+  '#nether',
+  '#end',
+  '[data-work="end-0"]',
+  '[data-work="end-1"]',
+  '#credits',
+] as const;
+
+/** Move the page to `y` and wait for the frame that draws it: scrubbed motion follows the scroll within a frame. */
+export const scrollAt = (page: Page, y: number) =>
+  page.evaluate(async (to) => {
+    window.scrollTo({ top: to, behavior: 'instant' });
+    await new Promise((done) =>
+      requestAnimationFrame(() => requestAnimationFrame(done)),
+    );
+  }, y);
+
+/**
+ * Where the slow stretch of a dimension's opening is at its middle, as a scroll position, worked out from the
+ * layout alone (the stretch is `0.33` of a screen a line and `0.4` over; the words are carried `0.62` of it; at the
+ * middle the title stands a fifth of the way down, whatever the carry): the section's place, plus the title's place
+ * in the section, less a fifth of a screen, plus half of what is carried by then.
+ */
+export const stretchOf = (page: Page, section: string) =>
+  page.evaluate((sel) => {
+    const sec = document.querySelector<HTMLElement>(sel)!;
+    const narrow = matchMedia('(max-width: 860px)').matches;
+    const title = sec.querySelector<HTMLElement>(narrow ? '.vt' : '.tag')!;
+    const lines = sec.querySelectorAll('[data-say] span').length;
+    const run = innerHeight * (0.33 * lines + 0.4);
+    const carry = run * 0.62;
+    // the title's place in the section, summed up the chain of what it is offset from (a block that is carried has a
+    // transform, and is the next link)
+    let offset = 0;
+    for (
+      let el: HTMLElement | null = title;
+      el && el !== sec;
+      el = el.offsetParent as HTMLElement | null
+    )
+      offset += el.offsetTop;
+    const top = sec.getBoundingClientRect().top + scrollY;
+    return {
+      narrow,
+      lines,
+      run,
+      mid: top + offset - innerHeight * 0.2 + carry / 2,
+    };
+  }, section);

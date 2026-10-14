@@ -18,6 +18,7 @@ import {
   recordHeld,
   scrollToSection,
   shownPictures,
+  stretchOf,
   topOf,
   visibleScenes,
   watchLanding,
@@ -798,14 +799,15 @@ test.describe('home: a jump that is interrupted', () => {
     await page.waitForTimeout(2400);
     const rest = await page.evaluate(() => window.scrollY);
     expect(rest).toBe(last);
-    const nether = rest + (await topOf(page, '#nether'));
-    expect(rest).toBeLessThan(nether - 400);
+    // where the travel was going: the opening's words, the middle of its slow stretch
+    const target = (await stretchOf(page, '#nether')).mid;
+    expect(rest).toBeLessThan(target - 400);
     expect(rest).toBeGreaterThan(y0);
     const frames = await recorded(page);
-    // it never got to the nether, and no cover came
+    // it never got there, and no cover came
     for (const f of frames) {
       expect(f.y).toBeGreaterThanOrEqual(y0);
-      expect(f.y).toBeLessThan(nether - 400);
+      expect(f.y).toBeLessThan(target - 400);
     }
     expect(Math.max(...frames.map((f) => f.cover))).toBe(0);
     // the address is not that of the place that was given up, and nothing was arrived at
@@ -1352,12 +1354,15 @@ test.describe('home: arriving, leaving and robustness', () => {
       await ready(page);
       await expect(page.locator('.loader')).toBeHidden();
       await landedOn(page, hash);
+      // where the section stands once landed: its top at the top of the screen, or, for an opening, above it by what
+      // brings its words into view
+      const there = await topOf(page, hash);
       const seen = await landingFrames(page);
       const lifting = seen.filter((f) => f.loader < 0.99);
       expect(lifting.length).toBeGreaterThan(5);
       expect(seen.length - lifting.length).toBeGreaterThan(5);
       for (const f of lifting) {
-        expect(Math.abs(f.top)).toBeLessThanOrEqual(1);
+        expect(Math.abs(f.top - there)).toBeLessThanOrEqual(1);
         expect(f.scenes).toBe(scene);
       }
       await expect(page.locator('html')).toHaveAttribute('data-dim', dim);
@@ -2149,5 +2154,90 @@ test.describe('home: stepping back lands where the reader was', () => {
     expect(after.section).toBe('ledger');
     expect(after.scenes).toEqual(['nether']);
     expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
+  });
+});
+
+/**
+ * The top of an opening is a screen of scene alone: its words come in a screen lower (spec 5.3). A jump to a
+ * dimension lands where its slow stretch is at its middle, the title a fifth of the way down.
+ */
+test.describe('home: a jump to an opening lands on its words', () => {
+  /** The title of the opening, as a fraction of the screen, and how far its statement has lit (one opacity a line). */
+  const words = (page: Page, sel: string) =>
+    page.evaluate((s) => {
+      const sec = document.querySelector(s)!;
+      const title = sec.querySelector(
+        matchMedia('(max-width: 860px)').matches ? '.vt' : '.tag',
+      )!;
+      return {
+        title: title.getBoundingClientRect().top / innerHeight,
+        lines: [...sec.querySelectorAll('[data-say] span')].map(
+          (l) => +getComputedStyle(l).opacity,
+        ),
+      };
+    }, sel);
+
+  for (const d of ['nether', 'end'])
+    test(`the bar's link to the ${d} lands with the opening's title a fifth of the way down and the statement lighting, not on a screen of scene`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      await page.locator(`.dim-bar nav a[data-d="${d}"]`).click();
+      await landedOn(page, `#${d}`);
+      const now = await words(page, `#${d}`);
+      expect(now.title).toBeGreaterThan(0.1);
+      expect(now.title).toBeLessThan(0.4);
+      // the slow stretch is at its middle: the first line is lit, the last is on its way
+      expect(now.lines[0]).toBe(1);
+      expect(now.lines.at(-1)).toBeLessThan(1);
+    });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ])
+    for (const hash of ['nether', 'end'])
+      test(`arriving with #${hash} at ${width}×${height} is arriving on the opening's words`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        await openPage(page, `/#${hash}`);
+        await ready(page);
+        await landedOn(page, `#${hash}`);
+        const now = await words(page, `#${hash}`);
+        expect(now.title).toBeGreaterThan(0.1);
+        expect(now.title).toBeLessThan(0.4);
+        expect(now.lines[0]).toBe(1);
+        // and the names of the credits coming in under it do not take the reader off the place
+        await expect(
+          page.locator('#credits .names span').first(),
+        ).toBeAttached();
+        await page.waitForTimeout(600);
+        await landedOn(page, `#${hash}`);
+      });
+
+  test('arriving at the credits is arriving on their first heading, the push into the stars played out', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/#credits');
+    await ready(page);
+    await landedOn(page, '#credits');
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+  });
+
+  test('with reduced motion nothing is slowed, and a jump to the Nether still lands with its title a fifth of the way down', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await page.locator('.dim-bar nav a[data-d="nether"]').click();
+    await landedOn(page, '#nether');
+    const now = await words(page, '#nether');
+    expect(now.lines).toEqual(now.lines.map(() => 1));
   });
 });
