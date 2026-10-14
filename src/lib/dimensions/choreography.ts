@@ -16,9 +16,21 @@ export interface ChoreographyOptions {
 }
 
 /**
+ * The length of a dimension's opening that its words are carried over in the slow stretch: the stretch is a third of a
+ * screen of scroll a line and a little more, and they are carried 0.62 of it (whole pixels: the layout below stays on
+ * whole pixels, as the pinned ledger's place is read). The opening has this room at the foot of its text column in
+ * every mode, so the page is as long with reduced motion (which carries nothing) as without.
+ */
+const stretchRun = (lines: number) => window.innerHeight * (0.33 * lines + 0.4);
+const stretchCarry = (lines: number) => Math.round(stretchRun(lines) * 0.62);
+
+/**
  * Every scroll-driven animation on the home page is created here, top to bottom.
- * Order matters: the pinned nether ledger adds scroll length, so any trigger below it
- * must be created after it or its position is measured wrong.
+ * Creation order is kept top to bottom all the same, but it no longer decides how triggers are measured: the
+ * openings' triggers carry a `refreshPriority`, and any trigger with one makes ScrollTrigger sort all of them on every
+ * refresh, by where their elements stand at that moment (before it reverts anything), the ones with a priority
+ * last. That is safe here because the sort sees the page as it is laid out, the pin's spacer in place, so the
+ * order is the page's order: a trigger below the ledger's pin is measured after the pin has taken its room.
  * Returns a cleanup function.
  */
 export const buildChoreography = (
@@ -110,6 +122,18 @@ export const buildChoreography = (
         onUpdate: sync,
         onRefresh: sync,
       });
+      // The same layout as with motion, so a place on the page is the same place: each opening has the room its words
+      // would be carried into at the foot of its text column (nothing is carried), measured again with every refresh.
+      gsap.utils.toArray<HTMLElement>('.open', root).forEach((section) => {
+        const text = section.firstElementChild as HTMLElement | null;
+        const n = section.querySelectorAll('[data-say] span').length;
+        if (!text || !n) return;
+        const room = () => {
+          text.style.paddingBottom = `${stretchCarry(n)}px`;
+        };
+        room();
+        ScrollTrigger.create({ trigger: section, onRefreshInit: room });
+      });
       dims();
       return;
     }
@@ -199,10 +223,8 @@ export const buildChoreography = (
       const narrow = () => window.matchMedia('(max-width: 860px)').matches;
       // what the reader meets first: the name where it leads, above 860px the tag
       const title = () => (narrow() ? name : tag) ?? text;
-      // a third of a screen of scroll a line, and a little more
-      const run = () => window.innerHeight * (0.33 * lines.length + 0.4);
-      // (whole pixels: the layout below stays on whole pixels, as the pinned ledger's place is read)
-      const carry = () => Math.round(run() * 0.62);
+      const run = () => stretchRun(lines.length);
+      const carry = () => stretchCarry(lines.length);
       // The room the words are carried into is the text column's own, at its foot, not the section's padding: the
       // section's content is then that much taller, and the upright name (position: sticky, which holds only within
       // its grid area) holds beside the words through the whole stretch. The section keeps its own padding (home.css).
@@ -231,7 +253,7 @@ export const buildChoreography = (
             invalidateOnRefresh: true,
             onRefreshInit: room,
             // Measured after every other trigger, so after the holds above it (the ledger's) have taken their room.
-            // Not by sorting the triggers again: that measured the wake a pin's length too early.
+            // (A priority turns ScrollTrigger's sort on for every refresh: see the note at the top of this file.)
             refreshPriority: -1,
           },
         })
@@ -398,11 +420,11 @@ export const buildChoreography = (
     // wake itself would be squeezed.
     const wake = change(TRANSITIONS[9]);
     const blocks = root.querySelectorAll('.respawn .call > *');
-    wake?.set(blocks, { autoAlpha: 0 }, 0).fromTo(
+    wake?.set(blocks, { opacity: 0 }, 0).fromTo(
       blocks,
-      { autoAlpha: 0, y: 40 },
+      { opacity: 0, y: 40 },
       {
-        autoAlpha: 1,
+        opacity: 1,
         y: 0,
         duration: 0.36,
         stagger: 0.02,
@@ -440,15 +462,15 @@ export const buildChoreography = (
           },
           0,
         )
-        .set(fin, { autoAlpha: 0 }, 0.5)
+        .set(fin, { opacity: 0 }, 0.5)
         // as long as the change itself: the set above is half way through it
         .set({}, {}, 1);
     }
 
     // ── later tasks append here, in page order ──
     // Rule: one section at a time, top to bottom, and everything a section needs (its scene change, its drift,
-    // its pin, its reveals(section)) is created together. A pin adds scroll length, so a trigger created before
-    // a pin that sits above it on the page is measured wrong.
+    // its pin, its reveals(section)) is created together. Where a trigger is measured does not depend on it (the
+    // sort at every refresh puts them in the page's order), but a section's own triggers are easier to read together.
 
     // ── always last ──
     dims();
