@@ -2045,7 +2045,8 @@
         if (float) $('#respawn').style.paddingTop = '20vh';
         $$('.open').forEach((sec) => {
           const lines = $$('span', $('[data-say]', sec)),
-            words = [sec.children[0], $('.vt', sec)];
+            text = sec.children[0],
+            name = $('.vt', sec);
           // what the reader meets first: the name, which leads the opening up to 860px; above that the tag
           const title = () => (narrow() ? $('.vt', sec) : $('.tag', sec));
           const run = () =>
@@ -2080,9 +2081,22 @@
               },
             })
             .fromTo(
-              words,
+              text,
               { y: 0 },
               { y: () => carry(), duration: 1, ease: 'sine.inOut' },
+              0,
+            )
+            // The name is carried with the words only where it leads them (up to 860px, written across). Above
+            // that it stands upright beside them and holds by the stylesheet (position: sticky): carried as well,
+            // it would be moved twice, and jump where its hold begins and ends.
+            .fromTo(
+              name,
+              { y: 0 },
+              {
+                y: () => (narrow() ? carry() : 0),
+                duration: 1,
+                ease: 'sine.inOut',
+              },
               0,
             )
             .to(
