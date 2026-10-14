@@ -837,3 +837,33 @@ test.describe('home: the words of the wake', () => {
     }
   });
 });
+
+test.describe('home: the respawn is there for assistive technology before the wake', () => {
+  test('its heading and links are not hidden and can take the focus while the white has not come', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    // at the top of the page: the wake is far below
+    const state = await page.evaluate(() =>
+      [
+        '#respawn h2',
+        '#respawn a.btn',
+        '#respawn .acts a.more',
+        '#respawn .depts li a',
+        '#credits .fin',
+      ].map((sel) => {
+        const el = document.querySelector<HTMLElement>(sel)!;
+        const hidden = getComputedStyle(el).visibility === 'hidden';
+        el.focus({ preventScroll: true });
+        return [sel, hidden, document.activeElement === el];
+      }),
+    );
+    for (const [sel, hidden, focused] of state) {
+      expect(hidden, `${sel} is not visibility: hidden`).toBe(false);
+      if (sel !== '#credits .fin' && sel !== '#respawn h2')
+        expect(focused, `${sel} takes the focus`).toBe(true);
+    }
+  });
+});

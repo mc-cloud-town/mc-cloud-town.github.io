@@ -2513,6 +2513,67 @@ test.describe('home: the words come after the scene change', () => {
     }
   });
 
+  test('after a resize the slow stretch, the room it is carried into and the wake are measured again', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.waitForTimeout(1500);
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      // the room: the carry, at the foot of the text column
+      const room = await page
+        .locator(`${sel} > :first-child`)
+        .evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+      expect(room, `${sel}: the room`).toBe(Math.round(stretch.run * 0.62));
+      await scrollAt(page, stretch.mid);
+      const title = await page
+        .locator(`${sel} .tag`)
+        .evaluate((el) => el.getBoundingClientRect().top / 800);
+      expect(Math.abs(title - 0.2), `${sel}: title at ${title}`).toBeLessThan(
+        0.03,
+      );
+    }
+    // the wake begins one screen above the respawn: the last line is carried as far as the page has gone since
+    const start = await page.evaluate(
+      () =>
+        document.querySelector('#respawn')!.getBoundingClientRect().top +
+        scrollY -
+        innerHeight,
+    );
+    await scrollAt(page, start + 270);
+    const carried = await page
+      .locator('#credits .fin')
+      .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42);
+    expect(Math.abs(carried - 270)).toBeLessThanOrEqual(2);
+  });
+
+  test('with reduced motion the page is as long as with motion: each opening has the room its words are carried into', async ({
+    browser,
+  }) => {
+    const heights = async (reducedMotion: boolean) => {
+      const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+      });
+      await openPage(page, '/', { reducedMotion });
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      await page.waitForTimeout(800);
+      const out = await page.evaluate(() =>
+        // (their own heights: the ledger between them is a list, not a pin, with reduced motion)
+        ['#overworld', '#nether', '#end'].map((s) =>
+          Math.round(document.querySelector(s)!.getBoundingClientRect().height),
+        ),
+      );
+      await page.close();
+      return out;
+    };
+    expect(await heights(true)).toEqual(await heights(false));
+  });
+
   test('with reduced motion nothing of an opening is carried or risen, and its lines are lit', async ({
     page,
   }) => {
