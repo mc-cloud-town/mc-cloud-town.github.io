@@ -6,8 +6,10 @@ import {
   afterLoaderFrames,
   expectFullRun,
   loaderFrames,
+  landedOn,
   mapLifting,
   ready,
+  topOf,
   watchLoader,
 } from './helpers/home';
 import { stubVideo } from './helpers/video';
@@ -1663,9 +1665,12 @@ test.describe('home: the other pictures wait for the loader', () => {
       await ready(page);
       await expect(page.locator('.loader')).toHaveCount(0);
       const { handover, after } = await handoverSeen(page);
+      // where the address leads: the End's words, the title a fifth of the way down (home.ts, `landedOn`)
+      await landedOn(page, '#end');
+      const there = await topOf(page, '#end');
       // handed over once: on the section, on its scene, its picture whole, and the loader has not begun to lift
       expect(handover.length).toBe(1);
-      expect(Math.abs(handover[0].top)).toBeLessThanOrEqual(1);
+      expect(Math.abs(handover[0].top - there)).toBeLessThanOrEqual(1);
       expect(handover[0]).toMatchObject({
         scenes: ['hall'],
         dim: 'end',
@@ -1679,7 +1684,7 @@ test.describe('home: the other pictures wait for the loader', () => {
       expect(
         after.filter(
           (f) =>
-            Math.abs(f.top) > 1 ||
+            Math.abs(f.top - there) > 1 ||
             f.scenes.join() !== 'hall' ||
             f.picture < 1 ||
             f.dim !== 'end',
@@ -1703,9 +1708,11 @@ test.describe('home: the other pictures wait for the loader', () => {
     await expect(page.locator('.loader')).toHaveCount(0);
     const { handover, after } = await handoverSeen(page);
     // the loader gave up, not the page: it is where the address says, on its scene, in its dimension
+    await landedOn(page, '#end');
+    const there = await topOf(page, '#end');
     expect(handover.length).toBe(1);
     expect(handover[0].t).toBeGreaterThan(LOADER_TIMEOUT_MS);
-    expect(Math.abs(handover[0].top)).toBeLessThanOrEqual(1);
+    expect(Math.abs(handover[0].top - there)).toBeLessThanOrEqual(1);
     expect(handover[0]).toMatchObject({
       scenes: ['hall'],
       dim: 'end',
@@ -1719,7 +1726,7 @@ test.describe('home: the other pictures wait for the loader', () => {
     expect(
       after.filter(
         (f) =>
-          Math.abs(f.top) > 1 ||
+          Math.abs(f.top - there) > 1 ||
           f.scenes.join() !== 'hall' ||
           f.picture !== 0 ||
           f.whole,
