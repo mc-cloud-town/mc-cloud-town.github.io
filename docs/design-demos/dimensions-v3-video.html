@@ -2012,7 +2012,7 @@
         // begins a screen lower than the change: see .open in the stylesheet). They do not stop. Over a stretch of
         // the page they are carried down as the page goes up, by an ease that begins and ends at nothing: they slow
         // down near the head of the screen, stand almost still while the statement lights up line by line, dark to
-        // bright, and gather speed again. The section is that much longer at its foot, so nothing after it moves.
+        // bright, and gather speed again. The opening is that much longer at its foot, so nothing after it moves.
         const narrow = () => matchMedia('(max-width: 860px)').matches;
         $$('.open').forEach((sec) => {
           const lines = $$('span', $('[data-say]', sec)),
@@ -2023,8 +2023,10 @@
           // a third of a screen of scroll a line, and a little more
           const run = () => innerHeight * (0.33 * lines.length + 0.4);
           const carry = () => run() * 0.62;
-          const pad = () =>
-            (sec.style.paddingBottom = 'calc(18vh + ' + carry() + 'px)');
+          // The room the words are carried into is the text column's own, at its foot, not the section's padding:
+          // the section's content is then that much taller, and the upright name (position: sticky, which holds
+          // only within its grid area) holds until the slowing is over, beside the words, not let go half way.
+          const pad = () => (text.style.paddingBottom = carry() + 'px');
           pad();
           addEventListener('resize', pad);
           gsap
