@@ -24,24 +24,13 @@
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "Redstone Team",
       "features": [
-        "Submit your redstone creations to the submission channel or directly message a reviewer to apply for review.",
-        "We will invite authors of outstanding works to join.",
-        "Reviewer Discord:"
+        "Submit your redstone creations through the application form to apply for review.",
+        "We will invite authors of outstanding works to join."
       ],
       "buttons": [
         {
-          "text": "fantasy_sakura",
-          "href": "https://discordapp.com/users/676261754782613514",
-          "type": "link"
-        },
-        {
-          "text": "jezlarm",
-          "href": "https://discordapp.com/users/378510281250439168",
-          "type": "link"
-        },
-        {
-          "text": "Submission Channel",
-          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "text": "Application Form",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
           "type": "link"
         }
       ]
@@ -358,8 +347,8 @@
       "depts": [
         {
           "name": "Redstone",
-          "body": "Submit your redstone work. We invite the authors of outstanding builds.",
-          "action": "Submission channel"
+          "body": "Submit your redstone work through the application form. We invite the authors of outstanding builds.",
+          "action": "Application form"
         },
         {
           "name": "Building",

@@ -6,7 +6,7 @@ import { SiteFooter } from '#/dimensions/SiteFooter';
 
 /** In the order of respawn.depts: redstone, building, logistics. */
 const JOIN_LINKS = [
-  joinLink.redstoneChannel,
+  joinLink.applicationForm,
   joinLink.applicationForm,
   joinLink.applicationForm,
 ];

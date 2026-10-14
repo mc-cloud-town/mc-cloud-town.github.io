@@ -24,24 +24,13 @@
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "紅石組",
       "features": [
-        "投稿紅石作品至作品投稿或審核人員私訊來申請審核。",
-        "我們將邀請優秀作品的作者加入。",
-        "審核人員 Discord:"
+        "填寫申請表單，投稿紅石作品來申請審核。",
+        "我們將邀請優秀作品的作者加入。"
       ],
       "buttons": [
         {
-          "text": "fantasy_sakura",
-          "href": "https://discordapp.com/users/676261754782613514",
-          "type": "link"
-        },
-        {
-          "text": "jezlarm",
-          "href": "https://discordapp.com/users/378510281250439168",
-          "type": "link"
-        },
-        {
-          "text": "作品投稿頻道",
-          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "text": "申請表單",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
           "type": "link"
         }
       ]
@@ -354,8 +343,8 @@
       "depts": [
         {
           "name": "紅石組",
-          "body": "投稿你的紅石作品，我們會邀請優秀作品的作者加入。",
-          "action": "到投稿頻道"
+          "body": "用申請表單投稿你的紅石作品，我們會邀請優秀作品的作者加入。",
+          "action": "填寫申請表單"
         },
         {
           "name": "建築組",

@@ -10,7 +10,7 @@ import { joinLink, serverLink } from '@/constants';
  * its criteria, its people).
  */
 const DEPTS = [
-  { link: joinLink.redstoneChannel, detail: 'redstone' },
+  { link: joinLink.applicationForm, detail: 'redstone' },
   { link: joinLink.applicationForm, detail: 'build' },
   { link: joinLink.applicationForm, detail: 'logistics' },
 ] as const;

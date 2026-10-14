@@ -30,13 +30,10 @@ test.describe('home: respawn', () => {
       /discord\.gg/,
     );
     await expect(page.locator('#respawn .depts li')).toHaveCount(3);
-    // each department leads straight to where it takes applications
+    // each department leads straight to where it takes applications: all three, the one form
     const actions = page.locator('#respawn .depts li a');
     await expect(actions).toHaveCount(3);
-    await expect(actions.nth(0)).toHaveAttribute(
-      'href',
-      /discord\.com\/channels\//,
-    );
+    await expect(actions.nth(0)).toHaveAttribute('href', /forms\.gle\//);
     await expect(actions.nth(1)).toHaveAttribute('href', /forms\.gle\//);
     await expect(actions.nth(2)).toHaveAttribute('href', /forms\.gle\//);
     for (const a of await actions.all()) {
@@ -579,7 +576,7 @@ test.describe('home: respawn', () => {
       'Logistics',
     ]);
     await expect(page.locator('#respawn .depts li a').first()).toContainText(
-      'Submission channel',
+      'Application form',
     );
     await expect(page.locator('#respawn h2')).toHaveCSS('opacity', '1');
     await expect(page.locator('#respawn .depts')).toHaveCSS('opacity', '1');

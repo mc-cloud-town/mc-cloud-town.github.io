@@ -31,7 +31,7 @@ const TEXT = { zh_TW: read('zh_TW'), zh_CN: read('zh_CN'), en: read('en') };
 const zhTW = TEXT.zh_TW;
 /** In the order of respawn.depts: redstone, building, logistics. */
 const ACTIONS = [
-  joinLink.redstoneChannel,
+  joinLink.applicationForm,
   joinLink.applicationForm,
   joinLink.applicationForm,
 ];
@@ -75,16 +75,11 @@ test.describe('join page', () => {
       );
     }
     await expect(depts.nth(1)).toContainText(zhTW.join.build.subTitle!);
-    // the reviewers of the redstone department, each by their own link
-    const reviewers = depts.nth(0).locator('.join-people a');
-    await expect(reviewers).toHaveCount(2);
-    await expect(reviewers.nth(0)).toHaveAttribute(
+    // the redstone department takes applications by the form, as the others do: no reviewers to write to
+    await expect(depts.nth(0).locator('.join-people')).toHaveCount(0);
+    await expect(depts.nth(0).locator('.join-link')).toHaveAttribute(
       'href',
-      'https://discordapp.com/users/676261754782613514',
-    );
-    await expect(reviewers.nth(1)).toHaveAttribute(
-      'href',
-      'https://discordapp.com/users/378510281250439168',
+      joinLink.applicationForm,
     );
     // the form is a link, never a frame
     await expect(page.locator('main iframe')).toHaveCount(0);
