@@ -294,7 +294,8 @@ export const buildChoreography = (
         ease: 'power3.out',
         scrollTrigger: {
           trigger: sec,
-          start: 'top 30%',
+          // once the change into its picture has played out: the section's top at the head of the screen
+          start: 'top top',
           toggleActions: 'play none none reverse',
         },
       });

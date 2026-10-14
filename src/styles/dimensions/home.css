@@ -683,8 +683,9 @@ html.lenis {
   }
 
   /* the end: credits */
+  /* the credits begin a screen lower: their words reach the foot of the screen only as the push into the stars ends */
   .credits {
-    padding: 10vh var(--gutter) 30vh;
+    padding: 100vh var(--gutter) 30vh;
     text-align: center;
   }
   .credits .cast {
