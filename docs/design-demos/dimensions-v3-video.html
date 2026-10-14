@@ -2014,6 +2014,19 @@
         // down near the head of the screen, stand almost still while the statement lights up line by line, dark to
         // bright, and gather speed again. The section is that much longer at its foot, so nothing after it moves.
         const narrow = () => matchMedia('(max-width: 860px)').matches;
+        // The wake lab (wake-lab.js): the respawn a screen lower, so its words come in after the wake ("delay"), or
+        // in its own place, its words under the white and coming up as it clears ("float").
+        const float = (() => {
+          try {
+            return (
+              (new URLSearchParams(location.search).get('respawn') ??
+                localStorage.getItem('ctec-wake-lab')) === 'float'
+            );
+          } catch {
+            return false;
+          }
+        })();
+        if (float) $('#respawn').style.paddingTop = '20vh';
         $$('.open').forEach((sec) => {
           const lines = $$('span', $('[data-say]', sec)),
             words = [sec.children[0], $('.vt', sec)];
@@ -2067,15 +2080,17 @@
             scrollTrigger: { trigger: v, start: 'top 85%' },
           }),
         );
-        $$('.rise').forEach((el) =>
-          gsap.from(el, {
-            y: 44,
-            opacity: 0,
-            duration: 1.1,
-            ease: 'power3.out',
-            scrollTrigger: { trigger: el, start: 'top 86%' },
-          }),
-        );
+        $$('.rise')
+          .filter((el) => !(float && el.closest('.respawn')))
+          .forEach((el) =>
+            gsap.from(el, {
+              y: 44,
+              opacity: 0,
+              duration: 1.1,
+              ease: 'power3.out',
+              scrollTrigger: { trigger: el, start: 'top 86%' },
+            }),
+          );
 
         // works: plain scrolling sections, no pin. Each build arrives its own way and its caption sits somewhere else.
         const camMoves = [
@@ -2203,15 +2218,35 @@
             },
             0,
           )
-          .set('.credits .fin', { autoAlpha: 0 }, 0.5);
-        gsap.from('.pal', {
-          y: 160,
-          rotate: 8,
-          opacity: 0,
-          duration: 1.5,
-          ease: 'expo.out',
-          scrollTrigger: { trigger: '.respawn h2', start: 'top 80%' },
-        });
+          .set('.credits .fin', { autoAlpha: 0 }, 0.5)
+          .add(
+            float
+              ? gsap.timeline().set('.respawn > *', { autoAlpha: 0 }, 0).fromTo(
+                  '.respawn > *',
+                  { autoAlpha: 0, y: 40 },
+                  {
+                    autoAlpha: 1,
+                    y: 0,
+                    // within the second half of the wake: the timeline must not grow past 1, or the wake itself would be squeezed
+                    duration: 0.36,
+                    stagger: 0.02,
+                    ease: 'power2.out',
+                    immediateRender: false,
+                  },
+                  0.5,
+                )
+              : gsap.timeline(),
+            0,
+          );
+        if (!float)
+          gsap.from('.pal', {
+            y: 160,
+            rotate: 8,
+            opacity: 0,
+            duration: 1.5,
+            ease: 'expo.out',
+            scrollTrigger: { trigger: '.respawn h2', start: 'top 80%' },
+          });
         gsap.to('.pal', {
           yPercent: -3,
           rotation: -2,
@@ -2225,5 +2260,6 @@
       })();
     </script>
     <script src="day-lab.js"></script>
+    <script src="wake-lab.js"></script>
   </body>
 </html>
