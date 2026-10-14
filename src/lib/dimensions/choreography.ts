@@ -184,7 +184,7 @@ export const buildChoreography = (
      * screen lower than the change, see .open in home.css). They do not stop. Over a stretch of the page they are
      * carried down as the page goes up, by an ease that begins and ends at nothing: they slow down near the head of
      * the screen, stand almost still while the statement lights up line by line, dark to bright, and gather speed
-     * again. The section is that much longer at its foot, so nothing after it moves. The ScrollTrigger carries an
+     * again. The opening is that much longer at its foot, so nothing after it moves. The ScrollTrigger carries an
      * id (`open-nether`): a jump to the section lands in the middle of its stretch (sectionJumps.ts).
      */
     const opening = (section: HTMLElement | null) => {
@@ -203,13 +203,13 @@ export const buildChoreography = (
       const run = () => window.innerHeight * (0.33 * lines.length + 0.4);
       // (whole pixels: the layout below stays on whole pixels, as the pinned ledger's place is read)
       const carry = () => Math.round(run() * 0.62);
-      // The section's own bottom padding (home.css) and, over it, the length it carries. Set again before every
-      // refresh measures anything (another language has another number of lines, a resize another screen): the
-      // sections below move with it.
+      // The room the words are carried into is the text column's own, at its foot, not the section's padding: the
+      // section's content is then that much taller, and the upright name (position: sticky, which holds only within
+      // its grid area) holds beside the words through the whole stretch. The section keeps its own padding (home.css).
+      // Set again before every refresh measures anything (another language has another number of lines, a resize
+      // another screen): the sections below move with it.
       const room = () => {
-        section.style.paddingBottom = '';
-        const own = getComputedStyle(section).paddingBottom;
-        section.style.paddingBottom = `calc(${own} + ${carry()}px)`;
+        text.style.paddingBottom = `${carry()}px`;
       };
       room();
       gsap
@@ -469,9 +469,9 @@ export const buildChoreography = (
     if (lenis) gsap.ticker.lagSmoothing(500, 33); // back to GSAP's default
     lenis?.destroy();
     ctx.revert();
-    // the length each opening was given at its foot (the stylesheet's own is back)
+    // the length each opening's text column was given at its foot
     root
-      .querySelectorAll<HTMLElement>('.open')
+      .querySelectorAll<HTMLElement>('.open > :first-child')
       .forEach((el) => (el.style.paddingBottom = ''));
     // whatever Lenis left on the document: the next page scrolls natively
     document.documentElement.classList.remove(

@@ -2488,6 +2488,31 @@ test.describe('home: the words come after the scene change', () => {
     }
   });
 
+  test('above 860px the upright name holds a fifth and a bit down beside the words through the whole slow stretch, not let go half way', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      // (the name's own rise, a time-based move that begins as it comes up, is over before it is measured)
+      await scrollAt(page, stretch.mid - 0.25 * stretch.run);
+      await page.waitForTimeout(1800);
+      for (const p of [0.25, 0.5, 0.75]) {
+        await scrollAt(page, stretch.mid + (p - 0.5) * stretch.run);
+        const top = await page
+          .locator(`${sel} .vt`)
+          .evaluate((el) => el.getBoundingClientRect().top / innerHeight);
+        expect(
+          Math.abs(top - 0.22),
+          `${sel} at ${p} of the stretch: name at ${top}`,
+        ).toBeLessThan(0.02);
+      }
+    }
+  });
+
   test('with reduced motion nothing of an opening is carried or risen, and its lines are lit', async ({
     page,
   }) => {

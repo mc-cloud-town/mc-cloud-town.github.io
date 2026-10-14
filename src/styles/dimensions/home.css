@@ -433,7 +433,7 @@ html.lenis {
   /* ───────── a dimension opens ───────── */
   /* Its words reach the foot of the screen only as the change into the dimension ends: the section begins a screen
      lower than the change, and the words come in after it. choreography.ts carries them down the page as it goes up,
-     and lengthens the foot of the section by what they are carried. */
+     and lengthens the foot of their column by what they are carried. */
   .open {
     position: relative;
     min-height: 140vh;
