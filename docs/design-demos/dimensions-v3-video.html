@@ -2016,6 +2016,22 @@
         const narrow = () => matchMedia('(max-width: 860px)').matches;
         // The wake lab (wake-lab.js): the respawn a screen lower, so its words come in after the wake ("delay"), or
         // in its own place, its words under the white and coming up as it clears ("float").
+        // The proposal lab (proposal-lab.js): three proposals, each off unless switched on.
+        //   open=third    an opening's slow stretch is a third of a screen a line, not a half
+        //   works=after   a work's caption comes in only once the change into its picture has played out
+        //   credits=delay the credits begin a screen lower, so they come in after the push into the stars
+        const proposal = (key, on) => {
+          try {
+            return (
+              (new URLSearchParams(location.search).get(key) ??
+                localStorage.getItem('ctec-proposal-' + key)) === on
+            );
+          } catch {
+            return false;
+          }
+        };
+        if (proposal('credits', 'delay'))
+          $('.credits').style.paddingTop = '100vh';
         const float = (() => {
           try {
             return (
@@ -2032,7 +2048,11 @@
             words = [sec.children[0], $('.vt', sec)];
           // what the reader meets first: the name, which leads the opening up to 860px; above that the tag
           const title = () => (narrow() ? $('.vt', sec) : $('.tag', sec));
-          const run = () => innerHeight * (0.5 * lines.length + 0.6);
+          const run = () =>
+            innerHeight *
+            (proposal('open', 'third')
+              ? 0.33 * lines.length + 0.4
+              : 0.5 * lines.length + 0.6);
           const carry = () => run() * 0.62;
           const pad = () =>
             (sec.style.paddingBottom = 'calc(18vh + ' + carry() + 'px)');
@@ -2125,7 +2145,8 @@
             ease: 'power3.out',
             scrollTrigger: {
               trigger: sec,
-              start: 'top 30%',
+              // (the proposal: once the change has played out, the section's top at the head of the screen)
+              start: proposal('works', 'after') ? 'top top' : 'top 30%',
               toggleActions: 'play none none reverse',
             },
           });
@@ -2261,5 +2282,6 @@
     </script>
     <script src="day-lab.js"></script>
     <script src="wake-lab.js"></script>
+    <script src="proposal-lab.js"></script>
   </body>
 </html>
