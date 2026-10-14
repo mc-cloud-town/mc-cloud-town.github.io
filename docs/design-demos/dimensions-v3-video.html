@@ -835,10 +835,11 @@
       }
 
       /* respawn */
+      /* as an opening: its words reach the foot of the screen only as the wake into day one ends */
       .respawn {
         position: relative;
         min-height: 100vh;
-        padding: 20vh var(--gutter) 170px;
+        padding: 100vh var(--gutter) 170px;
       }
       .respawn h2 {
         font-size: clamp(40px, 6vw, 108px);
@@ -2040,6 +2041,9 @@
                 end: () => '+=' + run(),
                 scrub: true,
                 invalidateOnRefresh: true,
+                // measured after every other trigger, so after the holds above it (the ledger's) have taken their
+                // room; nothing below depends on it
+                refreshPriority: -1,
               },
             })
             .fromTo(
@@ -2183,12 +2187,23 @@
         changeOn('.credits', 'farm', 'end', 'push');
 
         // respawn: wake up on day one
-        changeOn('#respawn', 'end', 'day1', 'wake');
-        // The openings' stretches are made with the statements, before the ledger's hold that stands above the End:
-        // put every trigger back in the order of the page, so each is measured after what stands above it has taken
-        // its room.
-        ScrollTrigger.sort();
-        ScrollTrigger.refresh();
+        // The credits' last line stays where it stands on the screen while the white rises over it (the words of
+        // the section that is leaving may stand over its change), and is gone under the white when it is whole;
+        // the respawn's own words come in only after the wake.
+        changeOn('#respawn', 'end', 'day1', 'wake')
+          .fromTo(
+            '.credits .fin',
+            { y: 0 },
+            // the change runs over one screen of scroll: half of it is half a screen
+            {
+              y: () => innerHeight * 0.5,
+              duration: 0.5,
+              ease: 'none',
+              immediateRender: false,
+            },
+            0,
+          )
+          .set('.credits .fin', { autoAlpha: 0 }, 0.5);
         gsap.from('.pal', {
           y: 160,
           rotate: 8,
