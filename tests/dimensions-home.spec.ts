@@ -10,9 +10,12 @@ import {
 import {
   jumpTo,
   ready,
+  scrollAt,
   scrollToSection,
   shownPictures,
+  stretchOf,
   visibleScenes,
+  WORDED,
 } from './helpers/home';
 import { STAR_DRIFT } from '../src/constants/starfield';
 import { readFileSync } from 'node:fs';
@@ -769,7 +772,8 @@ test.describe('home: nether', () => {
           .getBoundingClientRect();
         return {
           spacers: document.querySelectorAll('.pin-spacer').length,
-          top: Math.round(stage.top),
+          // (the stage of a pin that begins a fraction of a pixel down stands that much off the top: no sign for zero)
+          top: Math.abs(Math.round(stage.top)),
           stage: Math.round(stage.height),
           ledger: Math.round(ledger.height),
           vh: window.innerHeight,
@@ -817,7 +821,9 @@ test.describe('home: nether', () => {
         () =>
           page
             .locator('.ledger-stage')
-            .evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+            .evaluate((el) =>
+              Math.abs(Math.round(el.getBoundingClientRect().top)),
+            ),
         note,
       )
       .toBe(0);
@@ -1886,7 +1892,7 @@ test.describe('home: the end', () => {
   });
 
   for (const theme of ['dark', 'light'] as const)
-    test(`the page moves on to the End as its opening takes over, and each section keeps its own accent (${theme})`, async ({
+    test(`the page moves on to the End while its portal plays, its words follow, and each section keeps its own accent (${theme})`, async ({
       page,
     }) => {
       // the Nether has no daylight: its accent is the night's in both themes
@@ -1904,7 +1910,8 @@ test.describe('home: the end', () => {
             .querySelector('#end .tag')!
             .getBoundingClientRect();
           return {
-            // how much of the rank statement is on screen, and how far down the tag line of the End is
+            // how much of the rank statement is on screen, and how far down the tag line of the End is (the End's
+            // words come a screen after its top: they are below the screen until the change into it has played out)
             rank:
               (Math.min(h2.bottom, innerHeight) - Math.max(h2.top, 0)) /
               h2.height,
@@ -1916,18 +1923,18 @@ test.describe('home: the end', () => {
       const tag = page.locator('#end .tag .acc');
       const stillNether = async (step: string) => {
         await scrollToSection(page, '#end', -0.62);
-        // most of the statement is still readable and the tag line of the End has barely come in at the bottom
+        // most of the statement is still readable and the End's words have not come
         const s = await state();
         expect(s.rank, step).toBeGreaterThan(0.5);
-        expect(s.tag, step).toBeGreaterThan(0.75);
+        expect(s.tag, step).toBeGreaterThan(1);
         await expect(html, step).toHaveAttribute('data-dim', 'nether');
         await expect(em, step).toHaveCSS('color', NETHER);
       };
       const nowEnd = async (step: string) => {
         await scrollToSection(page, '#end', -0.4);
-        // the tag line is well inside the screen and the statement is mostly gone
+        // the statement is mostly gone, and the End's words are still to come: the portal plays over what is leaving
         const s = await state();
-        expect(s.tag, step).toBeLessThan(0.75);
+        expect(s.tag, step).toBeGreaterThan(1);
         expect(s.rank, step).toBeLessThan(0.5);
         expect(s.rank, step).toBeGreaterThan(0);
         await expect(html, step).toHaveAttribute('data-dim', 'end');
@@ -2016,8 +2023,9 @@ test.describe('home: the end', () => {
         await expect(page.locator(`[data-work="end-${i}"] h3`)).toBeVisible();
         await expectTextFits(page, { within: `[data-work="end-${i}"]` });
       }
-      // the credits open a little way down the screen, so nothing of them is passing under the bar yet
-      await scrollToSection(page, '#credits', -0.15);
+      // the credits' words come a screen after their top: here the first heading stands a third of the way down the
+      // screen, so nothing of them is passing under the bar yet
+      await scrollToSection(page, '#credits', 0.7);
       expect(await visibleScenes(page)).toEqual(['end']);
       await expect(page.locator('#credits .roles a').first()).toBeInViewport();
       await expectTextFits(page, { within: '#credits' });
@@ -2078,17 +2086,16 @@ test.describe('home: the end', () => {
       'Full member roster',
     );
     await expect(page.locator('#credits .fin')).toHaveText('Not over yet.');
-    await scrollToSection(page, '#credits', -0.15);
+    await scrollToSection(page, '#credits', 0.85);
     await expectTextFits(page, { within: '#credits' });
-    // the statement of the opening lights up in the new language
-    const sayHeight = await page
-      .locator('#end .say')
-      .evaluate((el) => el.getBoundingClientRect().height / innerHeight);
-    await scrollToSection(page, '#end .say', sayHeight - 0.33);
+    // the statement of the opening lights up in the new language: its slow stretch was measured again
+    const stretch = await stretchOf(page, '#end');
+    await scrollAt(page, stretch.mid);
     expect(await visibleScenes(page)).toEqual(['hall']);
     const lines = page.locator('#end .say span');
     expect(await lines.count()).toBe(2);
     await expect(lines.first()).toHaveText('After the End');
+    await scrollAt(page, stretch.mid + stretch.run / 2);
     for (const line of await lines.all())
       await expect(line).toHaveCSS('opacity', '1');
     await expect(page.locator('#end p.body')).toHaveCSS('opacity', '1');
@@ -2294,5 +2301,218 @@ test.describe('home: the language list over the film', () => {
     expect(await visibleScenes(page)).toEqual(['farm']);
     await scrollToSection(page, '#respawn', 0);
     expect(await visibleScenes(page)).toEqual(['day1']);
+  });
+});
+
+/**
+ * The words of a section come in after the change into it (spec 5.3): the change plays over the section that is
+ * leaving, never over the words of the one that is coming. Each change runs over the screen of scroll in which its
+ * section comes up from the foot of the screen to the head.
+ */
+test.describe('home: the words come after the scene change', () => {
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ])
+    for (const theme of ['dark', 'light'] as const)
+      test(`at ${width}×${height} by ${theme}, no word of the section a change leads to is on screen before the change has ended`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        await openPage(page, '/', { theme });
+        await ready(page);
+        // the names of the credits are in, and with them the last measure of the page
+        await expect(
+          page.locator('#credits .names span').first(),
+        ).toBeAttached();
+        const seen = await page.evaluate(
+          async (sections) => {
+            const frame = () =>
+              new Promise((done) =>
+                requestAnimationFrame(() => requestAnimationFrame(done)),
+              );
+            /** The elements of `root` that carry words and can be seen: on the screen, not transparent, not hidden. */
+            const shown = (root: Element) =>
+              [root, ...root.querySelectorAll('*')].filter((el) => {
+                if (
+                  ![...el.childNodes].some(
+                    (n) => n.nodeType === 3 && n.textContent!.trim(),
+                  )
+                )
+                  return false;
+                const r = el.getBoundingClientRect();
+                if (
+                  !r.width ||
+                  !r.height ||
+                  r.bottom <= 0 ||
+                  r.top >= innerHeight
+                )
+                  return false;
+                if (getComputedStyle(el).visibility === 'hidden') return false;
+                let opacity = 1;
+                for (let a: Element | null = el; a; a = a.parentElement)
+                  opacity *= +getComputedStyle(a).opacity;
+                return opacity > 0.05;
+              });
+            const out: string[] = [];
+            for (const sel of sections) {
+              const sec = document.querySelector(sel)!;
+              const top = sec.getBoundingClientRect().top + scrollY;
+              // every 2.5% of the change's range, the last step still before its end
+              for (let k = 0; k < 40; k++) {
+                window.scrollTo({
+                  top: top - innerHeight * (1 - k / 40),
+                  behavior: 'instant',
+                });
+                await frame();
+                for (const el of shown(sec))
+                  out.push(
+                    `${sel} at ${k * 2.5}%: ${el.tagName.toLowerCase()}.${el.className} "${el.textContent!.trim().slice(0, 24)}"`,
+                  );
+              }
+            }
+            return out;
+          },
+          [...WORDED],
+        );
+        expect(seen).toEqual([]);
+      });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [820, 1180],
+    [390, 844],
+  ])
+    test(`at ${width}×${height} each opening stands its title a fifth of the way down at the middle of its slow stretch, the statement lighting line by line`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      for (const sel of ['#overworld', '#nether', '#end']) {
+        const stretch = await stretchOf(page, sel);
+        await scrollAt(page, stretch.mid);
+        const at = await page.evaluate(
+          ([s, narrow]) => {
+            const sec = document.querySelector(s as string)!;
+            const title = sec.querySelector(narrow ? '.vt' : '.tag')!;
+            return {
+              title: title.getBoundingClientRect().top / innerHeight,
+              lines: [...sec.querySelectorAll('[data-say] span')].map(
+                (l) => +getComputedStyle(l).opacity,
+              ),
+            };
+          },
+          [sel, stretch.narrow] as const,
+        );
+        expect(
+          Math.abs(at.title - 0.2),
+          `${sel}: title at ${at.title}`,
+        ).toBeLessThan(0.03);
+        // lit one after another from 0.22 of the stretch, a quarter of it each: at the middle the first is whole,
+        // and the last has not begun
+        expect(at.lines[0], `${sel}: first line`).toBe(1);
+        expect(at.lines.at(-1), `${sel}: last line`).toBeLessThan(0.5);
+        // and by the end of the stretch all are lit
+        await scrollAt(page, stretch.mid + stretch.run / 2);
+        for (const o of await page
+          .locator(`${sel} [data-say] span`)
+          .evaluateAll((ls) => ls.map((l) => +getComputedStyle(l).opacity)))
+          expect(o, `${sel}: lit at the end of the stretch`).toBe(1);
+      }
+    });
+
+  test('a language switch inside an opening measures its slow stretch and the page below it again', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    const before = await stretchOf(page, '#end');
+    await scrollAt(page, before.mid);
+    await setLanguage(page, 'en');
+    await page.waitForTimeout(800);
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      await scrollAt(page, stretch.mid);
+      const title = await page
+        .locator(`${sel} .tag`)
+        .evaluate((el) => el.getBoundingClientRect().top / innerHeight);
+      expect(
+        Math.abs(title - 0.2),
+        `${sel} in English: title at ${title}`,
+      ).toBeLessThan(0.03);
+    }
+    // and what is below stands where the page says: the credits' first heading, one screen under their top
+    const credits = await page.evaluate(() => {
+      const sec = document.querySelector('#credits')!;
+      return sec.getBoundingClientRect().top + scrollY;
+    });
+    await scrollAt(page, credits);
+    expect(
+      await page
+        .locator('#credits .cast')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().top),
+    ).toBeGreaterThan(890);
+  });
+
+  test('above 860px the upright name of an opening does not jump while the words are slowed: it moves by no more than the page does', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      let last: number | null = null;
+      const jumps: string[] = [];
+      // in steps of 12px through the stretch, and a screen either side of it
+      for (
+        let y = stretch.mid - stretch.run / 2 - 900;
+        y < stretch.mid + stretch.run / 2 + 900;
+        y += 12
+      ) {
+        await scrollAt(page, y);
+        const top = await page
+          .locator(`${sel} .vt`)
+          .evaluate((el) => el.getBoundingClientRect().top);
+        if (last !== null && Math.abs(top - last) > 24)
+          jumps.push(`${sel} at ${Math.round(y)}: ${last} to ${top}`);
+        last = top;
+      }
+      expect(jumps).toEqual([]);
+    }
+  });
+
+  test('with reduced motion nothing of an opening is carried or risen, and its lines are lit', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const top = await page.evaluate(
+        (s) => document.querySelector(s)!.getBoundingClientRect().top + scrollY,
+        sel,
+      );
+      // through the opening, a tenth of a screen at a time
+      for (let y = top; y < top + 2.5 * 900; y += 90) {
+        await scrollAt(page, y);
+        const moved = await page
+          .locator(`${sel}, ${sel} *`)
+          .evaluateAll((els) =>
+            els
+              .filter((el) => getComputedStyle(el).transform !== 'none')
+              .map((el) => `${el.tagName}.${el.className}`),
+          );
+        expect(moved, `${sel} at ${Math.round(y - top)}`).toEqual([]);
+      }
+      for (const line of await page.locator(`${sel} [data-say] span`).all())
+        await expect(line).toHaveCSS('opacity', '1');
+    }
   });
 });

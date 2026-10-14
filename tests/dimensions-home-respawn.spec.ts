@@ -11,6 +11,7 @@ import {
   flashState,
   landedOn,
   ready,
+  scrollAt,
   scrollToSection,
   visibleScenes,
 } from './helpers/home';
@@ -96,7 +97,7 @@ test.describe('home: respawn', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
   });
 
-  test('the mascot rises with the title and keeps floating; the bar marks the respawn and the rail is full', async ({
+  test('the mascot has come up with the words, and keeps floating; the bar marks the respawn and the rail is full', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -120,7 +121,7 @@ test.describe('home: respawn', () => {
     await expect(pal).toHaveCSS('opacity', '1');
     const at = () =>
       pal.evaluate((el) => {
-        // the floating is on these two properties; the transform belongs to the rise
+        // the floating is on these two properties; the transform belongs to the wake (it came up with the words)
         const c = getComputedStyle(el);
         return `${c.translate} ${c.rotate}`;
       });
@@ -696,5 +697,143 @@ test.describe('home: respawn', () => {
     await expect(
       page.locator('.scene[data-scene="day1"] .cam > img'),
     ).toHaveCSS('opacity', '1');
+  });
+});
+
+/**
+ * The words of the wake (spec 5.3): the credits' last line stays where it stands while the white rises over it and is
+ * gone under the white when that is whole; the respawn's own words are under the white, and come up as it clears.
+ * The wake runs over the screen of scroll in which the respawn comes up from the foot of the screen to the head.
+ */
+test.describe('home: the words of the wake', () => {
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ])
+    test(`at ${width}×${height} the credits' last line keeps its place until the middle and is gone from there; the respawn's words are hidden until the middle and whole by the end`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      const start = await page.evaluate(
+        () =>
+          document.querySelector('#respawn')!.getBoundingClientRect().top +
+          scrollY -
+          innerHeight,
+      );
+      const at = async (progress: number) => {
+        await scrollAt(page, start + progress * height);
+        return page.evaluate(() => {
+          const shown = (el: Element) => {
+            const c = getComputedStyle(el);
+            return c.visibility !== 'hidden' ? +c.opacity : 0;
+          };
+          const fin = document.querySelector('#credits .fin')!;
+          const blocks = [...document.querySelectorAll('#respawn .call > *')]
+            // (the mascot has no room on a phone)
+            .filter((el) => getComputedStyle(el).display !== 'none');
+          return {
+            finTop: fin.getBoundingClientRect().top,
+            fin: shown(fin),
+            words: blocks.map(shown),
+          };
+        });
+      };
+      const first = await at(0.02);
+      expect(first.fin).toBe(1);
+      for (const p of [0.1, 0.2, 0.3, 0.4, 0.46]) {
+        const now = await at(p);
+        expect(now.fin, `last line at ${p}`).toBe(1);
+        // it keeps its place on the screen while the page goes up under it
+        expect(
+          Math.abs(now.finTop - first.finTop),
+          `place at ${p}`,
+        ).toBeLessThan(height * 0.02 + 2);
+        for (const w of now.words)
+          expect(w, `words at ${p}`).toBeLessThan(0.05);
+      }
+      // (the place at the very start, to the pixel)
+      const begin = await at(0);
+      expect(
+        Math.abs((await at(0.4)).finTop - begin.finTop),
+      ).toBeLessThanOrEqual(2);
+      for (const p of [0.52, 0.6, 0.7]) {
+        const now = await at(p);
+        expect(now.fin, `last line at ${p}`).toBe(0);
+      }
+      // the words come up one after another, the last whole by the end
+      const late = await at(0.7);
+      expect(Math.max(...late.words)).toBeGreaterThan(0);
+      for (const w of (await at(1)).words) expect(w).toBe(1);
+      // and back: the last line is there again, the words are under the white again
+      const back = await at(0.3);
+      expect(back.fin).toBe(1);
+      for (const w of back.words) expect(w).toBeLessThan(0.05);
+    });
+
+  test('the wake begins one screen above the respawn, also after the member list has filled in and after a language switch', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    /** The last line is carried as much as the page has gone up since the wake began: that is how far in it is. */
+    const began = async () => {
+      const expected = await page.evaluate(
+        () =>
+          document.querySelector('#respawn')!.getBoundingClientRect().top +
+          scrollY -
+          innerHeight,
+      );
+      await scrollAt(page, expected + 270);
+      const carried = await page.evaluate(
+        () =>
+          new DOMMatrix(
+            getComputedStyle(
+              document.querySelector('#credits .fin')!,
+            ).transform,
+          ).m42,
+      );
+      return Math.round(carried - 270);
+    };
+    // before the member list: the page is short of it; after: the list is in
+    expect(Math.abs(await began()), 'before the members').toBeLessThanOrEqual(
+      2,
+    );
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await page.waitForTimeout(600);
+    expect(Math.abs(await began()), 'after the members').toBeLessThanOrEqual(2);
+    await setLanguage(page, 'en');
+    await page.waitForTimeout(800);
+    expect(Math.abs(await began()), 'after the switch').toBeLessThanOrEqual(2);
+  });
+
+  test('with reduced motion the last line of the credits and the words of the respawn simply stand there', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    const start = await page.evaluate(
+      () =>
+        document.querySelector('#respawn')!.getBoundingClientRect().top +
+        scrollY -
+        innerHeight,
+    );
+    for (const p of [0, 0.3, 0.6, 1]) {
+      await scrollAt(page, start + p * 900);
+      const state = await page.evaluate(() =>
+        [
+          document.querySelector('#credits .fin')!,
+          ...document.querySelectorAll('#respawn .call > *'),
+        ].map((el) => {
+          const c = getComputedStyle(el);
+          return `${c.visibility} ${c.opacity} ${c.transform}`;
+        }),
+      );
+      for (const s of state) expect(s, `at ${p}`).toBe('visible 1 none');
+    }
   });
 });
