@@ -699,6 +699,12 @@ html.lenis {
     padding: 100vh var(--gutter) 30vh;
     text-align: center;
   }
+  /* on a touch screen the credits stand where they did: their words do not wait for the push into the stars there */
+  @media (pointer: coarse) {
+    .credits {
+      padding-top: 10vh;
+    }
+  }
   .credits .cast {
     font: 500 13px var(--mono);
     letter-spacing: 0.3em;

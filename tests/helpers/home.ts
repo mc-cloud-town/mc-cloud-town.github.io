@@ -310,6 +310,9 @@ export const landingOf = (page: Page, selector: string) =>
           o += e.offsetTop;
         return o;
       };
+      // (on a touch screen the credits' words are at their top)
+      if (el.matches('.credits') && matchMedia('(pointer: coarse)').matches)
+        return null;
       if (el.matches('.credits'))
         return Math.round(
           topOfEl(el.querySelector('.cast')!) - innerHeight * 0.2,
@@ -693,19 +696,20 @@ export const arrived = async (page: Page) => {
 };
 
 /**
- * The sections whose words come in after the change into them (TRANSITIONS in scenes.ts), in page order. Not the
- * respawn: its words come up out of the white of the wake.
+ * The sections whose words come in after the change into them, in page order: the changes into a dimension (the
+ * Overworld, the Nether, the End) and, on the desktop, the credits. Not the respawn: its words come up out of the
+ * white of the wake. (The works' captions come in when their change is seven tenths through: a work is not a
+ * dimension. On a touch screen the credits stand at their top.)
  */
-export const WORDED = [
-  '#overworld',
+export const WORDED = ['#overworld', '#nether', '#end', '#credits'] as const;
+
+/** The works, in page order. */
+export const WORKS = [
   '[data-work="overworld-0"]',
   '[data-work="overworld-1"]',
   '[data-work="overworld-2"]',
-  '#nether',
-  '#end',
   '[data-work="end-0"]',
   '[data-work="end-1"]',
-  '#credits',
 ] as const;
 
 /** Move the page to `y` and wait for the frame that draws it: scrubbed motion follows the scroll within a frame. */

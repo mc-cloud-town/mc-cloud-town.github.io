@@ -157,6 +157,12 @@ export const mountSectionJumps = (
         : null;
     // A touch screen's facilities are sections of their own: the first one's caption comes in once its top has
     // reached the head of the screen, so the reader is put a hair past it.
+    // the credits of a touch screen are at their top (their words do not wait there)
+    if (
+      el.matches('.credits') &&
+      window.matchMedia('(pointer: coarse)').matches
+    )
+      return top(el);
     if (el.id === 'ledger' && el.querySelector('[data-ledger-sec]'))
       return Math.min(top(el) + 2, ScrollTrigger.maxScroll(window));
     if (!words) return top(el);

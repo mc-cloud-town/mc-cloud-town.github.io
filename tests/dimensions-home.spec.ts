@@ -18,6 +18,7 @@ import {
   stretchOf,
   visibleScenes,
   WORDED,
+  WORKS,
 } from './helpers/home';
 import { STAR_DRIFT } from '../src/constants/starfield';
 import { readFileSync } from 'node:fs';
@@ -2089,7 +2090,12 @@ test.describe('home: the end', () => {
       }
       // the credits' words come a screen after their top: here the first heading stands a third of the way down the
       // screen, so nothing of them is passing under the bar yet
-      await scrollToSection(page, '#credits', 0.7);
+      // (on a touch screen they stand at their top, 10vh of room over the heading: above that, as before the credits waited)
+      await scrollToSection(
+        page,
+        '#credits',
+        (await onTouch(page)) ? -0.15 : 0.7,
+      );
       expect(await visibleScenes(page)).toEqual(['end']);
       await expect(page.locator('#credits .roles a').first()).toBeInViewport();
       await expectTextFits(page, { within: '#credits' });
@@ -2379,7 +2385,7 @@ test.describe('home: the words come after the scene change', () => {
     [390, 844],
   ])
     for (const theme of ['dark', 'light'] as const)
-      test(`at ${width}×${height} by ${theme}, no word of the section a change leads to is on screen before the change has ended`, async ({
+      test(`at ${width}×${height} by ${theme}, no word of the section a dimension change leads to is on screen before the change has ended`, async ({
         page,
       }) => {
         await page.setViewportSize({ width, height });
@@ -2389,6 +2395,7 @@ test.describe('home: the words come after the scene change', () => {
         await expect(
           page.locator('#credits .names span').first(),
         ).toBeAttached();
+        const touch = await onTouch(page);
         const seen = await page.evaluate(
           async (sections) => {
             const frame = () =>
@@ -2437,10 +2444,42 @@ test.describe('home: the words come after the scene change', () => {
             }
             return out;
           },
-          [...WORDED],
+          // (on a touch screen the credits stand at their top, and their words do not wait)
+          [...WORDED].filter((s) => !(touch && s === '#credits')),
         );
         expect(seen).toEqual([]);
       });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ])
+    test(`at ${width}×${height} a work's caption comes in when the change into its picture is seven tenths through, not before: a work is not a dimension`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      for (const sel of WORKS) {
+        const top = await page.evaluate(
+          (s) =>
+            document.querySelector(s)!.getBoundingClientRect().top + scrollY,
+          sel,
+        );
+        const opacities = () =>
+          page
+            .locator(`${sel} .work > div > *`)
+            .evaluateAll((els) => els.map((e) => +getComputedStyle(e).opacity));
+        // 60% through the change: nothing yet
+        await scrollAt(page, top - height * 0.4);
+        for (const o of await opacities())
+          expect(o, `${sel} at 60%`).toBeLessThan(0.05);
+        // 80% through: it has begun, and is whole in a moment
+        await scrollAt(page, top - height * 0.2);
+        await expect.poll(async () => Math.min(...(await opacities()))).toBe(1);
+      }
+    });
 
   for (const [width, height] of [
     [1440, 900],
@@ -2726,7 +2765,7 @@ test.describe('home: on a touch screen', () => {
     expect(await sticky(page)).toEqual([]);
   });
 
-  test('nothing of an opening is carried: its text column has no transform at any point, and a line is lit as it crosses the middle of the screen', async ({
+  test('nothing of an opening is carried: its text column has no transform at any point, and a line is lit from the moment it comes in at the foot of the screen', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -2754,9 +2793,9 @@ test.describe('home: on a touch screen', () => {
         }, sel);
         expect(now.column, `${sel} at ${y - top}: the column`).toBe('none');
         for (const l of now.lines) {
-          // lit by the time it is at 45% of the screen, still dim while it is below 75%
-          if (l.at < 0.43) expect(l.opacity, `${sel}: line at ${l.at}`).toBe(1);
-          if (l.at > 0.77)
+          // lit by the time it is at 65% of the screen, still dim while it is below 95%
+          if (l.at < 0.63) expect(l.opacity, `${sel}: line at ${l.at}`).toBe(1);
+          if (l.at > 0.97)
             expect(l.opacity, `${sel}: line at ${l.at}`).toBeLessThan(0.3);
         }
       }
@@ -2845,6 +2884,41 @@ test.describe('home: on a touch screen', () => {
     );
     expect(await type('[data-ledger-sec="0"] .work p')).toEqual(
       await type('[data-work="overworld-0"] .work p'),
+    );
+  });
+
+  test('the waits are short: the credits stand at their place, and the fades of an opening and a caption take about 0.4s', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    // the credits are not a screen lower: 10vh of room over the first heading
+    const room = await page
+      .locator('#credits')
+      .evaluate((el) => parseFloat(getComputedStyle(el).paddingTop));
+    expect(Math.abs(room - 84.4)).toBeLessThan(1);
+    // the body of an opening: came in at the foot of the screen, whole in well under the desktop's 1.1s
+    const body = page.locator('#nether p.body');
+    const at = await body.evaluate(
+      (el) => el.getBoundingClientRect().top + scrollY,
+    );
+    await scrollAt(page, at - 844 * 0.8);
+    await page.waitForTimeout(700);
+    await expect(body).toHaveCSS('opacity', '1');
+    // a work's caption: 0.4s after its section's top is at 30% of the screen
+    const work = await page.evaluate(
+      () =>
+        document
+          .querySelector('[data-work="overworld-1"]')!
+          .getBoundingClientRect().top + scrollY,
+    );
+    await scrollAt(page, work - 844 * 0.25);
+    await page.waitForTimeout(700);
+    await expect(page.locator('[data-work="overworld-1"] .work h3')).toHaveCSS(
+      'opacity',
+      '1',
     );
   });
 

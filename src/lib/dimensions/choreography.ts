@@ -190,11 +190,14 @@ export const buildChoreography = (
     // up line by line in `opening`, below.)
     const reveals = (section: HTMLElement | null) => {
       if (!section) return;
+      // On a touch screen the fades of a dimension's opening are short (about 0.4s): the words wait for the change
+      // into the dimension, and then they are not to be waited for again (spec 5.3.1).
+      const quick = opts.touch && section.matches('.open');
       gsap.utils.toArray<HTMLElement>('.vt', section).forEach((el) =>
         gsap.from(el, {
           yPercent: 12,
           opacity: 0,
-          duration: 1.4,
+          duration: quick ? 0.4 : 1.4,
           ease: 'expo.out',
           scrollTrigger: { trigger: el, start: 'top 85%' },
         }),
@@ -203,7 +206,7 @@ export const buildChoreography = (
         gsap.from(el, {
           y: 44,
           opacity: 0,
-          duration: 1.1,
+          duration: quick ? 0.4 : 1.1,
           ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 86%' },
         }),
@@ -253,8 +256,8 @@ export const buildChoreography = (
             ease: 'none',
             scrollTrigger: {
               trigger: line,
-              start: 'top 75%',
-              end: 'top 45%',
+              start: 'top 95%',
+              end: 'top 65%',
               scrub: true,
             },
           }),
@@ -325,18 +328,19 @@ export const buildChoreography = (
         { scale: 1.1, yPercent: -1.5 },
       ],
     ] as const;
-    // A work's caption: it comes in once the change into its picture has played out, the section's top at the head of
-    // the screen.
+    // A work's caption comes in when the change into its picture is seven tenths through (the section's top at 30% of
+    // the screen): a work is not a dimension, and only the changes into a dimension are waited for (spec 5.3). On a
+    // touch screen it comes in quickly as well (spec 5.3.1).
     const caption = (sec: Element) =>
       gsap.from(sec.querySelectorAll('.work > div > *'), {
         y: 36,
         opacity: 0,
-        duration: 0.9,
+        duration: opts.touch ? 0.4 : 0.9,
         stagger: 0.08,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: sec,
-          start: 'top top',
+          start: 'top 30%',
           toggleActions: 'play none none reverse',
         },
       });
