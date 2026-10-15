@@ -579,6 +579,9 @@ test.describe('home: respawn', () => {
     await expect(page.locator('#respawn .depts li a').first()).toContainText(
       'Application form',
     );
+    // (the English text is longer: the respawn has moved a little down the page, and its words come up with the
+    // wake, by the scroll: back at its top they are whole)
+    await scrollToSection(page, '#respawn', 0);
     await expect(page.locator('#respawn h2')).toHaveCSS('opacity', '1');
     await expect(page.locator('#respawn .depts')).toHaveCSS('opacity', '1');
     await expect(page.locator('#respawn .pal')).toHaveCSS('opacity', '1');
