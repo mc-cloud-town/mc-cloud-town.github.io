@@ -319,7 +319,9 @@ export const landingOf = (page: Page, selector: string) =>
       const title = el.querySelector<HTMLElement>(narrow ? '.vt' : '.tag')!;
       const lines = el.querySelectorAll('[data-say] span').length;
       const carry = Math.round(innerHeight * (0.33 * lines + 0.4) * 0.62);
-      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const still =
+        matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        matchMedia('(pointer: coarse)').matches;
       let y =
         topOfEl(el) +
         offset(title) -

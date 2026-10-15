@@ -624,7 +624,7 @@ html.lenis {
     display: block;
     animation: ledger-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  /* Reduced motion: no pin and no steps (NetherLedger.tsx). The facilities are a plain list in the flow of the
+  /* Reduced motion, and a touch screen: no pin and no steps (NetherLedger.tsx). The facilities are a plain list in the flow of the
      page, each with its own picture, over the scene and its veil like everything else: no ground of its own. */
   .ledger-plain {
     display: grid;
@@ -665,6 +665,17 @@ html.lenis {
   }
   .rank {
     padding: 26vh var(--gutter);
+  }
+  /* A touch screen (the same query as choreography.ts is told by HomePage.tsx): nothing holds. The upright dimension
+     name and a work's caption frame scroll with the finger, laid out as they are where the hold has not begun. */
+  @media (pointer: coarse) {
+    .open .vt {
+      position: static;
+    }
+    /* (still positioned, as it was: it stands over the world as before) */
+    .work {
+      position: relative;
+    }
   }
   .rank .claim {
     font-size: clamp(56px, 9vw, 170px);

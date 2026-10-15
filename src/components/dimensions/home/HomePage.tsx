@@ -47,6 +47,9 @@ const noSubscription = () => () => {};
 const prefersReducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** A touch screen: phones and tablets, by the pointer and not by the width (spec 5.3.1). */
+const hasTouchScreen = () => window.matchMedia('(pointer: coarse)').matches;
+
 const daysToday = () => daysSince(SERVER_START_MS, Date.now());
 
 /**
@@ -87,6 +90,12 @@ export const HomePage = ({
   const reduced = useSyncExternalStore<boolean | null>(
     noSubscription,
     prefersReducedMotion,
+    () => null,
+  );
+  // null until the browser has been asked, like `reduced`; read once, as the page is built for it
+  const touch = useSyncExternalStore<boolean | null>(
+    noSubscription,
+    hasTouchScreen,
     () => null,
   );
   // known only in the browser, like `reduced`: the served page asks for the first picture alone
@@ -146,10 +155,11 @@ export const HomePage = ({
   // ScrollTrigger remembers the last scroll position it read; taken down while the page is still where the reader
   // left it, it gives that position back to the next visit's first refresh (a fresh visit then starts far down).
   useEffect(() => {
-    if (!ready || reduced === null || !root.current) return;
+    if (!ready || reduced === null || touch === null || !root.current) return;
     const el = root.current;
     const dispose = buildChoreography(el, {
       reduced,
+      touch,
       onDim: setDim,
       onLedger: setLedger,
     });
@@ -200,7 +210,7 @@ export const HomePage = ({
       arrival?.revert();
       dispose();
     };
-  }, [ready, reduced, setDim]);
+  }, [ready, reduced, touch, setDim]);
 
   // Another language reflows the text and moves every section below it: measure the triggers again.
   // (Runs after the new text is committed; the nodes themselves are kept, see the index keys below.)
@@ -339,7 +349,7 @@ export const HomePage = ({
           label={t('dimensions.dim.nether')}
         />
         <NetherLedger
-          reduced={reduced}
+          plain={reduced || touch}
           index={ledger}
           items={
             t('dimensions.nether.ledger', { returnObjects: true }) as {

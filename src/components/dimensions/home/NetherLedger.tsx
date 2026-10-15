@@ -19,8 +19,8 @@ const shown = (img: HTMLImageElement | null) => {
 };
 
 /**
- * With reduced motion nothing is pinned and nothing steps: the facilities are a plain list in the flow of the
- * page, each with its date, its name and its own picture, at every screen size.
+ * With reduced motion, and on a touch screen, nothing is pinned and nothing steps: the facilities are a plain list in
+ * the flow of the page, each with its date, its name and its own picture, at every screen size.
  */
 const PlainLedger = ({ items }: { items: Facility[] }) => (
   <section id='ledger' data-dim='nether'>
@@ -49,18 +49,18 @@ const PlainLedger = ({ items }: { items: Facility[] }) => (
 
 /**
  * Pinned while the reader scrolls through the facilities. choreography.ts reports which one is current.
- * `reduced` is null until the browser has been asked (the static markup is the pinned stage).
+ * `plain` is null until the browser has been asked (the static markup is the pinned stage).
  */
 export const NetherLedger = ({
   index,
   items,
-  reduced,
+  plain,
 }: {
   index: number;
   items: Facility[];
-  reduced: boolean | null;
+  plain: boolean | null;
 }) =>
-  reduced ? (
+  plain ? (
     <PlainLedger items={items} />
   ) : (
     <section id='ledger' data-dim='nether'>

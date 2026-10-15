@@ -11,6 +11,12 @@ gsap.registerPlugin(ScrollTrigger);
 
 export interface ChoreographyOptions {
   reduced: boolean;
+  /**
+   * A touch screen (`pointer: coarse`: phones and tablets, not by width). The finger's scroll is the system's, moved
+   * on its own thread a frame before the page's script can answer, so nothing that counters the scroll is made: no
+   * slowing, no hold, no pin (spec 5.3.1). The desktop keeps the film as it is.
+   */
+  touch: boolean;
   onDim: (d: Dimension) => void;
   onLedger: (index: number) => void;
 }
@@ -23,26 +29,6 @@ export interface ChoreographyOptions {
  */
 const stretchRun = (lines: number) => window.innerHeight * (0.33 * lines + 0.4);
 const stretchCarry = (lines: number) => Math.round(stretchRun(lines) * 0.62);
-
-/**
- * For testing on phones, until one way is chosen (then this goes): how the motions that counter the scroll, an
- * opening's slowing and the credits' last line held under the wake, meet a finger's scroll, which a phone moves on its
- * own, a frame before the page's script can answer.
- *   ?touch=sync   Lenis takes the finger's scroll too (syncTouch): the scroll and the counter-motion are one frame
- *   ?touch=still  on a touch screen nothing counters the scroll: no slowing, no hold (the layout is the same, and the
- *                 statement still lights up line by line)
- *   (none)        as it is: the phone scrolls, the counter-motion follows
- */
-const touchTest = () => {
-  try {
-    return new URLSearchParams(window.location.search).get('touch');
-  } catch {
-    return null;
-  }
-};
-/** Whether the motions that counter the scroll are made (all but ?touch=still on a touch screen). */
-const countersScroll = () =>
-  !(touchTest() === 'still' && window.matchMedia('(pointer: coarse)').matches);
 
 /**
  * Every scroll-driven animation on the home page is created here, top to bottom.
@@ -159,11 +145,8 @@ export const buildChoreography = (
     }
 
     // Lenis does the easing, so scrubbed timelines follow the scroll position directly
-    lenis = new Lenis({
-      lerp: 0.11,
-      smoothWheel: true,
-      syncTouch: touchTest() === 'sync',
-    });
+    // (the wheel's: a finger's scroll is not taken over, on a touch screen or any other)
+    lenis = new Lenis({ lerp: 0.11, smoothWheel: true });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
@@ -258,6 +241,26 @@ export const buildChoreography = (
         text.style.paddingBottom = `${carry()}px`;
       };
       room();
+      // Where the scroll is not countered (a touch screen) the words go at the finger's pace: no stretch, nothing is
+      // carried (the room above keeps the layout the same), and each line lights up as it crosses the middle of the
+      // screen.
+      if (opts.touch) {
+        // (the room is measured again with every refresh, as with the stretch)
+        ScrollTrigger.create({ trigger: section, onRefreshInit: room });
+        lines.forEach((line) =>
+          gsap.to(line, {
+            opacity: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: line,
+              start: 'top 75%',
+              end: 'top 45%',
+              scrub: true,
+            },
+          }),
+        );
+        return;
+      }
       const stretch = gsap
         .timeline({
           scrollTrigger: {
@@ -285,7 +288,7 @@ export const buildChoreography = (
           text,
           { y: 0 },
           {
-            y: () => (countersScroll() ? carry() : 0),
+            y: () => carry(),
             duration: 1,
             ease: 'sine.inOut',
           },
@@ -297,34 +300,17 @@ export const buildChoreography = (
           name,
           { y: 0 },
           {
-            y: () => (narrow() && countersScroll() ? carry() : 0),
+            y: () => (narrow() ? carry() : 0),
             duration: 1,
             ease: 'sine.inOut',
           },
           0,
         );
-      if (countersScroll())
-        stretch.to(
-          lines,
-          { opacity: 1, duration: 0.24, stagger: 0.24, ease: 'none' },
-          0.22,
-        );
-      // Where nothing counters the scroll (?touch=still on a touch screen) the words go at the finger's pace and are
-      // past the head of the screen before the stretch would light them: each line lights up as it crosses the
-      // middle of the screen instead.
-      else
-        lines.forEach((line) =>
-          gsap.to(line, {
-            opacity: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: line,
-              start: 'top 75%',
-              end: 'top 45%',
-              scrub: true,
-            },
-          }),
-        );
+      stretch.to(
+        lines,
+        { opacity: 1, duration: 0.24, stagger: 0.24, ease: 'none' },
+        0.22,
+      );
     };
 
     // each build drifts its own way while it is on screen
@@ -484,7 +470,9 @@ export const buildChoreography = (
     // size, so measured again with every refresh. (On a timeline of its own, over the same range: invalidating the
     // wake's, which holds the scenes, on every refresh left the last build's caption showing.)
     const fin = q('.credits .fin');
-    if (wake && fin) {
+    // (on a touch screen it is not held: it scrolls away with the page, and is gone under the white when that is whole)
+    if (wake && fin && opts.touch) wake.set(fin, { opacity: 0 }, 0.5);
+    else if (wake && fin) {
       const held: gsap.core.Timeline = gsap
         .timeline({
           scrollTrigger: {
@@ -500,7 +488,7 @@ export const buildChoreography = (
           fin,
           { y: 0 },
           {
-            y: () => (countersScroll() ? window.innerHeight * 0.5 : 0),
+            y: () => window.innerHeight * 0.5,
             duration: 0.5,
             ease: 'none',
             immediateRender: false,
