@@ -4,7 +4,7 @@
 // photograph where the layout has a clear side (above 860px), lying on the bottom-up veil where it has not.
 import { expect, test, type Page } from '@playwright/test';
 import { atRest, LOCALES, openPage, type Locale } from './helpers/dimensions';
-import { arrived, jumpTo, scrollAt, stretchOf } from './helpers/home';
+import { arrived, jumpTo, landingOf, scrollAt } from './helpers/home';
 
 /** The layouts in which the name lies on the bottom-up veil, up to the last width of it. */
 const ON_THE_VEIL = [
@@ -69,8 +69,8 @@ for (const vp of ON_THE_VEIL)
         await arrived(page);
         // the Nether and the End have no daylight: there the name has no shade, as by night
         for (const id of ['overworld', 'nether', 'end']) {
-          // where the name is on the screen: the middle of the opening's slow stretch (its top is a screen of scene)
-          await scrollAt(page, (await stretchOf(page, `#${id}`)).mid);
+          // where the name is on the screen: where a jump lands (its top is a screen of scene)
+          await scrollAt(page, (await landingOf(page, `#${id}`))!);
           await atRest(page);
           const label = `#${id} .vt`;
           await expect(page.locator(label)).toBeInViewport();

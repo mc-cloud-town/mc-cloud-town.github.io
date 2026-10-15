@@ -10,6 +10,7 @@ import {
 import {
   flashState,
   landedOn,
+  onTouch,
   ready,
   scrollAt,
   scrollToSection,
@@ -744,14 +745,18 @@ test.describe('home: the words of the wake', () => {
           };
         });
       };
+      // (on a touch screen the last line is not held: it goes up with the page, spec 5.3.1)
+      const touch = await onTouch(page);
       const first = await at(0.02);
       expect(first.fin).toBe(1);
       for (const p of [0.1, 0.2, 0.3, 0.4, 0.46]) {
         const now = await at(p);
         expect(now.fin, `last line at ${p}`).toBe(1);
-        // it keeps its place on the screen while the page goes up under it
+        // it keeps its place on the screen while the page goes up under it (on a touch screen: it goes up with it)
         expect(
-          Math.abs(now.finTop - first.finTop),
+          Math.abs(
+            now.finTop - first.finTop + (touch ? (p - 0.02) * height : 0),
+          ),
           `place at ${p}`,
         ).toBeLessThan(height * 0.02 + 2);
         for (const w of now.words)
@@ -759,9 +764,10 @@ test.describe('home: the words of the wake', () => {
       }
       // (the place at the very start, to the pixel)
       const begin = await at(0);
-      expect(
-        Math.abs((await at(0.4)).finTop - begin.finTop),
-      ).toBeLessThanOrEqual(2);
+      if (!touch)
+        expect(
+          Math.abs((await at(0.4)).finTop - begin.finTop),
+        ).toBeLessThanOrEqual(2);
       for (const p of [0.52, 0.6, 0.7]) {
         const now = await at(p);
         expect(now.fin, `last line at ${p}`).toBe(0);
@@ -790,6 +796,21 @@ test.describe('home: the words of the wake', () => {
           scrollY -
           innerHeight,
       );
+      // (on a touch screen nothing is carried: the last line is whole before the middle of the wake and gone after it)
+      if (await onTouch(page)) {
+        const opacity = async (progress: number) => {
+          await scrollAt(
+            page,
+            expected + progress * page.viewportSize()!.height,
+          );
+          return page
+            .locator('#credits .fin')
+            .evaluate((el) => +getComputedStyle(el).opacity);
+        };
+        return (await opacity(0.45)) === 1 && (await opacity(0.55)) === 0
+          ? 0
+          : 1;
+      }
       await scrollAt(page, expected + 270);
       const carried = await page.evaluate(
         () =>

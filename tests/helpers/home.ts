@@ -314,6 +314,8 @@ export const landingOf = (page: Page, selector: string) =>
         return Math.round(
           topOfEl(el.querySelector('.cast')!) - innerHeight * 0.2,
         );
+      if (el.id === 'ledger' && el.querySelector('[data-ledger-sec]'))
+        return Math.round(topOfEl(el)) + 2;
       if (!el.matches('.open')) return null;
       const narrow = matchMedia('(max-width: 860px)').matches;
       const title = el.querySelector<HTMLElement>(narrow ? '.vt' : '.tag')!;
@@ -746,3 +748,7 @@ export const stretchOf = (page: Page, section: string) =>
       mid: top + offset - innerHeight * 0.2 + carry / 2,
     };
   }, section);
+
+/** The page is on a touch screen (`pointer: coarse`): nothing counters the scroll there, spec 5.3.1. */
+export const onTouch = (page: Page) =>
+  page.evaluate(() => matchMedia('(pointer: coarse)').matches);

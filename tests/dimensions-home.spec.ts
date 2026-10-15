@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { devices, expect, test, type Page } from '@playwright/test';
 import {
   expectNoHorizontalScroll,
   expectNoMissingKeys,
@@ -9,6 +9,8 @@ import {
 } from './helpers/dimensions';
 import {
   jumpTo,
+  landedOn,
+  onTouch,
   ready,
   scrollAt,
   scrollToSection,
@@ -58,7 +60,12 @@ test.describe('home: spawn', () => {
 
   test('the hero and the pinned stage are as tall as the screen that is left under a phone’s address bar (svh), and as tall as the screen where there is none', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await openPage(page, '/');
     await ready(page);
     // what the stylesheet says: the small viewport height where the browser knows it, after a plain vh for one that does not
@@ -168,8 +175,12 @@ test.describe('home: the outline', () => {
       ).toEqual(['overworld', 'nether', 'end', 'respawn']);
       // what a dimension holds is below its statement: builds, the facility, the claim, the credits
       const third = outline.filter((h) => h.level === 3).map((h) => h.section);
-      expect(third.filter((s) => s === 'work-sec')).toHaveLength(5);
-      expect(third).toContain('ledger');
+      // (on a touch screen each facility is a section like a work, with its own heading)
+      const facilities = (await onTouch(page)) ? 6 : 0;
+      expect(third.filter((s) => s === 'work-sec')).toHaveLength(
+        5 + facilities,
+      );
+      if (!facilities) expect(third).toContain('ledger');
       expect(third).toContain('rank');
       expect(third.filter((s) => s === 'credits')).toHaveLength(3);
       expect(outline.every((h) => h.level <= 3)).toBe(true);
@@ -662,7 +673,12 @@ test.describe('home: nether', () => {
 
   test('the ledger walks through all six facilities and ends on the last', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -676,7 +692,12 @@ test.describe('home: nether', () => {
 
   test('the ledger steps through its pictures in order, and back again', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -709,7 +730,12 @@ test.describe('home: nether', () => {
 
   test('the rank statement follows the ledger, still in the nether', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await openPage(page, '/');
     await ready(page);
     await scrollToSection(page, '.rank', -0.3);
@@ -745,7 +771,12 @@ test.describe('home: nether', () => {
 
   test('resizing while pinned keeps the nether scene and leaves no stuck spacer', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -875,7 +906,12 @@ test.describe('home: nether', () => {
 
   test('on a short landscape screen the pinned ledger still names all six facilities, clear of the bar', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 844, height: 390 });
     await openPage(page, '/');
     await ready(page);
@@ -912,7 +948,12 @@ test.describe('home: nether', () => {
   ] as const)
     test(`rotating a phone inside the ledger keeps it pinned, with name and picture in step (opened in ${name})`, async ({
       page,
+      isMobile,
     }) => {
+      test.skip(
+        isMobile,
+        "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+      );
       await page.setViewportSize(first);
       await openPage(page, '/');
       await ready(page);
@@ -963,7 +1004,14 @@ test.describe('home: nether', () => {
     expect(await frames()).toBe(top);
   });
 
-  test('on a phone in the day theme the nether text fits', async ({ page }) => {
+  test('on a phone in the day theme the nether text fits', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await openPage(page, '/', { theme: 'light' });
     await ready(page);
@@ -982,7 +1030,12 @@ test.describe('home: nether', () => {
 
   test('switching language inside the nether keeps the portal, the ledger and the statement working', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -1147,16 +1200,27 @@ test.describe('home: the end', () => {
   ] as const;
   /** Walk the pinned ledger from its first facility to its last, as a reader would. */
   const walkTheLedger = async (page: Page) => {
+    // (on a touch screen the facilities are sections, not a pin: the way through is the ledger's own height)
+    const touch = await onTouch(page);
     for (const f of [0.1, 0.5, 0.95]) {
-      await page.evaluate((k) => {
-        const top =
-          document.querySelector('#ledger')!.getBoundingClientRect().top +
-          window.scrollY;
-        window.scrollTo(0, top + k * 3 * window.innerHeight);
-      }, f);
+      await page.evaluate(
+        ([k, touch]) => {
+          const box = document.querySelector('#ledger')!;
+          const top = box.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo(
+            0,
+            top +
+              k *
+                (touch
+                  ? box.getBoundingClientRect().height - window.innerHeight
+                  : 3 * window.innerHeight),
+          );
+        },
+        [f, touch] as const,
+      );
       await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
     }
-    await expect(page.locator('.pin-spacer')).toHaveCount(1);
+    await expect(page.locator('.pin-spacer')).toHaveCount(touch ? 0 : 1);
   };
   /** Rotation in degrees, scale and position of a scene's layer or of its .zoom. */
   const pose = (page: Page, scene: string, part: '' | ' .zoom' = ' .zoom') =>
@@ -2385,7 +2449,12 @@ test.describe('home: the words come after the scene change', () => {
   ])
     test(`at ${width}×${height} each opening stands its title a fifth of the way down at the middle of its slow stretch, the statement lighting line by line`, async ({
       page,
+      isMobile,
     }) => {
+      test.skip(
+        isMobile,
+        "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+      );
       await page.setViewportSize({ width, height });
       await openPage(page, '/');
       await ready(page);
@@ -2425,7 +2494,12 @@ test.describe('home: the words come after the scene change', () => {
 
   test('a language switch inside an opening measures its slow stretch and the page below it again', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -2461,7 +2535,12 @@ test.describe('home: the words come after the scene change', () => {
 
   test('above 860px the upright name of an opening does not jump while the words are slowed: it moves by no more than the page does', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -2490,7 +2569,12 @@ test.describe('home: the words come after the scene change', () => {
 
   test('above 860px the upright name holds a fifth and a bit down beside the words through the whole slow stretch, not let go half way', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -2515,7 +2599,12 @@ test.describe('home: the words come after the scene change', () => {
 
   test('after a resize the slow stretch, the room it is carried into and the wake are measured again', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -2600,5 +2689,224 @@ test.describe('home: the words come after the scene change', () => {
       for (const line of await page.locator(`${sel} [data-say] span`).all())
         await expect(line).toHaveCSS('opacity', '1');
     }
+  });
+});
+
+/**
+ * A touch screen (`pointer: coarse`: phones and tablets, not by width) is not given the film's counter-motions
+ * (spec 5.3.1): its scroll is the system's, and nothing may fail to follow the finger. The mobile project (a Pixel 7)
+ * is one; the desktop cases above are the film.
+ */
+test.describe('home: on a touch screen', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(!isMobile, 'a touch screen: the mobile project');
+  });
+
+  /** The elements of the page that are held by `position: sticky`. */
+  const sticky = (page: Page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('main *')]
+        .filter((el) => getComputedStyle(el).position === 'sticky')
+        .map((el) => `${el.tagName}.${el.className}`),
+    );
+
+  test('nothing is held: no pin, no sticky element, no stage', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    expect(await onTouch(page)).toBe(true);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    await expect(page.locator('.ledger-stage')).toHaveCount(0);
+    expect(await sticky(page)).toEqual([]);
+    // wide, too: a tablet is a touch screen whatever its width, and the upright name is not held beside the words
+    await page.setViewportSize({ width: 1180, height: 820 });
+    expect(await sticky(page)).toEqual([]);
+  });
+
+  test('nothing of an opening is carried: its text column has no transform at any point, and a line is lit as it crosses the middle of the screen', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const [top, height] = await page.evaluate((s) => {
+        const r = document.querySelector(s)!.getBoundingClientRect();
+        return [r.top + scrollY, r.height];
+      }, sel);
+      for (let y = top; y < top + height; y += 120) {
+        await scrollAt(page, y);
+        const now = await page.evaluate((s) => {
+          const sec = document.querySelector(s)!;
+          const column = sec.firstElementChild!;
+          return {
+            column: getComputedStyle(column).transform,
+            name: getComputedStyle(sec.querySelector('.vt')!).transform,
+            lines: [...sec.querySelectorAll('[data-say] span')].map((l) => ({
+              at: l.getBoundingClientRect().top / innerHeight,
+              opacity: +getComputedStyle(l).opacity,
+            })),
+          };
+        }, sel);
+        expect(now.column, `${sel} at ${y - top}: the column`).toBe('none');
+        for (const l of now.lines) {
+          // lit by the time it is at 45% of the screen, still dim while it is below 75%
+          if (l.at < 0.43) expect(l.opacity, `${sel}: line at ${l.at}`).toBe(1);
+          if (l.at > 0.77)
+            expect(l.opacity, `${sel}: line at ${l.at}`).toBeLessThan(0.3);
+        }
+      }
+    }
+  });
+
+  test("the credits' last line is not held: it goes up with the page, and is gone under the white", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    const start = await page.evaluate(
+      () =>
+        document.querySelector('#respawn')!.getBoundingClientRect().top +
+        scrollY -
+        innerHeight,
+    );
+    const fin = page.locator('#credits .fin');
+    await scrollAt(page, start + 0.05 * 844);
+    const first = await fin.evaluate((el) => el.getBoundingClientRect().top);
+    for (const p of [0.15, 0.3, 0.45]) {
+      await scrollAt(page, start + p * 844);
+      const now = await fin.evaluate((el) => ({
+        top: el.getBoundingClientRect().top,
+        transform: getComputedStyle(el).transform,
+        opacity: +getComputedStyle(el).opacity,
+      }));
+      expect(now.transform, `no hold at ${p}`).toBe('none');
+      expect(now.opacity).toBe(1);
+      // it goes up by what the page has gone up
+      expect(Math.abs(first - now.top - (p - 0.05) * 844)).toBeLessThan(3);
+    }
+    await scrollAt(page, start + 0.6 * 844);
+    expect(+(await fin.evaluate((el) => getComputedStyle(el).opacity))).toBe(0);
+  });
+
+  test("the Nether's six facilities are sections like the works: the picture behind is the facility's, and its caption comes after the change into it", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await expect(page.locator('[data-ledger-sec]')).toHaveCount(6);
+    await expect(page.locator('.ledger-plain')).toHaveCount(0);
+    const sections = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ledger-sec]')].map(
+        (s) => s.getBoundingClientRect().top + scrollY,
+      ),
+    );
+    const opacities = (i: number) =>
+      page
+        .locator(`[data-ledger-sec="${i}"] .work > div > *`)
+        .evaluateAll((els) => els.map((el) => +getComputedStyle(el).opacity));
+    for (let i = 0; i < 6; i++) {
+      // the change into the picture is playing: the caption is not there yet
+      await scrollAt(page, sections[i] - 0.4 * 844);
+      for (const o of await opacities(i))
+        expect(o, `${i}: caption during the change`).toBeLessThan(0.05);
+      // at the section's top the change has played out: the picture is this facility's
+      await scrollAt(page, sections[i] + 1);
+      expect(await shownPictures(page), `${i}: the picture at the top`).toEqual(
+        [String(i)],
+      );
+      await expect.poll(async () => Math.min(...(await opacities(i)))).toBe(1);
+      expect(await visibleScenes(page)).toEqual(['nether']);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+      // the caption: number, date, name
+      await expect(
+        page.locator(`[data-ledger-sec="${i}"] .work p`),
+      ).toContainText(`0${i + 1}`);
+    }
+    // the caption is a work's: the same type
+    const type = (sel: string) =>
+      page
+        .locator(sel)
+        .first()
+        .evaluate((el) => {
+          const c = getComputedStyle(el);
+          return [c.fontFamily, c.fontSize, c.fontWeight, c.color];
+        });
+    expect(await type('[data-ledger-sec="0"] .work h3')).toEqual(
+      await type('[data-work="overworld-0"] .work h3'),
+    );
+    expect(await type('[data-ledger-sec="0"] .work p')).toEqual(
+      await type('[data-work="overworld-0"] .work p'),
+    );
+  });
+
+  test('arriving at #ledger lands on the first facility with its caption in', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/#ledger');
+    await ready(page);
+    await landedOn(page, '#ledger');
+    expect(await shownPictures(page)).toEqual(['0']);
+    await expect
+      .poll(async () =>
+        Math.min(
+          ...(await page
+            .locator('[data-ledger-sec="0"] .work > div > *')
+            .evaluateAll((els) =>
+              els.map((e) => +getComputedStyle(e).opacity),
+            )),
+        ),
+      )
+      .toBe(1);
+  });
+});
+
+test.describe('home: which screens get the touch experience', () => {
+  test.beforeEach(({}, info) => {
+    test.skip(info.project.name !== 'desktop', 'its own devices');
+  });
+  const state = async (page: Page) => {
+    await ready(page);
+    return page.evaluate(() => ({
+      coarse: matchMedia('(pointer: coarse)').matches,
+      pins: document.querySelectorAll('.pin-spacer').length,
+      facilities: document.querySelectorAll('[data-ledger-sec]').length,
+    }));
+  };
+  test('a tablet on its side, wide as a desktop, is a touch screen', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      ...devices['iPad Pro 11 landscape'],
+    });
+    const page = await context.newPage();
+    await openPage(page, '/');
+    expect(await state(page)).toEqual({ coarse: true, pins: 0, facilities: 6 });
+    await context.close();
+  });
+
+  test('a narrow desktop window, with a mouse, gets the film', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+    });
+    const page = await context.newPage();
+    await openPage(page, '/');
+    expect(await state(page)).toEqual({
+      coarse: false,
+      pins: 1,
+      facilities: 0,
+    });
+    await context.close();
   });
 });

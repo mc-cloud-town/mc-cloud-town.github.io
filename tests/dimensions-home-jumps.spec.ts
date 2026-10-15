@@ -11,11 +11,13 @@ import {
   heldFrames,
   jumpTo,
   landedOn,
+  onTouch,
   landingFrames,
   ready,
   record,
   recorded,
   recordHeld,
+  scrollAt,
   scrollToSection,
   shownPictures,
   stretchOf,
@@ -118,7 +120,12 @@ test.describe('home: jumping to a section', () => {
 
   test('from inside the pinned ledger to the End: a cut from the first facility, a travel from the last', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(
+      isMobile,
+      "the pinned ledger is the film's: a touch screen has its facilities as sections",
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -300,9 +307,13 @@ test.describe('home: jumping to a section', () => {
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
     await expect(page.locator('#nether [data-heading]')).toBeFocused();
     // not inside the pin: the stage is still below, on its first facility
-    expect(await topOf(page, '.ledger-stage')).toBeGreaterThan(900);
+    const touch = await onTouch(page);
+    expect(
+      await topOf(page, touch ? '[data-ledger-sec="0"]' : '.ledger-stage'),
+    ).toBeGreaterThan(900);
     expect(await shownPictures(page)).toEqual(['0']);
-    await expect(page.locator('.ledger-now h3')).toHaveText('地獄大廳');
+    if (!touch)
+      await expect(page.locator('.ledger-now h3')).toHaveText('地獄大廳');
     await expect(page.locator('#nether p.body')).toHaveCSS('opacity', '1');
 
     // nether → respawn again, then all the way back to the overworld
@@ -1329,7 +1340,9 @@ test.describe('home: a cover is never left stuck', () => {
           document.documentElement.classList.contains('lenis'),
         ),
       ).toBe(true);
-      await expect(page.locator('.pin-spacer')).toHaveCount(1);
+      await expect(page.locator('.pin-spacer')).toHaveCount(
+        (await onTouch(page)) ? 0 : 1,
+      );
       // the hero's button works
       await page.locator('.hero a.btn').click();
       await landedOn(page, '#respawn');
@@ -1368,9 +1381,16 @@ test.describe('home: arriving, leaving and robustness', () => {
       await expect(page.locator('html')).toHaveAttribute('data-dim', dim);
       expect(await visibleScenes(page)).toEqual([scene]);
       // the pin was measured before the landing
-      await expect(page.locator('.pin-spacer')).toHaveCount(1);
+      await expect(page.locator('.pin-spacer')).toHaveCount(
+        (await onTouch(page)) ? 0 : 1,
+      );
       if (hash === '#nether')
-        expect(await topOf(page, '.ledger-stage')).toBeGreaterThan(900);
+        expect(
+          await topOf(
+            page,
+            (await onTouch(page)) ? '[data-ledger-sec="0"]' : '.ledger-stage',
+          ),
+        ).toBeGreaterThan(900);
       expect(new URL(page.url()).hash).toBe(hash);
     });
 
@@ -1428,6 +1448,11 @@ test.describe('home: arriving, leaving and robustness', () => {
   test('resizing mid-scroll keeps the scene in step with the section', async ({
     page,
   }) => {
+    // A finger scrolls in steps, never in one jump across the page: on a touch screen the page is brought back to its
+    // top after a resize, and then goes to the place, as a reader goes.
+    const fromTheTop = async (page: Page) => {
+      if (await onTouch(page)) await scrollAt(page, 0);
+    };
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
@@ -1435,19 +1460,24 @@ test.describe('home: arriving, leaving and robustness', () => {
     expect(await visibleScenes(page)).toEqual(['moon']);
     await page.setViewportSize({ width: 844, height: 390 });
     await page.waitForTimeout(1200);
+    await fromTheTop(page);
     await scrollToSection(page, '[data-work="end-0"]', 0.2);
     expect(await visibleScenes(page)).toEqual(['moon']);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(1200);
+    await fromTheTop(page);
     await scrollToSection(page, '#credits', 0.3);
     expect(await visibleScenes(page)).toEqual(['end']);
     await scrollToSection(page, '#respawn', 0);
     expect(await visibleScenes(page)).toEqual(['day1']);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(1200);
+    await fromTheTop(page);
     await scrollToSection(page, '#respawn', 0);
     expect(await visibleScenes(page)).toEqual(['day1']);
-    await expect(page.locator('.pin-spacer')).toHaveCount(1);
+    await expect(page.locator('.pin-spacer')).toHaveCount(
+      (await onTouch(page)) ? 0 : 1,
+    );
   });
 
   test('leaving for the join page cleans up, and coming back rebuilds', async ({
@@ -1559,7 +1589,8 @@ test.describe('home: arriving, leaving and robustness', () => {
     expect(await visibleScenes(page)).toEqual(['hall']);
     const home = await state();
     expect(home.lenis).toContain('lenis');
-    expect(home.spacers).toBe(1);
+    // (a touch screen has no pin)
+    expect(home.spacers).toBe((await onTouch(page)) ? 0 : 1);
     await page.goBack();
     await page.locator('.person').first().waitFor();
     expect(await sameDocument()).toBe(true);
@@ -1575,7 +1606,7 @@ test.describe('home: arriving, leaving and robustness', () => {
     await ready(page);
     await scrollToSection(page, '#overworld');
     expect(await visibleScenes(page)).toEqual(['town']);
-    expect((await state()).spacers).toBe(1);
+    expect((await state()).spacers).toBe((await onTouch(page)) ? 0 : 1);
   });
 
   test('coming back to an inner page from deep in the home page: it is at its top at once, and the wheel is the reader’s straight away', async ({
@@ -1788,7 +1819,12 @@ test.describe('home: stepping back lands where the reader was', () => {
 
     test(`at ${width}×${height}, leaving from inside the pinned ledger and stepping back: the same facility, its name and its picture`, async ({
       page,
+      isMobile,
     }) => {
+      test.skip(
+        isMobile,
+        "the pinned ledger is the film's: a touch screen has its facilities as sections",
+      );
       await page.setViewportSize({ width, height });
       await openPage(page, '/');
       await ready(page);
@@ -1833,7 +1869,9 @@ test.describe('home: stepping back lands where the reader was', () => {
       expect(after.scenes).toEqual(['nether']);
       expect(after.dim).toBe('nether');
       expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(4);
-      await expect(page.locator('.pin-spacer')).toHaveCount(1);
+      await expect(page.locator('.pin-spacer')).toHaveCount(
+        (await onTouch(page)) ? 0 : 1,
+      );
     });
   }
 
@@ -2192,7 +2230,8 @@ test.describe('home: a jump to an opening lands on its words', () => {
       expect(now.title).toBeLessThan(0.4);
       // the slow stretch is at its middle: the first line is lit, the last is on its way
       expect(now.lines[0]).toBe(1);
-      expect(now.lines.at(-1)).toBeLessThan(1);
+      // (a touch screen lights a line as it crosses the middle: no stretch, and by the landing all are lit)
+      if (!(await onTouch(page))) expect(now.lines.at(-1)).toBeLessThan(1);
     });
 
   for (const [width, height] of [
