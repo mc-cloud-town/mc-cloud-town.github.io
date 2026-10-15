@@ -258,7 +258,7 @@ export const buildChoreography = (
         text.style.paddingBottom = `${carry()}px`;
       };
       room();
-      gsap
+      const stretch = gsap
         .timeline({
           scrollTrigger: {
             id: `open-${section.id}`,
@@ -302,11 +302,28 @@ export const buildChoreography = (
             ease: 'sine.inOut',
           },
           0,
-        )
-        .to(
+        );
+      if (countersScroll())
+        stretch.to(
           lines,
           { opacity: 1, duration: 0.24, stagger: 0.24, ease: 'none' },
           0.22,
+        );
+      // Where nothing counters the scroll (?touch=still on a touch screen) the words go at the finger's pace and are
+      // past the head of the screen before the stretch would light them: each line lights up as it crosses the
+      // middle of the screen instead.
+      else
+        lines.forEach((line) =>
+          gsap.to(line, {
+            opacity: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: line,
+              start: 'top 75%',
+              end: 'top 45%',
+              scrub: true,
+            },
+          }),
         );
     };
 
