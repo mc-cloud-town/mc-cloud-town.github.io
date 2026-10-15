@@ -25,6 +25,26 @@ const stretchRun = (lines: number) => window.innerHeight * (0.33 * lines + 0.4);
 const stretchCarry = (lines: number) => Math.round(stretchRun(lines) * 0.62);
 
 /**
+ * For testing on phones, until one way is chosen (then this goes): how the motions that counter the scroll, an
+ * opening's slowing and the credits' last line held under the wake, meet a finger's scroll, which a phone moves on its
+ * own, a frame before the page's script can answer.
+ *   ?touch=sync   Lenis takes the finger's scroll too (syncTouch): the scroll and the counter-motion are one frame
+ *   ?touch=still  on a touch screen nothing counters the scroll: no slowing, no hold (the layout is the same, and the
+ *                 statement still lights up line by line)
+ *   (none)        as it is: the phone scrolls, the counter-motion follows
+ */
+const touchTest = () => {
+  try {
+    return new URLSearchParams(window.location.search).get('touch');
+  } catch {
+    return null;
+  }
+};
+/** Whether the motions that counter the scroll are made (all but ?touch=still on a touch screen). */
+const countersScroll = () =>
+  !(touchTest() === 'still' && window.matchMedia('(pointer: coarse)').matches);
+
+/**
  * Every scroll-driven animation on the home page is created here, top to bottom.
  * Creation order is kept top to bottom all the same, but it no longer decides how triggers are measured: the
  * openings' triggers carry a `refreshPriority`, and any trigger with one makes ScrollTrigger sort all of them on every
@@ -139,7 +159,11 @@ export const buildChoreography = (
     }
 
     // Lenis does the easing, so scrubbed timelines follow the scroll position directly
-    lenis = new Lenis({ lerp: 0.11, smoothWheel: true });
+    lenis = new Lenis({
+      lerp: 0.11,
+      smoothWheel: true,
+      syncTouch: touchTest() === 'sync',
+    });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
@@ -260,7 +284,11 @@ export const buildChoreography = (
         .fromTo(
           text,
           { y: 0 },
-          { y: () => carry(), duration: 1, ease: 'sine.inOut' },
+          {
+            y: () => (countersScroll() ? carry() : 0),
+            duration: 1,
+            ease: 'sine.inOut',
+          },
           0,
         )
         // Above 860px the name stands upright beside the words and holds by the stylesheet (position: sticky):
@@ -269,7 +297,7 @@ export const buildChoreography = (
           name,
           { y: 0 },
           {
-            y: () => (narrow() ? carry() : 0),
+            y: () => (narrow() && countersScroll() ? carry() : 0),
             duration: 1,
             ease: 'sine.inOut',
           },
@@ -455,7 +483,7 @@ export const buildChoreography = (
           fin,
           { y: 0 },
           {
-            y: () => window.innerHeight * 0.5,
+            y: () => (countersScroll() ? window.innerHeight * 0.5 : 0),
             duration: 0.5,
             ease: 'none',
             immediateRender: false,
