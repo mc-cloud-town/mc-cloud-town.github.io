@@ -325,6 +325,21 @@ export const buildChoreography = (
         { scale: 1.1, yPercent: -1.5 },
       ],
     ] as const;
+    // A work's caption: it comes in once the change into its picture has played out, the section's top at the head of
+    // the screen.
+    const caption = (sec: Element) =>
+      gsap.from(sec.querySelectorAll('.work > div > *'), {
+        y: 36,
+        opacity: 0,
+        duration: 0.9,
+        stagger: 0.08,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: sec,
+          start: 'top top',
+          toggleActions: 'play none none reverse',
+        },
+      });
     const work = (def: TransitionDef, i: number) => {
       if (!has(def)) return;
       const sec = q(def.trigger)!,
@@ -341,19 +356,7 @@ export const buildChoreography = (
           scrub: true,
         },
       });
-      gsap.from(sec.querySelectorAll('.work > div > *'), {
-        y: 36,
-        opacity: 0,
-        duration: 0.9,
-        stagger: 0.08,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: sec,
-          // once the change into its picture has played out: the section's top at the head of the screen
-          start: 'top top',
-          toggleActions: 'play none none reverse',
-        },
-      });
+      caption(sec);
     };
     const drift = (
       trigger: string,
@@ -425,6 +428,53 @@ export const buildChoreography = (
         onRefresh: step,
       });
       settle = () => gsap.getTweensOf(imgs).forEach((t) => t.progress(1));
+    }
+    // On a touch screen the facilities are sections of their own (NetherLedger.tsx): the picture changes as a scene
+    // change does, scrubbed over the section's entry (a dissolve between the stacked pictures, the next one settling
+    // in), its caption comes in after that, and nothing is pinned.
+    const shots = gsap.utils.toArray<HTMLElement>('[data-ledger-sec]', root);
+    if (shots.length) {
+      const imgs = gsap.utils.toArray<HTMLElement>('[data-ledger]', root);
+      shots.forEach((sec, i) => {
+        if (i > 0)
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: sec,
+                start: 'top bottom',
+                end: 'top top',
+                scrub: true,
+              },
+            })
+            .fromTo(
+              imgs[i - 1],
+              { opacity: 1 },
+              { opacity: 0, duration: 1, ease: 'none', immediateRender: false },
+              0,
+            )
+            .fromTo(
+              imgs[i],
+              { opacity: 0, scale: 1.06 },
+              {
+                opacity: 1,
+                scale: 1,
+                duration: 1,
+                ease: 'none',
+                immediateRender: false,
+                force3D: false,
+              },
+              0,
+            );
+        caption(sec);
+        // the facility the world is on (the Nether's veil has that picture's strength): from where its change is half
+        // way
+        ScrollTrigger.create({
+          trigger: sec,
+          start: 'top 50%',
+          onEnter: () => opts.onLedger(i),
+          onLeaveBack: () => opts.onLedger(Math.max(0, i - 1)),
+        });
+      });
     }
     // below the pin, so created after it
     reveals(q('.rank'));

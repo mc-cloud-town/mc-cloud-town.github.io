@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 
-const PLACE = ['work--bl', 'work--tr', 'work--bc'];
+export const PLACE = ['work--bl', 'work--tr', 'work--bc'];
 
 /** One full-screen build. The picture is the scene behind it; this is only the caption. */
 export const WorkSection = ({

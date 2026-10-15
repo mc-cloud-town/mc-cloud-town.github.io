@@ -132,6 +132,21 @@ export const mountSectionJumps = (
    * the same. The credits: their first heading a fifth of the way down. Never later than where the next scene
    * change begins (`beforeNextChange`).
    */
+  /**
+   * Where `words` stand in `section`, by the layout alone: a rise or a carry that is under way moves what is seen, not
+   * what is laid out, and the reader is put where the words will stand.
+   */
+  const placeIn = (section: HTMLElement, words: HTMLElement) => {
+    let place = 0;
+    let e: HTMLElement | null = words;
+    for (; e && e !== section; e = e.offsetParent as HTMLElement | null)
+      place += e.offsetTop;
+    // (a section that is not positioned is not on the chain: the place it is seen at is then the layout's too)
+    return e
+      ? place
+      : words.getBoundingClientRect().top - section.getBoundingClientRect().top;
+  };
+
   const landing = (el: HTMLElement) => {
     const words = el.matches('.open')
       ? el.querySelector<HTMLElement>(
@@ -140,14 +155,15 @@ export const mountSectionJumps = (
       : el.matches('.credits')
         ? el.querySelector<HTMLElement>('.cast')
         : null;
+    // A touch screen's facilities are sections of their own: the first one's caption comes in once its top has
+    // reached the head of the screen, so the reader is put a hair past it.
+    if (el.id === 'ledger' && el.querySelector('[data-ledger-sec]'))
+      return Math.min(top(el) + 2, ScrollTrigger.maxScroll(window));
     if (!words) return top(el);
     const stretch = ScrollTrigger.getById(`open-${el.id}`);
     const y = stretch
       ? (stretch.start + stretch.end) / 2
-      : top(el) +
-        words.getBoundingClientRect().top -
-        el.getBoundingClientRect().top -
-        window.innerHeight * 0.2;
+      : top(el) + placeIn(el, words) - window.innerHeight * 0.2;
     return Math.min(
       Math.max(0, Math.round(y)),
       ScrollTrigger.maxScroll(window),
