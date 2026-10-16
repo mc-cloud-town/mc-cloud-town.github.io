@@ -20,6 +20,7 @@ import { serverLink } from '@/constants';
 import { followSectionLink, wait } from '@/lib/dimensions/navigation';
 import { followPageLink, prefetchPage } from '@/lib/dimensions/pageTransition';
 import { holdPage } from '@/lib/dimensions/pageScroll';
+import { BrandMark } from './BrandMark';
 import { useDimension } from './DimensionProvider';
 import { LanguageMenu } from './LanguageMenu';
 
@@ -253,8 +254,7 @@ export const SiteBar = ({
           data-section={variant === 'home' ? 'top' : undefined}
           onClick={follow}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src='/assets/brand/brand1.webp' alt='雲鎮工藝 CTEC' />
+          <BrandMark />
         </a>
         <nav aria-label={t('dimensions.nav.menu')}>{items}</nav>
         <button

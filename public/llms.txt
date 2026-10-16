@@ -1,0 +1,27 @@
+# CloudTown 雲鎮工藝 (CTEC)
+
+> CloudTown (雲鎮工藝, CTEC) is a Minecraft technical server: vanilla rules, admission by application. Its members
+> study redstone and build in one survival world that has been running since 23 July 2022 and has never been
+> reset. The site is in Traditional Chinese, Simplified Chinese and English (add `?lang=zh_TW`, `?lang=zh_CN` or
+> `?lang=en` to any page).
+
+雲鎮工藝是一個以純原版為基礎的審核制技術向 Minecraft 伺服器，在原版規則裡研究紅石、蓋建築，經營一個 2022 年 7 月 23 日開服至今沒有重置過的生存世界。成員分為紅石、建築、後勤三個組別。
+
+## Pages
+
+- [Home](https://mc-ctec.org/): the server in brief, through the Overworld, the Nether and the End: its builds, its farms and how to join.
+- [Join](https://mc-ctec.org/join/): the three departments (redstone, building, logistics), what each looks for, and how to apply.
+- [Survival progress](https://mc-ctec.org/survivalProgress/): every milestone of the survival world since it opened, by dimension and year.
+- [Redstone collection](https://mc-ctec.org/redstoneCollection/): redstone machines designed by members, with pictures, videos and download links.
+- [Architecture collection](https://mc-ctec.org/architectureCollection/): buildings made by members.
+- [Members](https://mc-ctec.org/member/): the server's members and trial members.
+- [Partners](https://mc-ctec.org/partner/): the teams and creators CloudTown works with.
+- [Open source](https://mc-ctec.org/openSource/): the organisation's repositories on GitHub (plugins and tools for the server).
+- [Server hardware](https://mc-ctec.org/hardware/): what the server runs on.
+
+## Community
+
+- [Discord](https://discord.gg/H6uHghNq5Z)
+- [YouTube](https://www.youtube.com/@CTEC_)
+- [X](https://twitter.com/CT_cloudtown)
+- [GitHub](https://github.com/mc-cloud-town)

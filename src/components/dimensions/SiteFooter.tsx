@@ -9,6 +9,7 @@ import {
 import { useId, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { serverLink } from '@/constants';
+import { BrandMark } from './BrandMark';
 
 /**
  * The site's map, in two lists: what was built, and who built it. Each page under the words the site's navigation
@@ -59,8 +60,7 @@ export const SiteFooter = () => {
   return (
     <footer className='dim-foot'>
       <div className='brand'>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src='/assets/brand/brand1.webp' alt='雲鎮工藝 CTEC' />
+        <BrandMark />
         <span data-t='note'>{t('dimensions.footer.rights', { year })}</span>
       </div>
       <div className='map'>

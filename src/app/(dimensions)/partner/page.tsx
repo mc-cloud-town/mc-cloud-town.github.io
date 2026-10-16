@@ -13,6 +13,7 @@ export default function PartnerPage() {
   const { t } = useTranslation();
   return (
     <div className='dim'>
+      <link rel='canonical' href='https://mc-ctec.org/partner/' />
       <SiteBar variant='inner' />
       <main>
         <InnerHeader

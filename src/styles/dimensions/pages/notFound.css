@@ -8,7 +8,7 @@
   --muted: #a3adb8;
   --v: 6, 8, 11;
   --line: rgba(242, 244, 246, 0.18);
-  --logo: invert(1);
+  --mark-dark: 1;
   /* no accent of a dimension: the ink itself, a little softer */
   --accent: #d5dbe1;
   --accent-ink: #d5dbe1;

@@ -12,6 +12,7 @@ export default function OpenSourcePage() {
   const { t } = useTranslation();
   return (
     <div className='dim'>
+      <link rel='canonical' href='https://mc-ctec.org/openSource/' />
       <SiteBar variant='inner' />
       <main>
         <InnerHeader

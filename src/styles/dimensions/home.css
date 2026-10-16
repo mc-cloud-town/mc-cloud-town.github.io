@@ -1194,7 +1194,7 @@ html[data-live]
   --muted: #414c57;
   --v: 238, 242, 245;
   --line: rgba(15, 20, 24, 0.24);
-  --logo: none;
+  --mark-dark: 0;
   --accent: #0b6fb5;
   --accent-ink: #095b95;
   color: var(--fg);

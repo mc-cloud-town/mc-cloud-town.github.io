@@ -16,6 +16,7 @@ export default function ProgressPage() {
   );
   return (
     <div className='dim'>
+      <link rel='canonical' href='https://mc-ctec.org/survivalProgress/' />
       <SiteBar variant='inner' current='progress' />
       <main>
         <InnerHeader

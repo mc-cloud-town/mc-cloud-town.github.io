@@ -123,7 +123,7 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) {
   --v: 6, 8, 11;
   --line: rgba(242, 244, 246, 0.18);
   --accent: #86cdff;
-  --logo: invert(1);
+  --mark-dark: 1;
   /* veil stops: solid where text sits, clear where it does not */
   --s1: 0.92;
   --s2: 0.7;
@@ -222,7 +222,7 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) {
   --muted: #414c57;
   --v: 238, 242, 245;
   --line: rgba(15, 20, 24, 0.24);
-  --logo: none;
+  --mark-dark: 0;
   --accent: #0b6fb5;
   /* The accent as the colour of small words that stand on the paper (a partner's tag). The day accents have
      4.7 : 1 on bare paper at best: the same hue, deeper, has 4.5 : 1 and more on the palest ground such a tag
@@ -255,7 +255,7 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) {
   --muted: #eef2f5;
   --v: 0, 0, 0;
   --line: rgba(255, 255, 255, 0.45);
-  --logo: invert(1);
+  --mark-dark: 1;
   --accent: #cfeaff;
   --accent-ink: #cfeaff;
   --s1: 0.42;
@@ -284,7 +284,7 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) {
   --muted: #a3adb8;
   --v: 6, 8, 11;
   --line: rgba(242, 244, 246, 0.18);
-  --logo: invert(1);
+  --mark-dark: 1;
   --accent: #ff6a45;
   --accent-ink: #ff6a45;
   --s1: 0.92;

@@ -3,5 +3,10 @@ import { LoaderBoot } from '#/dimensions/home/LoaderBoot';
 
 export default function Page() {
   // (made here, where the site is built, and handed to the page to put behind its loader)
-  return <HomePage boot={<LoaderBoot />} />;
+  return (
+    <>
+      <link rel='canonical' href='https://mc-ctec.org/' />
+      <HomePage boot={<LoaderBoot />} />
+    </>
+  );
 }

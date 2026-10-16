@@ -49,8 +49,20 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) body {
   }
   .dim-bar .logo img {
     height: 28px;
-    filter: var(--logo);
-    transition: filter var(--t-theme);
+  }
+  .mark {
+    display: inline-grid;
+    justify-items: start;
+  }
+  .mark img {
+    grid-area: 1 / 1;
+    transition: opacity var(--t-theme);
+  }
+  .mark .on-paper {
+    opacity: calc(1 - var(--mark-dark));
+  }
+  .mark .on-dark {
+    opacity: var(--mark-dark);
   }
   .dim-bar nav {
     display: flex;
@@ -121,8 +133,6 @@ html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) body {
   }
   .dim-foot img {
     height: clamp(40px, 4.4vw, 64px);
-    filter: var(--logo);
-    transition: filter var(--t-theme);
   }
   .dim-foot .map,
   .dim-foot .site {

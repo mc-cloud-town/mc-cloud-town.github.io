@@ -3,5 +3,13 @@
 import { CollectionPage } from '#/dimensions/CollectionPage';
 
 export default function Page() {
-  return <CollectionPage kind='architecture' />;
+  return (
+    <>
+      <link
+        rel='canonical'
+        href='https://mc-ctec.org/architectureCollection/'
+      />
+      <CollectionPage kind='architecture' />
+    </>
+  );
 }

@@ -10,6 +10,7 @@ export default function Page() {
   const { t } = useTranslation();
   return (
     <div className='dim'>
+      <link rel='canonical' href='https://mc-ctec.org/member/' />
       <SiteBar variant='inner' current='members' />
       <main>
         <InnerHeader
