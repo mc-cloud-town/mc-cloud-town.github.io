@@ -1,0 +1,323 @@
+/* Tokens for the "three dimensions" pages. Everything below the document base lives under .dim. */
+
+/* Document base: what the page stands on, outside any one page. The shell is the whole site now. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+html {
+  font-family: sans-serif;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  margin: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+[hidden] {
+  display: none !important;
+}
+a,
+button,
+[role='button'],
+input:not([type='range']),
+label,
+select,
+summary,
+textarea {
+  touch-action: manipulation;
+}
+img {
+  vertical-align: middle;
+}
+[tabindex='-1']:focus {
+  outline: none;
+}
+dt {
+  font-weight: 500;
+}
+[type='search'] {
+  outline-offset: -2px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+[type='search']::-webkit-search-cancel-button,
+[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+button::-moz-focus-inner {
+  padding: 0;
+  border-style: none;
+}
+/* Colour changes ease everywhere unless a rule names its own transition (any such rule replaces this one). */
+* {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+/* The page's scrollbar where it takes room in the layout: thin, in the theme's greys. */
+html {
+  --scroll-track: #111827;
+  --scroll-thumb: #64748b;
+  --scroll-thumb-hover: #94a3b8;
+}
+html[data-theme='light'] {
+  --scroll-track: #f1f5f9;
+  --scroll-thumb: #94a3b8;
+  --scroll-thumb-hover: #64748b;
+}
+/* By day the home page is dark, except at the respawn (shell.css says what is behind it): the scrollbar is the night's. */
+html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) {
+  --scroll-track: #111827;
+  --scroll-thumb: #64748b;
+  --scroll-thumb-hover: #94a3b8;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+}
+
+/* Shared with the navigation cover (.dim-cover), which stands in the shell, outside any one page. */
+.dim,
+.dim-cover {
+  /* Motion: one language for the whole site, taken from the home page's choreography.
+     --ease-out is GSAP's expo.out (the title, the dimension names, the ledger heading),
+     --ease-rise its power3.out (.rise and the captions). */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-rise: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --t-state: 0.3s; /* hover, pressed, current: as .btn and .more */
+  --t-theme: 0.4s; /* day and night */
+  --t-in: 0.45s; /* something arrives: as the ledger heading */
+  --t-out: 0.22s; /* something leaves: about half of that */
+  --t-list: 0.6s; /* a list settles after a change */
+  /* the two grounds: for layers that cross-fade between day and night, and for the cover */
+  --v-night: 6, 8, 11;
+  --v-day: 238, 242, 245;
+}
+.dim {
+  --bg: #06080b;
+  --panel: #0e1217;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.18);
+  --accent: #86cdff;
+  --mark-dark: 1;
+  /* veil stops: solid where text sits, clear where it does not */
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+  --h1: 0.82;
+  --h2: 0.4;
+  --h3: 0.12;
+  --h4: 0.62;
+  --h5: 0.78;
+  /* up to 860px, where the veil runs bottom-up under the whole screen. Lower than the design's
+     0.96 / 0.8 / 0.5, under which no picture could be seen (user feedback); by day lower still (below). */
+  --n1: 0.9;
+  --n2: 0.62;
+  --n3: 0.3;
+  --serif: 'Chiron Sung HK', 'Noto Serif TC', serif;
+  --sans: 'Chiron Hei HK', 'Noto Sans TC', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --gutter: clamp(20px, 6vw, 96px);
+  --measure: 40em;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  transition:
+    background 0.4s,
+    color 0.4s;
+}
+.dim *,
+.dim *::before,
+.dim *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.dim a {
+  color: inherit;
+  text-decoration: none;
+}
+.dim img {
+  display: block;
+  max-width: 100%;
+}
+.dim ul,
+.dim ol {
+  list-style: none;
+}
+.dim button,
+.dim input,
+.dim select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+.dim button,
+.dim select {
+  cursor: pointer;
+}
+.dim :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.dim ::selection {
+  background: var(--accent);
+  color: #000;
+}
+.dim .mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.dim .acc {
+  color: var(--accent);
+  transition: color 0.5s;
+}
+.dim .serif {
+  font-family: var(--serif);
+  font-weight: 900;
+  line-height: 1.14;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+
+[data-theme='light'] .dim {
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --fg: #0f1418;
+  --muted: #414c57;
+  --v: 238, 242, 245;
+  --line: rgba(15, 20, 24, 0.24);
+  --mark-dark: 0;
+  --accent: #0b6fb5;
+  /* The accent as the colour of small words that stand on the paper (a partner's tag). The day accents have
+     4.7 : 1 on bare paper at best: the same hue, deeper, has 4.5 : 1 and more on the palest ground such a tag
+     is given. Lines, marks and hovers stay on --accent. By night there is none, and the words are in the
+     accent itself. A header's picture takes the light accents instead (inner.css), and the home page its own. */
+  --accent-ink: #095b95;
+}
+[data-dim='nether'] .dim {
+  --accent: #ff6a45;
+}
+[data-dim='end'] .dim {
+  --accent: #cdb0ff;
+}
+[data-theme='light'][data-dim='nether'] .dim {
+  --accent: #c2330f;
+  --accent-ink: #a72c0d;
+}
+/* (the End's day accent is deep enough as it is) */
+[data-theme='light'][data-dim='end'] .dim {
+  --accent: #6234c4;
+  --accent-ink: #6234c4;
+}
+/* By day the home page is still the film: the pictures keep their daylight under a thin black veil, and the
+   words on them are light and carry their own shade, as subtitles do (spec 4.2). Only the ground under the
+   respawn is paper (home.css gives it the paper's tokens back). */
+[data-theme='light'] .dim.dim--home {
+  --bg: #0b0f13;
+  --panel: #151b21;
+  --fg: #ffffff;
+  --muted: #eef2f5;
+  --v: 0, 0, 0;
+  --line: rgba(255, 255, 255, 0.45);
+  --mark-dark: 1;
+  --accent: #cfeaff;
+  --accent-ink: #cfeaff;
+  --s1: 0.42;
+  --s2: 0.28;
+  --s3: 0;
+  --s4: 0;
+  --f1: 0.5;
+  --f2: 0.25;
+  --f3: 0;
+  --h1: 0.4;
+  --h2: 0.2;
+  --h3: 0;
+  --h4: 0.2;
+  --h5: 0.35;
+  --n1: 0.5;
+  --n2: 0.3;
+  --n3: 0.12;
+  --shade: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 14px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(0, 0, 0, 0.4);
+}
+/* The Nether and the End have no daylight: there the home page is as it is by night, veil, ink and accent. */
+[data-theme='light']:is([data-dim='nether'], [data-dim='end']) .dim.dim--home {
+  --bg: #06080b;
+  --panel: #0e1217;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.18);
+  --mark-dark: 1;
+  --accent: #ff6a45;
+  --accent-ink: #ff6a45;
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+  --h1: 0.82;
+  --h2: 0.4;
+  --h3: 0.12;
+  --h4: 0.62;
+  --h5: 0.78;
+  --n1: 0.9;
+  --n2: 0.62;
+  --n3: 0.3;
+  --shade: none;
+}
+[data-theme='light'][data-dim='end'] .dim.dim--home {
+  --accent: #cdb0ff;
+  --accent-ink: #cdb0ff;
+}
+
+/* touch sizes: every control is at least 44 × 44 up to tablet landscape */
+@media (max-width: 1024px) {
+  .dim a,
+  .dim button,
+  .dim select,
+  .dim input {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}

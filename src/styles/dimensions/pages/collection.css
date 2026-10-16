@@ -1,0 +1,519 @@
+/* The two collections (redstone, architecture): a gallery of works, and the detail of one work over it.
+   Everything else on these pages is inner.css as it is. */
+.dim {
+  /* ───────── the gallery: the pictures come first ───────── */
+  .works {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+    gap: 56px 40px;
+    padding: 56px var(--gutter) 0;
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+  .work {
+    position: relative;
+    min-width: 0;
+  }
+  /* the picture's room is kept before the picture is there: nothing moves when it comes */
+  .work figure {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--panel);
+    transition: background-color var(--t-theme);
+  }
+  .work figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .work .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    margin-top: 18px;
+    color: var(--muted);
+  }
+  .work h2 {
+    font-size: clamp(22px, 2vw, 32px);
+    line-height: 1.2;
+    margin-top: 6px;
+    overflow-wrap: anywhere;
+  }
+  .work h2 a {
+    transition: color var(--t-state);
+  }
+  /* the whole card is the link: the picture opens the work as its name does */
+  .work h2 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .work h2 a:focus-visible {
+    outline: none;
+  }
+  .work h2 a:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+  }
+  .work .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 14px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  @media (hover: hover) {
+    .work:hover figure img {
+      transform: scale(1.04);
+    }
+    .work:hover h2 a {
+      color: var(--accent);
+    }
+  }
+
+  /* The list arrives with the rise of the progress log, one work after another; a change of filter settles it
+     in again (as the roster settles), each take under its own copy of the keyframes so that it starts anew. */
+  .works[data-run='in'] .work {
+    animation: dim-rise-0 var(--t-list) var(--ease-rise)
+      calc(var(--wait, 0ms) + var(--i, 0) * 50ms) backwards;
+  }
+  .works[data-run='0'] .work {
+    animation: dim-settle-0 0.35s var(--ease-rise) backwards;
+  }
+  .works[data-run='1'] .work {
+    animation: dim-settle-1 0.35s var(--ease-rise) backwards;
+  }
+
+  /* many tags, narrow screen: one row that is drawn sideways, so the stuck toolbar stays two rows tall */
+  @media (max-width: 860px) {
+    .tools .chips[data-filter='tag'] {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      max-width: 100%;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+    }
+    .tools .chips[data-filter='tag'] button {
+      flex: none;
+      white-space: nowrap;
+    }
+    .works {
+      gap: 44px 24px;
+    }
+  }
+
+  /* ───────── the detail of a work ─────────
+     A fixed layer over the whole page, the bar included. Opening it changes nothing in the page's layout (no
+     overflow lock: the page's scrollbar stays, and the page is held by pageScroll.ts). It is always in the page
+     so that it can ease out; closed, it is invisible, inert (WorkDetail.tsx) and lets every pointer through.
+     Arriving: the ground comes up, the picture settles as a header's does, and the words rise one after
+     another. Leaving is one quick fade of the whole, and what rose is put back only when it is out of sight. */
+  .work-detail {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--bg);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* beside the page's own scrollbar: a thin one in the line colour, not a second system bar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--t-out) var(--ease-rise),
+      visibility 0s linear var(--t-out),
+      background-color var(--t-theme);
+  }
+  .work-detail[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+      opacity var(--t-in) var(--ease-rise),
+      visibility 0s,
+      background-color var(--t-theme);
+  }
+  .wd-in {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    grid-template-rows: auto 1fr;
+    min-height: 100%;
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+  .wd-top {
+    grid-column: 1 / -1;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: var(--bar-h);
+    padding: 0 var(--gutter);
+    background: rgba(var(--v), 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    transition:
+      background-color var(--t-theme),
+      border-color var(--t-theme);
+  }
+  .wd-top p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    min-width: 0;
+  }
+  .wd-top .pill {
+    flex: none;
+  }
+
+  .wd-stage {
+    position: sticky;
+    top: var(--bar-h);
+    align-self: start;
+    min-width: 0;
+    padding: 40px 0 48px var(--gutter);
+  }
+  /* the pictures' room, whatever their own shape: they are shown whole, on the panel's ground */
+  .wd-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: calc(100vh - var(--bar-h) - 200px);
+    min-height: 180px;
+    width: 100%;
+    overflow: hidden;
+    background: var(--panel);
+    transition: background-color var(--t-theme);
+  }
+  .wd-slide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    /* one cell as large as the frame: a picture is fitted into it, not laid out at its own size */
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    place-items: center;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity var(--t-in) var(--ease-rise),
+      visibility 0s linear var(--t-in);
+  }
+  .wd-slide[data-current='true'] {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity var(--t-in) var(--ease-rise),
+      visibility 0s;
+  }
+  .wd-slide > img,
+  .wd-slide > iframe {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .wd-slide > img {
+    object-fit: contain;
+  }
+  .wd-slide > iframe {
+    background: #000;
+    animation: dim-fade-0 var(--t-in) var(--ease-rise) backwards;
+  }
+  /* over its still: a pill on the page's ground, so it reads on any picture */
+  .wd-slide .wd-play {
+    grid-area: 1 / 1;
+    z-index: 1;
+    padding: 12px 20px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .wd-seq {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .wd-seq .pill {
+    min-width: 44px;
+    min-height: 36px;
+  }
+  .wd-seq .pill[aria-disabled='true'] {
+    opacity: 0.35;
+    cursor: default;
+  }
+  @media (hover: hover) {
+    .wd-seq .pill[aria-disabled='true']:hover {
+      background: none;
+      color: inherit;
+    }
+  }
+  .wd-seq .pill[aria-disabled='true']:active {
+    transform: none;
+  }
+  .wd-count {
+    min-width: 4.5em;
+    text-align: center;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .wd-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .wd-thumbs button {
+    position: relative;
+    display: block;
+    width: 72px;
+    height: 48px;
+    padding: 0;
+    overflow: hidden;
+    background: var(--panel);
+    opacity: 0.55;
+    outline: 1px solid transparent;
+    outline-offset: 2px;
+    transition:
+      opacity var(--t-state),
+      outline-color var(--t-state);
+  }
+  .wd-thumbs button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .wd-thumbs button:hover,
+  .wd-thumbs button[aria-current='true'] {
+    opacity: 1;
+  }
+  .wd-thumbs button[aria-current='true'] {
+    outline-color: var(--accent);
+  }
+  .wd-thumbs button:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--accent);
+  }
+  /* a video among the pictures: a small triangle on its still */
+  .wd-thumbs button[data-kind='video']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -35% -50%;
+    border-style: solid;
+    border-width: 8px 0 8px 13px;
+    border-color: transparent transparent transparent #fff;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+  }
+
+  .wd-text {
+    min-width: 0;
+    padding: 40px var(--gutter) 72px clamp(28px, 4vw, 64px);
+  }
+  .wd-text .meta {
+    color: var(--muted);
+  }
+  .wd-text h2 {
+    font-size: clamp(28px, 2.8vw, 46px);
+    line-height: 1.2;
+    margin-top: 8px;
+    overflow-wrap: anywhere;
+  }
+  .wd-text .wd-tags {
+    margin-top: 20px;
+  }
+  .wd-text section,
+  .wd-text .wd-links {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    transition: border-color var(--t-theme);
+  }
+  .wd-text h3 {
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .wd-text section p {
+    max-width: var(--measure);
+  }
+  .wd-text section p + p {
+    margin-top: 0.8em;
+  }
+  .wd-people {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 20px;
+    font: 500 15px var(--mono);
+    overflow-wrap: anywhere;
+  }
+  .wd-people a {
+    border-bottom: 1px solid var(--line);
+    transition:
+      color var(--t-state),
+      border-color var(--t-state);
+  }
+  .wd-people a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .wd-links,
+  .wd-share > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+  }
+  .wd-links .pill {
+    font-size: 13px;
+    padding: 10px 18px;
+    border-color: var(--fg);
+  }
+  .wd-share a {
+    font-size: 14px;
+    color: var(--muted);
+    transition: color var(--t-state);
+  }
+  .wd-share a:hover {
+    color: var(--accent);
+  }
+  .wd-share [data-action='copy'] span {
+    animation: dim-fade-0 var(--t-state) var(--ease-rise) backwards;
+  }
+
+  /* the arrival of what is inside */
+  .wd-frame,
+  .wd-seq,
+  .wd-text > * {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0s linear var(--t-out),
+      transform 0s linear var(--t-out);
+  }
+  .wd-frame {
+    transform: scale(1.03);
+  }
+  .work-detail[data-open='true'] :is(.wd-frame, .wd-seq, .wd-text > *) {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--t-list) var(--ease-rise) calc(90ms + var(--i, 0) * 55ms),
+      transform 0.9s var(--ease-out) calc(90ms + var(--i, 0) * 55ms),
+      border-color var(--t-theme),
+      background-color var(--t-theme);
+  }
+  .wd-seq {
+    --i: 1;
+  }
+  .wd-text > :nth-child(1) {
+    --i: 1;
+  }
+  .wd-text > :nth-child(2) {
+    --i: 2;
+  }
+  .wd-text > :nth-child(3) {
+    --i: 3;
+  }
+  .wd-text > :nth-child(4) {
+    --i: 4;
+  }
+  .wd-text > :nth-child(5) {
+    --i: 5;
+  }
+  .wd-text > :nth-child(n + 6) {
+    --i: 6;
+  }
+
+  @media (max-width: 860px) {
+    .wd-in {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+    }
+    .wd-stage {
+      position: static;
+      padding: 20px var(--gutter) 0;
+    }
+    .wd-frame {
+      max-height: none;
+    }
+    .wd-thumbs {
+      margin-left: 0;
+      flex-basis: 100%;
+    }
+    .wd-text {
+      padding: 28px var(--gutter) 64px;
+    }
+  }
+  /* a wide screen that is not tall (a phone on its side): the picture does not stay while the words pass */
+  @media (max-height: 480px) {
+    .wd-stage {
+      position: static;
+    }
+    .wd-frame {
+      max-height: none;
+    }
+  }
+  @media (max-width: 1024px) {
+    .wd-seq .pill {
+      min-height: 44px;
+    }
+    /* every link is a box a finger can find here (tokens.css): the boxes stand closer, the words as far apart */
+    .wd-share > div {
+      gap: 4px 10px;
+    }
+    .wd-share a {
+      justify-content: center;
+    }
+  }
+
+  /* Less motion: the same end states, reached by a brief fade. No travel, no one-after-another. */
+  @media (prefers-reduced-motion: reduce) {
+    .works[data-run] .work {
+      animation: dim-fade-0 0.12s linear backwards;
+    }
+    .works[data-run='1'] .work {
+      animation-name: dim-fade-1;
+    }
+    .work figure img {
+      transition: none;
+    }
+    .work-detail {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s linear 0.12s;
+    }
+    .work-detail[data-open='true'] {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s;
+    }
+    .wd-frame,
+    .wd-seq,
+    .wd-text > *,
+    .work-detail[data-open='true'] :is(.wd-frame, .wd-seq, .wd-text > *) {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .wd-slide,
+    .wd-slide[data-current='true'] {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s;
+    }
+    .wd-slide > iframe,
+    .wd-share [data-action='copy'] span {
+      animation-duration: 0.12s;
+    }
+  }
+}

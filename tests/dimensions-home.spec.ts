@@ -1,0 +1,2986 @@
+import { devices, expect, test, type Page } from '@playwright/test';
+import {
+  expectNoHorizontalScroll,
+  expectNoMissingKeys,
+  expectTapTargets,
+  expectTextFits,
+  openPage,
+  setLanguage,
+} from './helpers/dimensions';
+import {
+  jumpTo,
+  landedOn,
+  onTouch,
+  ready,
+  scrollAt,
+  scrollToSection,
+  shownPictures,
+  stretchOf,
+  visibleScenes,
+  WORDED,
+  WORKS,
+} from './helpers/home';
+import { STAR_DRIFT } from '../src/constants/starfield';
+import { readFileSync } from 'node:fs';
+
+/** The two portals of the page: one canvas each, filled with its own surface. */
+const NETHER_PORTAL = 'canvas.portal[data-surface="nether"]';
+const END_PORTAL = 'canvas.portal[data-surface="end"]';
+
+test.describe('home: spawn', () => {
+  test('the loader gives way to the title over the spawn scene', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('.loader')).toBeHidden();
+    await expect(page.locator('.hero h1')).toHaveAttribute(
+      'aria-label',
+      '雲鎮工藝',
+    );
+    await expect(page.locator('.hero h1')).toBeVisible();
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+    await expectNoMissingKeys(page);
+  });
+
+  test('the title stays 雲鎮工藝 in English, with the English name beside it', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { locale: 'en' });
+    await ready(page);
+    await expect(page.locator('.hero h1')).toHaveAttribute(
+      'aria-label',
+      '雲鎮工藝',
+    );
+    await expect(page.locator('.hero-copy')).toContainText(
+      'CLOUD TOWN EXQUISITE CRAFT',
+    );
+    await expect(page.locator('.hero-copy')).toContainText('Join us');
+  });
+
+  test('the hero and the pinned stage are as tall as the screen that is left under a phone’s address bar (svh), and as tall as the screen where there is none', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await openPage(page, '/');
+    await ready(page);
+    // what the stylesheet says: the small viewport height where the browser knows it, after a plain vh for one that does not
+    const declared = await page.evaluate(() => {
+      const out: Record<string, string[]> = { hero: [], stage: [] };
+      const walk = (rules: CSSRuleList, scope: string) => {
+        for (const rule of rules) {
+          const inner = (rule as CSSGroupingRule).cssRules;
+          const own = (rule as CSSStyleRule).selectorText ?? '';
+          const style = (rule as CSSStyleRule).style;
+          const supports =
+            rule instanceof CSSSupportsRule ? rule.conditionText : '';
+          const here = `${scope} ${supports} ${own}`;
+          const height = style?.getPropertyValue('height');
+          if (height && /\.dim--home/.test(here)) {
+            if (/\.hero$/.test(own)) out.hero.push(height);
+            if (/\.ledger-stage$/.test(own)) out.stage.push(height);
+          }
+          if (inner) walk(inner, here);
+        }
+      };
+      for (const sheet of document.styleSheets) {
+        try {
+          walk(sheet.cssRules, '');
+        } catch {
+          // a stylesheet of another origin (the fonts): not ours to read
+        }
+      }
+      return out;
+    });
+    for (const heights of [declared.hero, declared.stage]) {
+      expect(heights).toContain('100vh');
+      expect(heights).toContain('100svh');
+      expect(heights.indexOf('100vh')).toBeLessThan(heights.indexOf('100svh'));
+    }
+    // and nothing changes where the two are the same: the whole screen, as before
+    const vh = page.viewportSize()!.height;
+    expect(
+      await page
+        .locator('.hero')
+        .evaluate((el) => el.getBoundingClientRect().height),
+    ).toBe(Math.max(vh, 620));
+    await scrollToSection(page, '#ledger', 0.2);
+    expect(
+      await page
+        .locator('.ledger-stage')
+        .evaluate((el) => el.getBoundingClientRect().height),
+    ).toBe(vh);
+  });
+
+  test('/home/ is the same page', async ({ page }) => {
+    await openPage(page, '/home/');
+    await ready(page);
+    await expect(page.locator('.hero h1')).toBeVisible();
+  });
+
+  test('uptime counts days since 2022-07-23', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    const days = Math.floor(
+      (Date.now() - Date.UTC(2022, 6, 22, 16)) / 86_400_000,
+    );
+    // with the thousands separator, as the same number among the figures of the overworld (spec 7.1)
+    expect(days).toBeGreaterThan(999);
+    const written = days.toLocaleString('en-US');
+    expect(written).toContain(',');
+    await expect(page.locator('.hero-meta strong')).toContainText(
+      `已運行 ${written} 天`,
+    );
+    await expect(page.locator('[data-stat="days"]')).toHaveText(written);
+  });
+});
+
+test.describe('home: the outline', () => {
+  for (const locale of ['zh_TW', 'zh_CN', 'en'] as const)
+    test(`the headings make an outline in ${locale}: one h1, each dimension's statement an h2, nothing skipped`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, '/', { locale });
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      const outline = await page.evaluate(() =>
+        [...document.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => ({
+          level: Number(h.tagName[1]),
+          text: (h.getAttribute('aria-label') ?? h.textContent ?? '').trim(),
+          section: h.closest('section')?.id || h.closest('section')?.className,
+          target: h.hasAttribute('data-heading'),
+        })),
+      );
+      expect(outline.length).toBeGreaterThan(12);
+      for (const h of outline) expect(h.text.length).toBeGreaterThan(0);
+      // one title, and it comes first
+      expect(outline.filter((h) => h.level === 1)).toHaveLength(1);
+      expect(outline[0]).toMatchObject({ level: 1, text: '雲鎮工藝' });
+      // going down, never more than one level at a time
+      outline.forEach((h, i) => {
+        if (i > 0)
+          expect(
+            h.level - outline[i - 1].level,
+            `"${outline[i - 1].text}" (h${outline[i - 1].level}) → "${h.text}" (h${h.level})`,
+          ).toBeLessThanOrEqual(1);
+      });
+      // the four parts of the page are its second level, in page order, and nothing else is
+      expect(
+        outline.filter((h) => h.level === 2).map((h) => h.section),
+      ).toEqual(['overworld', 'nether', 'end', 'respawn']);
+      // what a dimension holds is below its statement: builds, the facility, the claim, the credits
+      const third = outline.filter((h) => h.level === 3).map((h) => h.section);
+      // (on a touch screen each facility is a section like a work, with its own heading)
+      const facilities = (await onTouch(page)) ? 6 : 0;
+      expect(third.filter((s) => s === 'work-sec')).toHaveLength(
+        5 + facilities,
+      );
+      if (!facilities) expect(third).toContain('ledger');
+      expect(third).toContain('rank');
+      expect(third.filter((s) => s === 'credits')).toHaveLength(3);
+      expect(outline.every((h) => h.level <= 3)).toBe(true);
+      // where a jump puts the focus is a real heading
+      expect(outline.filter((h) => h.target).map((h) => h.level)).toEqual([
+        1, 2, 2, 2, 2,
+      ]);
+    });
+
+  test('a jump to a dimension puts the focus on its heading, and the statement looks as it did', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    // the page has settled: the names of the credits are in, and with them the last re-measure of the page
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await expect(page.locator('.loader')).toHaveCount(0);
+    await page.locator('.dim-bar nav a[data-d="nether"]').click();
+    await expect(page.locator('#nether .say')).toBeFocused();
+    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
+      'H2',
+    );
+    // the statement's own type: serif 900, the design's size and leading, the page's colour
+    const say = page.locator('#nether .say');
+    await expect(say).toHaveCSS('font-weight', '900');
+    await expect(say).toHaveCSS('font-family', /Chiron Sung HK/);
+    // 3.8vw of 1440 and 1.32 of that (the engines round a font size differently, in the second decimal)
+    const type = await say.evaluate((el) => {
+      const c = getComputedStyle(el);
+      return [parseFloat(c.fontSize), parseFloat(c.lineHeight)];
+    });
+    expect(Math.abs(type[0] - 54.72)).toBeLessThan(0.05);
+    expect(Math.abs(type[1] - 72.23)).toBeLessThan(0.1);
+    await expect(say).toHaveCSS('margin', '0px');
+    await expect(say).toHaveCSS('color', 'rgb(242, 244, 246)');
+    for (const sel of ['.rank h3', '#credits h3'])
+      await expect(page.locator(sel).first()).not.toHaveCSS(
+        'color',
+        'rgb(241, 245, 249)', // the old pages' text colour, which must not show
+      );
+  });
+});
+
+test.describe('home: overworld', () => {
+  test('the town scene shows behind the statement, with the label upright on the right', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    expect(await visibleScenes(page)).toEqual(['town']);
+    const label = page.locator('#overworld .vt');
+    await expect(label).toHaveCSS('writing-mode', 'vertical-rl');
+    const [box, say] = await Promise.all([
+      label.boundingBox(),
+      page.locator('#overworld .say').boundingBox(),
+    ]);
+    expect(box!.x).toBeGreaterThan(say!.x + say!.width);
+  });
+
+  test('stats show the day count and live member count', async ({
+    page,
+    request,
+  }) => {
+    const members = (
+      await (
+        await request.get('https://mc-ctec.org/static-data/member.json')
+      ).json()
+    ).member.length;
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    await expect(page.locator('[data-stat="members"]')).toHaveText(
+      String(members),
+    );
+    const days = Math.floor(
+      (Date.now() - Date.UTC(2022, 6, 22, 16)) / 86_400_000,
+    );
+    await expect(page.locator('[data-stat="days"]')).toHaveText(
+      days.toLocaleString('en-US'),
+    );
+    await expect(page.locator('#overworld a.more')).toHaveAttribute(
+      'href',
+      '/survivalProgress/',
+    );
+    await expectNoMissingKeys(page);
+  });
+
+  test('stats keep their defaults when the requests fail', async ({ page }) => {
+    await page.route(/member\.json|api\.github\.com/, (r) => r.abort());
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    await expect(page.locator('[data-stat="members"]')).toHaveText('116');
+    await expect(page.locator('[data-stat="repos"]')).toHaveText('29');
+  });
+
+  test('the milestone count comes from the same data as the progress page, in the figure and in the link', async ({
+    page,
+  }) => {
+    const entries = Array.from({ length: 7 }, (_, i) => ({
+      imageUrl: `survivalProgress/p${i + 1}.webp`,
+      title: `2023/0${i + 1}/01`,
+      subTitle: `milestone ${i + 1}`,
+    }));
+    await page.route(/static-data\/[^/]+\/survivalProgress\.json/, (r) =>
+      r.fulfill({ json: entries }),
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    await expect(page.locator('[data-stat="milestones"]')).toHaveText('7');
+    await expect(page.locator('#overworld a.more')).toHaveText(
+      /完整的世界紀錄，7 個里程碑/,
+    );
+    // the same in another language (its own file is asked for, and answered the same)
+    await setLanguage(page, 'en');
+    await expect(page.locator('[data-stat="milestones"]')).toHaveText('7');
+    await expect(page.locator('#overworld a.more')).toHaveText(
+      /The full world log, 7 milestones/,
+    );
+    // and the page the link leads to lists as many
+    await page.goto('/survivalProgress/');
+    await expect(page.locator('.entry')).toHaveCount(7);
+  });
+
+  test('the milestone count keeps its default when the request fails', async ({
+    page,
+  }) => {
+    await page.route(/static-data\/[^/]+\/survivalProgress\.json/, (r) =>
+      r.abort(),
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    await expect(page.locator('[data-stat="milestones"]')).toHaveText('53');
+    await expect(page.locator('#overworld a.more')).toHaveText(
+      /完整的世界紀錄，53 個里程碑/,
+    );
+  });
+
+  test('each of the three builds shows its own scene', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    for (const [i, scene] of ['w1', 'w2', 'w3'].entries()) {
+      await scrollToSection(page, `[data-work="overworld-${i}"]`, 0.2);
+      expect(await visibleScenes(page), `build ${i}`).toEqual([scene]);
+      await expect(
+        page.locator(`[data-work="overworld-${i}"] h3`),
+      ).toBeVisible();
+    }
+  });
+
+  test('halfway into a build both scenes are on screen', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="overworld-0"]', -0.5);
+    expect(await visibleScenes(page)).toEqual(['town', 'w1']);
+  });
+
+  test('the curtain rises from the bottom and the slide comes in from the right', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const box = (id: string) =>
+      page.evaluate((scene) => {
+        const r = document
+          .querySelector(`.scene[data-scene="${scene}"]`)!
+          .getBoundingClientRect();
+        return { x: Math.round(r.x), y: Math.round(r.y) };
+      }, id);
+    await scrollToSection(page, '[data-work="overworld-0"]', -0.5);
+    const w1 = await box('w1');
+    expect(w1.x).toBe(0);
+    expect(w1.y).toBeGreaterThan(200);
+    expect(w1.y).toBeLessThan(700);
+    await scrollToSection(page, '[data-work="overworld-1"]', -0.5);
+    expect(await visibleScenes(page)).toEqual(['w1', 'w2']);
+    const w2 = await box('w2');
+    expect(w2.y).toBe(0);
+    expect(w2.x).toBeGreaterThan(300);
+    expect(w2.x).toBeLessThan(1140);
+  });
+
+  test('scrolling back up undoes every scene change', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    for (const [sel, scene] of [
+      ['[data-work="overworld-1"]', 'w2'],
+      ['[data-work="overworld-0"]', 'w1'],
+      ['#overworld', 'town'],
+    ] as const) {
+      await scrollToSection(page, sel, 0.2);
+      expect(await visibleScenes(page), sel).toEqual([scene]);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(1800);
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+    await expect(page.locator('.hero h1')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+  });
+
+  test('on a phone in the day theme the text sits on the thin veil, and nothing overflows', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    // offset 0: the section is at rest under the bar, nothing is scrolling past it
+    await scrollToSection(page, '#overworld', 0);
+    expect(await visibleScenes(page)).toEqual(['town']);
+    // no clear side to keep on a narrow screen: the veil runs bottom-up under the full-width text
+    const veil = await page
+      .locator('.scene[data-scene="town"] .veil')
+      .evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(veil).toContain('linear-gradient(0deg');
+    await expect(page.locator('#overworld .vt')).toHaveCSS(
+      'writing-mode',
+      'horizontal-tb',
+    );
+    await expectNoHorizontalScroll(page);
+    await expectTextFits(page, { within: '#overworld' });
+    await scrollToSection(page, '#overworld .stats', -0.4);
+    await expect(page.locator('#overworld a.more')).toBeVisible();
+    await expectTapTargets(page);
+  });
+
+  test('on a wide screen in the day theme the veil is on the text side only', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#overworld', 0);
+    const veil = await page
+      .locator('.scene[data-scene="town"] .veil')
+      .evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(veil).toContain('linear-gradient(90deg');
+    // the label stands on the veil like the words under it: no strip of its own
+    await expect(page.locator('#overworld .vt')).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    );
+    await expectTextFits(page, { within: '#overworld' });
+  });
+
+  test('switching language keeps the scenes, the statement and the captions working', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="overworld-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w2']);
+    const scenes = async (lang: string) => {
+      for (const [i, scene] of ['w1', 'w2', 'w3'].entries()) {
+        await scrollToSection(page, `[data-work="overworld-${i}"]`, 0.2);
+        expect(await visibleScenes(page), `${lang} build ${i}`).toEqual([
+          scene,
+        ]);
+        // the caption has risen into view
+        await expect(page.locator(`[data-work="overworld-${i}"] h3`)).toHaveCSS(
+          'opacity',
+          '1',
+        );
+        await expect(page.locator(`[data-work="overworld-${i}"] p`)).toHaveCSS(
+          'opacity',
+          '1',
+        );
+      }
+    };
+
+    await setLanguage(page, 'en');
+    await expect(page.locator('[data-work="overworld-1"] h3')).toHaveText(
+      'The new spawn',
+    );
+    await scenes('en');
+    // back at the opening, with the end of the statement a third of the way down: every line is lit by then
+    const sayHeight = await page
+      .locator('#overworld .say')
+      .evaluate((el) => el.getBoundingClientRect().height / innerHeight);
+    await scrollToSection(page, '#overworld .say', sayHeight - 0.33);
+    expect(await visibleScenes(page)).toEqual(['town']);
+    const lines = page.locator('#overworld .say span');
+    expect(await lines.count()).toBe(3);
+    await expect(lines.first()).toHaveText('Redstone is engineering.');
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+
+    await setLanguage(page, 'zh_CN');
+    await expect(page.locator('[data-work="overworld-1"] h3')).toHaveText(
+      '新出生点',
+    );
+    await scenes('zh_CN');
+  });
+
+  test('a two-line build name breaks where the copy says, and reads as one name', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="overworld-0"]', 0.2);
+    const title = page.locator('[data-work="overworld-0"] h3');
+    await expect(title.locator('br')).toHaveCount(1);
+    await expect(title).toHaveAttribute('aria-label', '進撃の巨人 瑪莉亞之牆');
+    await expect(title).not.toContainText('：');
+    // a one-line name has no break
+    const plain = page.locator('[data-work="overworld-1"] h3');
+    await expect(plain).toHaveText('新出生點');
+    await expect(plain.locator('br')).toHaveCount(0);
+    await expect(page.locator('#overworld .tag')).toContainText('OVERWORLD');
+  });
+
+  test('reduced motion: the statement is fully shown and scenes still switch', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    expect(await visibleScenes(page)).toEqual(['town']);
+    const lines = page.locator('#overworld .say span');
+    expect(await lines.count()).toBe(3);
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    await scrollToSection(page, '[data-work="overworld-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w2']);
+  });
+});
+
+test.describe('home: nether', () => {
+  /** The six facilities of dimensions.nether.ledger (zh_TW), in order. */
+  const FACILITIES = [
+    '地獄大廳',
+    'Y0 切門豬人農場',
+    '地獄 1k 空置域',
+    '雙維度百萬豬布林交易',
+    '地獄大廳主砲',
+    '刷花機（地獄）',
+  ];
+  /** Scroll to a fraction of the way through the pinned ledger. */
+  const scrollToLedgerStep = async (page: Page, fraction: number) => {
+    await page.evaluate((f) => {
+      const top =
+        document.querySelector('#ledger')!.getBoundingClientRect().top +
+        window.scrollY;
+      window.scrollTo(0, top + f * 3 * window.innerHeight);
+    }, fraction);
+    await page.waitForTimeout(1800);
+  };
+  /** The middle of the transition is a single scroll position, so "full" allows for a fraction of a pixel. */
+  const expectPortalAtFull = async (page: Page) =>
+    expect((await portalState(page)).opacity).toBeGreaterThan(0.98);
+  const portalState = (page: Page) =>
+    page.locator(NETHER_PORTAL).evaluate((c) => {
+      const s = getComputedStyle(c);
+      return { visibility: s.visibility, opacity: +s.opacity };
+    });
+
+  test('the portal covers the screen mid-transition and no game texture is requested', async ({
+    page,
+  }) => {
+    const requested: string[] = [];
+    page.on('request', (r) => requested.push(r.url()));
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    const portal = page.locator(NETHER_PORTAL);
+    await expect(portal).toBeVisible();
+    await expectPortalAtFull(page);
+    const box = (await portal.boundingBox())!;
+    const view = page.viewportSize()!;
+    expect(box.x).toBeLessThanOrEqual(0);
+    expect(box.y).toBeLessThanOrEqual(0);
+    expect(box.x + box.width).toBeGreaterThanOrEqual(view.width);
+    expect(box.y + box.height).toBeGreaterThanOrEqual(view.height);
+    const painted = await portal.evaluate((c: HTMLCanvasElement) => {
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      // purple: opaque, blue well above green
+      for (let i = 0; i < d.length; i += 4)
+        if (d[i + 3] === 255 && d[i + 2] > 60 && d[i + 2] > d[i + 1] * 2) n++;
+      return n / (d.length / 4);
+    });
+    expect(painted).toBeGreaterThan(0.9);
+    expect(requested.length).toBeGreaterThan(0);
+    expect(requested.filter((u) => /nether_portal|\/mc\//.test(u))).toEqual([]);
+  });
+
+  test('the portal swirls while it is on screen', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    const sample = () =>
+      page
+        .locator(NETHER_PORTAL)
+        .evaluate((c: HTMLCanvasElement) =>
+          Array.from(
+            c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data,
+          ).join(),
+        );
+    const first = await sample();
+    await page.waitForTimeout(600);
+    expect(await sample()).not.toBe(first);
+  });
+
+  test('partway in, the portal is rising over the last build; partway out, it clears over the nether', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.7);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    const rising = await portalState(page);
+    expect(rising.visibility).toBe('visible');
+    expect(rising.opacity).toBeGreaterThan(0.1);
+    expect(rising.opacity).toBeLessThan(0.9);
+    await scrollToSection(page, '#nether', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const clearing = await portalState(page);
+    expect(clearing.visibility).toBe('visible');
+    expect(clearing.opacity).toBeGreaterThan(0.1);
+    expect(clearing.opacity).toBeLessThan(0.9);
+  });
+
+  test('after the portal the reader is in the nether', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    await expect(page.locator('#nether .tag')).toContainText('THE NETHER');
+    await expect(page.locator('#nether .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(255, 106, 69)',
+    );
+    expect(await shownPictures(page)).toEqual(['0']);
+    await expectNoMissingKeys(page);
+  });
+
+  test('in the day theme the Nether keeps the accent of night: it has no daylight', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator('#nether .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(255, 106, 69)',
+    );
+  });
+
+  test('scrolling back through the portal returns to the overworld', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    // back to the middle of the portal: it covers the screen again
+    await scrollToSection(page, '#nether', -0.5);
+    await expectPortalAtFull(page);
+    // and out the other side
+    await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'overworld');
+    await expect(page.locator('#overworld .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(134, 205, 255)',
+    );
+    const nether = await page
+      .locator('.scene[data-scene="nether"]')
+      .evaluate((el) => getComputedStyle(el).visibility);
+    expect(nether).toBe('hidden');
+    // the last build is back at its own size, not left zoomed by the portal
+    const scale = await page
+      .locator('.scene[data-scene="w3"] .zoom')
+      .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+    expect(scale).toBeCloseTo(1, 2);
+  });
+
+  test('the ledger walks through all six facilities and ends on the last', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#ledger', 0.05);
+    await expect(page.locator('.ledger-now h3')).toHaveText('地獄大廳');
+    await scrollToSection(page, '.rank', -1.05);
+    await expect(page.locator('.ledger-now h3')).toHaveText('刷花機（地獄）');
+    await expect(page.locator('.ledger-list li.on')).toHaveCount(1);
+    expect(await shownPictures(page)).toEqual(['5']);
+  });
+
+  test('the ledger steps through its pictures in order, and back again', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const dates = [
+      '2022.08.08',
+      '2023.01.17',
+      '2023.04.23',
+      '2024.02.13',
+      '2024.09.05',
+      '2025.02.11',
+    ];
+    const check = async (i: number, way: string) => {
+      await scrollToLedgerStep(page, (i + 0.5) / 6);
+      expect(await shownPictures(page), `${way} ${i}`).toEqual([String(i)]);
+      await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[i]);
+      await expect(page.locator('.ledger-now .acc')).toHaveText(dates[i]);
+      await expect(page.locator('.ledger-list li.on')).toHaveText(
+        `0${i + 1}${FACILITIES[i]}`,
+      );
+      expect(await visibleScenes(page), `${way} ${i}`).toEqual(['nether']);
+      // pinned: the stage has not moved
+      const top = await page
+        .locator('.ledger-stage')
+        .evaluate((el) => Math.round(el.getBoundingClientRect().top));
+      expect(top, `${way} ${i}`).toBe(0);
+    };
+    for (let i = 0; i < 6; i++) await check(i, 'down');
+    for (let i = 4; i >= 0; i--) await check(i, 'up');
+  });
+
+  test('the rank statement follows the ledger, still in the nether', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '.rank', -0.3);
+    // one line only, and it is the accent-coloured one
+    await expect(page.locator('.rank h3')).toHaveText('亞洲第一');
+    await expect(page.locator('.rank h3 em')).toHaveText('亞洲第一');
+    await expect(page.locator('.rank h3 em')).toHaveCount(1);
+    // no locale claims a world ranking any more
+    for (const locale of ['zh_TW', 'zh_CN', 'en']) {
+      const rank: string[] = JSON.parse(
+        readFileSync(`src/i18n/locales/${locale}/translation.json`, 'utf8'),
+      ).dimensions.nether.rank;
+      expect(rank, locale).toHaveLength(1);
+      expect(rank.join(' '), locale).not.toMatch(/第六|6th|sixth/i);
+    }
+    await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h3 em')).toHaveCSS(
+      'color',
+      'rgb(255, 106, 69)',
+    );
+    // page order: everything below the pin is measured after it
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    expect(await shownPictures(page)).toEqual(['5']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    // the statement stands clear of the pinned stage
+    const [stage, rank] = await Promise.all([
+      page.locator('.ledger-stage').boundingBox(),
+      page.locator('.rank').boundingBox(),
+    ]);
+    expect(rank!.y).toBeGreaterThanOrEqual(stage!.y + stage!.height - 1);
+  });
+
+  test('resizing while pinned keeps the nether scene and leaves no stuck spacer', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToLedgerStep(page, 0.5);
+    expect(await shownPictures(page)).toEqual(['3']);
+    for (const [width, height] of [
+      [1024, 768],
+      [390, 844],
+    ]) {
+      await page.setViewportSize({ width, height });
+      await page.waitForTimeout(1200);
+      // wherever the resize left the scroll, go back into the pin
+      await scrollToLedgerStep(page, 0.5);
+      const size = `${width}×${height}`;
+      expect(await visibleScenes(page), size).toEqual(['nether']);
+      expect(await shownPictures(page), size).toEqual(['3']);
+      await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
+      const m = await page.evaluate(() => {
+        const stage = document
+          .querySelector('.ledger-stage')!
+          .getBoundingClientRect();
+        const ledger = document
+          .querySelector('#ledger')!
+          .getBoundingClientRect();
+        return {
+          spacers: document.querySelectorAll('.pin-spacer').length,
+          // (the stage of a pin that begins a fraction of a pixel down stands that much off the top: no sign for zero)
+          top: Math.abs(Math.round(stage.top)),
+          stage: Math.round(stage.height),
+          ledger: Math.round(ledger.height),
+          vh: window.innerHeight,
+          // what a block can be as wide as: the screen without a scrollbar that takes room
+          vw: document.documentElement.clientWidth,
+          width: Math.round(stage.width),
+        };
+      });
+      expect(m.spacers, size).toBe(1);
+      expect(m.top, size).toBe(0);
+      expect(m.stage, size).toBe(m.vh);
+      expect(m.width, size).toBe(m.vw);
+      // the spacer is exactly the stage plus the pinned distance at this size
+      expect(m.ledger, size).toBe(m.vh * 4);
+      await expectNoHorizontalScroll(page);
+      await scrollToSection(page, '.rank', -0.3);
+      expect(await visibleScenes(page), size).toEqual(['nether']);
+      await expect(page.locator('.rank h3')).toBeVisible();
+      await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+      expect(await visibleScenes(page), size).toEqual(['w3']);
+    }
+  });
+
+  /** Scroll to the middle of facility `i` and wait until the pinned stage shows it: picture, name, date, list row. */
+  const expectLedgerStep = async (page: Page, i: number, note: string) => {
+    await page.evaluate(
+      (f) => {
+        const top =
+          document.querySelector('#ledger')!.getBoundingClientRect().top +
+          window.scrollY;
+        window.scrollTo(0, top + f * 3 * window.innerHeight);
+      },
+      (i + 0.5) / 6,
+    );
+    await expect.poll(() => shownPictures(page), note).toEqual([String(i)]);
+    await expect(page.locator('.ledger-now h3'), note).toHaveText(
+      FACILITIES[i],
+    );
+    await expect(page.locator('.ledger-list li.on'), note).toHaveCount(1);
+    await expect(page.locator('.ledger-list li.on .mono'), note).toHaveText(
+      `0${i + 1}`,
+    );
+    await expect
+      .poll(
+        () =>
+          page
+            .locator('.ledger-stage')
+            .evaluate((el) =>
+              Math.abs(Math.round(el.getBoundingClientRect().top)),
+            ),
+        note,
+      )
+      .toBe(0);
+    expect(await visibleScenes(page), note).toEqual(['nether']);
+  };
+  /** One pin spacer, as tall as the stage plus the pinned distance at the current viewport. */
+  const expectOnePin = async (page: Page, note: string) => {
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const box = (sel: string) =>
+              document.querySelector(sel)!.getBoundingClientRect();
+            return {
+              spacers: document.querySelectorAll('.pin-spacer').length,
+              ledger: Math.round(box('#ledger').height) / window.innerHeight,
+              stage:
+                Math.round(box('.ledger-stage').height) / window.innerHeight,
+              width:
+                Math.round(box('.ledger-stage').width) /
+                document.documentElement.clientWidth,
+            };
+          }),
+        note,
+      )
+      .toEqual({ spacers: 1, ledger: 4, stage: 1, width: 1 });
+  };
+  /** Whatever facility the stage settles on, its name, list row and picture are the same one. */
+  const expectLedgerConsistent = async (page: Page, note: string) => {
+    await expect
+      .poll(async () => {
+        const shown = await shownPictures(page);
+        const name = await page.locator('.ledger-now h3').textContent();
+        const row = await page
+          .locator('.ledger-list li.on .mono')
+          .allTextContents();
+        const k = FACILITIES.indexOf(name ?? '');
+        // one picture, a known name, and the same number three times
+        return (
+          k >= 0 &&
+          shown.length === 1 &&
+          Number(shown[0]) === k &&
+          row.length === 1 &&
+          row[0] === `0${k + 1}`
+        );
+      }, note)
+      .toBe(true);
+  };
+
+  test('on a short landscape screen the pinned ledger still names all six facilities, clear of the bar', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 844, height: 390 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    await expectPortalAtFull(page);
+    for (let i = 0; i < 6; i++) await expectLedgerStep(page, i, `down ${i}`);
+    for (let i = 4; i >= 0; i--) await expectLedgerStep(page, i, `up ${i}`);
+    await expectOnePin(page, '844×390');
+    // only what fits: the date and the name, under the bar; the side list is put away
+    await expectLedgerStep(page, 3, 'longest name');
+    await expect(page.locator('.ledger-list')).toBeHidden();
+    await expect(page.locator('.ledger-now h3')).toBeVisible();
+    const [bar, now] = await Promise.all([
+      page.locator('.dim-bar').boundingBox(),
+      page.locator('.ledger-now').boundingBox(),
+    ]);
+    expect(now!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+    expect(now!.y + now!.height).toBeLessThanOrEqual(390);
+    await expectTextFits(page, { within: '#ledger' });
+    await expectNoHorizontalScroll(page);
+    await scrollToSection(page, '.rank', 0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    expect(await shownPictures(page)).toEqual(['5']);
+    await expect(page.locator('.rank h3')).toBeVisible();
+    await expectTextFits(page, { within: '.rank' });
+    await expectTapTargets(page);
+  });
+
+  const PORTRAIT = { width: 390, height: 844 },
+    LANDSCAPE = { width: 844, height: 390 };
+  for (const [name, first, second] of [
+    ['portrait', PORTRAIT, LANDSCAPE],
+    ['landscape', LANDSCAPE, PORTRAIT],
+  ] as const)
+    test(`rotating a phone inside the ledger keeps it pinned, with name and picture in step (opened in ${name})`, async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(
+        isMobile,
+        "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+      );
+      await page.setViewportSize(first);
+      await openPage(page, '/');
+      await ready(page);
+      await expectLedgerStep(page, 2, 'as opened');
+      await expectOnePin(page, 'as opened');
+      for (const [size, note] of [
+        [second, 'rotated'],
+        [first, 'rotated back'],
+      ] as const) {
+        await page.setViewportSize(size);
+        // measured again at the new size: one spacer, four screens of this height
+        await expectOnePin(page, note);
+        await expectLedgerConsistent(page, note);
+        // and the steps are where they should be at this size
+        await expectLedgerStep(page, 2, note);
+        await expectLedgerStep(page, 5, note);
+        await expectLedgerStep(page, 2, note);
+        await expectNoHorizontalScroll(page);
+      }
+    });
+
+  test('the portal draws only while it is on screen', async ({ page }) => {
+    await openPage(page, '/');
+    await ready(page);
+    const frames = () =>
+      page
+        .locator(NETHER_PORTAL)
+        .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
+    // at the hero: counted, and not moving
+    expect(await frames()).toBe(0);
+    await page.waitForTimeout(700);
+    expect(await frames()).toBe(0);
+    await scrollToSection(page, '#nether', -0.5);
+    await expect.poll(frames).toBeGreaterThan(3);
+    const mid = await frames();
+    await expect.poll(frames).toBeGreaterThan(mid + 3);
+    // through to the other side: it stops again
+    await scrollToSection(page, '#nether', 0.3);
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    const after = await frames();
+    await page.waitForTimeout(700);
+    expect(await frames()).toBe(after);
+    // and back at the hero
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+    const top = await frames();
+    await page.waitForTimeout(700);
+    expect(await frames()).toBe(top);
+  });
+
+  test('on a phone in the day theme the nether text fits', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#nether', 0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expectTextFits(page, { within: '#nether' });
+    await scrollToLedgerStep(page, 0.6);
+    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
+    await expect(page.locator('.ledger-list')).toBeHidden();
+    await expectTextFits(page, { within: '#ledger' });
+    await scrollToSection(page, '.rank', 0.1);
+    await expectTextFits(page, { within: '.rank' });
+    await expectNoHorizontalScroll(page);
+    await expectTapTargets(page);
+  });
+
+  test('switching language inside the nether keeps the portal, the ledger and the statement working', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    // the middle of the fourth facility, not its first pixel: the new language's text above is not as tall, and
+    // not every engine moves the page with it (Chromium and Firefox do; WebKit keeps the same number of pixels)
+    await scrollToLedgerStep(page, 3.5 / 6);
+    await expect(page.locator('.ledger-now h3')).toHaveText(FACILITIES[3]);
+    await setLanguage(page, 'en');
+    await expect(page.locator('.ledger-now h3')).toHaveText(
+      'Million-rate piglin trading',
+    );
+    await page.waitForTimeout(800);
+    expect(await shownPictures(page)).toEqual(['3']);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await scrollToLedgerStep(page, 5.5 / 6);
+    expect(await shownPictures(page)).toEqual(['5']);
+    await expect(page.locator('.ledger-list li.on')).toHaveCount(1);
+    await expect(page.locator('.ledger-list li.on .mono')).toHaveText('06');
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.rank h3 em')).not.toHaveText('亞洲第一');
+    await expectTextFits(page, { within: '.rank' });
+    // the statement of the opening lights up in the new language
+    const sayHeight = await page
+      .locator('#nether .say')
+      .evaluate((el) => el.getBoundingClientRect().height / innerHeight);
+    await scrollToSection(page, '#nether .say', sayHeight - 0.33);
+    const lines = page.locator('#nether .say span');
+    expect(await lines.count()).toBe(2);
+    await expect(lines.first()).toHaveText('Through the portal');
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    await expect(page.locator('#nether p.body')).toHaveCSS('opacity', '1');
+    // and the way back out still works
+    await scrollToSection(page, '#nether', -0.5);
+    await expectPortalAtFull(page);
+    await scrollToSection(page, '[data-work="overworld-2"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['w3']);
+    await expectNoMissingKeys(page);
+  });
+
+  test('reduced motion: the nether scene shows without the portal, and the ledger reads as a list', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    await scrollToSection(page, '#nether', -0.5);
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    await scrollToSection(page, '#nether');
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    await scrollToSection(page, '#ledger', 0);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('#ledger .ledger-plain > li')).toHaveCount(6);
+    await expect(page.locator('#ledger .ledger-plain h3').first()).toHaveText(
+      FACILITIES[0],
+    );
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('.rank h3')).toBeVisible();
+  });
+
+  for (const [width, height] of [
+    [390, 844],
+    [844, 390],
+    [1440, 900],
+  ] as const)
+    test(`reduced motion at ${width}×${height}: all six facilities are a plain list, each with its date, name and picture`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/', { reducedMotion: true });
+      await ready(page);
+      const rows = page.locator('#ledger .ledger-plain > li');
+      await expect(rows).toHaveCount(6);
+      // in the flow of the page: nothing is pinned, and each row stands below the one before
+      await expect(page.locator('.pin-spacer')).toHaveCount(0);
+      const tops: number[] = [];
+      for (let i = 0; i < 6; i++) {
+        const row = rows.nth(i);
+        await row.scrollIntoViewIfNeeded();
+        await expect(row.locator('h3'), `name ${i}`).toHaveText(FACILITIES[i]);
+        await expect(row.locator('h3'), `name ${i}`).toBeVisible();
+        await expect(row.locator('.acc'), `date ${i}`).toHaveText(
+          /^\d{4}\.\d{2}\.\d{2}$/,
+        );
+        await expect(row.locator('.acc'), `date ${i}`).toBeVisible();
+        const img = row.locator('img');
+        await expect(img, `picture ${i}`).toHaveAttribute(
+          'src',
+          new RegExp(`/${['p4', 'p10', 'p12', 'p38', 'p49', 'p51'][i]}\.webp$`),
+        );
+        await expect
+          .poll(
+            () =>
+              img.evaluate(
+                (el: HTMLImageElement) =>
+                  el.complete &&
+                  el.naturalWidth > 0 &&
+                  +getComputedStyle(el).opacity,
+              ),
+            { message: `picture ${i} is loaded and shown` },
+          )
+          .toBe(1);
+        const box = (await img.boundingBox())!;
+        expect(box.width, `picture ${i} width`).toBeGreaterThan(120);
+        expect(box.height, `picture ${i} height`).toBeGreaterThan(60);
+        // a picture and its words can be seen together
+        const whole = (await row.boundingBox())!;
+        expect(whole.height, `row ${i} fits the screen`).toBeLessThanOrEqual(
+          height,
+        );
+        tops.push(
+          await row.evaluate(
+            (el) => el.getBoundingClientRect().top + window.scrollY,
+          ),
+        );
+        // read on the way down: a row may be passing behind the bar
+        await expectTextFits(page, { within: '#ledger', passing: '.dim-bar' });
+      }
+      expect([...tops].sort((a, b) => a - b)).toEqual(tops);
+      expect(new Set(tops).size).toBe(6);
+      await expectNoHorizontalScroll(page);
+    });
+
+  test('reduced motion: the scene is the one of the place on the page, also after a jump past whole sections', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    expect(await visibleScenes(page)).toEqual(['spawn']);
+    // from the top straight into the list of facilities: the opening of the nether is never on screen
+    await jumpTo(page, '#ledger .ledger-plain > li:nth-child(4)');
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    // to the foot of the page, and straight back: every section of the End is passed in one step
+    await jumpTo(page, '#respawn', 0.2);
+    await expect.poll(() => visibleScenes(page)).toEqual(['day1']);
+    await jumpTo(page, '#ledger .ledger-plain > li:nth-child(4)');
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    await jumpTo(page, '.rank', 0.1);
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    await jumpTo(page, '[data-work="overworld-1"]', 0.6);
+    await expect.poll(() => visibleScenes(page)).toEqual(['w2']);
+    await jumpTo(page, '.hero');
+    await expect.poll(() => visibleScenes(page)).toEqual(['spawn']);
+  });
+});
+
+test.describe('home: the end', () => {
+  /** The picture each End scene must carry (survivalProgress ids). */
+  const PICTURES = { hall: 'p21', moon: 'p14', farm: 'p6' } as const;
+  /** Where each End scene is at rest: selector and offset for scrollToSection. */
+  const STOPS = [
+    ['#end', 0.3, 'hall'],
+    ['[data-work="end-0"]', 0.2, 'moon'],
+    ['[data-work="end-1"]', 0.2, 'farm'],
+    ['#credits', 0.3, 'end'],
+  ] as const;
+  /** Walk the pinned ledger from its first facility to its last, as a reader would. */
+  const walkTheLedger = async (page: Page) => {
+    // (on a touch screen the facilities are sections, not a pin: the way through is the ledger's own height)
+    const touch = await onTouch(page);
+    for (const f of [0.1, 0.5, 0.95]) {
+      await page.evaluate(
+        ([k, touch]) => {
+          const box = document.querySelector('#ledger')!;
+          const top = box.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo(
+            0,
+            top +
+              k *
+                (touch
+                  ? box.getBoundingClientRect().height - window.innerHeight
+                  : 3 * window.innerHeight),
+          );
+        },
+        [f, touch] as const,
+      );
+      await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    }
+    await expect(page.locator('.pin-spacer')).toHaveCount(touch ? 0 : 1);
+  };
+  /** Rotation in degrees, scale and position of a scene's layer or of its .zoom. */
+  const pose = (page: Page, scene: string, part: '' | ' .zoom' = ' .zoom') =>
+    page.evaluate(
+      ([id, sub]) => {
+        const el = document.querySelector<HTMLElement>(
+          `.scene[data-scene="${id}"]${sub}`,
+        )!;
+        const m = new DOMMatrix(getComputedStyle(el).transform);
+        const r = el.getBoundingClientRect();
+        return {
+          rotate: (Math.atan2(m.b, m.a) * 180) / Math.PI,
+          scale: Math.hypot(m.a, m.b),
+          x: Math.round(r.x),
+          y: Math.round(r.y),
+        };
+      },
+      [scene, part],
+    );
+  const picture = (page: Page, scene: string) =>
+    page
+      .locator(`.scene[data-scene="${scene}"] img`)
+      .first()
+      .getAttribute('src');
+  const lit = async (page: Page, selector: string) => {
+    const els = page.locator(selector);
+    expect(await els.count(), selector).toBeGreaterThan(0);
+    for (const el of await els.all())
+      await expect(el).toHaveCSS('opacity', '1');
+  };
+
+  test('three End builds each show their own scene, then the stars', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#end');
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText('月宮');
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    await expect(page.locator('[data-work="end-1"] h3')).toHaveText(
+      '終界農業區',
+    );
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+  });
+
+  test('after the whole pinned ledger, every End scene is its own picture, down and back up', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    for (const [scene, id] of Object.entries(PICTURES))
+      expect(await picture(page, scene), scene).toContain(
+        `/survivalProgress/${id}.webp`,
+      );
+    await walkTheLedger(page);
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `down ${sel}`).toEqual([scene]);
+    }
+    // the caption of a build has risen by the time its scene is at rest
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    await lit(page, '[data-work="end-1"] .work > div > *');
+    for (const [sel, off, scene] of [...STOPS].reverse()) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `up ${sel}`).toEqual([scene]);
+    }
+    await lit(page, '#end p.body');
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+  });
+
+  /** Visibility and opacity of the End's portal. */
+  const endPortal = (page: Page) =>
+    page.locator(END_PORTAL).evaluate((c) => {
+      const s = getComputedStyle(c);
+      return { visibility: s.visibility, opacity: +s.opacity };
+    });
+  const endFrames = (page: Page) =>
+    page
+      .locator(END_PORTAL)
+      .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
+
+  test('the End is entered through its portal: it rises over the nether, the scene changes behind it, it clears over the hall; and back', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await walkTheLedger(page);
+    // the first steps of the crossing: the nether begins to push in, and nothing is over the page yet
+    await scrollToSection(page, '#end', -0.8);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    expect((await pose(page, 'nether')).scale).toBeGreaterThan(1);
+    // partway in: the layer is rising, the nether is still under it, upright (it does not turn or shrink)
+    await scrollToSection(page, '#end', -0.6);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const rising = await endPortal(page);
+    expect(rising.visibility).toBe('visible');
+    expect(rising.opacity).toBeGreaterThan(0.1);
+    expect(rising.opacity).toBeLessThan(0.9);
+    const leaving = await pose(page, 'nether');
+    expect(Math.abs(leaving.rotate)).toBeLessThan(0.01);
+    expect(leaving.scale).toBeGreaterThan(1);
+    expect(leaving.scale).toBeLessThan(1.25);
+    // the midpoint: the layer is whole and covers the screen
+    await scrollToSection(page, '#end', -0.5);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.98);
+    const box = (await page.locator(END_PORTAL).boundingBox())!;
+    expect(box.x).toBeLessThanOrEqual(0);
+    expect(box.y).toBeLessThanOrEqual(0);
+    expect(box.x + box.width).toBeGreaterThanOrEqual(1440);
+    expect(box.y + box.height).toBeGreaterThanOrEqual(900);
+    // a step past it the scene behind the layer is the hall, and the layer is still all but whole
+    await scrollToSection(page, '#end', -0.48);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.8);
+    // partway out: it clears over the hall
+    await scrollToSection(page, '#end', -0.3);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    const clearing = await endPortal(page);
+    expect(clearing.visibility).toBe('visible');
+    expect(clearing.opacity).toBeGreaterThan(0.1);
+    expect(clearing.opacity).toBeLessThan(0.9);
+    // the nether's own portal has no part in it
+    await expect(page.locator(NETHER_PORTAL)).toBeHidden();
+    // landed: the layer is gone, the hall is square and still
+    await scrollToSection(page, '#end', 0);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    const landed = await pose(page, 'hall');
+    expect(Math.abs(landed.rotate)).toBeLessThan(0.01);
+    expect(landed.scale).toBeCloseTo(1, 3);
+    // and back: through the whole layer again, then the nether as it was, the hall off
+    await scrollToSection(page, '#end', -0.5);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.98);
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    const back = await pose(page, 'nether');
+    expect(Math.abs(back.rotate)).toBeLessThan(0.01);
+    expect(back.scale).toBeCloseTo(1, 3);
+    await expect(page.locator('.scene[data-scene="hall"]')).toBeHidden();
+    await expect(page.locator('.rank h3')).toHaveCSS('opacity', '1');
+  });
+
+  for (const [width, height] of [
+    [360, 740],
+    [390, 844],
+    [768, 1024],
+    [1440, 900],
+    [2560, 1440],
+  ] as const)
+    test(`at ${width}×${height} the rank statement at rest is not yet under the End's portal`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      // by day too: the Nether and the End are read under the night's veil
+      await openPage(page, '/', { theme: 'light' });
+      await ready(page);
+      await walkTheLedger(page);
+      // The statement's section is shorter than the screen: with the statement at the head of the screen the
+      // End's opening is already coming in at the foot of it, and its transition is under way.
+      await scrollToSection(page, '.rank', 0);
+      expect(await visibleScenes(page)).toEqual(['nether']);
+      expect(
+        await page
+          .locator('#end')
+          .evaluate((el) => el.getBoundingClientRect().top / innerHeight),
+        "the End's opening is in the screen",
+      ).toBeLessThan(0.95);
+      // the portal's layer is not: it begins once the opening is well into the screen
+      await expect(page.locator(END_PORTAL)).toBeHidden();
+      await scrollToSection(page, '#end', -0.6);
+      expect((await endPortal(page)).opacity).toBeGreaterThan(0.1);
+    });
+
+  test("the End's portal is a near-black field of teal, green and pale specks, generated: no image is asked for", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const images: string[] = [];
+    page.on('request', (r) => {
+      if (r.resourceType() === 'image') images.push(r.url());
+    });
+    await openPage(page, '/');
+    await ready(page);
+    await walkTheLedger(page);
+    await scrollToSection(page, '#end', -0.5);
+    await expect(page.locator(END_PORTAL)).toBeVisible();
+    const read = () =>
+      page.locator(END_PORTAL).evaluate((c: HTMLCanvasElement) => {
+        const d = c
+          .getContext('2d')!
+          .getImageData(0, 0, c.width, c.height).data;
+        const n = d.length / 4;
+        let opaque = 0,
+          ground = 0,
+          teal = 0,
+          pale = 0,
+          violet = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+          if (a === 255) opaque++;
+          if (r < 16 && g < 24 && b < 24) ground++;
+          // a pale speck, or one in teal or green: green well above red
+          else if (r > 150 && g > 180 && b > 170) pale++;
+          else if (g > r * 1.6) teal++;
+          if (b > 60 && b > g * 2) violet++;
+        }
+        return {
+          opaque: opaque / n,
+          ground: ground / n,
+          teal,
+          pale,
+          violet,
+          size: [c.width, c.height],
+          rendering: getComputedStyle(c).imageRendering,
+          data: Array.from(d).join(),
+        };
+      });
+    const first = await read();
+    expect(first.opaque).toBe(1);
+    // mostly the dark field, and in it specks of more than one kind; nothing of the nether's violet
+    expect(first.ground).toBeGreaterThan(0.9);
+    expect(first.ground).toBeLessThan(0.995);
+    expect(first.teal).toBeGreaterThan(80);
+    expect(first.pale).toBeGreaterThan(5);
+    expect(first.violet).toBe(0);
+    expect(first.size[0] / first.size[1]).toBeCloseTo(16 / 9, 2);
+    expect(first.rendering).toBe('pixelated');
+    // the specks drift
+    await page.waitForTimeout(1500);
+    const later = await read();
+    expect(later.data).not.toBe(first.data);
+    expect(later.ground).toBeGreaterThan(0.9);
+    // the pictures of the page are its scenes, its own assets and the cover of its video; nothing of the game
+    expect(images.length).toBeGreaterThan(0);
+    expect(
+      images.filter(
+        (u) =>
+          /portal|\/mc\/|minecraft|textures?\//i.test(u) ||
+          !/^(https:\/\/mc-ctec\.org\/|http:\/\/localhost:\d+\/|https:\/\/mineskin\.eu\/|https:\/\/img\.youtube\.com\/vi\/|data:)/.test(
+            u,
+          ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("the End's portal draws only while it is on screen, and the stars behind the End do not move under it", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    // at the hero: counted, and not moving
+    expect(await endFrames(page)).toBe(0);
+    await walkTheLedger(page);
+    await page.waitForTimeout(700);
+    expect(await endFrames(page)).toBe(0);
+    await scrollToSection(page, '#end', -0.5);
+    await expect.poll(() => endFrames(page)).toBeGreaterThan(3);
+    const mid = await endFrames(page);
+    await expect.poll(() => endFrames(page)).toBeGreaterThan(mid + 3);
+    // the starfield belongs to the scene of the credits: it is not showing here and its layers stand still
+    await expect(page.locator('.scene[data-scene="end"]')).toBeHidden();
+    const stars = () =>
+      page
+        .locator('.scene[data-scene="end"] .starfield i')
+        .evaluateAll((els) =>
+          els.map((el) => getComputedStyle(el).transform).join('|'),
+        );
+    const still = await stars();
+    await page.waitForTimeout(500);
+    expect(await stars()).toBe(still);
+    // meanwhile the nether's portal draws nothing
+    const nether = () =>
+      page
+        .locator(NETHER_PORTAL)
+        .evaluate((c: HTMLCanvasElement) => Number(c.dataset.frames));
+    const netherAt = await nether();
+    // through to the other side: it stops again
+    await scrollToSection(page, '#end', 0.3);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    const after = await endFrames(page);
+    await page.waitForTimeout(700);
+    expect(await endFrames(page)).toBe(after);
+    expect(await nether()).toBe(netherAt);
+  });
+
+  test('the moon slides in from the right and the farm rises from the bottom, and both undo', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '[data-work="end-0"]', -0.5);
+    expect(await visibleScenes(page)).toEqual(['hall', 'moon']);
+    const moon = await pose(page, 'moon', '');
+    expect(moon.y).toBe(0);
+    expect(moon.x).toBeGreaterThan(300);
+    expect(moon.x).toBeLessThan(1140);
+    await scrollToSection(page, '[data-work="end-1"]', -0.5);
+    expect(await visibleScenes(page)).toEqual(['moon', 'farm']);
+    const farm = await pose(page, 'farm', '');
+    expect(farm.x).toBe(0);
+    expect(farm.y).toBeGreaterThan(200);
+    expect(farm.y).toBeLessThan(700);
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    // back up: each later layer is switched off, not parked off screen
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await expect(page.locator('.scene[data-scene="farm"]')).toBeHidden();
+    await scrollToSection(page, '#end', 0.3);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator('.scene[data-scene="moon"]')).toBeHidden();
+    await expect(page.locator('.scene[data-scene="farm"]')).toBeHidden();
+  });
+
+  test('the farm pushes in and dissolves into the stars, and comes back', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', -0.4);
+    expect(await visibleScenes(page)).toEqual(['farm', 'end']);
+    const farm = await pose(page, 'farm');
+    expect(farm.scale).toBeGreaterThan(1.02);
+    expect(farm.scale).toBeLessThan(1.22);
+    expect(Math.abs(farm.rotate)).toBeLessThan(0.01);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('.scene[data-scene="farm"]')).toBeHidden();
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    await expect(page.locator('.scene[data-scene="end"]')).toBeHidden();
+    expect((await pose(page, 'farm')).scale).toBeCloseTo(1, 3);
+  });
+
+  test('the stars are three drifting layers that move only while they are shown', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    const layers = page.locator('.scene[data-scene="end"] .starfield i');
+    await expect(layers).toHaveCount(3);
+    for (const l of await layers.all())
+      await expect(l).toHaveCSS('background-image', /^url\("data:image\/png/);
+    const at = () =>
+      layers.evaluateAll((els) =>
+        els.map((el) => getComputedStyle(el).transform).join('|'),
+      );
+    // at the hero: nothing moves
+    const top = await at();
+    await page.waitForTimeout(700);
+    expect(await at()).toBe(top);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    const shown = await at();
+    await page.waitForTimeout(1500);
+    // every layer has moved, not just one
+    const later = (await at()).split('|');
+    shown
+      .split('|')
+      .forEach((v, i) => expect(later[i], `layer ${i}`).not.toBe(v));
+    // back above the End they stand still again
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    const hidden = await at();
+    await page.waitForTimeout(700);
+    expect(await at()).toBe(hidden);
+  });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+    [844, 390],
+  ] as const)
+    test(`the stars cover a ${width}×${height} screen at both ends of their drift`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await scrollToSection(page, '#credits', 0.3);
+      expect(await visibleScenes(page)).toEqual(['end']);
+      // each layer drifts this far sideways and upwards from where the stylesheet puts it
+      const gaps = await page
+        .locator('.scene[data-scene="end"] .starfield i')
+        .evaluateAll(
+          (els, drift) =>
+            els.map((el) => {
+              const m = new DOMMatrix(getComputedStyle(el).transform);
+              const r = el.getBoundingClientRect();
+              const [left, right, top, bottom] = [
+                r.left - m.e,
+                r.right - m.e,
+                r.top - m.f,
+                r.bottom - m.f,
+              ];
+              return {
+                left: left + drift.x <= 0,
+                right: right - drift.x >= window.innerWidth,
+                top: top <= 0,
+                bottom: bottom - drift.y >= window.innerHeight,
+              };
+            }),
+          STAR_DRIFT,
+        );
+      expect(gaps).toHaveLength(3);
+      for (const g of gaps)
+        expect(g).toEqual({ left: true, right: true, top: true, bottom: true });
+    });
+
+  test('credits list every full and trial member and link to the roster', async ({
+    page,
+    request,
+  }) => {
+    const data = await (
+      await request.get('https://mc-ctec.org/static-data/member.json')
+    ).json();
+    expect(data.member.length).toBeGreaterThan(0);
+    expect(data.trial.length).toBeGreaterThan(0);
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveCount(data.member.length);
+    await expect(
+      page.locator('#credits [data-names="trial"] span'),
+    ).toHaveCount(data.trial.length);
+    await expect(
+      page.locator('#credits [data-names="member"] span').first(),
+    ).toHaveText(data.member[0].name);
+    const roles = page.locator('#credits .roles a');
+    await expect(roles).toHaveCount(18);
+    await expect(roles.first()).toHaveAttribute(
+      'href',
+      'https://github.com/mc-cloud-town/Carpet-CTEC-Addition',
+    );
+    for (const a of await roles.all()) {
+      const name = (await a.textContent())!.trim();
+      await expect(a).toHaveAttribute(
+        'href',
+        `https://github.com/mc-cloud-town/${name}`,
+      );
+      await expect(a).toHaveAttribute('target', '_blank');
+      await expect(a).toHaveAttribute('rel', /noopener/);
+    }
+    await expect(page.locator('#credits .roles dt')).toHaveText([
+      '遊戲核心',
+      '伺服器管理',
+      '基礎設施',
+      '社群工具',
+    ]);
+    await expect(page.locator('#credits a.more')).toHaveAttribute(
+      'href',
+      '/member/',
+    );
+    // the last line of the credits is reachable, still over the stars
+    await page.locator('#credits .fin').scrollIntoViewIfNeeded();
+    await expect(page.locator('#credits .fin')).toHaveText('還沒結束。');
+    await expect.poll(() => visibleScenes(page)).toEqual(['end']);
+  });
+
+  test('duplicate uuids in the member data do not drop or repeat names', async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    const same = '00000000-0000-0000-0000-000000000000';
+    await page.route(/member\.json/, (r) =>
+      r.fulfill({
+        json: {
+          member: [
+            { uuid: same, name: 'first_one' },
+            { uuid: same, name: 'second_one' },
+            { uuid: 'a', name: 'third_one' },
+          ],
+          trial: [{ uuid: same, name: 'trial_one' }],
+        },
+        headers: { 'access-control-allow-origin': '*' },
+      }),
+    );
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveText(['first_one', 'second_one', 'third_one']);
+    await expect(page.locator('#credits [data-names="trial"] span')).toHaveText(
+      ['trial_one'],
+    );
+    expect(errors.filter((e) => /same key/.test(e))).toEqual([]);
+  });
+
+  test('when the member request fails the tools stay and the member lists are hidden', async ({
+    page,
+  }) => {
+    await page.route(/member\.json/, (r) => r.abort());
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('#credits .roles')).toBeVisible();
+    await expect(page.locator('#credits .roles a')).toHaveCount(18);
+    await expect(page.locator('#credits [data-names]')).toHaveCount(0);
+    // no heading is left behind for a list that is not there
+    await expect(page.locator('#credits h3')).toHaveCount(1);
+    await expect(page.locator('#credits a.more')).toBeVisible();
+    await expect(page.locator('#credits .fin')).toHaveText('還沒結束。');
+  });
+
+  test('a slow member request: the page works meanwhile, and the names arrive without moving the scenes', async ({
+    page,
+  }) => {
+    let release = () => {};
+    const held = new Promise<void>((done) => {
+      release = done;
+    });
+    await page.route(/member\.json/, async (r) => {
+      await held;
+      await r.fulfill({
+        json: {
+          member: Array.from({ length: 120 }, (_, i) => ({
+            uuid: `m${i}`,
+            name: `member_${i}`,
+          })),
+          trial: Array.from({ length: 30 }, (_, i) => ({
+            uuid: `t${i}`,
+            name: `trial_${i}`,
+          })),
+        },
+        headers: { 'access-control-allow-origin': '*' },
+      });
+    });
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#credits', 0.3);
+    expect(await visibleScenes(page)).toEqual(['end']);
+    await expect(page.locator('#credits .roles')).toBeVisible();
+    await expect(page.locator('#credits [data-names]')).toHaveCount(0);
+    const before = await page.evaluate(
+      () => document.documentElement.scrollHeight,
+    );
+    release();
+    await expect(
+      page.locator('#credits [data-names="member"] span'),
+    ).toHaveCount(120);
+    await expect(
+      page.locator('#credits [data-names="trial"] span'),
+    ).toHaveCount(30);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight),
+    ).toBeGreaterThan(before);
+    // everything was measured again: each scene is still where its section is
+    for (const [sel, off, scene] of [...STOPS].reverse()) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), sel).toEqual([scene]);
+    }
+    await page.locator('#credits .fin').scrollIntoViewIfNeeded();
+    await expect.poll(() => visibleScenes(page)).toEqual(['end']);
+  });
+
+  test('the day theme is night in the Nether and the End, and the day again after them', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    const look = () =>
+      page.evaluate(() => {
+        const dim = getComputedStyle(document.querySelector('.dim')!);
+        return {
+          fg: dim.color,
+          veil: dim.getPropertyValue('--v').replace(/\s/g, ''),
+          accent: dim.getPropertyValue('--accent').trim(),
+          bar: getComputedStyle(document.querySelector('.dim-bar')!).color,
+        };
+      });
+    const DAY = {
+      fg: 'rgb(255, 255, 255)',
+      veil: '0,0,0',
+      accent: '#cfeaff',
+      bar: 'rgb(255, 255, 255)',
+    };
+    const NIGHT = {
+      fg: 'rgb(242, 244, 246)',
+      veil: '6,8,11',
+      accent: '#ff6a45',
+      bar: 'rgb(242, 244, 246)',
+    };
+    await scrollToSection(page, '#overworld');
+    expect(await look()).toEqual(DAY);
+    // the Nether has no daylight: the night's veil, ink and accent
+    await scrollToSection(page, '.rank', -0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    expect(await look()).toEqual(NIGHT);
+    for (const [sel, off] of STOPS) {
+      await scrollToSection(page, sel, off);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+      expect(await look(), sel).toEqual({ ...NIGHT, accent: '#cdb0ff' });
+    }
+    // the theme itself has not changed
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    // the dimension name stands on the dark photograph without a strip
+    await scrollToSection(page, '#end', 0.1);
+    await expect(page.locator('#end .vt')).toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    );
+    // leaving upward: the Nether is still night, then the Overworld has its day again
+    await scrollToSection(page, '.rank', -0.3);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    expect(await look()).toEqual(NIGHT);
+    await scrollToSection(page, '#overworld');
+    expect(await look()).toEqual(DAY);
+  });
+
+  test('by day the words on a picture are light and carry a shade, and the veil is thin and black', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#overworld');
+    const got = await page.evaluate(() => {
+      const dim = getComputedStyle(document.querySelector('.dim.dim--home')!);
+      const say = getComputedStyle(document.querySelector('#overworld .say')!);
+      const name = getComputedStyle(document.querySelector('#overworld .vt')!);
+      return {
+        v: dim.getPropertyValue('--v').replace(/\s/g, ''),
+        s1: dim.getPropertyValue('--s1').trim(),
+        ink: say.color,
+        shade: say.textShadow,
+        strip: name.backgroundColor,
+      };
+    });
+    expect(got.v).toBe('0,0,0');
+    expect(Number(got.s1)).toBeCloseTo(0.42);
+    expect(got.ink).toBe('rgb(255, 255, 255)');
+    expect(got.shade).not.toBe('none');
+    // no strip of paper under the dimension's name: it stands on the veil like every other word
+    expect(got.strip).toBe('rgba(0, 0, 0, 0)');
+  });
+
+  test('by day what has a solid ground of its own carries no shade: the button, the open language pill and its list', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#overworld', 0);
+    await page.locator('.dim-bar [data-action="language"]').click();
+    const list = page.locator('.dim-bar .lang-list');
+    await expect(list).toHaveCSS('opacity', '1');
+    const shade = (selector: string) =>
+      page
+        .locator(selector)
+        .first()
+        .evaluate((el) => getComputedStyle(el).textShadow);
+    // a word on the picture has its shade
+    expect(await shade('#overworld .say')).not.toBe('none');
+    expect(await shade('.btn')).toBe('none');
+    expect(await shade('.dim-bar .lang-list')).toBe('none');
+    expect(await shade('.dim-bar .lang-list li')).toBe('none');
+    expect(await shade('.dim-bar [data-action="language"]')).toBe('none');
+  });
+
+  test('by day the Nether has no daylight: the night veil and ink, as in the End', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await scrollToSection(page, '#nether');
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+    const got = await page.evaluate(() => {
+      const dim = getComputedStyle(document.querySelector('.dim.dim--home')!);
+      return {
+        v: dim.getPropertyValue('--v').replace(/\s/g, ''),
+        s1: Number(dim.getPropertyValue('--s1')),
+        fg: dim.getPropertyValue('--fg').trim(),
+        accent: dim.getPropertyValue('--accent').trim(),
+        shade: getComputedStyle(document.querySelector('#nether .say')!)
+          .textShadow,
+      };
+    });
+    expect(got).toEqual({
+      v: '6,8,11',
+      s1: 0.92,
+      fg: '#f2f4f6',
+      accent: '#ff6a45',
+      shade: 'none',
+    });
+  });
+
+  test('by day the ground under the respawn is paper, with dark words and no shade', async ({
+    page,
+  }) => {
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    await page.evaluate(() =>
+      scrollTo(0, document.documentElement.scrollHeight),
+    );
+    const got = await page.evaluate(() => {
+      const ground = getComputedStyle(document.querySelector('.ground')!);
+      return { ink: ground.color, shade: ground.textShadow };
+    });
+    expect(got.shade).toBe('none');
+    // dark ink: every channel under 128
+    expect(
+      got.ink
+        .match(/\d+/g)!
+        .slice(0, 3)
+        .every((n) => Number(n) < 128),
+    ).toBe(true);
+  });
+
+  for (const theme of ['dark', 'light'] as const)
+    test(`the page moves on to the End while its portal plays, its words follow, and each section keeps its own accent (${theme})`, async ({
+      page,
+    }) => {
+      // the Nether has no daylight: its accent is the night's in both themes
+      const NETHER = 'rgb(255, 106, 69)';
+      const VIOLET = 'rgb(205, 176, 255)';
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openPage(page, '/', { theme });
+      await ready(page);
+      const state = () =>
+        page.evaluate(() => {
+          const h2 = document
+            .querySelector('.rank h3')!
+            .getBoundingClientRect();
+          const tag = document
+            .querySelector('#end .tag')!
+            .getBoundingClientRect();
+          return {
+            // how much of the rank statement is on screen, and how far down the tag line of the End is (the End's
+            // words come a screen after its top: they are below the screen until the change into it has played out)
+            rank:
+              (Math.min(h2.bottom, innerHeight) - Math.max(h2.top, 0)) /
+              h2.height,
+            tag: tag.top / innerHeight,
+          };
+        });
+      const html = page.locator('html');
+      const em = page.locator('.rank h3 em');
+      const tag = page.locator('#end .tag .acc');
+      const stillNether = async (step: string) => {
+        await scrollToSection(page, '#end', -0.62);
+        // most of the statement is still readable and the End's words have not come
+        const s = await state();
+        expect(s.rank, step).toBeGreaterThan(0.5);
+        expect(s.tag, step).toBeGreaterThan(1);
+        await expect(html, step).toHaveAttribute('data-dim', 'nether');
+        await expect(em, step).toHaveCSS('color', NETHER);
+      };
+      const nowEnd = async (step: string) => {
+        await scrollToSection(page, '#end', -0.4);
+        // the statement is mostly gone, and the End's words are still to come: the portal plays over what is leaving
+        const s = await state();
+        expect(s.tag, step).toBeGreaterThan(1);
+        expect(s.rank, step).toBeLessThan(0.5);
+        expect(s.rank, step).toBeGreaterThan(0);
+        await expect(html, step).toHaveAttribute('data-dim', 'end');
+        await expect(tag, step).toHaveCSS('color', VIOLET);
+        // what is left of the nether statement keeps the nether colour (the page is dark here by day too)
+        await expect(em, step).toHaveCSS('color', 'rgb(255, 106, 69)');
+      };
+      await stillNether('down');
+      await nowEnd('down');
+      await scrollToSection(page, '#end', 0.3);
+      await expect(html).toHaveAttribute('data-dim', 'end');
+      await nowEnd('up');
+      await stillNether('up');
+    });
+
+  test('in the night theme the End accent is the pale violet', async ({
+    page,
+  }) => {
+    await openPage(page, '/');
+    await ready(page);
+    await scrollToSection(page, '#end', 0.1);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    await expect(page.locator('#end .tag .acc')).toHaveCSS(
+      'color',
+      'rgb(205, 176, 255)',
+    );
+    await expect(page.locator('#end .tag span').nth(1)).toHaveText('THE END');
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(page.locator('#credits h3').first()).toHaveCSS(
+      'color',
+      'rgb(205, 176, 255)',
+    );
+  });
+
+  for (const [name, width, height] of [
+    ['a phone', 390, 844],
+    ['a phone on its side', 844, 390],
+  ] as const)
+    test(`on ${name} in the day theme nothing above changes height when the page goes dark for the End`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/', { theme: 'light' });
+      await ready(page);
+      // the openings carry the dimension name in the flow of the text here: as tall by day as in the dark
+      const heights = () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>('.open')].map(
+            (el) => el.offsetHeight,
+          ),
+        );
+      const before = await heights();
+      expect(before).toHaveLength(3);
+      await scrollToSection(page, '#end', 0.3);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+      expect(await heights()).toEqual(before);
+      // and the page is where it was sent: the opening of the End starts 0.3 screens above the top
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            Math.abs(
+              document.querySelector('#end')!.getBoundingClientRect().top +
+                0.3 * innerHeight,
+            ),
+          ),
+        )
+        .toBeLessThan(1);
+    });
+
+  for (const [name, width, height] of [
+    ['a phone', 390, 844],
+    ['a phone on its side', 844, 390],
+    ['a tablet on its side', 1024, 768],
+  ] as const)
+    test(`on ${name} in the day theme the End and the credits fit`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/', { theme: 'light' });
+      await ready(page);
+      await scrollToSection(page, '#end', 0);
+      expect(await visibleScenes(page)).toEqual(['hall']);
+      await expectTextFits(page, { within: '#end' });
+      for (const i of [0, 1]) {
+        await scrollToSection(page, `[data-work="end-${i}"]`, 0.2);
+        await expect(page.locator(`[data-work="end-${i}"] h3`)).toBeVisible();
+        await expectTextFits(page, { within: `[data-work="end-${i}"]` });
+      }
+      // the credits' words come a screen after their top: here the first heading stands a third of the way down the
+      // screen, so nothing of them is passing under the bar yet
+      // (on a touch screen they stand at their top, 10vh of room over the heading: above that, as before the credits waited)
+      await scrollToSection(
+        page,
+        '#credits',
+        (await onTouch(page)) ? -0.15 : 0.7,
+      );
+      expect(await visibleScenes(page)).toEqual(['end']);
+      await expect(page.locator('#credits .roles a').first()).toBeInViewport();
+      await expectTextFits(page, { within: '#credits' });
+      await expectTapTargets(page);
+      // further down the list scrolls under the bar by design, so only the width is checked:
+      // every repository and every name stays inside the screen
+      await expect(
+        page.locator('#credits [data-names="member"] span').first(),
+      ).toBeAttached();
+      const outside = await page.evaluate(() =>
+        [
+          ...document.querySelectorAll(
+            '#credits .roles a, #credits .roles dt, #credits .names span, #credits .fin',
+          ),
+        ]
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.left < -1 || r.right > window.innerWidth + 1;
+          })
+          .map((el) => el.textContent),
+      );
+      expect(outside).toEqual([]);
+      await page.locator('#credits a.more').scrollIntoViewIfNeeded();
+      await page.waitForTimeout(800);
+      await expect(page.locator('#credits a.more')).toBeInViewport();
+      await expectTapTargets(page);
+      await expectNoHorizontalScroll(page);
+    });
+
+  test('switching language inside the End keeps the portal, the builds and the credits working', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await walkTheLedger(page);
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await setLanguage(page, 'en');
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText(
+      'Moon Palace',
+    );
+    await page.waitForTimeout(800);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `en ${sel}`).toEqual([scene]);
+      if (sel.startsWith('[data-work'))
+        await lit(page, `${sel} .work > div > *`);
+    }
+    await expect(page.locator('#credits h3').first()).toHaveText(
+      'OPEN-SOURCE TOOLS',
+    );
+    await expect(page.locator('#credits .roles dt').first()).toHaveText(
+      'Game core',
+    );
+    await expect(page.locator('#credits a.more')).toContainText(
+      'Full member roster',
+    );
+    await expect(page.locator('#credits .fin')).toHaveText('Not over yet.');
+    await scrollToSection(page, '#credits', 0.85);
+    await expectTextFits(page, { within: '#credits' });
+    // the statement of the opening lights up in the new language: its slow stretch was measured again
+    const stretch = await stretchOf(page, '#end');
+    await scrollAt(page, stretch.mid);
+    expect(await visibleScenes(page)).toEqual(['hall']);
+    const lines = page.locator('#end .say span');
+    expect(await lines.count()).toBe(2);
+    await expect(lines.first()).toHaveText('After the End');
+    await scrollAt(page, stretch.mid + stretch.run / 2);
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    await expect(page.locator('#end p.body')).toHaveCSS('opacity', '1');
+    await expect(page.locator('#end .vt')).toHaveText('THE END');
+    // the portal still runs, and the way back out still works
+    await scrollToSection(page, '#end', -0.5);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.98);
+    await scrollToSection(page, '#end', -0.6);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    expect((await endPortal(page)).opacity).toBeGreaterThan(0.1);
+    await scrollToSection(page, '.rank', -0.3);
+    expect(await visibleScenes(page)).toEqual(['nether']);
+    // a second switch, from above the End
+    await setLanguage(page, 'zh_CN');
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText('月宫');
+    for (const [sel, off, scene] of STOPS) {
+      await scrollToSection(page, sel, off);
+      expect(await visibleScenes(page), `zh_CN ${sel}`).toEqual([scene]);
+    }
+    // and what follows the End was measured again as well: the respawn is where its section is
+    await scrollToSection(page, '#respawn', 0);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+    await expect(page.locator('#respawn h2')).toHaveText(
+      '下一个里程碑，等你一起盖。',
+    );
+    await expectNoMissingKeys(page);
+  });
+
+  test('reduced motion: the End scenes switch without the portal and the stars stand still', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    // Without Lenis the site's own smooth scrolling would carry the page there, and from the top of the page
+    // that long native scroll is sometimes cut short (seen for the nether sections too). Jump instead.
+    for (const [sel, off, scene] of STOPS) {
+      await jumpTo(page, sel, off);
+      await expect
+        .poll(() => visibleScenes(page), { message: sel })
+        .toEqual([scene]);
+    }
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    const layers = page.locator('.scene[data-scene="end"] .starfield i');
+    await expect(layers).toHaveCount(3);
+    for (const l of await layers.all())
+      await expect(l).toHaveCSS('background-image', /^url\("data:image\/png/);
+    const at = () =>
+      layers.evaluateAll((els) =>
+        els.map((el) => getComputedStyle(el).transform).join('|'),
+      );
+    const still = await at();
+    await page.waitForTimeout(700);
+    expect(await at()).toBe(still);
+    await expect(page.locator('#credits .roles')).toBeVisible();
+    const lines = page.locator('#end .say span');
+    expect(await lines.count()).toBe(2);
+    for (const line of await lines.all())
+      await expect(line).toHaveCSS('opacity', '1');
+    // back up, with nothing left turned or enlarged
+    await jumpTo(page, '#end', 0.3);
+    await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
+    expect(Math.abs((await pose(page, 'hall')).rotate)).toBeLessThan(0.01);
+    expect((await pose(page, 'hall')).scale).toBeCloseTo(1, 3);
+    // the portal has no part in it: one still frame, never shown, at the boundary itself as well
+    await expect(page.locator(END_PORTAL)).toHaveCount(1);
+    await jumpTo(page, '#end', -0.55);
+    await expect.poll(() => visibleScenes(page)).toEqual(['nether']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    await jumpTo(page, '#end', -0.45);
+    await expect.poll(() => visibleScenes(page)).toEqual(['hall']);
+    await expect(page.locator(END_PORTAL)).toBeHidden();
+    expect(await endFrames(page)).toBe(0);
+  });
+});
+
+test.describe('home: the rail', () => {
+  test('the rail and the bar say which dimension the reader is in, and the line fills with the page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    const rail = page.locator('.rail');
+    await expect(rail).toBeVisible();
+    expect(
+      await rail
+        .locator('a')
+        .evaluateAll((els) => els.map((a) => a.getAttribute('href'))),
+    ).toEqual(['#overworld', '#nether', '#end']);
+    const fill = () =>
+      rail
+        .locator('b')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).d);
+    expect(await fill()).toBeLessThan(0.02);
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'overworld');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'overworld',
+    );
+    await scrollToSection(page, '#nether');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'nether',
+    );
+    await expect(page.locator('.dim-bar nav a.on')).toHaveCount(1);
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'nether');
+    await expect(rail.locator('a.on')).toHaveCount(1);
+    // the mark of the current stop is filled with the accent of its dimension
+    await expect
+      .poll(() =>
+        rail
+          .locator('a.on')
+          .evaluate((el) => getComputedStyle(el, '::before').backgroundColor),
+      )
+      .toBe('rgb(255, 106, 69)');
+    const mid = await fill();
+    expect(mid).toBeGreaterThan(0.15);
+    expect(mid).toBeLessThan(0.8);
+    await scrollToSection(page, '#credits', 0.3);
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'end');
+    await expect(page.locator('.dim-bar nav a.on')).toHaveAttribute(
+      'data-d',
+      'end',
+    );
+    expect(await fill()).toBeGreaterThan(mid);
+    // and back
+    await scrollToSection(page, '#overworld');
+    await expect(rail.locator('a.on')).toHaveAttribute('data-d', 'overworld');
+    expect(await fill()).toBeLessThan(mid);
+  });
+
+  for (const [width, height] of [
+    [390, 844],
+    [844, 390],
+    [1024, 768],
+  ] as const)
+    test(`at ${width}×${height} the rail is ${width > 860 && height > 480 ? 'there, with stops big enough to tap' : 'put away'}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      const rail = page.locator('.rail');
+      await expect(rail).toHaveCount(1);
+      if (width > 860 && height > 480) {
+        await expect(rail).toBeVisible();
+        await expectTapTargets(page);
+        const stops = await rail
+          .locator('a')
+          .evaluateAll((els) =>
+            els.map((a) => a.getBoundingClientRect().width),
+          );
+        expect(stops).toEqual([44, 44, 44]);
+      } else await expect(rail).toBeHidden();
+      await expectNoHorizontalScroll(page);
+    });
+});
+
+test.describe('home: the language list over the film', () => {
+  test('by day it is dark with light words over the film, in the Overworld as in the End, and choosing from it re-measures the page', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { theme: 'light' });
+    await ready(page);
+    const trigger = page.locator('.dim-bar [data-action="language"]');
+    const list = page.locator('.dim-bar .lang-list');
+    await scrollToSection(page, '#overworld', 0);
+    await trigger.click();
+    await expect(list).toHaveCSS('opacity', '1');
+    await expect(list).toHaveCSS('background-color', 'rgb(11, 15, 19)');
+    await expect(list.locator('[aria-selected="true"]')).toHaveCSS(
+      'color',
+      'rgb(207, 234, 255)',
+    );
+    await page.keyboard.press('Escape');
+    await expect(list).toHaveCSS('visibility', 'hidden');
+    await scrollToSection(page, '[data-work="end-0"]', 0.2);
+    await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
+    const y = await page.evaluate(() => Math.round(window.scrollY));
+    await trigger.click();
+    await expect(list).toHaveCSS('opacity', '1');
+    await expect(list).toHaveCSS('background-color', 'rgb(6, 8, 11)');
+    await expect(list.locator('[aria-selected="true"]')).toHaveCSS(
+      'color',
+      'rgb(205, 176, 255)',
+    );
+    await expect(list.locator('[aria-selected="false"]').first()).toHaveCSS(
+      'color',
+      'rgb(242, 244, 246)',
+    );
+    // open, it has moved neither the page nor the scene
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(y);
+    expect(await visibleScenes(page)).toEqual(['moon']);
+    await list.locator('[data-value="en"]').click();
+    await expect(page.locator('[data-work="end-0"] h3')).toHaveText(
+      'Moon Palace',
+    );
+    await expect(list).toHaveCSS('visibility', 'hidden');
+    // measured again in the new language: every scene is where its section is
+    await scrollToSection(page, '[data-work="end-1"]', 0.2);
+    expect(await visibleScenes(page)).toEqual(['farm']);
+    await scrollToSection(page, '#respawn', 0);
+    expect(await visibleScenes(page)).toEqual(['day1']);
+  });
+});
+
+/**
+ * The words of a section come in after the change into it (spec 5.3): the change plays over the section that is
+ * leaving, never over the words of the one that is coming. Each change runs over the screen of scroll in which its
+ * section comes up from the foot of the screen to the head.
+ */
+test.describe('home: the words come after the scene change', () => {
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ])
+    for (const theme of ['dark', 'light'] as const)
+      test(`at ${width}×${height} by ${theme}, no word of the section a dimension change leads to is on screen before the change has ended`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height });
+        await openPage(page, '/', { theme });
+        await ready(page);
+        // the names of the credits are in, and with them the last measure of the page
+        await expect(
+          page.locator('#credits .names span').first(),
+        ).toBeAttached();
+        const touch = await onTouch(page);
+        const seen = await page.evaluate(
+          async (sections) => {
+            const frame = () =>
+              new Promise((done) =>
+                requestAnimationFrame(() => requestAnimationFrame(done)),
+              );
+            /** The elements of `root` that carry words and can be seen: on the screen, not transparent, not hidden. */
+            const shown = (root: Element) =>
+              [root, ...root.querySelectorAll('*')].filter((el) => {
+                if (
+                  ![...el.childNodes].some(
+                    (n) => n.nodeType === 3 && n.textContent!.trim(),
+                  )
+                )
+                  return false;
+                const r = el.getBoundingClientRect();
+                if (
+                  !r.width ||
+                  !r.height ||
+                  r.bottom <= 0 ||
+                  r.top >= innerHeight
+                )
+                  return false;
+                if (getComputedStyle(el).visibility === 'hidden') return false;
+                let opacity = 1;
+                for (let a: Element | null = el; a; a = a.parentElement)
+                  opacity *= +getComputedStyle(a).opacity;
+                return opacity > 0.05;
+              });
+            const out: string[] = [];
+            for (const sel of sections) {
+              const sec = document.querySelector(sel)!;
+              const top = sec.getBoundingClientRect().top + scrollY;
+              // every 2.5% of the change's range, the last step still before its end
+              for (let k = 0; k < 40; k++) {
+                window.scrollTo({
+                  top: top - innerHeight * (1 - k / 40),
+                  behavior: 'instant',
+                });
+                await frame();
+                for (const el of shown(sec))
+                  out.push(
+                    `${sel} at ${k * 2.5}%: ${el.tagName.toLowerCase()}.${el.className} "${el.textContent!.trim().slice(0, 24)}"`,
+                  );
+              }
+            }
+            return out;
+          },
+          // (on a touch screen the credits stand at their top, and their words do not wait)
+          [...WORDED].filter((s) => !(touch && s === '#credits')),
+        );
+        expect(seen).toEqual([]);
+      });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ])
+    test(`at ${width}×${height} a work's caption comes in when the change into its picture is seven tenths through, not before: a work is not a dimension`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      for (const sel of WORKS) {
+        const top = await page.evaluate(
+          (s) =>
+            document.querySelector(s)!.getBoundingClientRect().top + scrollY,
+          sel,
+        );
+        const opacities = () =>
+          page
+            .locator(`${sel} .work > div > *`)
+            .evaluateAll((els) => els.map((e) => +getComputedStyle(e).opacity));
+        // 60% through the change: nothing yet
+        await scrollAt(page, top - height * 0.4);
+        for (const o of await opacities())
+          expect(o, `${sel} at 60%`).toBeLessThan(0.05);
+        // 80% through: it has begun, and is whole in a moment
+        await scrollAt(page, top - height * 0.2);
+        await expect.poll(async () => Math.min(...(await opacities()))).toBe(1);
+      }
+    });
+
+  for (const [width, height] of [
+    [1440, 900],
+    [820, 1180],
+    [390, 844],
+  ])
+    test(`at ${width}×${height} each opening stands its title a fifth of the way down at the middle of its slow stretch, the statement lighting line by line`, async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(
+        isMobile,
+        "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+      );
+      await page.setViewportSize({ width, height });
+      await openPage(page, '/');
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      for (const sel of ['#overworld', '#nether', '#end']) {
+        const stretch = await stretchOf(page, sel);
+        await scrollAt(page, stretch.mid);
+        const at = await page.evaluate(
+          ([s, narrow]) => {
+            const sec = document.querySelector(s as string)!;
+            const title = sec.querySelector(narrow ? '.vt' : '.tag')!;
+            return {
+              title: title.getBoundingClientRect().top / innerHeight,
+              lines: [...sec.querySelectorAll('[data-say] span')].map(
+                (l) => +getComputedStyle(l).opacity,
+              ),
+            };
+          },
+          [sel, stretch.narrow] as const,
+        );
+        expect(
+          Math.abs(at.title - 0.2),
+          `${sel}: title at ${at.title}`,
+        ).toBeLessThan(0.03);
+        // lit one after another from 0.22 of the stretch, a quarter of it each: at the middle the first is whole,
+        // and the last has not begun
+        expect(at.lines[0], `${sel}: first line`).toBe(1);
+        expect(at.lines.at(-1), `${sel}: last line`).toBeLessThan(0.5);
+        // and by the end of the stretch all are lit
+        await scrollAt(page, stretch.mid + stretch.run / 2);
+        for (const o of await page
+          .locator(`${sel} [data-say] span`)
+          .evaluateAll((ls) => ls.map((l) => +getComputedStyle(l).opacity)))
+          expect(o, `${sel}: lit at the end of the stretch`).toBe(1);
+      }
+    });
+
+  test('a language switch inside an opening measures its slow stretch and the page below it again', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    const before = await stretchOf(page, '#end');
+    await scrollAt(page, before.mid);
+    await setLanguage(page, 'en');
+    await page.waitForTimeout(800);
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      await scrollAt(page, stretch.mid);
+      const title = await page
+        .locator(`${sel} .tag`)
+        .evaluate((el) => el.getBoundingClientRect().top / innerHeight);
+      expect(
+        Math.abs(title - 0.2),
+        `${sel} in English: title at ${title}`,
+      ).toBeLessThan(0.03);
+    }
+    // and what is below stands where the page says: the credits' first heading, one screen under their top
+    const credits = await page.evaluate(() => {
+      const sec = document.querySelector('#credits')!;
+      return sec.getBoundingClientRect().top + scrollY;
+    });
+    await scrollAt(page, credits);
+    expect(
+      await page
+        .locator('#credits .cast')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().top),
+    ).toBeGreaterThan(890);
+  });
+
+  test('above 860px the upright name of an opening does not jump while the words are slowed: it moves by no more than the page does', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      let last: number | null = null;
+      const jumps: string[] = [];
+      // in steps of 12px through the stretch, and a screen either side of it
+      for (
+        let y = stretch.mid - stretch.run / 2 - 900;
+        y < stretch.mid + stretch.run / 2 + 900;
+        y += 12
+      ) {
+        await scrollAt(page, y);
+        const top = await page
+          .locator(`${sel} .vt`)
+          .evaluate((el) => el.getBoundingClientRect().top);
+        if (last !== null && Math.abs(top - last) > 24)
+          jumps.push(`${sel} at ${Math.round(y)}: ${last} to ${top}`);
+        last = top;
+      }
+      expect(jumps).toEqual([]);
+    }
+  });
+
+  test('above 860px the upright name holds a fifth and a bit down beside the words through the whole slow stretch, not let go half way', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      // (the name's own rise, a time-based move that begins as it comes up, is over before it is measured)
+      await scrollAt(page, stretch.mid - 0.25 * stretch.run);
+      await page.waitForTimeout(1800);
+      for (const p of [0.25, 0.5, 0.75]) {
+        await scrollAt(page, stretch.mid + (p - 0.5) * stretch.run);
+        const top = await page
+          .locator(`${sel} .vt`)
+          .evaluate((el) => el.getBoundingClientRect().top / innerHeight);
+        expect(
+          Math.abs(top - 0.22),
+          `${sel} at ${p} of the stretch: name at ${top}`,
+        ).toBeLessThan(0.02);
+      }
+    }
+  });
+
+  test('after a resize the slow stretch, the room it is carried into and the wake are measured again', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(
+      isMobile,
+      "the film is the desktop's: a touch screen has nothing pinned, held or slowed (see 'home: on a touch screen')",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.waitForTimeout(1500);
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const stretch = await stretchOf(page, sel);
+      // the room: the carry, at the foot of the text column
+      const room = await page
+        .locator(`${sel} > :first-child`)
+        .evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+      expect(room, `${sel}: the room`).toBe(Math.round(stretch.run * 0.62));
+      await scrollAt(page, stretch.mid);
+      const title = await page
+        .locator(`${sel} .tag`)
+        .evaluate((el) => el.getBoundingClientRect().top / 800);
+      expect(Math.abs(title - 0.2), `${sel}: title at ${title}`).toBeLessThan(
+        0.03,
+      );
+    }
+    // the wake begins one screen above the respawn: the last line is carried as far as the page has gone since
+    const start = await page.evaluate(
+      () =>
+        document.querySelector('#respawn')!.getBoundingClientRect().top +
+        scrollY -
+        innerHeight,
+    );
+    await scrollAt(page, start + 270);
+    const carried = await page
+      .locator('#credits .fin')
+      .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m42);
+    expect(Math.abs(carried - 270)).toBeLessThanOrEqual(2);
+  });
+
+  test('with reduced motion the page is as long as with motion: each opening has the room its words are carried into', async ({
+    browser,
+  }) => {
+    const heights = async (reducedMotion: boolean) => {
+      const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+      });
+      await openPage(page, '/', { reducedMotion });
+      await ready(page);
+      await expect(page.locator('#credits .names span').first()).toBeAttached();
+      await page.waitForTimeout(800);
+      const out = await page.evaluate(() =>
+        // (their own heights: the ledger between them is a list, not a pin, with reduced motion)
+        ['#overworld', '#nether', '#end'].map((s) =>
+          Math.round(document.querySelector(s)!.getBoundingClientRect().height),
+        ),
+      );
+      await page.close();
+      return out;
+    };
+    expect(await heights(true)).toEqual(await heights(false));
+  });
+
+  test('with reduced motion nothing of an opening is carried or risen, and its lines are lit', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openPage(page, '/', { reducedMotion: true });
+    await ready(page);
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const top = await page.evaluate(
+        (s) => document.querySelector(s)!.getBoundingClientRect().top + scrollY,
+        sel,
+      );
+      // through the opening, a tenth of a screen at a time
+      for (let y = top; y < top + 2.5 * 900; y += 90) {
+        await scrollAt(page, y);
+        const moved = await page
+          .locator(`${sel}, ${sel} *`)
+          .evaluateAll((els) =>
+            els
+              .filter((el) => getComputedStyle(el).transform !== 'none')
+              .map((el) => `${el.tagName}.${el.className}`),
+          );
+        expect(moved, `${sel} at ${Math.round(y - top)}`).toEqual([]);
+      }
+      for (const line of await page.locator(`${sel} [data-say] span`).all())
+        await expect(line).toHaveCSS('opacity', '1');
+    }
+  });
+});
+
+/**
+ * A touch screen (`pointer: coarse`: phones and tablets, not by width) is not given the film's counter-motions
+ * (spec 5.3.1): its scroll is the system's, and nothing may fail to follow the finger. The mobile project (a Pixel 7)
+ * is one; the desktop cases above are the film.
+ */
+test.describe('home: on a touch screen', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(!isMobile, 'a touch screen: the mobile project');
+  });
+
+  /** The elements of the page that are held by `position: sticky`. */
+  const sticky = (page: Page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('main *')]
+        .filter((el) => getComputedStyle(el).position === 'sticky')
+        .map((el) => `${el.tagName}.${el.className}`),
+    );
+
+  test('nothing is held: no pin, no sticky element, no stage', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    expect(await onTouch(page)).toBe(true);
+    await expect(page.locator('.pin-spacer')).toHaveCount(0);
+    await expect(page.locator('.ledger-stage')).toHaveCount(0);
+    expect(await sticky(page)).toEqual([]);
+    // wide, too: a tablet is a touch screen whatever its width, and the upright name is not held beside the words
+    await page.setViewportSize({ width: 1180, height: 820 });
+    expect(await sticky(page)).toEqual([]);
+  });
+
+  test('nothing of an opening is carried: its text column has no transform at any point, and a line is lit from the moment it comes in at the foot of the screen', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    for (const sel of ['#overworld', '#nether', '#end']) {
+      const [top, height] = await page.evaluate((s) => {
+        const r = document.querySelector(s)!.getBoundingClientRect();
+        return [r.top + scrollY, r.height];
+      }, sel);
+      for (let y = top; y < top + height; y += 120) {
+        await scrollAt(page, y);
+        const now = await page.evaluate((s) => {
+          const sec = document.querySelector(s)!;
+          const column = sec.firstElementChild!;
+          return {
+            column: getComputedStyle(column).transform,
+            name: getComputedStyle(sec.querySelector('.vt')!).transform,
+            lines: [...sec.querySelectorAll('[data-say] span')].map((l) => ({
+              at: l.getBoundingClientRect().top / innerHeight,
+              opacity: +getComputedStyle(l).opacity,
+            })),
+          };
+        }, sel);
+        expect(now.column, `${sel} at ${y - top}: the column`).toBe('none');
+        for (const l of now.lines) {
+          // lit by the time it is at 65% of the screen, still dim while it is below 95%
+          if (l.at < 0.63) expect(l.opacity, `${sel}: line at ${l.at}`).toBe(1);
+          if (l.at > 0.97)
+            expect(l.opacity, `${sel}: line at ${l.at}`).toBeLessThan(0.3);
+        }
+      }
+    }
+  });
+
+  test("the credits' last line is not held: it goes up with the page, and is gone under the white", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    const start = await page.evaluate(
+      () =>
+        document.querySelector('#respawn')!.getBoundingClientRect().top +
+        scrollY -
+        innerHeight,
+    );
+    const fin = page.locator('#credits .fin');
+    await scrollAt(page, start + 0.05 * 844);
+    const first = await fin.evaluate((el) => el.getBoundingClientRect().top);
+    for (const p of [0.15, 0.3, 0.45]) {
+      await scrollAt(page, start + p * 844);
+      const now = await fin.evaluate((el) => ({
+        top: el.getBoundingClientRect().top,
+        transform: getComputedStyle(el).transform,
+        opacity: +getComputedStyle(el).opacity,
+      }));
+      expect(now.transform, `no hold at ${p}`).toBe('none');
+      expect(now.opacity).toBe(1);
+      // it goes up by what the page has gone up
+      expect(Math.abs(first - now.top - (p - 0.05) * 844)).toBeLessThan(3);
+    }
+    await scrollAt(page, start + 0.6 * 844);
+    expect(+(await fin.evaluate((el) => getComputedStyle(el).opacity))).toBe(0);
+  });
+
+  test("the Nether's six facilities are sections like the works: the picture behind is the facility's, and its caption comes after the change into it", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    await expect(page.locator('[data-ledger-sec]')).toHaveCount(6);
+    await expect(page.locator('.ledger-plain')).toHaveCount(0);
+    const sections = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-ledger-sec]')].map(
+        (s) => s.getBoundingClientRect().top + scrollY,
+      ),
+    );
+    const opacities = (i: number) =>
+      page
+        .locator(`[data-ledger-sec="${i}"] .work > div > *`)
+        .evaluateAll((els) => els.map((el) => +getComputedStyle(el).opacity));
+    for (let i = 0; i < 6; i++) {
+      // the change into the picture is playing: the caption is not there yet
+      await scrollAt(page, sections[i] - 0.4 * 844);
+      for (const o of await opacities(i))
+        expect(o, `${i}: caption during the change`).toBeLessThan(0.05);
+      // at the section's top the change has played out: the picture is this facility's
+      await scrollAt(page, sections[i] + 1);
+      expect(await shownPictures(page), `${i}: the picture at the top`).toEqual(
+        [String(i)],
+      );
+      await expect.poll(async () => Math.min(...(await opacities(i)))).toBe(1);
+      expect(await visibleScenes(page)).toEqual(['nether']);
+      await expect(page.locator('html')).toHaveAttribute('data-dim', 'nether');
+      // the caption: number, date, name
+      await expect(
+        page.locator(`[data-ledger-sec="${i}"] .work p`),
+      ).toContainText(`0${i + 1}`);
+    }
+    // the caption is a work's: the same type
+    const type = (sel: string) =>
+      page
+        .locator(sel)
+        .first()
+        .evaluate((el) => {
+          const c = getComputedStyle(el);
+          return [c.fontFamily, c.fontSize, c.fontWeight, c.color];
+        });
+    expect(await type('[data-ledger-sec="0"] .work h3')).toEqual(
+      await type('[data-work="overworld-0"] .work h3'),
+    );
+    expect(await type('[data-ledger-sec="0"] .work p')).toEqual(
+      await type('[data-work="overworld-0"] .work p'),
+    );
+  });
+
+  test('the waits are short: the credits stand at their place, and the fades of an opening and a caption take about 0.4s', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/');
+    await ready(page);
+    await expect(page.locator('#credits .names span').first()).toBeAttached();
+    // the credits are not a screen lower: 10vh of room over the first heading
+    const room = await page
+      .locator('#credits')
+      .evaluate((el) => parseFloat(getComputedStyle(el).paddingTop));
+    expect(Math.abs(room - 84.4)).toBeLessThan(1);
+    // the body of an opening: came in at the foot of the screen, whole in well under the desktop's 1.1s
+    const body = page.locator('#nether p.body');
+    const at = await body.evaluate(
+      (el) => el.getBoundingClientRect().top + scrollY,
+    );
+    await scrollAt(page, at - 844 * 0.8);
+    await page.waitForTimeout(700);
+    await expect(body).toHaveCSS('opacity', '1');
+    // a work's caption: 0.4s after its section's top is at 30% of the screen
+    const work = await page.evaluate(
+      () =>
+        document
+          .querySelector('[data-work="overworld-1"]')!
+          .getBoundingClientRect().top + scrollY,
+    );
+    await scrollAt(page, work - 844 * 0.25);
+    await page.waitForTimeout(700);
+    await expect(page.locator('[data-work="overworld-1"] .work h3')).toHaveCSS(
+      'opacity',
+      '1',
+    );
+  });
+
+  test('arriving at #ledger lands on the first facility with its caption in', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openPage(page, '/#ledger');
+    await ready(page);
+    await landedOn(page, '#ledger');
+    expect(await shownPictures(page)).toEqual(['0']);
+    await expect
+      .poll(async () =>
+        Math.min(
+          ...(await page
+            .locator('[data-ledger-sec="0"] .work > div > *')
+            .evaluateAll((els) =>
+              els.map((e) => +getComputedStyle(e).opacity),
+            )),
+        ),
+      )
+      .toBe(1);
+  });
+});
+
+test.describe('home: which screens get the touch experience', () => {
+  test.beforeEach(({}, info) => {
+    test.skip(info.project.name !== 'desktop', 'its own devices');
+  });
+  const state = async (page: Page) => {
+    await ready(page);
+    return page.evaluate(() => ({
+      coarse: matchMedia('(pointer: coarse)').matches,
+      pins: document.querySelectorAll('.pin-spacer').length,
+      facilities: document.querySelectorAll('[data-ledger-sec]').length,
+    }));
+  };
+  test('a tablet on its side, wide as a desktop, is a touch screen', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      ...devices['iPad Pro 11 landscape'],
+    });
+    const page = await context.newPage();
+    await openPage(page, '/');
+    expect(await state(page)).toEqual({ coarse: true, pins: 0, facilities: 6 });
+    await context.close();
+  });
+
+  test('a narrow desktop window, with a mouse, gets the film', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+    });
+    const page = await context.newPage();
+    await openPage(page, '/');
+    expect(await state(page)).toEqual({
+      coarse: false,
+      pins: 1,
+      facilities: 0,
+    });
+    await context.close();
+  });
+});

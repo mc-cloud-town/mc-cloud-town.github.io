@@ -1,0 +1,1239 @@
+/* Home page: the fixed world of stacked scenes, the loader and the spawn section.
+   Ported from docs/design-demos/dimensions-v2.html. Scroll-driven motion uses transform and opacity only. */
+
+/* Lenis drives the scroll position itself, and the page grows with its content. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto !important;
+}
+
+/* a number, so that it can ease */
+@property --veil-k {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+.dim.dim--home {
+  /* ───────── the world ───────── */
+  .world {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: #000;
+  }
+  .scene {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+    opacity: 0;
+    overflow: hidden;
+  }
+  .scene.is-first {
+    visibility: visible;
+    opacity: 1;
+  }
+  .zoom,
+  .cam {
+    position: absolute;
+    inset: 0;
+  }
+  .cam img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* spawn: the anniversary video, in the box the old home page gave it: as tall as the screen, so the picture is
+     not enlarged, and much wider than the picture itself, so the player's own interface (its title at one end,
+     its mark at the other) lies in the empty ends of the frame, off the sides of the screen. Where the screen is
+     wider than about 3 : 2 the box grows by the width instead, so the picture still covers it. The cover is fitted
+     into the same box the same way (whole, centred), so the still and the moving picture line up. Scenery: it
+     takes no pointer, and it is no part of the layout (the world is fixed and cuts it off). */
+  .vid {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(150vh * 16 / 9);
+    height: 100vh;
+    min-width: 100vw;
+    min-height: calc(120vw * 9 / 16);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .vid > * {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .vid iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+  .cam .vid img.vid-cover {
+    object-fit: contain;
+  }
+  /* One veil per scene, of the design's shapes. A picture that is dark by itself (a shader shot) is given a
+     strength under 1 (scenes.ts): every stop of its veil is that much lower, the shape is the same. The strength
+     eases when it changes (from one facility of the ledger to the next), as anything else that changes. */
+  .veil {
+    position: absolute;
+    inset: 0;
+    --veil-k: var(--strength, 1);
+    transition: --veil-k var(--t-in) var(--ease-rise);
+  }
+  .veil--side {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), calc(var(--s1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--s2) * var(--veil-k))) 40%,
+      rgba(var(--v), calc(var(--s3) * var(--veil-k))) 72%,
+      rgba(var(--v), calc(var(--s4) * var(--veil-k))) 100%
+    );
+  }
+  .veil--wide {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), calc(var(--s1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--s2) * var(--veil-k))) 56%,
+      rgba(var(--v), calc(var(--s3) * var(--veil-k))) 84%,
+      rgba(var(--v), calc(var(--s4) * var(--veil-k))) 100%
+    );
+  }
+  .veil--flip {
+    transform: scaleX(-1);
+  }
+  .veil--foot {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--v), calc(var(--f1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--f2) * var(--veil-k))) 34%,
+      rgba(var(--v), calc(var(--f3) * var(--veil-k))) 66%
+    );
+  }
+  .veil--hero {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), calc(var(--h1) * var(--veil-k))) 0%,
+      rgba(var(--v), calc(var(--h2) * var(--veil-k))) 36%,
+      rgba(var(--v), calc(var(--h3) * var(--veil-k))) 56%,
+      rgba(var(--v), calc(var(--h3) * var(--veil-k))) 68%,
+      rgba(var(--v), calc(var(--h4) * var(--veil-k))) 82%,
+      rgba(var(--v), calc(var(--h5) * var(--veil-k))) 100%
+    );
+  }
+  /* the end: one generated tile of specks at three depths, on a ground that reaches past the screen */
+  .starfield {
+    position: absolute;
+    inset: -20%;
+    background-color: #05030a;
+  }
+  /* each layer drifts sideways and upwards by the distances Starfield.tsx sets here (constants/starfield.ts):
+     it reaches that much further, so no edge of the screen is left without stars at the far end of the drift */
+  .starfield i {
+    position: absolute;
+    inset: 0 calc(-1 * var(--drift-x)) calc(-1 * var(--drift-y));
+    background-repeat: repeat;
+  }
+  /* the portals (the Nether's swirl, the End's field of specks): generated, drawn small and scaled up with hard
+     pixels. One canvas each, in the same place; only the one that is being crossed is ever switched on. */
+  .portal {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash {
+    position: fixed;
+    inset: 0;
+    z-index: 21;
+    opacity: 0;
+    pointer-events: none;
+    background: #fff;
+  }
+
+  /* ───────── loader ───────── */
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #06080b;
+    color: #f2f4f6;
+    display: grid;
+    place-items: center;
+    /* The fail-safe, which needs no script: if no script of the page has started after ten seconds, the loader
+       gives way by itself and the served page is read as it is. The script the served page runs behind the
+       loader calls it off the moment it starts (`html[data-boot]`, at the foot of this file), and sees to a
+       page whose own script never arrives itself; so does Loader.tsx (`html[data-live]`). */
+    animation:
+      loader-failsafe var(--t-list) var(--ease-rise) 10s forwards,
+      loader-failsafe-gone 1ms linear calc(10s + var(--t-list)) forwards;
+  }
+  /* a map of the world being generated: the percentage, the map, the stage.
+     Shown in the served page: a loader is there to be seen, from the first frame that is painted. The script
+     behind the loader's markup draws the map from that frame on (loaderCore.ts); only for a reader known to
+     have everything does it put the block away at once, and so does Loader.tsx on a step here from another
+     page of the site. */
+  .loader-in {
+    display: grid;
+    justify-items: center;
+    gap: 22px;
+  }
+  /* in a face of the system, not the site's own monospace: the loader is painted before the fonts are in
+     (FontSheet.tsx), and its two lines must not change face while it is read */
+  .loader .pct {
+    font:
+      500 15px ui-monospace,
+      'SFMono-Regular',
+      Menlo,
+      Consolas,
+      monospace;
+    letter-spacing: 0.08em;
+    min-width: 4ch;
+    text-align: center;
+  }
+  /* 21 × 21 pixels, one per chunk, shown large with hard edges */
+  .loader canvas {
+    display: block;
+    width: min(46vmin, 300px);
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+  }
+  .loader .stage {
+    font:
+      12px ui-monospace,
+      'SFMono-Regular',
+      Menlo,
+      Consolas,
+      monospace;
+    letter-spacing: 0.14em;
+    color: #a3adb8;
+  }
+
+  /* ───────── the bar: clear over the world ───────── */
+  .dim-bar {
+    background: none;
+    backdrop-filter: none;
+    border-bottom: 0;
+  }
+  .dim-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 -28px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(var(--v), 0.92) 35%,
+      rgba(var(--v), 0)
+    );
+  }
+
+  /* ───────── the rail: where the reader is, and a way to the three dimensions ─────────
+     Under the menu sheet (49), over the page. */
+  .rail {
+    position: fixed;
+    left: calc(var(--gutter) / 2 - 6px);
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 40;
+    height: 38vh;
+    width: 12px;
+  }
+  .rail::before,
+  .rail b {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--line);
+  }
+  .rail b {
+    background: var(--accent);
+    transform-origin: top;
+    transform: scaleY(0);
+    transition: background-color 0.5s; /* with the accent, as .acc */
+  }
+  /* The stop itself is the ::before, so the link around it can be bigger than the mark: 28px to click,
+     44px where fingers are used. Its centre is where the design's 11px square has it. */
+  .rail a {
+    position: absolute;
+    left: 5.5px;
+    width: 28px;
+    height: 28px;
+    margin: -8.5px 0 0 -14px;
+    display: grid;
+    place-items: center;
+  }
+  .rail a::before {
+    content: '';
+    width: 11px;
+    height: 11px;
+    border: 1px solid var(--fg);
+    background: var(--bg);
+    rotate: 45deg;
+    transition:
+      background-color var(--t-state),
+      border-color var(--t-state),
+      scale var(--t-state) var(--ease-out);
+  }
+  .rail a.on::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  @media (hover: hover) {
+    .rail a:hover::before {
+      border-color: var(--accent);
+      scale: 1.3;
+    }
+  }
+  .rail a:nth-child(2) {
+    top: 0;
+  }
+  .rail a:nth-child(3) {
+    top: 50%;
+  }
+  .rail a:nth-child(4) {
+    top: 100%;
+  }
+
+  /* ───────── content ───────── */
+  main {
+    position: relative;
+    z-index: 10;
+  }
+  main > * {
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+  .vt {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    font-family: var(--serif);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .vt i {
+    display: inline-block;
+    overflow: hidden;
+    font-style: normal;
+  }
+  .vt i b {
+    display: block;
+    font-weight: inherit;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 18px 30px;
+    background: var(--fg);
+    color: var(--bg);
+    border-radius: 100px;
+    transition:
+      background 0.3s,
+      gap 0.3s;
+  }
+  .btn:hover {
+    background: var(--accent);
+    gap: 22px;
+  }
+
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 620px;
+  }
+  /* On a phone `100vh` is the screen with the browser's bars put away: while they show, the foot of the hero
+     (the way down, the call to join) is under them. The small viewport height is what is left with the bars
+     showing, and it does not change while the page is scrolled, so nothing is measured again. Where there are
+     no such bars the two are the same. */
+  @supports (height: 100svh) {
+    .hero {
+      height: 100svh;
+    }
+  }
+  .hero .vt {
+    position: absolute;
+    right: var(--gutter);
+    top: 52%;
+    translate: 0 -50%;
+    font-size: clamp(56px, 13vh, 150px);
+  }
+  .hero-meta {
+    position: absolute;
+    left: var(--gutter);
+    /* the demo's 96px, measured from this site's bar instead of the demo's shorter one */
+    top: calc(var(--bar-h) + 24px);
+    display: grid;
+    gap: 4px;
+  }
+  .hero-meta strong {
+    font: 500 14px var(--mono);
+  }
+  .hero-copy {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 96px;
+    max-width: 460px;
+  }
+  .hero-copy .en {
+    font: 500 13px var(--mono);
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .hero-copy p.lead {
+    font-size: 19px;
+    font-weight: 500;
+    margin: 14px 0 30px;
+  }
+  .cue {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 34px;
+    font: 11px var(--mono);
+    color: var(--muted);
+  }
+  .cue i {
+    width: 44px;
+    height: 1px;
+    background: var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .cue i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--fg);
+    animation: cue 1.8s cubic-bezier(0.7, 0, 0.2, 1) infinite;
+  }
+
+  /* ───────── a dimension opens ───────── */
+  /* Its words reach the foot of the screen only as the change into the dimension ends: the section begins a screen
+     lower than the change, and the words come in after it. choreography.ts carries them down the page as it goes up,
+     and lengthens the foot of their column by what they are carried. */
+  .open {
+    position: relative;
+    min-height: 140vh;
+    padding: 100vh var(--gutter) 18vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6vw;
+    align-items: start;
+  }
+  .open > div:first-child {
+    max-width: 44vw;
+  }
+  /* the dimension name: the same weight on the page as the statement beside it */
+  .open .vt {
+    font-size: clamp(40px, 5.2vw, 88px);
+    letter-spacing: 0.12em;
+    position: sticky;
+    top: 22vh;
+  }
+  /* the serif glyph box is a little wider than 1em, so the upright label would scroll inside itself;
+     the negative margin keeps the glyphs where the design puts them */
+  @media (min-width: 861px) {
+    .open .vt {
+      line-height: 1.2;
+      margin-right: -0.1em;
+    }
+  }
+  .open .tag {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .open .tag::after {
+    content: '';
+    width: 80px;
+    height: 1px;
+    background: var(--line);
+  }
+  .say {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(30px, 3.8vw, 64px);
+    line-height: 1.32;
+  }
+  /* whole in the served page; dimmed, to be lit line by line, only once the script that lights them runs
+     (`html[data-live]`, at the foot of this file) */
+  .say span {
+    display: block;
+    text-wrap: balance;
+  }
+  .open p.body {
+    max-width: min(30em, var(--measure));
+    margin-top: 40px;
+    font-size: 17px;
+    color: var(--muted);
+  }
+  /* Four figures in a row; where the column is too narrow for four, two and two. They are held in two pairs so
+     that a row never breaks after the third (which is what a plain wrap did at 1024px, and would do wherever a
+     language's captions happen to be a little longer). */
+  .stats,
+  .stats .pair {
+    display: flex;
+    gap: 20px 56px;
+  }
+  .stats {
+    flex-wrap: wrap;
+    margin-top: 64px;
+  }
+  .stats b {
+    display: block;
+    font: 900 clamp(40px, 4.4vw, 68px) / 1 var(--serif);
+    font-variant-numeric: tabular-nums;
+  }
+  /* the live figures replace the stand-ins with a fade, not a swap */
+  .stats b {
+    animation: dim-fade-0 var(--t-in) var(--ease-rise) backwards;
+  }
+  .stats span {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  /* a figure only the browser knows (the day count) is not in the served page: until it is there, its caption
+     does not stand alone under nothing */
+  .stats div:has(> b:empty) {
+    display: none;
+  }
+  /* the home page is the trailer: each part ends with a way into the full page */
+  .more {
+    display: inline-flex;
+    gap: 10px;
+    margin-top: 40px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    transition:
+      gap 0.3s,
+      border-color 0.3s;
+  }
+  .more:hover {
+    gap: 16px;
+    border-bottom-color: var(--accent);
+  }
+
+  /* works: full-screen builds, each arriving its own way with its caption somewhere else */
+  .work-sec {
+    position: relative;
+    height: 150vh;
+  }
+  .work {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: grid;
+    padding: 110px var(--gutter) 96px;
+  }
+  .work h3 {
+    font-size: clamp(36px, 5.2vw, 88px);
+    margin: 10px 0 0;
+    overflow-wrap: anywhere;
+  }
+  .work--bl {
+    align-content: end;
+    justify-items: start;
+  }
+  .work--tr {
+    align-content: center;
+    justify-items: end;
+    text-align: right;
+  }
+  .work--tr > div {
+    max-width: 36vw;
+  }
+  .work--bc {
+    align-content: end;
+    justify-items: center;
+    text-align: center;
+  }
+
+  /* nether ledger */
+  /* (the stage's own rule for the small viewport height follows this one: as the hero) */
+  .ledger-stage {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(200px, 300px) minmax(0, 1fr);
+    gap: 5vw;
+    align-items: center;
+    padding: 0 var(--gutter);
+  }
+  @supports (height: 100svh) {
+    .ledger-stage {
+      height: 100svh;
+    }
+  }
+  .ledger-list li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  .ledger-list li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .ledger-list li.on {
+    color: var(--fg);
+  }
+  .ledger-list li.on .mono {
+    color: var(--accent);
+  }
+  .ledger-now {
+    max-width: 38vw;
+  }
+  .ledger-now h3 {
+    font-size: clamp(32px, 4.4vw, 76px);
+    margin-top: 14px;
+    overflow: hidden;
+    padding-bottom: 0.1em;
+    overflow-wrap: anywhere;
+  }
+  /* the name of the next facility rises into the heading's own box */
+  .ledger-now h3 span {
+    display: block;
+    animation: ledger-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* Reduced motion, and a touch screen: no pin and no steps (NetherLedger.tsx). The facilities are a plain list in the flow of the
+     page, each with its own picture, over the scene and its veil like everything else: no ground of its own. */
+  .ledger-plain {
+    display: grid;
+    gap: clamp(56px, 10vh, 112px);
+    padding: 22vh var(--gutter);
+  }
+  .ledger-plain li {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    gap: 5vw;
+    align-items: center;
+  }
+  .ledger-plain p {
+    display: flex;
+    gap: 14px;
+    color: var(--muted);
+  }
+  .ledger-plain h3 {
+    font-size: clamp(28px, 3.6vw, 60px);
+    margin-top: 14px;
+    overflow-wrap: anywhere;
+  }
+  .ledger-plain figure {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  /* a picture that arrives late fades in: nothing pops, with reduced motion as without */
+  .ledger-plain img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--t-in) var(--ease-rise);
+  }
+  .ledger-plain img[data-in] {
+    opacity: 1;
+  }
+  .rank {
+    padding: 26vh var(--gutter);
+  }
+  /* A touch screen (the same query as choreography.ts is told by HomePage.tsx): nothing holds. The upright dimension
+     name and a work's caption frame scroll with the finger, laid out as they are where the hold has not begun. */
+  @media (pointer: coarse) {
+    .open .vt {
+      position: static;
+    }
+    /* (still positioned, as it was: it stands over the world as before) */
+    .work {
+      position: relative;
+    }
+  }
+  .rank .claim {
+    font-size: clamp(56px, 9vw, 170px);
+    line-height: 1.05;
+  }
+  .rank .claim em {
+    font-style: normal;
+    color: var(--accent);
+    display: block;
+  }
+  .rank p {
+    max-width: 30em;
+    margin-top: 36px;
+    font-size: 17px;
+    color: var(--muted);
+  }
+
+  /* the end: credits */
+  /* the credits begin a screen lower: their words reach the foot of the screen only as the push into the stars ends */
+  .credits {
+    padding: 100vh var(--gutter) 30vh;
+    text-align: center;
+  }
+  /* on a touch screen the credits stand where they did: their words do not wait for the push into the stars there */
+  @media (pointer: coarse) {
+    .credits {
+      padding-top: 10vh;
+    }
+  }
+  .credits .cast {
+    font: 500 13px var(--mono);
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin: 22vh 0 40px;
+  }
+  /* only the heading that opens the credits: the headings of the name lists are first in their own block */
+  .credits > .cast:first-child {
+    margin-top: 0;
+  }
+  .roles {
+    display: grid;
+    gap: 22px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .roles div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .roles dt {
+    text-align: right;
+    color: var(--muted);
+    font-size: 14px;
+    padding-top: 2px;
+  }
+  .roles dd {
+    text-align: left;
+    font: 500 14px/1.9 var(--mono);
+    /* one repository per line */
+    display: grid;
+    justify-items: start;
+  }
+  .roles dd a {
+    transition: color var(--t-state);
+  }
+  .roles dd a:hover {
+    color: var(--accent);
+  }
+  .names {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 28px;
+    max-width: 980px;
+    margin: 0 auto;
+    font: 500 15px/1.9 var(--mono);
+  }
+  .names span {
+    overflow-wrap: anywhere;
+  }
+  .credits .fin {
+    margin-top: 30vh;
+    font-size: clamp(40px, 7vw, 120px);
+  }
+
+  /* respawn: day one again (docs/design-demos/respawn-lab.html). The scene is the call to join, whole: what to
+     do, the mascot beside it, and under both the three departments, each with its own way in. Under the scene
+     the picture sinks into the ground, as an inner page's header does, and on the ground stands the site's
+     footer. Everything runs from gutter to gutter. */
+  .respawn {
+    position: relative;
+  }
+  .call {
+    min-height: 100vh;
+    padding: 16vh var(--gutter) 14vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    align-content: center;
+    gap: 72px var(--gutter);
+  }
+  .respawn h2 {
+    font-size: clamp(40px, 6vw, 108px);
+    line-height: 1.14;
+    margin: 18px 0 44px;
+    text-wrap: balance;
+  }
+  .acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px 32px;
+  }
+  .pal {
+    width: min(28vw, 400px);
+    height: auto;
+    aspect-ratio: 1;
+    filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.45));
+    /* floating around its place, on properties of its own: its coming up out of the wake (choreography.ts) owns the transform */
+    animation: pal-float 2.8s ease-in-out infinite alternate;
+  }
+  /* The departments: a list, one row each. The name at one end, the way in at the other, what the department
+     looks for between them; the rule over each row runs from gutter to gutter. The rows share their columns
+     (the list's own): the names have the width of the longest in the language being read, and no less than
+     the design's. */
+  .depts {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(8em, auto) minmax(0, 1fr) auto;
+    column-gap: 32px;
+  }
+  .depts li {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: baseline;
+    padding: 22px 0;
+    border-top: 1px solid var(--line);
+  }
+  .depts li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .depts b {
+    font: 900 24px/1.3 var(--serif);
+  }
+  .depts li > span {
+    color: var(--muted);
+  }
+  /* the ways in stand in a row of their own here, not under a paragraph */
+  .acts .more,
+  .depts .more {
+    margin-top: 0;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .ground {
+    background: linear-gradient(
+      180deg,
+      rgba(var(--v), 0) 0,
+      rgba(var(--v), 0.86) 110px,
+      rgb(var(--v)) 200px
+    );
+    padding: 180px var(--gutter) 0;
+    transition: background var(--t-theme);
+  }
+  /* the footer of the site stands on the ground: the gutters are the ground's */
+  .respawn .dim-foot {
+    margin-top: 0;
+    padding-inline: 0;
+  }
+  /* 861–1100px: the same frame, a smaller mascot, a narrower name column */
+  @media (max-width: 1100px) {
+    .pal {
+      width: min(26vw, 300px);
+    }
+    .call {
+      row-gap: 56px;
+    }
+    .depts {
+      grid-template-columns: minmax(6em, auto) minmax(0, 1fr) auto;
+      column-gap: 24px;
+    }
+  }
+  /* up to 860px: one column (the veil runs bottom-up), no room for the mascot; a department is its name, what
+     it looks for and its way in, one under another */
+  @media (max-width: 860px) {
+    .call {
+      grid-template-columns: minmax(0, 1fr);
+      padding-top: 112px;
+      padding-bottom: 10vh;
+      row-gap: 48px;
+    }
+    .pal {
+      display: none;
+    }
+    .respawn h2 {
+      margin-bottom: 32px;
+    }
+    .depts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .depts li {
+      row-gap: 6px;
+      padding: 20px 0 12px;
+    }
+    .depts .more {
+      justify-self: start;
+    }
+    .ground {
+      padding-top: 140px;
+    }
+  }
+  /* a phone on its side: the scene is as tall as what it holds */
+  @media (max-height: 480px) {
+    .call {
+      min-height: 0;
+      padding-top: 88px;
+      padding-bottom: 32px;
+    }
+    .pal {
+      display: none;
+    }
+  }
+  /* a section that was jumped to: the focus is on its heading, which is not a control */
+  [data-heading]:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  @media (max-width: 1024px) {
+    /* a finger needs 44px around each stop of the rail */
+    .rail a {
+      width: 44px;
+      height: 44px;
+      margin: -16.5px 0 0 -22px;
+    }
+    /* each repository is 44px tall to tap: the role stands level with the first of them */
+    .roles dt {
+      padding-top: 0;
+      line-height: 44px;
+    }
+    /* 44px tall to tap; the line stays right under the words, as in the design */
+    .more {
+      align-items: flex-end;
+      margin-top: 28px;
+    }
+  }
+  @media (max-width: 860px) {
+    /* no room for a clear side: the veil runs bottom-up instead */
+    .veil--side,
+    .veil--wide,
+    .veil--hero {
+      transform: none;
+      background: linear-gradient(
+        0deg,
+        rgba(var(--v), calc(var(--n1) * var(--veil-k))) 0%,
+        rgba(var(--v), calc(var(--n2) * var(--veil-k))) 55%,
+        rgba(var(--v), calc(var(--n3) * var(--veil-k))) 100%
+      );
+    }
+    .hero .vt {
+      font-size: clamp(48px, 10.5vh, 100px);
+      top: 46%;
+    }
+    .hero-copy {
+      right: calc(var(--gutter) + 12vh);
+      bottom: 84px;
+    }
+    .hero-copy p.lead {
+      font-size: 16px;
+    }
+    .open {
+      grid-template-columns: 1fr;
+      /* a screen lower here too: the words come in after the change into the dimension */
+      padding-top: 100vh;
+    }
+    .open > div:first-child,
+    .ledger-now,
+    .work--tr > div {
+      max-width: none;
+    }
+    .open .vt {
+      writing-mode: horizontal-tb;
+      position: static;
+      order: -1;
+      font-size: 40px;
+    }
+    .work--tr {
+      align-content: end;
+      justify-items: start;
+      text-align: left;
+    }
+    .ledger-stage {
+      grid-template-columns: 1fr;
+      align-content: end;
+      padding-bottom: 96px;
+    }
+    .ledger-list {
+      display: none;
+    }
+    /* the words, then the picture under them */
+    .ledger-plain li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
+    .roles div {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+    .roles dt,
+    .roles dd {
+      text-align: center;
+    }
+    .roles dd {
+      justify-items: center;
+    }
+    .roles dt {
+      line-height: inherit;
+    }
+    .rail {
+      display: none;
+    }
+  }
+  /* short landscape screens: the title would run off the bottom */
+  @media (max-height: 480px) {
+    .hero {
+      min-height: 0;
+    }
+    .hero .vt {
+      font-size: 15vh;
+      /* centred in what is left under the bar, so it clears the bar's buttons */
+      top: calc(var(--bar-h) + (100% - var(--bar-h)) / 2);
+    }
+    .hero-copy {
+      bottom: 24px;
+    }
+    .hero-copy p.lead {
+      margin: 6px 0 12px;
+    }
+    .cue {
+      display: none;
+    }
+    .open {
+      min-height: 0;
+      /* (its words come in a screen lower, as everywhere: the change into the dimension plays out first) */
+      padding-block: 100vh 64px;
+    }
+    .work {
+      padding-block: 72px 24px;
+    }
+    /* still pinned, with only what fits: the date and the name over the picture, clear of the bar */
+    .ledger-stage {
+      grid-template-columns: 1fr;
+      padding-top: var(--bar-h);
+    }
+    .ledger-list {
+      display: none;
+    }
+    .ledger-now {
+      max-width: none;
+    }
+    /* a picture as wide as this screen would be taller than it: side by side again, so each row fits */
+    .ledger-plain {
+      padding-block: 96px;
+      gap: 48px;
+    }
+    .ledger-plain li {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+      gap: 5vw;
+    }
+    .rank {
+      padding-block: 96px;
+    }
+    .rail {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cue i::after {
+      animation: none;
+    }
+    .pal {
+      animation: none;
+    }
+    .ledger-stage {
+      height: auto;
+      overflow: visible;
+      padding-block: 20vh;
+    }
+    .ledger-now h3 span {
+      animation: none;
+    }
+  }
+}
+
+/* The page's script has started (Loader.tsx marks the document): the loader is the script's from here on, and the
+   statements wait, dimmed, for the scroll that lights them. Without the mark (scripts off, or a script that never
+   came) the loader gives way by itself and every statement stands whole. */
+html[data-live] .dim.dim--home .loader,
+html[data-boot] .dim.dim--home .loader {
+  animation: none;
+}
+/* The served script has given the page's script up (it failed, or did not come in a long while: loaderCore.ts,
+   BOOT_LIMIT_MS): the loader gives way as the fail-safe has it, and the served page is read as it is. */
+html[data-boot='gone'] .dim.dim--home .loader {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--t-list) var(--ease-rise),
+    visibility 0s linear var(--t-list);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-live] .dim.dim--home .say span {
+    opacity: 0.16;
+  }
+}
+/* Without the mark nothing pins the ledger and nothing steps through it: its stage is one screen that names one
+   facility of six. Where the list of all six is left out for want of room (a phone, a short landscape screen) it
+   stands in the flow again, over the one the stage names, and the stage is as tall as that takes. */
+@media (max-width: 860px), (max-height: 480px) {
+  html:not([data-live]) .dim.dim--home .ledger-stage {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  html:not([data-live]) .dim.dim--home .ledger-list {
+    display: block;
+  }
+}
+
+/* A picture that comes after its scene is on the screen (the pictures are asked for when the loader lifts, and a
+   reader on a slow line can cut to a scene before its picture has come) fades in when it can be drawn (World.tsx
+   marks it), in the time of anything that arrives; it does not pop. Opacity only. Not the first picture, which
+   the loader waits for (nor, below, any other it waited for: the picture of the place the reader arrives at),
+   nor the facilities' pictures, whose opacity the ledger drives. */
+html[data-live]
+  .dim.dim--home
+  .scene:not(.is-first)
+  .cam
+  > img:not([data-ledger]) {
+  opacity: 0;
+  transition: opacity var(--t-in) var(--ease-rise);
+}
+html[data-live]
+  .dim.dim--home
+  .scene:not(.is-first)
+  .cam
+  > img[data-in]:not([data-ledger]) {
+  opacity: 1;
+}
+/* In before the loader lifted (Loader.tsx marks it as it lifts): the cover goes on a picture that is whole. */
+html[data-live]
+  .dim.dim--home
+  .scene:not(.is-first)
+  .cam
+  > img[data-whole]:not([data-ledger]) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-live]
+    .dim.dim--home
+    .scene:not(.is-first)
+    .cam
+    > img:not([data-ledger]) {
+    transition: opacity 0.12s linear;
+  }
+}
+/* Each section keeps the accent of its own dimension, so the text of the one that is leaving the screen
+   does not change colour when the page (<html data-dim>: bar, veil, theme) moves on to the next.
+   By day the page is read under the night's veil in the Nether and the End, and so the night accents apply there too. */
+.dim.dim--home [data-dim='nether'] {
+  --accent: #ff6a45;
+}
+.dim.dim--home [data-dim='end'] {
+  --accent: #cdb0ff;
+}
+/* day: the words on a picture carry their shade (--shade, tokens.css; none by night and in the Nether and the
+   End). Whatever has a solid ground of its own carries none: the button and the respawn's ground, the bar's pills
+   when they are filled (open, and under a pointer), the language list and the phone menu's sheet. */
+.dim.dim--home :is(main, .dim-bar) {
+  text-shadow: var(--shade, none);
+}
+.dim.dim--home
+  :is(
+    .btn,
+    .ground,
+    .lang-list,
+    .dim-sheet,
+    .dim-bar .pill[aria-expanded='true']
+  ) {
+  text-shadow: none;
+}
+@media (hover: hover) {
+  .dim.dim--home .dim-bar .pill:hover {
+    text-shadow: none;
+  }
+}
+/* day: the bar's fog is as thin as the veil */
+[data-theme='light']:not([data-dim='nether'], [data-dim='end'])
+  .dim.dim--home
+  .dim-bar::before {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
+}
+/* day: the departments' links stand on the far side of the respawn's picture, which the side veil leaves clear */
+[data-theme='light'] .dim.dim--home .scene[data-scene='day1'] .veil {
+  --s3: 0.2;
+  --s4: 0.2;
+}
+/* day: the ground under the respawn is paper, and what stands on it is read in the paper's ink */
+[data-theme='light'] .dim.dim--home .ground {
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --fg: #0f1418;
+  --muted: #414c57;
+  --v: 238, 242, 245;
+  --line: rgba(15, 20, 24, 0.24);
+  --mark-dark: 0;
+  --accent: #0b6fb5;
+  --accent-ink: #095b95;
+  color: var(--fg);
+}
+
+/* It fades, then it is taken away: two animations, the second beginning when the first has ended. Hidden from
+   its first keyframe on: after a delay this long the clock ends a hair short of the last keyframe, and "hidden"
+   is a value that is only reached at the very end. */
+@keyframes loader-failsafe {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes loader-failsafe-gone {
+  from,
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes cue {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: 100% 0;
+  }
+}
+@keyframes pal-float {
+  from {
+    translate: 0 1.5%;
+    rotate: 1deg;
+  }
+  to {
+    translate: 0 -1.5%;
+    rotate: -1deg;
+  }
+}
+@keyframes ledger-in {
+  from {
+    transform: translateY(110%);
+  }
+}

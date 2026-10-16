@@ -1,0 +1,128 @@
+/* The open-source page: the home page's credits in full. Built on inner.css (.head, .tools, .group, .empty,
+   .next); only what is this page's own is here. */
+.dim {
+  /* the organisation in four numbers, and the way to it */
+  .os-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 28px 48px;
+    max-width: 2200px;
+    margin-inline: auto;
+    padding: 56px var(--gutter) 0;
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
+  }
+  .os-stats dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px clamp(28px, 5vw, 72px);
+    margin-right: auto;
+  }
+  .os-stats dl div {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .os-stats dt {
+    color: var(--muted);
+    transition: color var(--t-theme);
+  }
+  .os-stats dd {
+    font-size: clamp(34px, 4.2vw, 64px);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* One line per repository, as the roster has one per person: name, what it is, and its figures in the mono
+     face. The whole line is the link. */
+  .repos {
+    animation: 0.35s var(--ease-rise) var(--wait, 0ms) backwards;
+  }
+  .repos[data-run='0'] {
+    animation-name: dim-settle-0;
+  }
+  .repos[data-run='1'] {
+    animation-name: dim-settle-1;
+  }
+  .repo {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 8fr) minmax(0, 5fr);
+    gap: 4px 32px;
+    align-items: baseline;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+    transition: border-color var(--t-theme);
+  }
+  .repo > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .repo .name {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+    transition: color var(--t-state);
+  }
+  .repo:hover .name {
+    color: var(--accent);
+  }
+  .repo .about {
+    font-size: 14px;
+    color: var(--muted);
+    transition: color var(--t-theme);
+  }
+  .repo .meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 2px 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    transition: color var(--t-theme);
+  }
+  .repo .tag {
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 0 9px;
+    transition: border-color var(--t-theme);
+  }
+  /* the refused request: the retry and the way to GitHub stand side by side */
+  .os-failed .pill + .pill {
+    margin-left: 10px;
+  }
+
+  @media (max-width: 860px) {
+    /* the two wrap under the words, and begin where the words do */
+    .os-failed .pill,
+    .os-failed .pill + .pill {
+      margin: 12px 10px 0 0;
+    }
+    .os-stats dl {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+    }
+    .repo {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .repo .meta {
+      justify-content: flex-start;
+      margin-top: 6px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .os-stats,
+    .repos {
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+    .os-stats,
+    .repos[data-run='0'] {
+      animation-name: dim-fade-0;
+    }
+    .repos[data-run='1'] {
+      animation-name: dim-fade-1;
+    }
+  }
+}

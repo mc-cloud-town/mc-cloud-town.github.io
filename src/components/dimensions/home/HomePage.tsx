@@ -1,0 +1,391 @@
+'use client';
+
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { useTranslation } from 'react-i18next';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SiteBar } from '#/dimensions/SiteBar';
+import { useDimension } from '#/dimensions/DimensionProvider';
+import { GITHUB_API, STATIC_DATA_API } from '@/constants';
+import useApi from '@/hooks/useApi';
+import { buildChoreography } from '@/lib/dimensions/choreography';
+import { daysSince, SERVER_START_MS } from '@/lib/dimensions/format';
+import { hashId } from '@/lib/dimensions/navigation';
+import { markHomeVisit, recallHomePlace } from '@/lib/dimensions/homePlace';
+import { onNextTick } from '@/lib/dimensions/nextTick';
+import { picturesAt } from '@/constants/scenes';
+import { ARRIVAL_CAMERA } from '@/constants/heroVideo';
+import type { IMembers } from '@/types/IMember';
+import { World } from './World';
+import { HeroVideo } from './HeroVideo';
+import { GROUND_GOES_AT_S, Loader } from './Loader';
+import { Hero } from './Hero';
+import { DimensionOpening } from './DimensionOpening';
+import { WorkSection } from './WorkSection';
+import { PortalCanvas } from './PortalCanvas';
+import { NetherLedger } from './NetherLedger';
+import { RankStatement } from './RankStatement';
+import { Starfield } from './Starfield';
+import { Credits } from './Credits';
+import { Respawn } from './Respawn';
+import { DimensionRail } from './DimensionRail';
+
+/** Shown until the live numbers arrive, and kept if they never do. */
+const DEFAULT_MILESTONES = 53;
+const DEFAULT_MEMBERS = 116;
+const DEFAULT_REPOS = 29;
+
+const noSubscription = () => () => {};
+const prefersReducedMotion = () =>
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** A touch screen: phones and tablets, by the pointer and not by the width (spec 5.3.1). */
+const hasTouchScreen = () => window.matchMedia('(pointer: coarse)').matches;
+
+const daysToday = () => daysSince(SERVER_START_MS, Date.now());
+
+/**
+ * The pictures the loader must not lift without, besides the first one: those of the place the reader arrives at.
+ * One string (addresses, a line each), so that asking twice gives the same value.
+ */
+const picturesOfArrival = () => {
+  // in the order sectionJumps.ts lands by: a return to where the reader was; or else an address that names a section
+  const back = recallHomePlace();
+  const hash = hashId(window.location.hash);
+  return (back ? back.pictures : hash ? picturesAt(hash) : []).join('\n');
+};
+const noPictures = () => '';
+/** The reader arrives somewhere other than the top: at the place of a return, or at a section the address names. */
+const arrivesBelow = () => {
+  const back = recallHomePlace();
+  const hash = hashId(window.location.hash);
+  return back
+    ? back.section > 0 || back.into > 0
+    : Boolean(hash && hash !== 'top');
+};
+const atTheTop = () => false;
+
+export const HomePage = ({
+  boot,
+}: {
+  /** the script the served page runs behind its loader (LoaderBoot.tsx): made where the site is built */
+  boot?: React.ReactNode;
+}) => {
+  const root = useRef<HTMLDivElement>(null);
+  const { setDim } = useDimension();
+  const [ready, setReady] = useState(false);
+  // the loader lifted without having shown its map: its ground began to go at once (Loader.tsx)
+  const plain = useRef(false);
+  // the arrival that follows the loader has played out: the hero's video waits for it (HeroVideo.tsx)
+  const [arrived, setArrived] = useState(false);
+  // null until the browser has been asked (the static export renders without it)
+  const reduced = useSyncExternalStore<boolean | null>(
+    noSubscription,
+    prefersReducedMotion,
+    () => null,
+  );
+  // null until the browser has been asked, like `reduced`; read once, as the page is built for it
+  const touch = useSyncExternalStore<boolean | null>(
+    noSubscription,
+    hasTouchScreen,
+    () => null,
+  );
+  // known only in the browser, like `reduced`: the served page asks for the first picture alone
+  const arrival = useSyncExternalStore(
+    noSubscription,
+    picturesOfArrival,
+    noPictures,
+  );
+  const first = useMemo(() => (arrival ? arrival.split('\n') : []), [arrival]);
+  const below = useSyncExternalStore(noSubscription, arrivesBelow, atTheTop);
+  // this visit has a name from here on, under which the reader's place is remembered (homePlace.ts)
+  useEffect(markHomeVisit, []);
+  const [ledger, setLedger] = useState(0);
+  const { t, i18n } = useTranslation();
+  const { data: members, error: noMembers } = useApi<IMembers>(
+    `${STATIC_DATA_API}/member.json`,
+  );
+  const { data: repos } = useApi<{ name: string }[]>(
+    `${GITHUB_API}?per_page=100`,
+  );
+  // the same list the progress page counts, so the figure, the link and that page agree
+  const { data: progress } = useApi<unknown[]>(
+    `${STATIC_DATA_API}/${i18n.language}/survivalProgress.json`,
+  );
+  // The last count that arrived: another language asks for its own file, and the figure does not fall back to
+  // the default while that one is on its way.
+  const [milestones, setMilestones] = useState(DEFAULT_MILESTONES);
+  if (Array.isArray(progress) && progress.length !== milestones)
+    setMilestones(progress.length);
+  // the static export is rendered at build time: the day count is only known in the browser
+  const days = useSyncExternalStore<number | null>(
+    noSubscription,
+    daysToday,
+    () => null,
+  );
+  const works = t('dimensions.overworld.works', { returnObjects: true }) as {
+    meta: string;
+    name: string;
+  }[];
+  const endWorks = t('dimensions.end.works', { returnObjects: true }) as {
+    meta: string;
+    name: string;
+  }[];
+  // the same video as the old site's header, from the same data
+  const video = t('home.backgroundVideo', { returnObjects: true }) as {
+    youtubeId: string;
+    start: number;
+  };
+
+  // Build once the loader is done, so measurements see the final fonts and layout.
+  // The build is also the landing (a section named by the address, the place of a return: sectionJumps.ts) and the
+  // change to its scene, and it is done before the loader takes its first step away: the loader hands the page over
+  // with `flushSync` (Loader.tsx), and React runs the effects of such an update before it returns. Left to the
+  // scheduler it came a task after `data-ready`, and a frame in between showed the first scene under a loader that
+  // had begun to go.
+  // An effect, not a layout effect: its cleanup must come after the router has put the next page at the top.
+  // ScrollTrigger remembers the last scroll position it read; taken down while the page is still where the reader
+  // left it, it gives that position back to the next visit's first refresh (a fresh visit then starts far down).
+  useEffect(() => {
+    if (!ready || reduced === null || touch === null || !root.current) return;
+    const el = root.current;
+    const dispose = buildChoreography(el, {
+      reduced,
+      touch,
+      onDim: setDim,
+      onLedger: setLedger,
+    });
+    // The arrival, timed against the loader lifting off (its ground begins to go 0.5s into the lift, after the map
+    // has opened): the camera settles, the title rises, the rest follows. A loader that had no map to open lifts
+    // by its ground at once, and the arrival begins that far in, so the two keep their places to each other.
+    // The camera move is on .cam so it never fights the scroll-driven moves on .zoom.
+    // Its parts stand where they start from at once, and it plays from the next tick, as the lift does (Loader.tsx):
+    // the two begin together, after the time this build takes.
+    const arrival = reduced
+      ? null
+      : gsap
+          .timeline({ paused: true, onComplete: () => setArrived(true) })
+          .fromTo(
+            el.querySelector('.scene.is-first .cam'),
+            { scale: 1.3 },
+            { scale: 1, duration: ARRIVAL_CAMERA.duration, ease: 'expo.out' },
+            ARRIVAL_CAMERA.at,
+          )
+          .from(
+            el.querySelectorAll('.hero .vt b'),
+            { yPercent: 105, duration: 1.3, stagger: 0.12, ease: 'expo.out' },
+            0.7,
+          )
+          // the rail comes with the bar, a step behind it (its place on the page is `translate`, so y is free)
+          .from(
+            el.querySelector('.rail'),
+            { y: 22, opacity: 0, duration: 1, ease: 'power3.out' },
+            1.26,
+          )
+          .from(
+            // .hero-meta itself belongs to the scroll-driven exit, so its two lines rise instead, as one
+            el.querySelectorAll('.dim-bar, .hero-meta > *, .hero .up'),
+            {
+              y: 22,
+              opacity: 0,
+              duration: 1,
+              stagger: (i: number) => 0.06 * (i < 2 ? i : i - 1),
+              ease: 'power3.out',
+            },
+            1.2,
+          );
+    ScrollTrigger.refresh();
+    const from = plain.current ? GROUND_GOES_AT_S : 0;
+    const unplayed = arrival ? onNextTick(() => arrival.play(from)) : null;
+    return () => {
+      unplayed?.();
+      arrival?.revert();
+      dispose();
+    };
+  }, [ready, reduced, touch, setDim]);
+
+  // Another language reflows the text and moves every section below it: measure the triggers again.
+  // (Runs after the new text is committed; the nodes themselves are kept, see the index keys below.)
+  // Before the next paint: whoever was taken to a section and has not moved since is put back on it by the
+  // choreography when the triggers are measured again, and must never see the frame in between.
+  const language = i18n.language;
+  useLayoutEffect(() => {
+    if (ready && language) ScrollTrigger.refresh();
+  }, [ready, language]);
+
+  // The credits grow when the names arrive, which moves everything measured below them.
+  useLayoutEffect(() => {
+    if (ready && members) ScrollTrigger.refresh();
+  }, [ready, members]);
+
+  const onDone = useCallback((withoutMap: boolean) => {
+    plain.current = withoutMap;
+    setReady(true);
+  }, []);
+
+  return (
+    <div className='dim dim--home' ref={root} data-ready={ready}>
+      {/* every other picture is asked for when the loader lifts, not before (and not as late as the scroll) */}
+      <World
+        first={first}
+        all={ready}
+        ledger={ledger}
+        spawn={
+          <HeroVideo
+            id={video.youtubeId}
+            start={video.start}
+            title={t('dimensions.hero.video')}
+            reduced={reduced}
+            arrived={arrived}
+          />
+        }
+      >
+        {reduced !== null && <Starfield reduced={reduced} />}
+      </World>
+      {/* one for each dimension that is entered through a portal (TRANSITIONS, scenes.ts) */}
+      <PortalCanvas surface='nether' />
+      <PortalCanvas surface='end' />
+      <div className='flash' aria-hidden='true' />
+      {/* On an arrival further down the page (a section named by the address, the place of a return) the names of
+          the credits are waited for as well: they are a good part of the page's height, and the place the loader
+          lifts on must not move when they come. At the top nothing above the reader can change. */}
+      <Loader
+        reduced={reduced}
+        settled={!below || Boolean(members) || Boolean(noMembers)}
+        onDone={onDone}
+      />
+      {/* right behind the loader's markup: the served page shows and runs the map with this, before this script has come */}
+      {boot}
+      {/* scripts off: nothing would ever lift the loader, so it is not shown at all */}
+      <noscript>
+        <style>{'.dim.dim--home .loader{display:none}'}</style>
+      </noscript>
+      <SiteBar variant='home' />
+      <DimensionRail />
+      <main>
+        <Hero />
+        <DimensionOpening
+          id='overworld'
+          tag={t('dimensions.overworld.tag')}
+          say={
+            t('dimensions.overworld.say', { returnObjects: true }) as string[]
+          }
+          body={t('dimensions.overworld.body')}
+          label={t('dimensions.dim.overworld')}
+        >
+          <div className='stats rise'>
+            {/* two pairs: where four do not fit in a row they stand two and two, never three and one (home.css) */}
+            <div className='pair'>
+              <div>
+                {/* a new node for a new number: a figure that arrives late fades in (home.css) */}
+                <b data-stat='days' key={days ?? 'none'}>
+                  {days === null ? '' : days.toLocaleString('en-US')}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.days')}
+                </span>
+              </div>
+              <div>
+                <b data-stat='milestones' key={milestones}>
+                  {milestones}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.milestones')}
+                </span>
+              </div>
+            </div>
+            <div className='pair'>
+              <div>
+                <b
+                  data-stat='members'
+                  key={members?.member?.length ?? DEFAULT_MEMBERS}
+                >
+                  {members?.member?.length ?? DEFAULT_MEMBERS}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.members')}
+                </span>
+              </div>
+              <div>
+                <b data-stat='repos' key={repos ? 'live' : 'default'}>
+                  {repos
+                    ? repos.filter((r) => !r.name.startsWith('.')).length
+                    : DEFAULT_REPOS}
+                </b>
+                <span data-t='note'>
+                  {t('dimensions.overworld.stats.repos')}
+                </span>
+              </div>
+            </div>
+          </div>
+          <a className='more rise' href='/survivalProgress/' data-t='control'>
+            {t('dimensions.overworld.more', { count: milestones })}{' '}
+            <span aria-hidden='true'>→</span>
+          </a>
+        </DimensionOpening>
+        {works.map((w, i) => (
+          <WorkSection
+            // keyed by position: the same section carries every language, so its scroll triggers survive a switch
+            key={i}
+            group='overworld'
+            index={i}
+            meta={w.meta}
+            name={w.name}
+          />
+        ))}
+        <DimensionOpening
+          id='nether'
+          tag={t('dimensions.nether.tag')}
+          say={t('dimensions.nether.say', { returnObjects: true }) as string[]}
+          body={t('dimensions.nether.body')}
+          label={t('dimensions.dim.nether')}
+        />
+        <NetherLedger
+          reduced={reduced}
+          touch={touch}
+          index={ledger}
+          items={
+            t('dimensions.nether.ledger', { returnObjects: true }) as {
+              date: string;
+              name: string;
+            }[]
+          }
+        />
+        <RankStatement
+          label={t('dimensions.nether.rankLabel')}
+          lines={
+            t('dimensions.nether.rank', { returnObjects: true }) as string[]
+          }
+          body={t('dimensions.nether.rankBody')}
+        />
+        <DimensionOpening
+          id='end'
+          tag={t('dimensions.end.tag')}
+          say={t('dimensions.end.say', { returnObjects: true }) as string[]}
+          body={t('dimensions.end.body')}
+          label={t('dimensions.dim.end')}
+        />
+        {endWorks.map((w, i) => (
+          <WorkSection
+            // keyed by position, like the overworld builds
+            key={i}
+            group='end'
+            index={i}
+            meta={w.meta}
+            name={w.name}
+          />
+        ))}
+        <Credits members={members} />
+        <Respawn />
+      </main>
+    </div>
+  );
+};
