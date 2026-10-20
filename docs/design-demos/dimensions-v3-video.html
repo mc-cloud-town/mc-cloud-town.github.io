@@ -274,26 +274,61 @@
         pointer-events: none;
         background: #fff;
       }
-      /* Wake lab: softer white-outs (team feedback, 2026-10-20: the white after 還沒結束。 is too bright). Each stays
-         opaque at the middle, so the respawn still comes up out of it; the switch at the top right chooses one.
-           now    pure white, rising sharply at the end (as built)
-           warm   a warm paper white, a step below pure white
-           slow   pure white, but brightening evenly instead of all at the end
-           dawn   light blooming from the middle, warm at the centre and cool grey at the edges, brightening evenly
-           mist   a pale silver-grey, brightening evenly: the dimmest */
-      [data-wake='warm'] .flash {
-        background: #ece6da;
-      }
-      [data-wake='dawn'] .flash {
-        background: radial-gradient(
-          ellipse 75% 70% at 50% 58%,
-          #f3eee3 0%,
-          #e4dfd5 45%,
-          #c3ccd5 100%
-        );
+      /* Wake lab: other ways into the respawn (team feedback, 2026-10-20: the white after 還沒結束。 is too bright).
+         Each covers the screen whole at the middle, so the respawn still comes up out of it as it clears; the
+         switch at the top right chooses one. The shaped ones are drawn by two numbers the change plays: --k, how
+         far the cover has closed (first half), and --o, how far it has opened again (second half).
+           mist   a pale silver-grey that fades in and out, brightening evenly (2026-10-20: the only soft white kept)
+           dark   a fade through black, as a film does: no light at all
+           lids   eyes closing on the End and opening on the first day: dark lids from top and bottom, soft-edged
+           iris   a silver disc grows from the middle over the End, then opens from the middle onto the day
+           rise   a silver dawn rises from the bottom over the End, then lifts off the top onto the day */
+      .flash {
+        --k: 0;
+        --o: 0;
       }
       [data-wake='mist'] .flash {
         background: #d3d9de;
+      }
+      [data-wake='dark'] .flash {
+        background: #050608;
+      }
+      [data-wake='lids'] .flash,
+      [data-wake='iris'] .flash,
+      [data-wake='rise'] .flash {
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+      [data-wake='lids'] .flash {
+        --c: calc(var(--k) - var(--o));
+        background: linear-gradient(
+            to bottom,
+            #050608 calc(var(--c) * 62% - 10%),
+            transparent calc(var(--c) * 62%)
+          ),
+          linear-gradient(
+            to top,
+            #050608 calc(var(--c) * 62% - 10%),
+            transparent calc(var(--c) * 62%)
+          );
+      }
+      [data-wake='iris'] .flash {
+        background: radial-gradient(
+          circle at 50% 55%,
+          transparent calc(var(--o) * 125% - 25%),
+          #d3d9de calc(var(--o) * 125%),
+          #d3d9de calc(var(--k) * 125% - 25%),
+          transparent calc(var(--k) * 125%)
+        );
+      }
+      [data-wake='rise'] .flash {
+        background: linear-gradient(
+          to top,
+          transparent calc(var(--o) * 140% - 40%),
+          #d3d9de calc(var(--o) * 140%),
+          #d3d9de calc(var(--k) * 140% - 40%),
+          transparent calc(var(--k) * 140%)
+        );
       }
       .wake-lab {
         position: fixed;
@@ -1669,24 +1704,23 @@
           put('#capB', b);
         };
 
-        // Wake lab (see the .wake-lab styles): ?wake=now|warm|slow|dawn|mist, or the switch at the top right
+        // Wake lab (see the .flash styles): ?wake=mist|dark|lids|iris|rise, or the switch at the top right
         const WAKES = [
-            ['now', '現行'],
-            ['warm', '暖白'],
-            ['slow', '緩升'],
-            ['dawn', '晨光'],
             ['mist', '銀白'],
+            ['dark', '暗轉'],
+            ['lids', '閉眼'],
+            ['iris', '光圈'],
+            ['rise', '晨曦'],
           ],
-          sharp = [gsap.parseEase('power2.in'), gsap.parseEase('power2.out')],
           even = [gsap.parseEase('sine.inOut'), gsap.parseEase('sine.inOut')],
           WAKE_EASE = {
-            now: sharp,
-            warm: sharp,
-            slow: even,
-            dawn: even,
             mist: even,
+            dark: even,
+            lids: even,
+            iris: even,
+            rise: even,
           },
-          wakeMode = () => document.documentElement.dataset.wake || 'now';
+          wakeMode = () => document.documentElement.dataset.wake || 'mist';
         {
           const nav = document.createElement('div');
           nav.className = 'wake-lab';
@@ -1796,6 +1830,19 @@
                   duration: 0.5,
                   ease: type === 'wake' ? wakeOut : 'power2.out',
                 },
+                0.5,
+              );
+            // the shaped wakes: how far the cover has closed, then how far it has opened again
+            if (type === 'wake')
+              tl.fromTo(
+                cover,
+                { '--k': 0 },
+                { '--k': 1, duration: 0.5, ease: wakeIn },
+                0,
+              ).fromTo(
+                cover,
+                { '--o': 0 },
+                { '--o': 1, duration: 0.5, ease: wakeOut, ...im },
                 0.5,
               );
           } else if (type === 'fall') {
