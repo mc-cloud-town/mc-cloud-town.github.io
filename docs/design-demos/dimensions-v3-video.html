@@ -2377,13 +2377,23 @@
               { autoAlpha: 0, duration: 0.07, ease: 'power1.out' },
               0.5,
             );
+        // the credits' last line, and the screen's centre as a transform origin of its own (the stars zoom from there)
+        const FIN = '.credits .fin';
+        const centred = () => {
+          const r = $(FIN).getBoundingClientRect();
+          return `${innerWidth / 2 - r.left}px ${innerHeight / 2 - r.top}px`;
+        };
         const swap = (tl, at = 0.5) =>
           tl.set(E.el, { autoAlpha: 0 }, 0.5).set(D.el, { autoAlpha: 1 }, at);
         // Light speed (the 'hyper' candidate): the End's stars as points in depth, flying at the camera. The
         // timeline plays three numbers: how much of the canvas is seen (alpha), how much of its own black stands
         // behind it (bg), and the speed. The stars move by the clock, so they keep flowing while the scroll rests;
         // the speed draws them out from points into streaks.
-        const hyper = { alpha: 0, bg: 0, speed: 0 };
+        // The credits' last line goes the same way: at the swap (glyphs 0 to 1) it is drawn here as points in the
+        // place where it stands, and then (text 0 to 1) the points fly at the camera and draw out into streaks
+        // with the stars. Unlike the stars they are placed by the scroll, not the clock, so scrolling back puts the
+        // line together again.
+        const hyper = { alpha: 0, bg: 0, speed: 0, glyphs: 0, text: 0 };
         {
           const cv = $('.hyper'),
             cx = cv.getContext('2d'),
@@ -2411,11 +2421,59 @@
             h = cv.height = innerHeight * r;
           };
           size();
-          addEventListener('resize', size);
+          let glyphs = null;
+          addEventListener('resize', () => {
+            size();
+            glyphs = null;
+          });
+          // the line as points: drawn off screen in its own type and size, and sampled every few pixels
+          const sample = () => {
+            const el = $('.credits .fin'),
+              r = el.getBoundingClientRect(),
+              cs = getComputedStyle(el),
+              k = w / innerWidth,
+              pad = r.height * 0.3,
+              oc = document.createElement('canvas');
+            oc.width = Math.ceil(r.width);
+            oc.height = Math.ceil(r.height + pad * 2);
+            const o = oc.getContext('2d');
+            o.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+            o.textAlign = 'center';
+            o.textBaseline = 'alphabetic';
+            o.fillStyle = '#fff';
+            // on the line's own baseline, found by a mark set on it
+            const mark = document.createElement('span');
+            mark.style.cssText =
+              'display:inline-block;width:0;height:0;vertical-align:baseline';
+            el.append(mark);
+            const base = mark.getBoundingClientRect().top - (r.top - pad);
+            mark.remove();
+            o.fillText(el.textContent.trim(), oc.width / 2, base);
+            const px = o.getImageData(0, 0, oc.width, oc.height).data,
+              step = 3,
+              pts = [];
+            for (let y = 0; y < oc.height; y += step)
+              for (let x = 0; x < oc.width; x += step)
+                if (px[(y * oc.width + x) * 4 + 3] > 120)
+                  pts.push({
+                    sx: (r.left + x) * k,
+                    sy: (r.top - pad + y) * k,
+                    z: 0.3 + Math.random() * 0.65,
+                    keep: Math.random(),
+                  });
+            return {
+              pts,
+              color: cs.color.match(/\d+/g).slice(0, 3).join(','),
+              dot: step * k * 1.2,
+              k,
+            };
+          };
           const frame = (now) => {
             const dt = Math.min(50, now - last) / 16.7;
             last = now;
-            const on = hyper.alpha > 0.001;
+            // (alpha is the stars' and the black's; the line's points are always whole, so the line does not
+            // change as it passes from the page to the canvas)
+            const on = hyper.alpha > 0.001 || hyper.glyphs > 0;
             if (on !== shown) {
               cv.style.visibility = on ? 'visible' : 'hidden';
               shown = on;
@@ -2425,9 +2483,9 @@
                 ox = w / 2,
                 oy = h / 2,
                 v = hyper.speed;
-              cv.style.opacity = hyper.alpha;
+              const a = hyper.alpha;
               cx.clearRect(0, 0, w, h);
-              cx.fillStyle = `rgba(5,6,8,${hyper.bg})`;
+              cx.fillStyle = `rgba(5,6,8,${hyper.bg * a})`;
               cx.fillRect(0, 0, w, h);
               cx.lineCap = 'round';
               const step = (0.0012 + v * v * 0.045) * dt,
@@ -2445,13 +2503,34 @@
                   x0 = ox + (s.x / z0) * f,
                   y0 = oy + (s.y / z0) * f;
                 const near = 1 - s.z;
-                cx.strokeStyle = `rgba(${s.c},${0.25 + near * 0.6})`;
+                cx.strokeStyle = `rgba(${s.c},${(0.25 + near * 0.6) * a})`;
                 cx.lineWidth = 0.6 + near * near * 2.4;
                 cx.beginPath();
                 cx.moveTo(x0, y0);
                 cx.lineTo(x1, y1);
                 cx.stroke();
               }
+              if (hyper.glyphs > 0) {
+                glyphs ??= sample();
+                const t = hyper.text,
+                  gt = 0.0005 + v * v * 0.12;
+                // as they go they thin into fine streaks and dim, as the stars are: not a mass of white
+                cx.strokeStyle = `rgba(${glyphs.color},${hyper.glyphs * (1 - t * 0.8)})`;
+                cx.lineWidth = glyphs.dot * (1 - t) + glyphs.k * t;
+                for (const p of glyphs.pts) {
+                  // most points fall away as the line goes, so what reaches light speed is a few fine streaks
+                  if (p.keep < t * 0.95) continue;
+                  // a point placed in depth so that it stands where the letter is, then carried at the camera
+                  const gx = ((p.sx - ox) * p.z) / f,
+                    gy = ((p.sy - oy) * p.z) / f,
+                    z = p.z * (1 - 0.96 * t),
+                    z0 = z + gt;
+                  cx.beginPath();
+                  cx.moveTo(ox + (gx / z0) * f, oy + (gy / z0) * f);
+                  cx.lineTo(ox + (gx / z) * f + 0.01, oy + (gy / z) * f);
+                  cx.stroke();
+                }
+              } else glyphs = null;
             }
             requestAnimationFrame(frame);
           };
@@ -2469,24 +2548,16 @@
               { scale: 1.1, duration: 0.3, ease: 'sine.in' },
               0,
             ).to(E.zoom, { scale: 2.8, duration: 0.2, ease: 'power3.in' }, 0.3);
-            // the credits' last line goes with the stars: it creeps closer, then rushes past the camera and is gone
-            // into the dark, rather than cut out at the middle
-            tl.fromTo(
-              '.credits .fin',
-              { scale: 1, filter: 'blur(0px)', opacity: 1 },
-              { scale: 1.06, duration: 0.3, ease: 'sine.in' },
-              0,
-            ).to(
-              '.credits .fin',
-              {
-                scale: 3,
-                filter: 'blur(8px)',
-                opacity: 0,
-                duration: 0.17,
-                ease: 'power3.in',
-              },
-              0.3,
-            );
+            // the credits' last line is pulled in with the stars, from the same centre and at the same pace, until
+            // the dark closes over it
+            tl.set(FIN, { transformOrigin: centred }, 0)
+              .fromTo(
+                FIN,
+                { scale: 1 },
+                { scale: 1.1, duration: 0.3, ease: 'sine.in' },
+                0,
+              )
+              .to(FIN, { scale: 2.8, duration: 0.2, ease: 'power3.in' }, 0.3);
             tl.fromTo(
               '.flash',
               { '--c': 0 },
@@ -2520,7 +2591,7 @@
               .fromTo(
                 hyper,
                 { alpha: 0, bg: 0 },
-                { alpha: 1, bg: 1, duration: 0.16, ease: 'none' },
+                { alpha: 1, bg: 0.45, duration: 0.16, ease: 'none' },
                 0.1,
               )
               .fromTo(
@@ -2529,23 +2600,19 @@
                 { speed: 1, duration: 0.38, ease: 'power3.in' },
                 0.12,
               )
+              // the flying stars' own black deepens slowly behind them, until it is whole at the middle
+              .to(hyper, { bg: 1, duration: 0.24, ease: 'power2.in' }, 0.26)
+              // the credits' last line becomes points where it stands, before the flying stars come over it, and
+              // they fly at the camera with the stars
+              .set(FIN, { autoAlpha: 0 }, 0.1)
+              .set(hyper, { glyphs: 1 }, 0.1)
               .fromTo(
-                '.credits .fin',
-                { scale: 1, filter: 'blur(0px)', opacity: 1 },
-                { scale: 1.06, duration: 0.28, ease: 'sine.in' },
-                0,
+                hyper,
+                { text: 0 },
+                { text: 1, duration: 0.24, ease: 'power3.in' },
+                0.26,
               )
-              .to(
-                '.credits .fin',
-                {
-                  scale: 3,
-                  filter: 'blur(8px)',
-                  opacity: 0,
-                  duration: 0.18,
-                  ease: 'power3.in',
-                },
-                0.28,
-              )
+              .set(hyper, { glyphs: 0 }, 0.5)
               .fromTo(
                 '.flash',
                 { '--c': 0 },
@@ -2579,6 +2646,13 @@
                 r.v >= 1 ? '' : `circle(${px}px at 50% 55%)`;
               const ring = $('.ring');
               ring.style.width = ring.style.height = `${px * 2}px`;
+              // the credits' last line belongs to the End: the ring wipes it away with the stars as it passes
+              const fin = $(FIN),
+                fr = fin.getBoundingClientRect();
+              fin.style.maskImage = fin.style.webkitMaskImage =
+                r.v <= 0
+                  ? ''
+                  : `radial-gradient(circle at ${innerWidth / 2 - fr.left}px ${innerHeight * 0.55 - fr.top}px, transparent ${px}px, #000 ${px + 2}px)`;
             };
             tl.fromTo(
               E.zoom,
@@ -2634,7 +2708,19 @@
               { '--c': 0 },
               { '--c': 1, duration: 0.48, ease: 'sine.inOut' },
               0,
-            );
+            )
+              // the credits' last line goes out of focus and drifts off as the eyes close on it
+              .fromTo(
+                FIN,
+                { filter: 'blur(0px)', scale: 1 },
+                {
+                  filter: 'blur(7px)',
+                  scale: 0.96,
+                  duration: 0.48,
+                  ease: 'sine.inOut',
+                },
+                0,
+              );
             swap(tl);
             // snap open, a flutter, then open for good
             tl.to(
@@ -2671,10 +2757,13 @@
             gsap.set(
               [E.zoom, D.el, D.zoom, '.flash', '.ring', '.credits .fin'],
               {
-                clearProps: 'transform,filter,clipPath,--c,width,height',
+                clearProps:
+                  'transform,transformOrigin,filter,clipPath,--c,width,height',
               },
             );
             D.el.style.clipPath = '';
+            $(FIN).style.maskImage = $(FIN).style.webkitMaskImage = '';
+            hyper.glyphs = hyper.text = 0;
           }
           document.documentElement.dataset.wake = mode;
           const tl = gsap.timeline({
