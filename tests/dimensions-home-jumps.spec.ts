@@ -6,7 +6,7 @@ import {
   coverAtLanding,
   coverAtMoves,
   coverRuns,
-  flashState,
+  wakeSeen,
   type Frame,
   heldFrames,
   jumpTo,
@@ -279,9 +279,9 @@ test.describe('home: jumping to a section', () => {
     expect(frames[changed].cover).toBe(1);
     // one cut: the page is only ever at the start or at the target
     expect(new Set(frames.map((f) => f.y)).size).toBe(2);
-    // no transition of the page in between is ever seen: neither the portal nor the wake's black
+    // no transition of the page in between is ever seen: neither the portal nor the wake's jump at light speed
     expect(Math.max(...frames.map((f) => f.portal * (1 - f.cover)))).toBe(0);
-    expect(Math.max(...frames.map((f) => f.flash * (1 - f.cover)))).toBe(0);
+    expect(Math.max(...frames.map((f) => f.wake * (1 - f.cover)))).toBe(0);
     // it lifts over about half a second, onto day one
     const lifting = frames.filter((f) => f.cover > 0 && f.cover < 1 && f.y);
     expect(lifting.length).toBeGreaterThan(5);
@@ -1690,10 +1690,10 @@ test.describe('home: arriving, leaving and robustness', () => {
         .poll(() => visibleScenes(page), { message: sel })
         .toEqual([scene]);
     }
-    // the respawn: nothing waits for an animation, the wake's black never shows, the mascot stands still
+    // the respawn: nothing waits for an animation, the wake's jump never shows, the mascot stands still
     for (const sel of ['#respawn h2', '#respawn .depts', '#respawn .pal'])
       await expect(page.locator(sel)).toHaveCSS('opacity', '1');
-    expect(await flashState(page)).toBe(0);
+    expect(await wakeSeen(page)).toBe(0);
     const pal = page.locator('#respawn .pal');
     const at = () =>
       pal.evaluate((el) => {
@@ -1706,7 +1706,7 @@ test.describe('home: arriving, leaving and robustness', () => {
     expect(await at()).toBe(still);
     await jumpTo(page, '#respawn', -0.5);
     await page.waitForTimeout(300);
-    expect(await flashState(page)).toBe(0);
+    expect(await wakeSeen(page)).toBe(0);
     await jumpTo(page, '#overworld', 0.1);
     await expect.poll(() => visibleScenes(page)).toEqual(['town']);
     const lines = page.locator('#overworld .say span');

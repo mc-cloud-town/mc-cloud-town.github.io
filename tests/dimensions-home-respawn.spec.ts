@@ -8,13 +8,13 @@ import {
   setLanguage,
 } from './helpers/dimensions';
 import {
-  flashState,
   landedOn,
   onTouch,
   ready,
   scrollAt,
   scrollToSection,
   visibleScenes,
+  wakeState,
 } from './helpers/home';
 
 test.describe('home: respawn', () => {
@@ -53,50 +53,73 @@ test.describe('home: respawn', () => {
     await expectNoMissingKeys(page);
   });
 
-  test('the wake: the stars fade to black, day one comes up out of the black, and it all undoes', async ({
+  test('the wake: a jump at light speed, whole at the middle, day one lands, and it all undoes', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
-    // before it starts: the stars, no black
+    // before it starts: the stars, the canvas hidden and idle, the tunnel clear, the last line on the page
     await scrollToSection(page, '#respawn', -1.3);
     expect(await visibleScenes(page)).toEqual(['end']);
-    expect(await flashState(page)).toBe(0);
-    // partway in: the black is falling over the stars
+    let w = await wakeState(page);
+    expect(w.shown).toBe(false);
+    expect(w.tunnel).toBe(0);
+    expect(w.fin).toBe(1);
+    const idle = w.frames;
+    await page.waitForTimeout(500);
+    expect(
+      (await wakeState(page)).frames,
+      'a hidden canvas draws nothing',
+    ).toBe(idle);
+    // partway in: the stars fly over the End, the edges darken, the last line is the canvas's now
     await scrollToSection(page, '#respawn', -0.7);
     expect(await visibleScenes(page)).toEqual(['end']);
-    const rising = await flashState(page);
-    expect(rising).toBeGreaterThan(0.1);
-    expect(rising).toBeLessThan(0.9);
-    // the middle: nothing but black (not a white-out: that was found too bright)
+    w = await wakeState(page);
+    expect(w.shown).toBe(true);
+    expect(w.fin).toBe(0);
+    expect(w.tunnel).toBeGreaterThan(0);
+    expect(w.covered).toBeLessThan(0.9);
+    // it keeps drawing while the scroll rests: the stars move by the clock
+    await page.waitForTimeout(300);
+    expect((await wakeState(page)).frames).toBeGreaterThan(w.frames);
+    // the middle: at full speed, nothing behind it can be seen (and no white: that was found too bright)
     await scrollToSection(page, '#respawn', -0.5);
-    expect(await flashState(page)).toBeGreaterThan(0.98);
-    await expect(page.locator('.flash')).toHaveCSS(
-      'background-color',
-      'rgb(5, 6, 8)',
-    );
-    // partway out: day one under the clearing black
+    w = await wakeState(page);
+    expect(w.shown).toBe(true);
+    expect(w.covered).toBeGreaterThan(0.98);
+    // partway out: day one under the stars as they slow and fade
     await scrollToSection(page, '#respawn', -0.3);
     expect(await visibleScenes(page)).toEqual(['day1']);
-    const clearing = await flashState(page);
-    expect(clearing).toBeGreaterThan(0.1);
-    expect(clearing).toBeLessThan(0.9);
+    w = await wakeState(page);
+    expect(w.shown).toBe(true);
+    expect(w.covered).toBeLessThan(0.9);
     // landed
     await scrollToSection(page, '#respawn', 0);
     expect(await visibleScenes(page)).toEqual(['day1']);
-    expect(await flashState(page)).toBe(0);
+    w = await wakeState(page);
+    expect(w.shown).toBe(false);
+    expect(w.tunnel).toBe(0);
     const scale = (scene: string) =>
       page
         .locator(`.scene[data-scene="${scene}"] .zoom`)
         .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
     expect(await scale('day1')).toBeCloseTo(1, 2);
-    // and back: the black again, then the stars, with day one switched off
+    // the jolt has settled: the day's layer stands in its place
+    expect(
+      await page
+        .locator('.scene[data-scene="day1"]')
+        .evaluate((el) => getComputedStyle(el).transform),
+    ).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+    // and back: whole at the middle again, then the stars, with day one switched off and the last line back
     await scrollToSection(page, '#respawn', -0.5);
-    expect(await flashState(page)).toBeGreaterThan(0.98);
+    expect((await wakeState(page)).covered).toBeGreaterThan(0.98);
     await scrollToSection(page, '#respawn', -1.3);
     expect(await visibleScenes(page)).toEqual(['end']);
-    expect(await flashState(page)).toBe(0);
+    w = await wakeState(page);
+    expect(w.shown).toBe(false);
+    expect(w.tunnel).toBe(0);
+    expect(w.fin).toBe(1);
     await expect(page.locator('.scene[data-scene="day1"]')).toBeHidden();
     expect(await scale('end')).toBeCloseTo(1, 2);
     await expect(page.locator('html')).toHaveAttribute('data-dim', 'end');
@@ -592,12 +615,12 @@ test.describe('home: respawn', () => {
     await expect(page.locator('#respawn .pal')).toHaveCSS('opacity', '1');
     await scrollToSection(page, '#respawn', 0);
     await expectTextFits(page, { within: '#respawn' });
-    // the wake was measured again: its middle is still nothing but black, and it still undoes
+    // the wake was measured again: its middle is still whole, and it still undoes
     await scrollToSection(page, '#respawn', -0.5);
-    expect(await flashState(page)).toBeGreaterThan(0.98);
+    expect((await wakeState(page)).covered).toBeGreaterThan(0.98);
     await scrollToSection(page, '#respawn', -1.3);
     expect(await visibleScenes(page)).toEqual(['end']);
-    expect(await flashState(page)).toBe(0);
+    expect((await wakeState(page)).shown).toBe(false);
     await setLanguage(page, 'zh_CN');
     await expect(page.locator('#respawn h2')).toHaveText(
       '下一个里程碑，等你一起盖。',
@@ -709,16 +732,17 @@ test.describe('home: respawn', () => {
 });
 
 /**
- * The words of the wake (spec 5.3): the credits' last line stays where it stands while the black falls over it and is
- * gone under the black when that is whole; the respawn's own words are under the black, and come up as it clears.
- * The wake runs over the screen of scroll in which the respawn comes up from the foot of the screen to the head.
+ * The words of the wake (spec 5.3): the credits' last line stays where it stands until the jump at light speed
+ * begins, and is then taken over by the canvas in its place and flies away with the stars, gone by the middle; the
+ * respawn's own words come up as the day lands. The wake runs over the screen of scroll in which the respawn comes
+ * up from the foot of the screen to the head.
  */
 test.describe('home: the words of the wake', () => {
   for (const [width, height] of [
     [1440, 900],
     [390, 844],
   ])
-    test(`at ${width}×${height} the credits' last line keeps its place until the middle and is gone from there; the respawn's words are hidden until the middle and whole by the end`, async ({
+    test(`at ${width}×${height} the credits' last line is taken over by the light-speed canvas where it stands and is gone by the middle; the respawn's words are hidden until the middle and whole by the end`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -733,33 +757,48 @@ test.describe('home: the words of the wake', () => {
       );
       const at = async (progress: number) => {
         await scrollAt(page, start + progress * height);
-        return page.evaluate(() => {
-          const shown = (el: Element) => {
-            const c = getComputedStyle(el);
-            return c.visibility !== 'hidden' ? +c.opacity : 0;
-          };
-          const fin = document.querySelector('#credits .fin')!;
-          const blocks = [...document.querySelectorAll('#respawn .call > *')]
-            // (the mascot has no room on a phone)
-            .filter((el) => getComputedStyle(el).display !== 'none');
-          return {
-            finTop: fin.getBoundingClientRect().top,
-            fin: shown(fin),
-            words: blocks.map(shown),
-          };
-        });
+        const wake = await wakeState(page);
+        return {
+          wake,
+          ...(await page.evaluate(() => {
+            const shown = (el: Element) => {
+              const c = getComputedStyle(el);
+              return c.visibility !== 'hidden' ? +c.opacity : 0;
+            };
+            const fin = document.querySelector('#credits .fin')!;
+            const blocks = [...document.querySelectorAll('#respawn .call > *')]
+              // (the mascot has no room on a phone)
+              .filter((el) => getComputedStyle(el).display !== 'none');
+            return {
+              finTop: fin.getBoundingClientRect().top,
+              words: blocks.map(shown),
+            };
+          })),
+        };
       };
       // (on a touch screen the last line is not held: it goes up with the page, spec 5.3.1)
       const touch = await onTouch(page);
-      const first = await at(0.02);
-      expect(first.fin).toBe(1);
-      for (const p of [0.1, 0.2, 0.3, 0.4, 0.46]) {
+      // before the jump: the line is the page's, the canvas is not shown
+      const first = await at(0.01);
+      expect(first.wake.fin).toBe(1);
+      expect(first.wake.shown).toBe(false);
+      for (const p of [0.08, 0.13]) {
         const now = await at(p);
-        expect(now.fin, `last line at ${p}`).toBe(1);
+        // hidden on the page, and drawn whole in its place by the canvas: the line never goes missing
+        expect(now.wake.fin, `last line at ${p}`).toBe(0);
+        expect(now.wake.shown, `canvas at ${p}`).toBe(true);
+        expect(
+          now.wake.ink,
+          `the line's ink on the canvas at ${p}`,
+        ).toBeGreaterThan(0.05);
+      }
+      for (const p of [0.08, 0.2, 0.3, 0.4, 0.46]) {
+        const now = await at(p);
+        expect(now.wake.fin, `last line at ${p}`).toBe(0);
         // it keeps its place on the screen while the page goes up under it (on a touch screen: it goes up with it)
         expect(
           Math.abs(
-            now.finTop - first.finTop + (touch ? (p - 0.02) * height : 0),
+            now.finTop - first.finTop + (touch ? (p - 0.01) * height : 0),
           ),
           `place at ${p}`,
         ).toBeLessThan(height * 0.02 + 2);
@@ -774,16 +813,22 @@ test.describe('home: the words of the wake', () => {
         ).toBeLessThanOrEqual(2);
       for (const p of [0.52, 0.6, 0.7]) {
         const now = await at(p);
-        expect(now.fin, `last line at ${p}`).toBe(0);
+        expect(now.wake.fin, `last line at ${p}`).toBe(0);
+        // (the line's points have all flown: nothing of it is left where it stood)
+        expect(now.wake.ink, `the line's ink at ${p}`).toBeLessThan(0.01);
       }
       // the words come up one after another, the last whole by the end
       const late = await at(0.7);
       expect(Math.max(...late.words)).toBeGreaterThan(0);
       for (const w of (await at(1)).words) expect(w).toBe(1);
-      // and back: the last line is there again, the words are under the black again
-      const back = await at(0.3);
-      expect(back.fin).toBe(1);
+      // and back: the canvas puts the line together where it stood, then hands it back to the page
+      const back = await at(0.1);
+      expect(back.wake.fin).toBe(0);
+      expect(back.wake.ink).toBeGreaterThan(0.05);
       for (const w of back.words) expect(w).toBeLessThan(0.05);
+      const home = await at(0.01);
+      expect(home.wake.fin).toBe(1);
+      expect(home.wake.shown).toBe(false);
     });
 
   test('the wake begins one screen above the respawn, also after the member list has filled in and after a language switch', async ({
@@ -800,7 +845,7 @@ test.describe('home: the words of the wake', () => {
           scrollY -
           innerHeight,
       );
-      // (on a touch screen nothing is carried: the last line is whole before the middle of the wake and gone after it)
+      // (on a touch screen nothing is carried: the last line is the page's until the jump begins, the canvas's after)
       if (await onTouch(page)) {
         const opacity = async (progress: number) => {
           await scrollAt(
@@ -811,7 +856,8 @@ test.describe('home: the words of the wake', () => {
             .locator('#credits .fin')
             .evaluate((el) => +getComputedStyle(el).opacity);
         };
-        return (await opacity(0.45)) === 1 && (await opacity(0.55)) === 0
+        // (the light-speed canvas takes it over three hundredths into the wake)
+        return (await opacity(0.02)) === 1 && (await opacity(0.04)) === 0
           ? 0
           : 1;
       }
@@ -862,12 +908,16 @@ test.describe('home: the words of the wake', () => {
         }),
       );
       for (const s of state) expect(s, `at ${p}`).toBe('visible 1 none');
+      // no jump at light speed: its canvas is never shown, its tunnel never closes in
+      const w = await wakeState(page);
+      expect(w.shown, `at ${p}`).toBe(false);
+      expect(w.tunnel, `at ${p}`).toBe(0);
     }
   });
 });
 
 test.describe('home: the respawn is there for assistive technology before the wake', () => {
-  test('its heading and links are not hidden and can take the focus while the black has not come', async ({
+  test('its heading and links are not hidden and can take the focus while the wake has not come', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });

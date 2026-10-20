@@ -46,8 +46,8 @@ export interface Frame {
   dim: string | undefined;
   /** opacity of a portal, the Nether's or the End's, whichever shows more (0 when both are hidden) */
   portal: number;
-  /** opacity of the fade through black of the wake (0 when it is hidden) */
-  flash: number;
+  /** whether the wake is seen: 1 while its light-speed canvas is shown or its tunnel of dark has closed in at all */
+  wake: number;
   /** opacity of the menu sheet (0 when it is hidden) */
   sheet: number;
   /** the cover's colour */
@@ -136,7 +136,15 @@ export const record = (page: Page) =>
           shown('canvas.portal[data-surface="nether"]'),
           shown('canvas.portal[data-surface="end"]'),
         ),
-        flash: shown('.flash'),
+        wake:
+          shown('canvas.hyper') > 0 ||
+          +(
+            getComputedStyle(document.querySelector('.flash')!)
+              .getPropertyValue('--c')
+              .trim() || 0
+          ) > 0
+            ? 1
+            : 0,
         sheet: shown('.dim-sheet'),
         tone: cover ? getComputedStyle(cover).backgroundColor : '',
         run: (cover?.getAnimations() ?? [])
@@ -364,12 +372,69 @@ export const landedOn = async (page: Page, selector: string) => {
   await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
 };
 
-/** Opacity of the wake's black, 0 while it is hidden. */
-export const flashState = (page: Page) =>
-  page.locator('.flash').evaluate((el) => {
-    const s = getComputedStyle(el);
-    return s.visibility === 'hidden' ? 0 : +s.opacity;
+/** The wake as it stands: the jump at light speed (lightSpeed.ts) and its tunnel of dark. */
+export interface WakeState {
+  /** the light-speed canvas is shown */
+  shown: boolean;
+  /** how many frames it has drawn since the page was built */
+  frames: number;
+  /** how far the tunnel of dark has closed in from the edges (0: wholly clear) */
+  tunnel: number;
+  /** the share of the canvas (sampled on a grid) that is opaque: 1 when nothing behind it can be seen */
+  covered: number;
+  /** the share of the credits' last line's box in which the canvas has drawn something bright (its ink) */
+  ink: number;
+  /** opacity of the credits' last line on the page */
+  fin: number;
+}
+export const wakeState = (page: Page): Promise<WakeState> =>
+  page.evaluate(() => {
+    const cv = document.querySelector<HTMLCanvasElement>('canvas.hyper')!;
+    const shown = getComputedStyle(cv).visibility !== 'hidden';
+    const fin = document.querySelector<HTMLElement>('#credits .fin')!;
+    const d = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data;
+    const k = cv.width / cv.clientWidth;
+    const px = (x: number, y: number) => {
+      const i =
+        (Math.min(cv.height - 1, Math.max(0, Math.round(y * k))) * cv.width +
+          Math.min(cv.width - 1, Math.max(0, Math.round(x * k)))) *
+        4;
+      return [d[i], d[i + 1], d[i + 2], d[i + 3]];
+    };
+    let opaque = 0,
+      n = 0;
+    for (let y = 5; y < cv.clientHeight; y += 23)
+      for (let x = 5; x < cv.clientWidth; x += 23) {
+        n++;
+        if (px(x, y)[3] >= 250) opaque++;
+      }
+    const r = fin.getBoundingClientRect();
+    let bright = 0,
+      m = 0;
+    for (let y = r.top; y < r.bottom; y += 3)
+      for (let x = r.left; x < r.right; x += 3) {
+        m++;
+        const [R, G, B, A] = px(x, y);
+        if (A > 150 && (R + G + B) / 3 > 150) bright++;
+      }
+    return {
+      shown,
+      frames: +(cv.dataset.frames ?? 0),
+      tunnel: +(
+        getComputedStyle(document.querySelector('.flash')!)
+          .getPropertyValue('--c')
+          .trim() || 0
+      ),
+      covered: shown ? opaque / n : 0,
+      ink: shown && m ? bright / m : 0,
+      fin: +getComputedStyle(fin).opacity,
+    };
   });
+/** 1 while anything of the wake is seen (its canvas, its tunnel), 0 otherwise. */
+export const wakeSeen = async (page: Page) => {
+  const w = await wakeState(page);
+  return w.shown || w.tunnel > 0 ? 1 : 0;
+};
 /** Without smooth scrolling the site's own `scroll-behavior` would carry the page there: jump instead. */
 export const jumpTo = (page: Page, sel: string, off = 0) =>
   page.evaluate(
@@ -697,8 +762,8 @@ export const arrived = async (page: Page) => {
 
 /**
  * The sections whose words come in after the change into them, in page order: the changes into a dimension (the
- * Overworld, the Nether, the End) and, on the desktop, the credits. Not the respawn: its words come up out of the
- * black of the wake. (The works' captions come in when their change is seven tenths through: a work is not a
+ * Overworld, the Nether, the End) and, on the desktop, the credits. Not the respawn: its words come up as the
+ * wake lands. (The works' captions come in when their change is seven tenths through: a work is not a
  * dimension. On a touch screen the credits stand at their top.)
  */
 export const WORDED = ['#overworld', '#nether', '#end', '#credits'] as const;

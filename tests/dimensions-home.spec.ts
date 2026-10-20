@@ -17,6 +17,7 @@ import {
   shownPictures,
   stretchOf,
   visibleScenes,
+  wakeState,
   WORDED,
   WORKS,
 } from './helpers/home';
@@ -2802,7 +2803,7 @@ test.describe('home: on a touch screen', () => {
     }
   });
 
-  test("the credits' last line is not held: it goes up with the page, and is gone under the black", async ({
+  test("the credits' last line is not held: it goes up with the page, and the light-speed canvas takes it over where it is", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -2816,22 +2817,27 @@ test.describe('home: on a touch screen', () => {
         innerHeight,
     );
     const fin = page.locator('#credits .fin');
-    await scrollAt(page, start + 0.05 * 844);
+    await scrollAt(page, start + 0.01 * 844);
     const first = await fin.evaluate((el) => el.getBoundingClientRect().top);
-    for (const p of [0.15, 0.3, 0.45]) {
+    expect(+(await fin.evaluate((el) => getComputedStyle(el).opacity))).toBe(1);
+    for (const p of [0.08, 0.15, 0.3, 0.45]) {
       await scrollAt(page, start + p * 844);
       const now = await fin.evaluate((el) => ({
         top: el.getBoundingClientRect().top,
         transform: getComputedStyle(el).transform,
-        opacity: +getComputedStyle(el).opacity,
       }));
       expect(now.transform, `no hold at ${p}`).toBe('none');
-      expect(now.opacity).toBe(1);
       // it goes up by what the page has gone up
-      expect(Math.abs(first - now.top - (p - 0.05) * 844)).toBeLessThan(3);
+      expect(Math.abs(first - now.top - (p - 0.01) * 844)).toBeLessThan(3);
+      const w = await wakeState(page);
+      expect(w.fin, `hidden on the page at ${p}`).toBe(0);
+      expect(w.shown, `the canvas at ${p}`).toBe(true);
     }
+    // where it stands as the jump begins, the canvas draws it
+    await scrollAt(page, start + 0.08 * 844);
+    expect((await wakeState(page)).ink).toBeGreaterThan(0.05);
     await scrollAt(page, start + 0.6 * 844);
-    expect(+(await fin.evaluate((el) => getComputedStyle(el).opacity))).toBe(0);
+    expect((await wakeState(page)).fin).toBe(0);
   });
 
   test("the Nether's six facilities are sections like the works: the picture behind is the facility's, and its caption comes after the change into it", async ({
