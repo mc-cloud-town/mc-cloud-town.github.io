@@ -1,0 +1,136 @@
+/* The not-found page: the void. Near-black and quiet in both themes, with no dimension accent.
+   (The day theme does not lighten it: like the End on the home page, it has no daylight.) */
+.dim.dim--void,
+[data-theme='light'] .dim.dim--void {
+  --bg: #06080b;
+  --panel: #0e1217;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.18);
+  --mark-dark: 1;
+  /* no accent of a dimension: the ink itself, a little softer */
+  --accent: #d5dbe1;
+  --accent-ink: #d5dbe1;
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+  --h1: 0.82;
+  --h2: 0.4;
+  --h3: 0.12;
+  --h4: 0.62;
+  --h5: 0.78;
+}
+/* Behind the page, where it shows when pulled past its end: the void's ground by day too (shell.css gives the
+   day's paper to every page of the shell; the home page's End is dark behind in the same way). */
+html[data-theme='light']:has(.dim.dim--void) body {
+  background: #06080b;
+}
+
+.dim {
+  .void {
+    min-height: calc(100vh - var(--bar-h));
+    max-width: 2200px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: calc(var(--bar-h) + 40px) var(--gutter) 96px;
+  }
+  .void .mono {
+    color: var(--muted);
+  }
+  .void h1 {
+    margin-top: 22px;
+    font-size: clamp(34px, 4.6vw, 76px);
+    line-height: 1.2;
+  }
+  .void h1 span {
+    display: block;
+  }
+  .void > p[data-t='body'] {
+    margin-top: 18px;
+    max-width: min(34em, var(--measure));
+    color: var(--muted);
+  }
+  .ways {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    align-items: center;
+    margin-top: 40px;
+  }
+  .ways a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    transition:
+      color var(--t-state),
+      border-color var(--t-state),
+      background-color var(--t-state),
+      transform var(--t-state) var(--ease-out);
+  }
+  .ways a:hover {
+    color: var(--fg);
+    border-color: var(--fg);
+  }
+  .ways a:active {
+    transform: scale(0.97);
+  }
+  .ways .home {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+  .ways .home:hover {
+    background: transparent;
+    color: var(--fg);
+  }
+  .ways .mono {
+    margin-left: 10px;
+  }
+
+  /* arrival: the same motion language as an inner page's header (inner.css keyframes), then the ways */
+  .void > .mono {
+    animation: dim-enter-rise 1s var(--ease-rise) backwards;
+  }
+  .void h1 span {
+    animation: dim-enter-line 1.3s var(--ease-out)
+      calc(80ms + var(--i, 0) * 120ms) backwards;
+  }
+  .void > p[data-t='body'] {
+    animation: dim-enter-rise 1s var(--ease-rise) 440ms backwards;
+  }
+  .ways {
+    animation: dim-enter-rise 1s var(--ease-rise) 560ms backwards;
+  }
+  @media (max-width: 860px) {
+    .void {
+      justify-content: flex-start;
+      padding-top: calc(var(--bar-h) + 56px);
+    }
+    .ways .mono {
+      flex-basis: 100%;
+      margin: 14px 0 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .void > .mono,
+    .void h1 span,
+    .void > p[data-t='body'],
+    .ways {
+      animation-name: dim-fade-0;
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+  }
+}

@@ -5,8 +5,11 @@ export const serverLink = {
   paypal: 'https://www.paypal.com/paypalme/cloudtownctec',
 };
 
-// export const MEMBER_API =
-//   'https://raw.githubusercontent.com/mc-cloud-town/static-data/main/data/member.json';
+/** Where the departments take applications: all three by the one form (the redstone department too, since its
+    reviewers stopped taking them in direct messages). The form needs a Google sign-in, so it opens in a new tab. */
+export const joinLink = {
+  applicationForm: 'https://forms.gle/sGUxUtUaskchiTfG7',
+};
 
 export const STATIC_DATA_API = 'https://mc-ctec.org/static-data';
 

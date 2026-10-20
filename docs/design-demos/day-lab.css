@@ -1,0 +1,271 @@
+/* Day lab. The day theme, tried on the demos before the product (the switch is day-lab.js).
+
+   What the day may not change is what the design is by night: the picture from edge to edge, the words on the
+   scene's veil, the veil's shape, the layout. The ink is light by day as by night: a picture is never washed
+   toward paper, and its veil is never coloured (the candidates that did either, and the one that split the
+   page, were turned down).
+
+     subtitle  chosen. Almost no veil, in plain black: the words carry their own shade, as a film's subtitles
+               do, and the picture keeps its daylight.
+     cinema    the night's veil and the night's ink. On the home page it is what the Nether and the End have
+               by day: neither has daylight.
+
+   <html data-day> is the candidate chosen; <html data-pic> is the one in force where the visitor is now.
+   Without data-day the page is the day theme as it is now. The pages say what they are on <html>: lab-home,
+   lab-inner, lab-respawn. */
+
+/* The paper (what has no picture under it) is the day's paper as it is today: nothing here changes it.
+   paper-v is its colour, for the foot of an inner header, whose picture sinks into it. */
+html[data-theme='light'][data-day] {
+  --paper-v: 238, 242, 245;
+  --line-strong: rgba(15, 20, 24, 0.4);
+}
+/* an inner header's words are over its picture, whatever their order (the name is put first at 860px and below,
+   and was painted under the picture) */
+html[data-theme='light'][data-day] .head > :not(.bg) {
+  z-index: 1;
+}
+/* the home demo's old footer line: the respawn and the footer are respawn-lab.html now */
+html.lab-home[data-theme='light'][data-day] .foot {
+  display: none;
+}
+
+/* ═════════ the candidates' veils and inks ═════════
+   s1–s4  the side veil's stops, from the words to the far side (an inner header uses them too)
+   f1–f3  the foot veil's   h1–h5  the hero's   n1–n3  bottom-up, at 860px and below
+   r3–r4  the far side of the respawn, where the departments' links stand
+   sink   how far up an inner header's picture sinks into the paper under it */
+
+/* ── cinema ── */
+html.lab-home[data-theme='light'][data-pic='cinema'],
+html.lab-inner[data-theme='light'][data-pic='cinema'] .head,
+html.lab-respawn[data-theme='light'][data-pic='cinema']
+  :is(.world, .call, .bar) {
+  --bg: #06080b;
+  --panel: #0e1217;
+  --fg: #f2f4f6;
+  --muted: #a3adb8;
+  --v: 6, 8, 11;
+  --line: rgba(242, 244, 246, 0.18);
+  --line-strong: rgba(242, 244, 246, 0.34);
+  --logo: invert(1);
+  --accent: #86cdff;
+  --s1: 0.92;
+  --s2: 0.7;
+  --s3: 0.2;
+  --s4: 0.32;
+  --f1: 0.95;
+  --f2: 0.5;
+  --f3: 0.28;
+  --h1: 0.82;
+  --h2: 0.4;
+  --h3: 0.12;
+  --h4: 0.62;
+  --h5: 0.78;
+  --n1: 0.9;
+  --n2: 0.62;
+  --n3: 0.3;
+  --r3: 0.2;
+  --r4: 0.32;
+  --sink: 56px;
+  color: var(--fg);
+}
+html.lab-home[data-theme='light'][data-pic='cinema'][data-dim='nether'],
+html.lab-inner[data-theme='light'][data-pic='cinema'][data-dim='nether'] .head {
+  --accent: #ff6a45;
+}
+html.lab-home[data-theme='light'][data-pic='cinema'][data-dim='end'],
+html.lab-inner[data-theme='light'][data-pic='cinema'][data-dim='end'] .head {
+  --accent: #cdb0ff;
+}
+
+/* ── subtitle ── */
+html.lab-home[data-theme='light'][data-pic='subtitle'],
+html.lab-inner[data-theme='light'][data-pic='subtitle'] .head,
+html.lab-respawn[data-theme='light'][data-pic='subtitle']
+  :is(.world, .call, .bar) {
+  --bg: #0b0f13;
+  --panel: #151b21;
+  --fg: #ffffff;
+  --muted: #eef2f5;
+  --v: 0, 0, 0;
+  --line: rgba(255, 255, 255, 0.45);
+  --line-strong: rgba(255, 255, 255, 0.7);
+  --logo: invert(1);
+  --accent: #cfeaff;
+  --s1: 0.42;
+  --s2: 0.28;
+  --s3: 0;
+  --s4: 0;
+  --f1: 0.5;
+  --f2: 0.25;
+  --f3: 0;
+  --h1: 0.4;
+  --h2: 0.2;
+  --h3: 0;
+  --h4: 0.2;
+  --h5: 0.35;
+  --n1: 0.5;
+  --n2: 0.3;
+  --n3: 0.12;
+  --r3: 0.2;
+  --r4: 0.2;
+  --sink: 56px;
+  --shade: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 14px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(0, 0, 0, 0.4);
+  color: var(--fg);
+}
+html.lab-home[data-theme='light'][data-pic='subtitle'][data-dim='nether'],
+html.lab-home[data-theme='light'][data-pic='subtitle'] [data-dim='nether'],
+html.lab-inner[data-theme='light'][data-pic='subtitle'][data-dim='nether']
+  .head {
+  --accent: #ffd0c0;
+}
+html.lab-inner[data-theme='light'][data-pic='subtitle'][data-dim='end'] .head {
+  --accent: #e6d8ff;
+}
+/* (the bar's own fog is as thin as the veil) */
+html.lab-home[data-theme='light'][data-pic='subtitle'] .bar::before {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
+}
+
+/* ═════════ what every candidate does with those ═════════ */
+
+/* the words' own shade or halo, where a candidate has one */
+html.lab-home[data-theme='light'][data-pic] :is(main, .bar),
+html.lab-inner[data-theme='light'][data-pic] .head,
+html.lab-respawn[data-theme='light'][data-pic] :is(.call, .bar) {
+  text-shadow: var(--shade, none);
+  .btn,
+  .pill:hover {
+    text-shadow: none;
+  }
+}
+
+/* The dimension's name stands on the veil's clear side, on the bare picture, in the same light ink as the rest.
+   No strip of paper under it: that is a patch. */
+html.lab-home[data-theme='light'][data-pic] .open .vt,
+html.lab-inner[data-theme='light'][data-pic] .head .vt {
+  background: none;
+  padding: 0;
+}
+/* ── home: the side veil in the night's shape, from the candidate's stops ── */
+@media (min-width: 861px) {
+  html.lab-home[data-theme='light'][data-pic] .veil--side {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), var(--s1)) 0%,
+      rgba(var(--v), var(--s2)) 40%,
+      rgba(var(--v), var(--s3)) 72%,
+      rgba(var(--v), var(--s4)) 100%
+    );
+  }
+}
+@media (max-width: 860px) {
+  html.lab-home[data-theme='light'][data-pic]
+    :is(.veil--side, .veil--wide, .veil--hero) {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--v), var(--n1, 0.96)) 0%,
+      rgba(var(--v), var(--n2, 0.8)) 55%,
+      rgba(var(--v), var(--n3, 0.5)) 100%
+    );
+  }
+}
+
+/* ── inner header: the same side veil, and the picture sinks into the paper under it ── */
+html.lab-inner[data-theme='light'][data-pic] .head .bg::after {
+  background: linear-gradient(
+      0deg,
+      rgb(var(--paper-v)) 0,
+      rgba(var(--paper-v), 0) var(--sink)
+    ),
+    linear-gradient(
+      90deg,
+      rgba(var(--v), var(--s1)) 0%,
+      rgba(var(--v), var(--s2)) 42%,
+      rgba(var(--v), var(--s3)) 78%,
+      rgba(var(--v), var(--s4)) 100%
+    );
+}
+@media (max-width: 860px) {
+  html.lab-inner[data-theme='light'][data-pic] .head .bg::after {
+    background: linear-gradient(
+        0deg,
+        rgb(var(--paper-v)) 0,
+        rgba(var(--paper-v), 0) var(--sink)
+      ),
+      linear-gradient(
+        0deg,
+        rgba(var(--v), var(--n1)) 0%,
+        rgba(var(--v), var(--n2)) 60%,
+        rgba(var(--v), var(--n3)) 100%
+      );
+  }
+}
+
+/* ── respawn: the side veil, with enough left on the far side for the departments' links ── */
+@media (min-width: 861px) {
+  html.lab-respawn[data-theme='light'][data-pic] .world::after {
+    background: linear-gradient(
+      90deg,
+      rgba(var(--v), var(--s1)) 0%,
+      rgba(var(--v), var(--s2)) 40%,
+      rgba(var(--v), var(--r3)) 72%,
+      rgba(var(--v), var(--r4)) 100%
+    );
+  }
+}
+@media (max-width: 860px) {
+  html.lab-respawn[data-theme='light'][data-pic] .world::after {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--v), var(--n1)) 0%,
+      rgba(var(--v), var(--n2)) 55%,
+      rgba(var(--v), var(--n3)) 100%
+    );
+  }
+}
+
+/* ───────── the lab's own switch ───────── */
+.day-lab {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  z-index: 300;
+  display: flex;
+  gap: 2px;
+  max-width: calc(100vw - 16px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px;
+  border-radius: 100px;
+  background: #0b0f13;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  font:
+    500 12px/1 'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  white-space: nowrap;
+  text-shadow: none;
+}
+.day-lab button {
+  flex: none;
+  font: inherit;
+  color: #c9d1d9;
+  background: none;
+  border: 0;
+  border-radius: 100px;
+  padding: 9px 11px;
+  min-height: 0;
+  min-width: 0;
+  cursor: pointer;
+}
+.day-lab button:hover {
+  color: #fff;
+}
+.day-lab button[aria-pressed='true'] {
+  background: #f2f4f6;
+  color: #0b0f13;
+}

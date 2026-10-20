@@ -1,0 +1,759 @@
+/* Inner pages. Ported from docs/design-demos/inner.css and members.html. */
+.dim {
+  /* The header's veil, for every inner page alike: retune it here. Lighter than the design's (side 0.96 / 0.82 /
+     0.2 / 0.3 with a bottom fade over 40%; bottom-up 1 / 0.82 / 0.6), under which the picture could not be seen
+     (user feedback). The shapes are the design's: only the stops are lower.
+     Above 860px, from the text's side to the far one: */
+  --head-s1: 0.92;
+  --head-s2: 0.72;
+  --head-s3: 0.1;
+  --head-s4: 0.18;
+  /* and how far up the solid edge that joins the header to the page fades away */
+  --head-fade: 30%;
+  /* at 860px and below, bottom-up from that solid edge: at 60%, and at the top */
+  --head-n2: 0.64;
+  --head-n3: 0.3;
+
+  /* header: half a screen, never a full one */
+  .head {
+    position: relative;
+    min-height: 58vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6vw;
+    align-items: end;
+    padding: 140px var(--gutter) 56px;
+    overflow: hidden;
+    /* the base transition of tokens.css, and with it the day's shade eases in with the theme */
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      text-shadow var(--t-theme);
+  }
+  /* The night's ground, in both themes: the picture enters from nothing, and until it is in, the thin veil of the
+     day would lie over the paper and the header's light words would stand on it. */
+  .head .bg {
+    position: absolute;
+    inset: 0;
+    background: rgb(var(--v-night));
+  }
+  .head .bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Two veils, one for the night and one for the day, each in its own colour: a gradient cannot ease from
+     one colour to another, so the theme switch cross-fades them.
+     Both over the picture, by a z-index of their own: while the picture moves or fades it is a layer of its own,
+     and in the order of the document that layer was painted over the night's veil (which comes before it) for as
+     long as its entrance ran. The picture was bare by night, and veiled at a stroke when it came to rest. */
+  .head .bg::before,
+  .head .bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transition: opacity var(--t-theme);
+    background: linear-gradient(
+        90deg,
+        rgba(var(--v), var(--head-s1)) 0%,
+        rgba(var(--v), var(--head-s2)) 42%,
+        rgba(var(--v), var(--head-s3)) 78%,
+        rgba(var(--v), var(--head-s4)) 100%
+      ),
+      linear-gradient(
+        0deg,
+        rgba(var(--v), 1) 0%,
+        rgba(var(--v), 0) var(--head-fade)
+      );
+  }
+  .head .bg::before {
+    --v: var(--v-night);
+  }
+  .head .bg::after {
+    /* The day's: black and thin across the picture, as the home page's, and the picture's last 56px sink into
+       the paper under it (every word of a header stands above its 56px of padding). Each veil keeps its own
+       stops while the two cross-fade. */
+    background: linear-gradient(
+        0deg,
+        rgb(var(--v-day)) 0,
+        rgba(var(--v-day), 0) 56px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.42) 0%,
+        rgba(0, 0, 0, 0.28) 42%,
+        rgba(0, 0, 0, 0) 78%,
+        rgba(0, 0, 0, 0) 100%
+      );
+    opacity: 0;
+  }
+  [data-theme='light'] & .head .bg::before {
+    opacity: 0;
+  }
+  [data-theme='light'] & .head .bg::after {
+    opacity: 1;
+  }
+  /* Over the picture, whatever their order: where the label is put first (order: -1, at 860px and below) a grid
+     paints it first as well, and the picture, which comes later in that order, was painted over it. */
+  .head > * {
+    position: relative;
+    z-index: 1;
+  }
+  .head .bg {
+    z-index: 0;
+  }
+  .head .crumb {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 22px;
+  }
+  .head .crumb a {
+    color: var(--fg);
+    transition: color var(--t-state);
+  }
+  .head .crumb a:hover {
+    color: var(--accent);
+  }
+  /* the current page: accent-coloured words over the picture, in the accent's ink where the theme has one */
+  .head .crumb .acc {
+    color: var(--accent-ink, var(--accent));
+  }
+  .head h1 {
+    font-size: clamp(34px, 4.6vw, 76px);
+  }
+  .head p {
+    margin-top: 18px;
+    max-width: 34em;
+    color: var(--muted);
+  }
+  .head .vt {
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+    font: 900 clamp(40px, 5.2vw, 88px) / 1 var(--serif);
+    letter-spacing: 0.12em;
+    align-self: start;
+  }
+  /* By day a header's picture keeps its daylight under a thin black veil, and the words on it are light and
+     carry their own shade, as on the home page (spec 4.2). The accent is the dimension's, in its picture ink.
+     The paper's own tokens are untouched: they still serve what stands on paper, such as a partner's tag. */
+  [data-theme='light'] & .head {
+    --fg: #ffffff;
+    --muted: #eef2f5;
+    --line: rgba(255, 255, 255, 0.45);
+    --accent: #cfeaff;
+    --accent-ink: #cfeaff;
+    color: var(--fg);
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.75),
+      0 0 14px rgba(0, 0, 0, 0.55),
+      0 0 40px rgba(0, 0, 0, 0.4);
+  }
+  [data-theme='light'][data-dim='nether'] & .head {
+    --accent: #ffd0c0;
+    --accent-ink: #ffd0c0;
+  }
+  [data-theme='light'][data-dim='end'] & .head {
+    --accent: #e6d8ff;
+    --accent-ink: #e6d8ff;
+  }
+
+  /* tools: filters and search stay reachable while the list scrolls */
+  .tools {
+    position: sticky;
+    top: var(--bar-h);
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    align-items: center;
+    padding: 14px var(--gutter);
+    background: rgba(var(--v), 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    transition:
+      background-color var(--t-theme),
+      border-color var(--t-theme);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chips button {
+    font-size: 14px;
+    padding: 5px 14px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    color: var(--muted);
+    transition:
+      background-color var(--t-state),
+      color var(--t-state),
+      border-color var(--t-state),
+      transform var(--t-state) var(--ease-out);
+  }
+  .chips button:active {
+    transform: scale(0.95);
+  }
+  .chips button:hover {
+    color: var(--fg);
+  }
+  .chips button[aria-pressed='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+  .tools .count {
+    margin-left: auto;
+    color: var(--muted);
+  }
+  .search {
+    flex: 1 1 200px;
+    max-width: 320px;
+    border-bottom: 1px solid var(--line);
+    padding: 6px 2px;
+    font-size: 15px;
+    transition: border-color var(--t-state);
+  }
+  .search::placeholder {
+    color: var(--muted);
+  }
+  .search:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+  }
+  .empty {
+    padding: 80px var(--gutter);
+    color: var(--muted);
+  }
+  .next {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    margin: 120px var(--gutter) 0;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .next a {
+    font: 900 clamp(24px, 3vw, 44px) var(--serif);
+    color: var(--fg);
+    transition: color var(--t-state);
+  }
+  .next a:hover {
+    color: var(--accent);
+  }
+
+  /* The full credits. A roster, not a card wall: one line per person so 150 names stay scannable. */
+  .group {
+    padding: 64px var(--gutter) 0;
+  }
+  .group[hidden] {
+    display: none;
+  }
+  .group header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .group h2 {
+    font-size: clamp(26px, 3vw, 44px);
+  }
+  .group header p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .group header .mono {
+    margin-left: auto;
+    color: var(--muted);
+  }
+  .people {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0 28px;
+  }
+  .person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font: 500 14px var(--mono);
+    color: var(--fg);
+    transition:
+      color var(--t-state),
+      border-color var(--t-theme);
+  }
+  .person[hidden] {
+    display: none;
+  }
+  .person img {
+    width: 28px;
+    height: 28px;
+    image-rendering: pixelated;
+    background: var(--panel);
+    flex: none;
+  }
+  .person:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 860px) {
+    .head {
+      grid-template-columns: 1fr;
+      min-height: 0;
+      padding-top: 120px;
+    }
+    .head .vt {
+      writing-mode: horizontal-tb;
+      order: -1;
+      font-size: 34px;
+      /* as wide as its words, as the upright one is */
+      justify-self: start;
+    }
+    .head .bg::before,
+    .head .bg::after {
+      background: linear-gradient(
+        0deg,
+        rgba(var(--v), 1) 0%,
+        rgba(var(--v), var(--head-n2)) 60%,
+        rgba(var(--v), var(--head-n3)) 100%
+      );
+    }
+    /* and the day's, after it so that it wins: the paper at the foot, then the thin black veil from below */
+    .head .bg::after {
+      background: linear-gradient(
+          0deg,
+          rgb(var(--v-day)) 0,
+          rgba(var(--v-day), 0) 56px
+        ),
+        linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.5) 0%,
+          rgba(0, 0, 0, 0.3) 60%,
+          rgba(0, 0, 0, 0.12) 100%
+        );
+    }
+    .tools .count {
+      display: none;
+    }
+  }
+
+  .head h1 span {
+    display: block;
+  }
+  .head,
+  .tools,
+  .group,
+  .log,
+  .empty {
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+  /* the demo gives .next gutter margins; auto margins would drop them, so cap the width instead */
+  .next {
+    width: min(
+      calc(100% - 2 * var(--gutter)),
+      calc(2200px - 2 * var(--gutter))
+    );
+    margin-inline: auto;
+  }
+  .head p[data-t='body'] {
+    max-width: min(34em, var(--measure));
+  }
+  /* long names wrap instead of pushing the grid wider */
+  .person {
+    min-width: 0;
+  }
+  .person span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .group header p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* English and other rotated labels: letters turn with the line */
+  .vt {
+    text-orientation: mixed;
+  }
+  /* the demo's inner pages use 1.2 for serif headings; the home tokens use 1.14 */
+  .head h1,
+  .group h2 {
+    line-height: 1.2;
+  }
+  /* the serif glyph box is a little taller than 1em; without this the label scrolls inside itself.
+     The negative margin keeps the glyph where the demo puts it. */
+  @media (min-width: 861px) {
+    .head .vt {
+      line-height: 1.2;
+      margin-right: -0.1em;
+    }
+  }
+  @media (max-width: 1024px) {
+    /* 44px tap height and width, but the visual rhythm stays the demo's */
+    .head .crumb a {
+      justify-content: center;
+      margin-inline: -8px;
+    }
+  }
+
+  /* the full world log: one column of entries beside a year that stays in view */
+  .log {
+    display: grid;
+    grid-template-columns: clamp(120px, 16vw, 240px) minmax(0, 1fr);
+    gap: 0 5vw;
+    padding: 56px var(--gutter) 0;
+  }
+  .year {
+    grid-column: 1;
+    position: sticky;
+    top: calc(var(--bar-h) + 78px);
+    align-self: start;
+    font: 900 clamp(44px, 6vw, 104px) / 1 var(--serif);
+    font-variant-numeric: tabular-nums;
+  }
+  .year small {
+    display: block;
+    margin-top: 12px;
+    font: 12px var(--mono);
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .entries {
+    grid-column: 2;
+    padding-bottom: 96px;
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: 32px;
+    align-items: center;
+    padding: 26px 0;
+    border-top: 1px solid var(--line);
+  }
+  /* Arrived at by its address (`?index=`, `#entry-`): the entry is marked for a moment. A wash of the accent
+     swells behind it and fades away, once, after the entry itself has come in (ProgressLog.tsx sets the mark
+     then). Behind the entry's own content, and a little wider than the row. */
+  .entry {
+    position: relative;
+    isolation: isolate;
+  }
+  .entry[data-landed]::before {
+    content: '';
+    position: absolute;
+    inset: 0 -16px;
+    z-index: -1;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    animation: entry-landed 2.4s var(--ease-rise);
+  }
+  .entry figure {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .entry img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .entry:hover img {
+    transform: scale(1.04);
+  }
+  .entry .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+  }
+  .entry .dimtag {
+    border: 1px solid currentColor;
+    border-radius: 100px;
+    padding: 0 9px;
+  }
+  .entry .dimtag.overworld {
+    color: #86cdff;
+  }
+  .entry .dimtag.nether {
+    color: #ff6a45;
+  }
+  .entry .dimtag.end {
+    color: #cdb0ff;
+  }
+  [data-theme='light'] & .entry .dimtag.overworld {
+    color: #0b6fb5;
+  }
+  [data-theme='light'] & .entry .dimtag.nether {
+    color: #c2330f;
+  }
+  [data-theme='light'] & .entry .dimtag.end {
+    color: #6234c4;
+  }
+  .entry h2 {
+    font-size: clamp(22px, 2.4vw, 38px);
+    margin-top: 10px;
+  }
+  .entry .no {
+    color: var(--muted);
+  }
+  @media (max-width: 860px) {
+    .log {
+      grid-template-columns: 1fr;
+    }
+    .year,
+    .entries {
+      grid-column: 1;
+    }
+    .year {
+      position: static;
+      margin: 0 0 20px;
+      font-size: 44px;
+    }
+    .entry {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+  }
+  .year b {
+    display: block;
+    font: inherit;
+  }
+  .entry h2 {
+    overflow-wrap: anywhere;
+  }
+  /* short landscape screens: the sticky year would cover the list */
+  @media (max-height: 480px) {
+    .year {
+      position: static;
+    }
+  }
+
+  /* ───────── state changes ─────────
+     Nothing on these pages appears at once. What arrives rises in the motion of the home page's captions;
+     a list that changes plays its entrance again. The lists are not rebuilt for that: the component flips
+     data-run between 0 and 1, and each value names its own copy of the keyframes, which restarts them. */
+  .entry {
+    animation: var(--t-list) var(--ease-rise)
+      calc(var(--wait, 0ms) + var(--i, 0) * 50ms) backwards;
+  }
+  .entries[data-run='0'] .entry {
+    animation-name: dim-rise-0;
+  }
+  .entries[data-run='1'] .entry {
+    animation-name: dim-rise-1;
+  }
+  /* the roster changes with every letter typed: it settles, it does not start over */
+  .people {
+    animation: 0.35s var(--ease-rise) var(--wait, 0ms) backwards;
+  }
+  .people[data-run='0'] {
+    animation-name: dim-settle-0;
+  }
+  .people[data-run='1'] {
+    animation-name: dim-settle-1;
+  }
+  /* A group comes in from nothing, as a whole: its rows settle from a third (they are never rebuilt, so that is
+     where a search starts them from), and without this they would be there at a third before their heading. */
+  .group {
+    animation: dim-fade-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
+  }
+  .group header {
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
+  }
+  /* nothing found, or the request failed */
+  .empty {
+    animation: dim-rise-0 var(--t-in) var(--ease-rise) var(--wait, 0ms)
+      backwards;
+  }
+  /* still loading: said only if it takes a moment, so a quick answer does not flash a line of text;
+     and in its turn in the entrance, after the toolbar */
+  .empty[data-state='loading'] {
+    animation: dim-fade-0 0.4s var(--ease-rise) 0.68s backwards;
+  }
+  .empty .pill {
+    margin-left: 8px;
+  }
+  /* the big year rises into its place when the reader crosses into another year */
+  .year b {
+    animation: dim-up var(--t-in) var(--ease-out) var(--wait, 0ms) backwards;
+  }
+  .year small,
+  .tools .count span {
+    animation: dim-fade-0 var(--t-state) var(--ease-rise) var(--wait, 0ms)
+      backwards;
+  }
+  .tools .count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ───────── the entrance ─────────
+     An inner page opens the way the home page does: the picture develops under its veil (which is there from the first frame: it has no entrance) while it settles like the hero's camera, the title rises
+     line by line (expo.out, a tenth of a second apart, as the hero's title), the upright label follows as the
+     dimension names do, then the lede (power3.out, as the hero's captions), then the toolbar, then the list.
+     It is CSS on purpose: it plays in the served page before any script, and with scripts off, and `backwards`
+     keeps each part out of sight until its turn, so nothing is seen at rest and then taken away.
+     What arrives with the data (the list, the groups) is told how long its turn is still away: --wait, set by
+     entrance.ts on its container and added to the delays above. */
+  .head .bg img {
+    animation: dim-enter-cam 2.2s var(--ease-out) backwards;
+  }
+  .head .crumb {
+    animation: dim-enter-rise 1s var(--ease-rise) backwards;
+  }
+  .head h1 span {
+    animation: dim-enter-line 1.3s var(--ease-out)
+      calc(80ms + var(--i, 0) * 120ms) backwards;
+  }
+  .head .vt {
+    animation: dim-enter-label 1.4s var(--ease-out) 320ms backwards;
+  }
+  .head p[data-t='body'] {
+    animation: dim-enter-rise 1s var(--ease-rise) 440ms backwards;
+  }
+  /* a fixture of the page (it is sticky): it fades in where it stands */
+  .tools {
+    animation: dim-fade-0 0.8s var(--ease-rise) 560ms backwards;
+  }
+  /* in the served page it stands right under the toolbar, until the list is there: it comes with the list */
+  .next {
+    animation: dim-fade-0 0.8s var(--ease-rise) 680ms backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* the picture does not move: it fades in briefly, as everything else does */
+    .head .bg img {
+      animation: dim-fade-0 0.12s linear backwards;
+    }
+    .head .crumb,
+    .head h1 span,
+    .head .vt,
+    .head p[data-t='body'],
+    .tools,
+    .next {
+      animation-name: dim-fade-0;
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+    .entry,
+    .people,
+    .group,
+    .group header,
+    .empty,
+    .empty[data-state='loading'],
+    .year b {
+      animation-duration: 0.12s;
+      animation-delay: 0s;
+      animation-timing-function: linear;
+    }
+    .entries[data-run='0'] .entry,
+    .people[data-run='0'],
+    .group header,
+    .empty,
+    .year b {
+      animation-name: dim-fade-0;
+    }
+    .entries[data-run='1'] .entry,
+    .people[data-run='1'] {
+      animation-name: dim-fade-1;
+    }
+    .chips button:active {
+      transform: none;
+    }
+    .entry img {
+      transition: none;
+    }
+    /* no mark: the landing itself has put the entry at the head of the screen */
+    .entry[data-landed]::before {
+      animation: none;
+    }
+  }
+}
+
+/* quick to swell (--t-in of its 2.4s), slow to go */
+@keyframes entry-landed {
+  0% {
+    opacity: 0;
+  }
+  19% {
+    opacity: 0.14;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dim-rise-0 {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes dim-rise-1 {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes dim-settle-0 {
+  from {
+    opacity: 0.35;
+    transform: translateY(8px);
+  }
+}
+@keyframes dim-settle-1 {
+  from {
+    opacity: 0.35;
+    transform: translateY(8px);
+  }
+}
+@keyframes dim-fade-0 {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dim-fade-1 {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dim-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.25em);
+  }
+}
+@keyframes dim-enter-line {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em);
+  }
+}
+@keyframes dim-enter-label {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+  }
+}
+@keyframes dim-enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+@keyframes dim-enter-cam {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}

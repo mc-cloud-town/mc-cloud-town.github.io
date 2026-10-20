@@ -1,0 +1,140 @@
+import { STATIC_DATA_API } from '@/constants';
+import type { PortalSurface } from '@/lib/dimensions/portalSurfaces';
+
+export type SceneId =
+  | 'spawn'
+  | 'town'
+  | 'w1'
+  | 'w2'
+  | 'w3'
+  | 'nether'
+  | 'hall'
+  | 'moon'
+  | 'farm'
+  | 'end'
+  | 'day1';
+export type Veil = 'hero' | 'side' | 'side-flip' | 'wide' | 'foot' | 'none';
+export type Fx = 'push' | 'curtain' | 'slide' | 'portal' | 'wake';
+
+export interface SceneDef {
+  id: SceneId;
+  src?: string;
+  veil: Veil;
+  /**
+   * How much of the design's veil this picture is given, by night and by day: every stop of the veil is multiplied by it
+   * (the shape stays). 1 if not given. Under 1 only for a picture that is dark by itself, which the full veil
+   * leaves nearly black. To retune a picture, change this one number.
+   */
+  strength?: number;
+}
+export interface TransitionDef {
+  trigger: string;
+  from: SceneId;
+  to: SceneId;
+  fx: Fx;
+  /** for a portal: which one covers the screen */
+  surface?: PortalSurface;
+  /**
+   * For a portal: how far into the crossing (0 to 0.45) the cover begins to rise; 0 if not given.
+   * It is whole at the middle either way.
+   */
+  coverFrom?: number;
+  /** For the wake: the words of the section that is leaving which the jump carries away with its stars. */
+  line?: string;
+}
+
+const progress = (id: string) =>
+  `${STATIC_DATA_API}/images/survivalProgress/${id}.webp`;
+
+/** Stacking order is DOM order: later scenes sit above earlier ones. */
+export const SCENES: SceneDef[] = [
+  // no picture of its own in this list: the anniversary video and its cover (HeroVideo.tsx), from the i18n data
+  { id: 'spawn', veil: 'hero' },
+  { id: 'town', src: '/assets/homePage/CTEC_Building.webp', veil: 'side' },
+  { id: 'w1', src: progress('p40'), veil: 'foot' }, // 瑪莉亞之牆
+  { id: 'w2', src: progress('p33'), veil: 'side-flip' }, // 新出生點
+  { id: 'w3', src: progress('p17'), veil: 'foot' }, // 全編碼全物品
+  { id: 'nether', veil: 'wide' }, // six stacked images, see NETHER_IMAGES and NETHER_STRENGTHS
+  { id: 'hall', src: progress('p21'), veil: 'side', strength: 0.8 }, // 終界大廳 (a shader shot)
+  { id: 'moon', src: progress('p14'), veil: 'foot' }, // 月宮
+  { id: 'farm', src: progress('p6'), veil: 'side-flip' }, // 終界農業區
+  { id: 'end', veil: 'none' }, // starfield
+  { id: 'day1', src: progress('p2'), veil: 'side' }, // 開服當天
+];
+
+/** In the order of nether.ledger in the translations. */
+export const NETHER_IMAGES = ['p4', 'p10', 'p12', 'p38', 'p49', 'p51'].map(
+  progress,
+);
+
+/** The veil's strength over each of them (as `strength` of a scene): all six are shader shots, dark by themselves. */
+export const NETHER_STRENGTHS = [0.8, 0.8, 0.8, 0.8, 0.8, 0.8];
+
+/**
+ * One transition per section, in page order. Neighbours never share an effect, with one exception that is the
+ * point of it: a dimension other than the first is entered through its portal, the Nether's and the End's alike,
+ * each with its own surface (the facilities and the rank statement lie between the two on the page).
+ * `trigger` is a selector inside the home page root.
+ */
+export const TRANSITIONS: TransitionDef[] = [
+  { trigger: '#overworld', from: 'spawn', to: 'town', fx: 'push' },
+  {
+    trigger: '[data-work="overworld-0"]',
+    from: 'town',
+    to: 'w1',
+    fx: 'curtain',
+  },
+  { trigger: '[data-work="overworld-1"]', from: 'w1', to: 'w2', fx: 'slide' },
+  { trigger: '[data-work="overworld-2"]', from: 'w2', to: 'w3', fx: 'push' },
+  {
+    trigger: '#nether',
+    from: 'w3',
+    to: 'nether',
+    fx: 'portal',
+    surface: 'nether',
+  },
+  {
+    trigger: '#end',
+    from: 'nether',
+    to: 'hall',
+    fx: 'portal',
+    surface: 'end',
+    // The rank statement above is shorter than a screen: when it stands at the head of the screen the End's
+    // opening is already up to a quarter of the way in at the foot of it (measured at 360px to 2560px), and
+    // the statement would be read under the rising layer, a dark one over the day's paper. The layer waits
+    // until the opening is three tenths in; the push of the old scene begins with the crossing, as ever.
+    coverFrom: 0.3,
+  },
+  { trigger: '[data-work="end-0"]', from: 'hall', to: 'moon', fx: 'slide' },
+  { trigger: '[data-work="end-1"]', from: 'moon', to: 'farm', fx: 'curtain' },
+  { trigger: '#credits', from: 'farm', to: 'end', fx: 'push' },
+  {
+    trigger: '#respawn',
+    from: 'end',
+    to: 'day1',
+    fx: 'wake',
+    line: '.credits .fin',
+  },
+];
+
+/**
+ * The pictures behind a place of the page that can be arrived at by its id (`#end`), other than the first one,
+ * which is in the served page. At the top of a section its own transition has played out, so it is that
+ * section's scene alone; the facilities begin with the first of their pictures.
+ */
+export const picturesAt = (id: string): string[] => {
+  const scene =
+    id === 'ledger'
+      ? 'nether'
+      : TRANSITIONS.find((t) => t.trigger === `#${id}`)?.to;
+  if (scene === 'nether') return [NETHER_IMAGES[0]];
+  const src = SCENES.find((s) => s.id === scene)?.src;
+  return src ? [src] : [];
+};
+
+/** The Latin mark beside each dimension's tag. Untranslated on purpose: a design mark, identical in every language. */
+export const DIMENSION_MARKS = {
+  overworld: 'OVERWORLD',
+  nether: 'THE NETHER',
+  end: 'THE END',
+} as const;

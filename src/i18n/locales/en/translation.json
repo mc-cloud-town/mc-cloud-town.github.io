@@ -1,31 +1,10 @@
 {
-  "loading": "Loading...",
-  "error": "Error, Something went wrong",
-  "download": "Download",
-  "share": "Share",
-  "copyLink": "Copy Link",
-  "copySuccess": "Copied Successfully",
-  "copyFail": "Copy Failed",
-  "creator": "Creator",
-  "credit": "Special Thanks",
-  "introduction": "Introduction",
-  "scroll": "Scroll",
   "menu": {
-    "home": "Home",
-    "survivalProgress": "Survival Progress",
-    "memberAndWork": "Members & Works",
-    "member": "Member",
     "redstone": "Redstone",
     "building": "Building",
     "join": "Join Us",
     "openSource": "Open Source",
     "partner": "Partners"
-  },
-  "footer": {
-    "donate": {
-      "description": "Support us",
-      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
-    }
   },
   "time": {
     "days": "days",
@@ -38,138 +17,20 @@
       "youtubeId": "FCtztiDl_rE",
       "start": 9
     },
-    "description": "The true work of art is but a shadow of the divine perfection",
-    "serverRunning": "Created for",
-    "joinButton": "Embark on Creativity",
-    "about": {
-      "imageUrl": "homePage/CTEC_Sort.webp",
-      "title": "Cloud Town Exquisite Craft",
-      "subTitle": "CTEC",
-      "features": [
-        "One of the top Technical Minecraft Communities in Asia",
-        "Active in Minecraft's vanilla environment for technical research",
-        "Optimized survival, redstone technologies and aesthetic builds",
-        "State-of-the-art server equipment that fosters creativity",
-        "Collaborative research in friendly forums with outstanding players from various countries",
-        "The farm holds the world record for being ranked sixth globally and first in Asia."
-      ],
-      "buttons": [
-        {
-          "text": "Latest Progress",
-          "link": "/survival"
-        }
-      ]
-    },
-    "feature": {
-      "title": "What We Offer",
-      "card": [
-        {
-          "imageUrl": "homePage/CTEC_Building.webp",
-          "title": "Top-tier Architectural Team",
-          "paragraph": "We strive to blend Redstone and architecture, showcasing unique creations in survival mode. Our architects hail from diverse fields, each a master of at least one style. We believe that only by standing on the shoulders of giants can we broaden our horizons. In learning from the masters, we also frequently engage with teams and servers deeply rooted in the architectural community, including the Ghost Whale server, Arthas Industries, and the LIF Frame Wood Production Group. CTEC also provides a comprehensive set of plugins and a creative environment for architects to showcase their talents.",
-          "buttons": [
-            {
-              "text": "View Architectural Works",
-              "link": "/architectureCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Redstone.webp",
-          "title": "Advanced Redstone Technology",
-          "paragraph": "Our community boasts strong technical capabilities, with numerous Redstone technology developers proficient in various tech tree research, maintaining friendly relations with multiple international Technical Minecraft Communities. Our team is dedicated to research and innovation, continuously rolling out various novel farms or components, providing more fun for community members. We have set up dedicated labs, including two creative servers and two mirror servers, allowing players who do not wish to play survival to join in the fun. Our farms hold the world record for being ranked sixth globally and first in Asia.",
-          "buttons": [
-            {
-              "text": "View Redstone Works",
-              "link": "/redstoneCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "Stable and Reliable Server Equipment",
-          "paragraph": "We possess excellent server equipment, capable of supporting a large number of players online simultaneously for development and play. We have low-latency connection proxy servers in various countries, providing an excellent gaming experience for players from different regions. Our equipment features an i9-13900K, 128G RAM, 6TB Gen 4 SSD, and a UPS uninterrupted power supply system. We also have amateur engineers maintaining the servers, ensuring their stable operation.",
-          "buttons": [
-            {
-              "text": "View Server Equipment",
-              "link": "/hardware"
-            }
-          ]
-        }
-      ]
-    },
-    "carousel": {
-      "title": "Server Content",
-      "subtitles": [
-        "Latest Survival Progress",
-        "Latest Redstone Creations",
-        "Latest Architectural Works"
-      ]
-    },
-    "frostPursuit": {
-      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
-      "title": "Frost Pursuit Christmas Special Map",
-      "subTitle": "The Ultimate Ice Boat Racing Map is Now Available!",
-      "features": [
-        "Immersive winter track designs",
-        "Meticulously Designed Redstone and festive atmosphere",
-        "Multiplayer racing mode support",
-        "Carefully crafted lighting and visual effects"
-      ],
-      "buttons": [
-        {
-          "text": "Explore the Map",
-          "href": "/frostpursuit"
-        }
-      ]
-    }
-  },
-  "notFound": {
-    "title": "404 Not Found",
-    "description": "Seems like it has already been burnt into ashes...",
-    "imageUrl": "notFoundPage/CTEC_Burning.webp",
-    "backButton": "Back to Home"
-  },
-  "members": {
-    "title": "Member List",
-    "imageUrl": "members/CTEC_Members.webp",
-    "description": "Excellent members in various fields create wonderful server records",
-    "searchPlaceholder": "Search for members",
-    "noResult": "No result",
-    "memberGroup": {
-      "title": "Member Group",
-      "subTitle": "Veteran members who have been with us for a long time"
-    },
-    "trialGroup": {
-      "title": "Trial Group",
-      "subTitle": "The rookie group is full of vitality"
-    }
+    "serverRunning": "Created for"
   },
   "join": {
-    "description": "How to Join Us",
-    "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "Redstone Team",
       "features": [
-        "Submit your redstone creations to the submission channel or directly message a reviewer to apply for review.",
-        "We will invite authors of outstanding works to join.",
-        "Reviewer Discord:"
+        "Submit your redstone creations through the application form to apply for review.",
+        "We will invite authors of outstanding works to join."
       ],
       "buttons": [
         {
-          "text": "fantasy_sakura",
-          "href": "https://discordapp.com/users/676261754782613514",
-          "type": "link"
-        },
-        {
-          "text": "jezlarm",
-          "href": "https://discordapp.com/users/378510281250439168",
-          "type": "link"
-        },
-        {
-          "text": "Submission Channel",
-          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "text": "Application Form",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
           "type": "link"
         }
       ]
@@ -179,7 +40,7 @@
       "title": "Building Team",
       "subTitle": "The review will be based on the following criteria:",
       "features": [
-        "Structural Rationality: Defies Newtonian physics (exceptions for magic/fantasy themes, but exaggeration must be reasonably grounded), the work should display rational building structures and accurately replicate stylistic details and structure, not just surface appearance.",
+        "Structural Rationality: Does not defy Newtonian physics (exceptions for magic/fantasy themes, but exaggeration must be reasonably grounded), the work should display rational building structures and accurately replicate stylistic details and structure, not just surface appearance.",
         "Color Application: The work employs stunning visual effects through the application of color concepts and coloring skills.",
         "Creativity: Plagiarism, poor secondary creation, and exploiting review loopholes are strictly prohibited in the Cloud Town building department. Please respect each original work. Authors with rich creativity can reflect a strong personal style and unique innovative ability in their work."
       ],
@@ -206,89 +67,9 @@
       ]
     }
   },
-  "survivalProgress": {
-    "title": "Survival Server Progress",
-    "description": "History is not meaningless. it's to leave traces of our journey through time.",
-    "storyMode": "Story Mode",
-    "pause": "Pause",
-    "continue": "Continue"
-  },
-  "opensource": {
-    "title": "Open Source",
-    "description": "To contribute to the community, we have open-sourced some of our projects",
-    "imageUrl": "openSource/CTEC_Development.webp",
-    "stats": {
-      "total": "Repos",
-      "languages": "Languages",
-      "stars": "Stars",
-      "forks": "Forks"
-    },
-    "noDescription": "This repository does not have a description yet.",
-    "unknownLanguage": "Unknown",
-    "archived": "Archived",
-    "noRepositories": "No repositories are available right now.",
-    "overviewTitle": "Open-sourcing the tools we build",
-    "viewOnGithub": "View on GitHub",
-    "languages": "Languages",
-    "searchPlaceholder": "Search by name, description or topic…",
-    "allLanguages": "All",
-    "sort": {
-      "label": "Sort",
-      "updated": "Recently updated",
-      "stars": "Stars",
-      "name": "Name"
-    },
-    "noMatch": "No repositories match your filters",
-    "clearFilters": "Clear filters",
-    "retry": "Retry",
-    "fork": "Fork",
-    "allProjects": "All projects"
-  },
-  "partner": {
-    "title": "Partners",
-    "team": {
-      "title": "Collaborative Team"
-    },
-    "longtime": {
-      "title": "Long-Term Collaborative Creators"
-    },
-    "creator": {
-      "title": "Collaborative Creators"
-    },
-    "contact": {
-      "title": "Contact Us",
-      "subTitle": "If you are interested in becoming our partner, we are welcome to contact us",
-      "imageUrl": "brand/brand1.webp",
-      "buttons": [
-        {
-          "text": "Email",
-          "link": "mailto:cloudtown0723@gmail.com"
-        },
-        {
-          "text": "Discord",
-          "link": "https://discordapp.com/users/525640608228966400"
-        },
-        {
-          "text": "YouTube",
-          "link": "https://www.youtube.com/@CTEC_"
-        }
-      ]
-    }
-  },
-  "architectureCollection": {
-    "title": "Building Collection",
-    "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "Search Tags/Name..."
-  },
-  "redstoneCollection": {
-    "title": "Redstone Collection",
-    "imageUrl": "redstoneCollection/p30.webp",
-    "searchPlaceholder": "Search Tags or Name"
-  },
   "hardware": {
     "title": "Server Hardware",
     "description": "State-of-the-art equipment powering our creative community",
-    "imageUrl": "homePage/CTEC_Hardware.webp",
     "specsTitle": "Server Specifications",
     "featuresTitle": "Key Features",
     "specs": [
@@ -332,5 +113,315 @@
       "Automated backup systems to protect player data and world progress",
       "Optimized for both creative building and intensive redstone contraptions"
     ]
+  },
+  "dimensions": {
+    "nav": {
+      "home": "Cloud Town home",
+      "homeShort": "Home",
+      "overworld": "Overworld",
+      "nether": "Nether",
+      "end": "The End",
+      "progress": "Progress",
+      "members": "Members",
+      "join": "Join us",
+      "menu": "Menu",
+      "close": "Close",
+      "theme": "Switch day or night",
+      "language": "Language",
+      "rail": "Dimensions",
+      "languageNow": "Language: {{language}}"
+    },
+    "dim": {
+      "overworld": "OVERWORLD",
+      "nether": "THE NETHER",
+      "end": "THE END",
+      "all": "WORLD LOG"
+    },
+    "hero": {
+      "since": "Since 2022.07.23",
+      "uptime": "Running {{days}} days {{clock}}",
+      "lead": "We study redstone and build in vanilla Minecraft, in one survival world that has never been reset.",
+      "cta": "Join us",
+      "cue": "Scroll through three dimensions",
+      "loading": "Building terrain",
+      "entering": "Entering the world",
+      "video": "CTEC anniversary video (background)"
+    },
+    "overworld": {
+      "tag": "Dimension 01 / 03",
+      "say": [
+        "Redstone is engineering.",
+        "Building is the work.",
+        "Survival is one long experiment."
+      ],
+      "body": "CTEC is a technical survival community from Asia. Members come from many fields and work with technical servers worldwide. Everything is built in survival mode.",
+      "stats": {
+        "days": "days, one world",
+        "milestones": "survival milestones",
+        "members": "full members",
+        "repos": "open-source projects"
+      },
+      "more": "The full world log, {{count}} milestones",
+      "works": [
+        {
+          "meta": "Build · 2024.03.22",
+          "name": "Attack on Titan\nWall Maria"
+        },
+        {
+          "meta": "Build · 2023.07",
+          "name": "The new spawn"
+        },
+        {
+          "meta": "Survival · Storage · 2023.08.20",
+          "name": "Fully encoded all-item sorter"
+        }
+      ]
+    },
+    "collection": {
+      "redstone": {
+        "crumb": "Redstone works",
+        "title": ["Redstone works,", "taken apart."],
+        "lead": "Redstone designed by CTEC members: {{total}} works. Open one for its pictures, video and download link.",
+        "leadPlain": "Redstone designed by CTEC members. Open one for its pictures, video and download link.",
+        "next": "Now the builds"
+      },
+      "architecture": {
+        "crumb": "Builds",
+        "title": ["Builds,", "seen up close."],
+        "lead": "What CTEC members have built: {{total}} works. Open one to see every picture of it.",
+        "leadPlain": "What CTEC members have built. Open one to see every picture of it.",
+        "next": "Now the redstone"
+      },
+      "search": "Search by name, tag or creator",
+      "tags": "Tags",
+      "allTags": "All",
+      "count": "{{n}} / {{total}} works",
+      "empty": "No work matches. Try another tag or word.",
+      "none": "No works here yet.",
+      "loading": "Loading",
+      "error": "The works could not be loaded.",
+      "retry": "Try again",
+      "detail": {
+        "no": "No. {{n}}",
+        "close": "Close",
+        "pictures": "Pictures of this work",
+        "picture": "{{title}}, picture {{n}}",
+        "video": "Video of {{title}}",
+        "play": "Load the video",
+        "prev": "Previous",
+        "next": "Next",
+        "toPicture": "{{n}}: picture",
+        "toVideo": "{{n}}: video",
+        "creator": "Creators",
+        "intro": "About",
+        "credit": "Special thanks",
+        "download": "Download",
+        "watch": "Watch the video",
+        "share": "Share",
+        "copy": "Copy link",
+        "copied": "Copied",
+        "copyFail": "Could not copy",
+        "weibo": "Weibo"
+      }
+    },
+    "nether": {
+      "tag": "Dimension 02 / 03",
+      "say": ["Through the portal", "is our factory."],
+      "body": "The nether hub, perimeters, piglin trading, magma cube farms. These machines are not creative-mode showpieces. They run and produce in the survival world.",
+      "ledger": [
+        {
+          "date": "2022.08.08",
+          "name": "Nether hub"
+        },
+        {
+          "date": "2023.01.17",
+          "name": "Y0 portal piglin farm"
+        },
+        {
+          "date": "2023.04.23",
+          "name": "1k nether perimeter"
+        },
+        {
+          "date": "2024.02.13",
+          "name": "Million-rate piglin trading"
+        },
+        {
+          "date": "2024.09.05",
+          "name": "Nether hub main cannon"
+        },
+        {
+          "date": "2025.02.11",
+          "name": "Flower farm (Nether)"
+        }
+      ],
+      "rankLabel": "Farm world records held",
+      "rank": ["1st in Asia"],
+      "rankBody": "Several farms we designed hold certified world records."
+    },
+    "hardware": {
+      "crumb": "Server hardware",
+      "title": ["What holds this world up", "is these few machines."],
+      "next": "The world they have run"
+    },
+    "end": {
+      "tag": "Dimension 03 / 03",
+      "say": ["After the End", "come the credits."],
+      "body": "The end hub, the Moon Palace and the end farms all stand over the void. After these three come the people who built this world.",
+      "works": [
+        {
+          "meta": "Build · 2023.09.29",
+          "name": "Moon Palace"
+        },
+        {
+          "meta": "Survival · 2022.12.03",
+          "name": "End farming district"
+        }
+      ],
+      "credits": {
+        "tools": "OPEN-SOURCE TOOLS",
+        "member": "FULL MEMBERS",
+        "trial": "TRIAL MEMBERS",
+        "roles": {
+          "core": "Game core",
+          "server": "Server management",
+          "infra": "Infrastructure",
+          "community": "Community tools"
+        },
+        "more": "Full member roster",
+        "fin": "Not over yet."
+      }
+    },
+    "openSource": {
+      "crumb": "Open source",
+      "title": ["The tools we write", "are all open source."],
+      "lead": "We build tools to make the game better for our players, and publish them. These are all of the organisation's repositories on GitHub, grouped by what they are for. Search by name or description.",
+      "search": "Search by name, description or topic",
+      "count": "{{n}} / {{total}}",
+      "groupCount": "{{n}}",
+      "other": "Other projects",
+      "stats": {
+        "total": "Repositories",
+        "languages": "Languages",
+        "stars": "Stars",
+        "forks": "Forks"
+      },
+      "noDescription": "This repository does not have a description yet.",
+      "unknownLanguage": "No language",
+      "fork": "Fork",
+      "archived": "Archived",
+      "github": "View on GitHub",
+      "empty": "No repository matches. Try another word.",
+      "clear": "Clear the search",
+      "none": "No repositories are available right now.",
+      "loading": "Loading",
+      "error": "Could not load the list of projects. GitHub's public API limits the number of requests made without a sign-in. Try again later, or see our organisation on GitHub.",
+      "retry": "Try again",
+      "next": "The partners and teams beside us"
+    },
+    "partner": {
+      "crumb": "Partners",
+      "title": ["The partners and teams", "beside us."],
+      "lead": "The teams and creators Cloud Town works with: their own words, their videos, and where to find them.",
+      "groups": {
+        "team": "Partner teams",
+        "longtime": "Long-term partner creators",
+        "creator": "Partner creators"
+      },
+      "groupCount": "{{n}}",
+      "site": "Website",
+      "play": "Play the introduction",
+      "videoTitle": "Introduction video of {{name}}",
+      "loading": "Loading",
+      "error": "Could not load the partners.",
+      "retry": "Try again",
+      "contact": {
+        "title": "Contact us",
+        "body": "If you would like to work with us, you are welcome to get in touch."
+      },
+      "next": "Want to build with us? Join"
+    },
+    "respawn": {
+      "label": "Respawn point: Cloud Town",
+      "title": "The next milestone is waiting for you.",
+      "cta": "Join the Discord",
+      "depts": [
+        {
+          "name": "Redstone",
+          "body": "Submit your redstone work through the application form. We invite the authors of outstanding builds.",
+          "action": "Application form"
+        },
+        {
+          "name": "Building",
+          "body": "We review structure, use of colour and originality.",
+          "action": "Application form"
+        },
+        {
+          "name": "Logistics",
+          "body": "Basic redstone knowledge and enthusiasm for the game are enough to apply.",
+          "action": "Application form"
+        }
+      ],
+      "more": "How to join, in full"
+    },
+    "join": {
+      "title": ["How to join", "Cloud Town."],
+      "lead": "Redstone, building, logistics: each department reviews in its own way. Find yours and apply as described below.",
+      "label": "RESPAWN",
+      "way": "All three departments live on Discord. To meet everyone first, or to ask anything about applying, find us there.",
+      "next": "See what we have built first"
+    },
+    "footer": {
+      "groups": { "works": "Works", "team": "Team", "community": "Community" },
+      "support": "Support us",
+      "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
+    },
+    "notFound": {
+      "code": "404",
+      "label": "Void",
+      "title": ["Go any further,", "and it is the void."],
+      "body": "The page you wanted is not in this world. The address may be mistyped, or the page may have moved.",
+      "home": "Back to the home page",
+      "more": "Or go here"
+    },
+    "progress": {
+      "crumb": "Survival progress",
+      "title": ["One world,", "from day one until now."],
+      "lead": "The server opened on 23 July 2022 and the world has never been reset. All {{total}} milestones are here. Filter by dimension or year.",
+      "leadPlain": "The server opened on 23 July 2022 and the world has never been reset. All milestones are here. Filter by dimension or year.",
+      "allDims": "All dimensions",
+      "allYears": "All years",
+      "count": "{{n}} / {{total}}",
+      "no": "No. {{n}}",
+      "perYear": "{{n}} milestones",
+      "empty": "No milestones for this combination. Try another dimension or year.",
+      "loading": "Loading",
+      "error": "Could not load the progress data.",
+      "retry": "Reload",
+      "next": "The people who built this world"
+    },
+    "nextLabel": "Next up",
+    "members": {
+      "crumb": "Members",
+      "title": ["The credits,", "in full."],
+      "lead": "Outstanding members from every field, building the server's record together.",
+      "search": "Search members",
+      "count": "{{n}} / {{total}}",
+      "groupCount": "{{n}}",
+      "groups": {
+        "member": {
+          "title": "Full members",
+          "line": "Veterans who have already left their mark on the server"
+        },
+        "trial": {
+          "title": "Trial members",
+          "line": "Fresh hands, waiting to be discovered"
+        }
+      },
+      "empty": "No member found. Try another name.",
+      "loading": "Loading",
+      "error": "Could not load the member data.",
+      "retry": "Reload",
+      "next": "The next name could be yours"
+    }
   }
 }

@@ -1,14 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { AntdRegistry } from '@ant-design/nextjs-registry';
 
-import StyledComponentsRegistry from '@/lib/StyledComponentsRegistry';
 import { ThemeProvider, themeInitScript } from '@/context/ThemeContext';
-import { Layout } from '@/Layout';
-
-import 'antd/dist/reset.css';
-import 'react-lazy-load-image-component/src/effects/blur.css';
-import '@/app.css';
 
 const SITE_URL = 'https://mc-ctec.org/';
 const TITLE = 'CloudTown 雲鎮工藝 - Minecraft 技術向伺服器';
@@ -74,20 +67,21 @@ export default function RootLayout({
   return (
     <html lang='zh' suppressHydrationWarning>
       <head>
-        <Script id='theme-init' strategy='beforeInteractive'>
-          {themeInitScript}
-        </Script>
+        {/* A plain inline script, first in the head: it runs while the document is parsed, so the reader's theme
+            is on the document before anything is painted. (next/script's beforeInteractive only queues it for
+            the framework's own script, which comes later than the first paint on a slow line: the page was then
+            painted by night and cross-faded to the day.) */}
+        <script
+          id='theme-init'
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
         <link rel='preconnect' href='https://fonts.googleapis.com' />
         <link
           rel='preconnect'
           href='https://fonts.gstatic.com'
           crossOrigin='anonymous'
         />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href='https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+TC:wght@200..900&display=swap'
-          rel='stylesheet'
-        />
+        {/* the fonts' stylesheet itself is asked for by the shell, page by page (FontSheet.tsx) */}
         <script
           type='application/ld+json'
           dangerouslySetInnerHTML={{
@@ -97,13 +91,7 @@ export default function RootLayout({
       </head>
       <body>
         <div id='root'>
-          <StyledComponentsRegistry>
-            <AntdRegistry>
-              <ThemeProvider>
-                <Layout>{children}</Layout>
-              </ThemeProvider>
-            </AntdRegistry>
-          </StyledComponentsRegistry>
+          <ThemeProvider>{children}</ThemeProvider>
         </div>
         <Script
           src='https://www.googletagmanager.com/gtag/js?id=G-091JNQ58E9'

@@ -1,31 +1,10 @@
 {
-  "loading": "加载中...",
-  "error": "好像出了点问题...",
-  "download": "下载",
-  "share": "分享",
-  "copyLink": "复制链接",
-  "copySuccess": "复制成功",
-  "copyFail": "复制失败",
-  "creator": "创作者",
-  "credit": "特别鸣谢",
-  "introduction": "简介",
-  "scroll": "向下滚动",
   "menu": {
-    "home": "首页",
-    "survivalProgress": "生存服进度",
-    "memberAndWork": "成员与作品",
-    "member": "成员",
     "redstone": "红石作品",
     "building": "建筑作品",
     "join": "加入我们",
     "openSource": "开源项目",
     "partner": "合作伙伴及团队"
-  },
-  "footer": {
-    "donate": {
-      "description": "支持我们",
-      "link": "https://paypal.me/cloudtownctec?country.x=TW&locale.x=zh_TW"
-    }
   },
   "time": {
     "days": "天",
@@ -38,134 +17,20 @@
       "youtubeId": "FCtztiDl_rE",
       "start": 9
     },
-    "description": "真正的艺术作品不过是神圣完美的倒影",
-    "serverRunning": "已创立",
-    "joinButton": "创意启航",
-    "about": {
-      "imageUrl": "homePage/CTEC_Sort.webp",
-      "title": "Cloud Town Exquisite Craft",
-      "subTitle": "云镇工艺",
-      "features": [
-        "为目前亚洲顶尖技术生存服务器之一",
-        "活跃于Minecraft原版环境下的技术研究",
-        "生存实践、红石科技、建筑创作",
-        "良好的创作环境与服务器设备",
-        "与各国优秀玩家共同研究交流",
-        "农场世界纪录持有量世界第六、亚洲第一"
-      ],
-      "buttons": [
-        {
-          "text": "最新进度",
-          "link": "/survival"
-        }
-      ]
-    },
-    "feature": {
-      "title": "我们拥有",
-      "card": [
-        {
-          "imageUrl": "homePage/CTEC_Building.webp",
-          "title": "顶尖建筑团队",
-          "paragraph": "极力于融合红石与建筑，呈现独有在生存模式的作品。云镇的建筑师来自各个领域，在至少一门风格脱颖而出的大师。我们相信只有站到巨人的肩膀才能够开阔自己的视野。在学习大佬的手法中也常跟在建筑圈深耕的团队和服务器交好，其中包含鬼鲸服务器，阿尔萨斯工业以及LIF框木的制作组。云镇也提供完善的插件和创作环境让建筑师尽显才华。",
-          "buttons": [
-            {
-              "text": "查看建筑作品",
-              "link": "/architectureCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Redstone.webp",
-          "title": "先进的红石技术",
-          "paragraph": "团队拥有前瞻红石技术实力，由各领域优秀开发者所组成，熟练掌握各种科技树研究，并与多个国际技术性服务器维持友好关系。致力于研究和创新，为社区研发各种高原创性的农场或原件，为社区成员提供更多的游戏乐趣。设置红石研究室，包括两个创造与两个生存镜像服务器，让创造设计的玩家也可以加入云镇工艺的行列。我们目前持有农场世界纪录认证排名世界第六、亚洲第一。",
-          "buttons": [
-            {
-              "text": "查看红石作品",
-              "link": "/redstoneCollection"
-            }
-          ]
-        },
-        {
-          "imageUrl": "homePage/CTEC_Hardware.webp",
-          "title": "長效穩定的服务器设备",
-          "paragraph": "我们拥有优秀的服务器设备，能够支持大量的同时在线玩家开发与游玩。并在各国拥有低延迟连接代理服务器，为不同地区的玩家提供了极佳的游戏体验。设备拥有 i9-13900K, 128G RAM, 6TB SSD, UPS 不断电系统。并有专属工程师维护，保证服务器的稳定运行。",
-          "buttons": [
-            {
-              "text": "查看服务器设备",
-              "link": "/hardware"
-            }
-          ]
-        }
-      ]
-    },
-    "carousel": {
-      "title": "服务器内容",
-      "subtitles": ["最新生存进度", "最新红石作品", "最新建筑作品"]
-    },
-    "frostPursuit": {
-      "imageUrl": "homePage/CTEC_FrostPursuit.webp",
-      "title": "Frost Pursuit 圣诞特别地图",
-      "subTitle": "全新冰船竞速地图正式发布！",
-      "features": [
-        "身临其境的冬季赛道设计",
-        "精心设计红石与节日氛围",
-        "支持多人竞速模式",
-        "精心设计的光影与视觉效果"
-      ],
-      "buttons": [
-        {
-          "text": "探索地图",
-          "href": "/frostpursuit"
-        }
-      ]
-    }
-  },
-  "notFound": {
-    "title": "404 未找到",
-    "description": "看起来这里已经化为灰烬了...",
-    "imageUrl": "notFoundPage/CTEC_Burning.webp",
-    "backButton": "返回首页"
-  },
-  "members": {
-    "title": "成员列表",
-    "imageUrl": "members/CTEC_Members.webp",
-    "description": "各领域优秀成员共创了服务器精彩纪录",
-    "searchPlaceholder": "搜索成员",
-    "noResult": "没有找到成员",
-    "memberGroup": {
-      "title": "正式成员",
-      "subTitle": "这些老司机们已经在服务器上留下了自己的痕迹"
-    },
-    "trialGroup": {
-      "title": "新秀成员",
-      "subTitle": "新鲜的肝，等待你的发掘"
-    }
+    "serverRunning": "已创立"
   },
   "join": {
-    "description": "如何加入我们",
-    "imageUrl": "join/CTEC_Lounge.webp",
     "redstone": {
       "imageUrl": "join/CTEC_Redstone.webp",
       "title": "红石组",
       "features": [
-        "投稿红石作品至作品投稿或审核人员私信来申请审核。",
-        "我们将邀请优秀作品的作者加入。",
-        "审核人员 Discord:"
+        "填写申请表单，投稿红石作品来申请审核。",
+        "我们将邀请优秀作品的作者加入。"
       ],
       "buttons": [
         {
-          "text": "fantasy_sakura",
-          "href": "https://discordapp.com/users/676261754782613514",
-          "type": "link"
-        },
-        {
-          "text": "jezlarm",
-          "href": "https://discordapp.com/users/378510281250439168",
-          "type": "link"
-        },
-        {
-          "text": "作品投稿频道",
-          "href": "https://discord.com/channels/933290709589577728/1103568261683101696",
+          "text": "申请表单",
+          "href": "https://forms.gle/sGUxUtUaskchiTfG7",
           "type": "link"
         }
       ]
@@ -202,89 +67,9 @@
       ]
     }
   },
-  "survivalProgress": {
-    "title": "生存服进度",
-    "description": "历史并非毫无意义，而是为了在时光中留下我们走过的痕迹",
-    "storyMode": "故事模式",
-    "pause": "暂停",
-    "continue": "继续"
-  },
-  "opensource": {
-    "title": "开源列表",
-    "description": "为了给玩家带来更好的体验，我们也将部分项目开放为开源作品。",
-    "imageUrl": "openSource/CTEC_Development.webp",
-    "stats": {
-      "total": "项目",
-      "languages": "语言",
-      "stars": "星数",
-      "forks": "分支"
-    },
-    "noDescription": "这个仓库暂时还没有说明。",
-    "unknownLanguage": "未标注语言",
-    "archived": "已归档",
-    "noRepositories": "目前没有可显示的开源项目。",
-    "overviewTitle": "将我们开发的工具开源",
-    "viewOnGithub": "前往 GitHub",
-    "languages": "语言",
-    "searchPlaceholder": "搜索项目名称、说明或标签…",
-    "allLanguages": "全部",
-    "sort": {
-      "label": "排序",
-      "updated": "最近更新",
-      "stars": "星数",
-      "name": "名称"
-    },
-    "noMatch": "找不到符合条件的项目",
-    "clearFilters": "清除筛选",
-    "retry": "重新加载",
-    "fork": "Fork",
-    "allProjects": "所有项目"
-  },
-  "partner": {
-    "title": "合作伙伴及团队",
-    "team": {
-      "title": "合作团队"
-    },
-    "longtime": {
-      "title": "长期合作创作者"
-    },
-    "creator": {
-      "title": "合作创作者"
-    },
-    "contact": {
-      "title": "联系我们",
-      "subTitle": "如果你有任何问题或者合作意向，欢迎与我们联系",
-      "imageUrl": "brand/brand1.webp",
-      "buttons": [
-        {
-          "text": "Email",
-          "link": "mailto:cloudtown0723@gmail.com"
-        },
-        {
-          "text": "Discord",
-          "link": "https://discordapp.com/users/525640608228966400"
-        },
-        {
-          "text": "YouTube",
-          "link": "https://www.youtube.com/@CTEC_"
-        }
-      ]
-    }
-  },
-  "architectureCollection": {
-    "title": "建筑作品集",
-    "imageUrl": "homePage/CTEC_Building.webp",
-    "searchPlaceholder": "搜索标签或名称"
-  },
-  "redstoneCollection": {
-    "title": "紅石作品集",
-    "imageUrl": "redstoneCollection/p30.webp",
-    "searchPlaceholder": "搜索标签或名称"
-  },
   "hardware": {
     "title": "服务器硬件",
     "description": "顶级设备驱动我们的创意社区",
-    "imageUrl": "homePage/CTEC_Hardware.webp",
     "specsTitle": "服务器规格",
     "featuresTitle": "核心特色",
     "specs": [
@@ -328,5 +113,311 @@
       "自动化备份系统保护玩家数据和世界进度",
       "针对创意建筑和高强度红石装置进行优化"
     ]
+  },
+  "dimensions": {
+    "nav": {
+      "home": "云镇工艺 首页",
+      "homeShort": "首页",
+      "overworld": "主世界",
+      "nether": "地狱",
+      "end": "末地",
+      "progress": "进度",
+      "members": "成员",
+      "join": "加入我们",
+      "menu": "菜单",
+      "close": "关闭",
+      "theme": "切换白天或夜晚",
+      "language": "语言",
+      "rail": "维度",
+      "languageNow": "语言：{{language}}"
+    },
+    "dim": {
+      "overworld": "主世界",
+      "nether": "地狱",
+      "end": "末地",
+      "all": "世界纪录"
+    },
+    "hero": {
+      "since": "开服 2022.07.23",
+      "uptime": "已运行 {{days}} 天 {{clock}}",
+      "lead": "在 Minecraft 原版规则里研究红石、盖建筑，经营一个开服至今没有重置过的生存世界。",
+      "cta": "加入我们",
+      "cue": "往下滚，走过三个维度",
+      "loading": "正在构建地形",
+      "entering": "正在进入世界",
+      "video": "云镇工艺周年纪念视频（背景）"
+    },
+    "overworld": {
+      "tag": "维度 01 / 03",
+      "say": ["红石是工程。", "建筑是作品。", "生存是一场不重置的长期实验。"],
+      "body": "云镇工艺是来自亚洲的技术生存社区。成员来自不同专业，和多个国际技术服务器往来，所有东西都在生存模式里完成。",
+      "stats": {
+        "days": "天，同一个世界",
+        "milestones": "个生存服里程碑",
+        "members": "位正式成员",
+        "repos": "个开源项目"
+      },
+      "more": "完整的世界纪录，{{count}} 个里程碑",
+      "works": [
+        {
+          "meta": "建筑 · 2024.03.22",
+          "name": "进击的巨人\n玛丽亚之墙"
+        },
+        {
+          "meta": "建筑 · 2023.07",
+          "name": "新出生点"
+        },
+        {
+          "meta": "生存 · 仓储 · 2023.08.20",
+          "name": "全编码全物品"
+        }
+      ]
+    },
+    "collection": {
+      "redstone": {
+        "crumb": "红石作品",
+        "title": ["红石作品，", "拆开来看。"],
+        "lead": "云镇成员设计的红石作品，共 {{total}} 件。点开一件，看它的图片、视频与下载链接。",
+        "leadPlain": "云镇成员设计的红石作品。点开一件，看它的图片、视频与下载链接。",
+        "next": "再看建筑作品"
+      },
+      "architecture": {
+        "crumb": "建筑作品",
+        "title": ["建筑作品，", "走近一点看。"],
+        "lead": "云镇成员盖出来的建筑，共 {{total}} 件。点开一件，看它的每一张图片。",
+        "leadPlain": "云镇成员盖出来的建筑。点开一件，看它的每一张图片。",
+        "next": "再看红石作品"
+      },
+      "search": "搜索名称、标签或创作者",
+      "tags": "标签",
+      "allTags": "全部",
+      "count": "{{n}} / {{total}} 件",
+      "empty": "没有符合的作品，换一个标签或关键字。",
+      "none": "这里还没有作品。",
+      "loading": "加载中",
+      "error": "作品数据加载失败。",
+      "retry": "重新加载",
+      "detail": {
+        "no": "第 {{n}} 件",
+        "close": "关闭",
+        "pictures": "这件作品的图片",
+        "picture": "{{title}}，第 {{n}} 张",
+        "video": "{{title}} 的视频",
+        "play": "加载视频",
+        "prev": "上一张",
+        "next": "下一张",
+        "toPicture": "第 {{n}} 张：图片",
+        "toVideo": "第 {{n}} 张：视频",
+        "creator": "创作者",
+        "intro": "简介",
+        "credit": "特别感谢",
+        "download": "下载",
+        "watch": "观看视频",
+        "share": "分享",
+        "copy": "复制链接",
+        "copied": "已复制",
+        "copyFail": "复制失败",
+        "weibo": "微博"
+      }
+    },
+    "nether": {
+      "tag": "维度 02 / 03",
+      "say": ["穿过传送门，", "就是我们的工厂。"],
+      "body": "地狱大厅、空置域、猪灵交易、岩浆怪农场。这些机器不是摆在创造模式里看的，它们在生存世界里实际运转、实际产出。",
+      "ledger": [
+        {
+          "date": "2022.08.08",
+          "name": "地狱大厅"
+        },
+        {
+          "date": "2023.01.17",
+          "name": "Y0 切门猪灵农场"
+        },
+        {
+          "date": "2023.04.23",
+          "name": "地狱 1k 空置域"
+        },
+        {
+          "date": "2024.02.13",
+          "name": "双维度百万猪灵交易"
+        },
+        {
+          "date": "2024.09.05",
+          "name": "地狱大厅主炮"
+        },
+        {
+          "date": "2025.02.11",
+          "name": "刷花机（地狱）"
+        }
+      ],
+      "rankLabel": "农场世界纪录持有量",
+      "rank": ["亚洲第一"],
+      "rankBody": "我们设计的农场有多项取得世界纪录认证。"
+    },
+    "hardware": {
+      "crumb": "服务器硬件",
+      "title": ["撑起这个世界的，", "是这几台机器。"],
+      "next": "这台机器跑出来的世界"
+    },
+    "end": {
+      "tag": "维度 03 / 03",
+      "say": ["末地之后，", "是制作名单。"],
+      "body": "末地大厅、月宫、末地农业区，都盖在虚空上。看完这三处，就是把这个世界盖出来的人。",
+      "works": [
+        {
+          "meta": "建筑 · 2023.09.29",
+          "name": "月宫"
+        },
+        {
+          "meta": "生存 · 2022.12.03",
+          "name": "末地农业区"
+        }
+      ],
+      "credits": {
+        "tools": "开源工具",
+        "member": "正式成员",
+        "trial": "新秀成员",
+        "roles": {
+          "core": "游戏核心",
+          "server": "服务器管理",
+          "infra": "基础设施",
+          "community": "社区工具"
+        },
+        "more": "完整成员名册",
+        "fin": "还没结束。"
+      }
+    },
+    "openSource": {
+      "crumb": "开源项目",
+      "title": ["我们写的工具，", "全部开源。"],
+      "lead": "为了给玩家更好的体验，我们开发了许多开源插件。这里是组织在 GitHub 上的全部项目，按用途分组，可以用名称或说明搜索。",
+      "search": "搜索项目名称、说明或标签",
+      "count": "{{n}} / {{total}} 个",
+      "groupCount": "{{n}} 个",
+      "other": "其他项目",
+      "stats": {
+        "total": "项目",
+        "languages": "语言",
+        "stars": "星数",
+        "forks": "分支"
+      },
+      "noDescription": "目前还没有补上项目说明。",
+      "unknownLanguage": "未标注语言",
+      "fork": "Fork",
+      "archived": "已归档",
+      "github": "前往 GitHub",
+      "empty": "找不到符合的项目，换个关键字试试。",
+      "clear": "清除搜索",
+      "none": "目前没有可显示的开源项目。",
+      "loading": "加载中",
+      "error": "项目列表加载失败。GitHub 的公开 API 对未登录的请求有次数限制，请稍后再试，或直接到 GitHub 看我们的组织。",
+      "retry": "重新加载",
+      "next": "一起走过来的伙伴与团队"
+    },
+    "partner": {
+      "crumb": "合作伙伴及团队",
+      "title": ["一路同行的", "伙伴与团队。"],
+      "lead": "和云镇工艺往来的团队与创作者：他们的介绍、视频，还有可以找到他们的地方。",
+      "groups": {
+        "team": "合作团队",
+        "longtime": "长期合作创作者",
+        "creator": "合作创作者"
+      },
+      "groupCount": "{{n}} 位",
+      "site": "网站",
+      "play": "播放介绍视频",
+      "videoTitle": "{{name}} 的介绍视频",
+      "loading": "加载中",
+      "error": "合作伙伴资料加载失败。",
+      "retry": "重新加载",
+      "contact": {
+        "title": "联系我们",
+        "body": "如果您有任何合作意向，欢迎与我们联系。"
+      },
+      "next": "想一起盖？加入我们"
+    },
+    "respawn": {
+      "label": "重生点：云镇",
+      "title": "下一个里程碑，等你一起盖。",
+      "cta": "加入 Discord",
+      "depts": [
+        {
+          "name": "红石组",
+          "body": "用申请表单投稿你的红石作品，我们会邀请优秀作品的作者加入。",
+          "action": "填写申请表单"
+        },
+        {
+          "name": "建筑组",
+          "body": "审核看结构合理性、色彩运用与原创性。",
+          "action": "填写申请表单"
+        },
+        {
+          "name": "后勤组",
+          "body": "有基础红石知识、对游戏有热忱就可以申请。",
+          "action": "填写申请表单"
+        }
+      ],
+      "more": "完整的加入说明"
+    },
+    "join": {
+      "title": ["如何加入", "云镇工艺。"],
+      "lead": "红石、建筑、后勤，三个组别各有自己的审核方式。找到你的那一组，照着下面的说明申请。",
+      "label": "重生点",
+      "way": "三个组别都在 Discord 上活动。想先认识大家，或对申请有任何疑问，欢迎到 Discord 找我们。",
+      "next": "先看看我们盖了什么"
+    },
+    "footer": {
+      "groups": { "works": "作品", "team": "团队", "community": "社群" },
+      "support": "支持我们",
+      "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
+    },
+    "notFound": {
+      "code": "404",
+      "label": "虚空",
+      "title": ["再往前走，", "就是虚空。"],
+      "body": "你要找的页面不在这个世界里。也许网址输错了，也许它已经被搬走。",
+      "home": "返回首页",
+      "more": "或者去这里"
+    },
+    "progress": {
+      "crumb": "生存服进度",
+      "title": ["同一个世界，", "从第一天到现在。"],
+      "lead": "2022 年 7 月 23 日开服，世界没有重置过。这里是全部 {{total}} 个里程碑，可以按维度或年份筛选。",
+      "leadPlain": "2022 年 7 月 23 日开服，世界没有重置过。这里是全部里程碑，可以按维度或年份筛选。",
+      "allDims": "全部维度",
+      "allYears": "全部年份",
+      "count": "{{n}} / {{total}} 项",
+      "no": "第 {{n}} 项",
+      "perYear": "{{n}} 个里程碑",
+      "empty": "这个组合没有里程碑，换一个维度或年份。",
+      "loading": "加载中",
+      "error": "进度数据加载失败。",
+      "retry": "重新加载",
+      "next": "把这个世界盖出来的人"
+    },
+    "nextLabel": "接着看",
+    "members": {
+      "crumb": "成员",
+      "title": ["制作名单，", "完整版。"],
+      "lead": "各领域优秀成员共创了服务器精彩纪录",
+      "search": "搜索成员",
+      "count": "{{n}} / {{total}} 位",
+      "groupCount": "{{n}} 位",
+      "groups": {
+        "member": {
+          "title": "正式成员",
+          "line": "这些老司机们已经在服务器上留下了自己的痕迹"
+        },
+        "trial": {
+          "title": "新秀成员",
+          "line": "新鲜的肝，等待你的发掘"
+        }
+      },
+      "empty": "没有找到成员，换个名字试试。",
+      "loading": "加载中",
+      "error": "成员数据加载失败。",
+      "retry": "重新加载",
+      "next": "下一个名字，可以是你"
+    }
   }
 }

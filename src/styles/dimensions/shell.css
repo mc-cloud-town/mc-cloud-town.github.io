@@ -1,0 +1,650 @@
+/* Shell: top bar, menu sheet and footer. Ported from docs/design-demos/inner.css.
+   Every change of state here is a transition in the motion language of tokens.css; none uses `all`,
+   and none touches a property that a scroll-driven tween owns (the home arrival moves the bar's y and opacity). */
+
+/* The page is never carried anywhere by native smooth scrolling (nothing sets it): where it
+   goes is decided by the page (the home page's choreography) or happens at once. <html data-dim> is there for as
+   long as the shell is (DimensionProvider). */
+/* Behind the shell, where a page that is pulled past its end shows what is under it: the shell's own ground
+   (--bg in tokens.css, which is defined on .dim and so not known here).
+   It changes with the theme as the shell does (--t-theme). By day the home page's film is dark, and so is what is behind it everywhere
+   but at the respawn, where the ground is paper; the members' page, which is in the End, stays in the light. */
+html[data-dim] body {
+  background: #06080b;
+  transition: background-color 0.4s;
+}
+html[data-dim][data-theme='light'] body {
+  background: #eef2f5;
+}
+html[data-theme='light']:not([data-dim='respawn']):has(.dim.dim--home) body {
+  background: #06080b;
+}
+
+.dim {
+  /* the fixed bar's height, for sticky offsets: 18px padding twice + content (44px controls up to 1024px) */
+  --bar-h: 72px;
+  @media (max-width: 1024px) {
+    --bar-h: 81px;
+  }
+  .dim-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 18px var(--gutter);
+    background: rgba(var(--v), 0.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    transition:
+      background-color var(--t-theme),
+      border-color var(--t-theme),
+      text-shadow var(--t-theme);
+  }
+  .dim-bar .logo {
+    margin-right: auto;
+  }
+  .dim-bar .logo img {
+    height: 28px;
+  }
+  .mark {
+    display: inline-grid;
+    justify-items: start;
+  }
+  .mark img {
+    grid-area: 1 / 1;
+    transition: opacity var(--t-theme);
+  }
+  .mark .on-paper {
+    opacity: calc(1 - var(--mark-dark));
+  }
+  .mark .on-dark {
+    opacity: var(--mark-dark);
+  }
+  .dim-bar nav {
+    display: flex;
+    gap: 24px;
+    font-size: 14px;
+  }
+  .dim-bar nav a {
+    opacity: 0.7;
+    padding: 4px 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      opacity var(--t-state),
+      border-color var(--t-state);
+  }
+  .dim-bar nav a:hover,
+  .dim-bar nav a[aria-current] {
+    opacity: 1;
+    border-bottom-color: var(--accent);
+  }
+  .pill {
+    font: 12px var(--mono);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 8px 14px;
+    transition:
+      background-color var(--t-state),
+      color var(--t-state),
+      border-color var(--t-state),
+      transform var(--t-state) var(--ease-out);
+  }
+  /* only where a pointer can hover: after a tap the fill would stay on */
+  @media (hover: hover) {
+    .pill:hover {
+      background: var(--fg);
+      color: var(--bg);
+    }
+  }
+  .pill:active {
+    transform: scale(0.95);
+  }
+
+  /* The footer is the site's map (docs/design-demos/respawn-lab.html). The mark at one edge, large enough to
+     carry that side by itself; the three lists at the other (what was built, who built it, where the community
+     is), each as wide as its longest word, with one space between them. The two edges are the gutters; between
+     them the footer is sized by what it holds, so no language squeezes it. */
+  .dim-foot {
+    --foot-gap: clamp(32px, 4vw, 72px);
+    margin-top: 120px;
+    border-top: 1px solid var(--line);
+    padding: 56px var(--gutter) 64px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 48px var(--foot-gap);
+    font-size: 14px;
+    color: var(--muted);
+    transition:
+      color var(--t-theme),
+      border-color var(--t-theme);
+  }
+  .dim-foot .brand {
+    display: grid;
+    gap: 20px;
+    justify-items: start;
+    font-size: 13px;
+    /* the lists keep their width; where a language makes them wide, the line under the mark is what folds */
+    min-width: min-content;
+  }
+  .dim-foot img {
+    height: clamp(40px, 4.4vw, 64px);
+  }
+  .dim-foot .map,
+  .dim-foot .site {
+    display: flex;
+    gap: var(--foot-gap);
+  }
+  .dim-foot nav {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .dim-foot .label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+    transition: color var(--t-theme);
+  }
+  /* its own colour, so the hover eases from a fixed value instead of trailing the footer's */
+  .dim-foot a {
+    color: var(--fg);
+    transition:
+      color var(--t-state),
+      border-color var(--t-state);
+  }
+  .dim-foot a:hover {
+    color: var(--accent);
+  }
+  /* the community: marks, not words. Each is a round control a finger can hit, in the bar's own pill language */
+  .dim-foot .icons {
+    display: flex;
+    gap: 10px;
+    margin: 2px 0 8px;
+  }
+  .dim-foot .icons a {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    font-size: 19px;
+  }
+  .dim-foot .icons a:hover {
+    border-color: var(--accent);
+  }
+
+  /* additions not in the design demos */
+  .dim-bar nav a.on {
+    opacity: 1;
+    border-bottom-color: var(--accent);
+  } /* home page: the current dimension */
+
+  /* controls carry a mark instead of a glyph: one line weight, the text's own colour */
+  .anticon {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  /* as tall as a line of the pill's type, so a pill with only a mark is as tall as one with a word */
+  .pill .mark,
+  .pill .swap {
+    display: inline-grid;
+    place-items: center;
+    height: 16px;
+    font-size: 14px;
+  }
+  /* two marks in one place: the one that is not current is turned away and faded out */
+  .swap > .anticon {
+    grid-area: 1 / 1;
+    transition:
+      opacity var(--t-state) var(--ease-rise),
+      transform var(--t-in) var(--ease-out);
+  }
+  .dim-bar [data-action='theme'] .anticon-sun,
+  .dim-bar .menu .anticon-close {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+  [data-theme='light'] & .dim-bar [data-action='theme'] .anticon-sun,
+  .dim-bar .menu[aria-expanded='true'] .anticon-close {
+    opacity: 1;
+    transform: none;
+  }
+  [data-theme='light'] & .dim-bar [data-action='theme'] .anticon-moon,
+  .dim-bar .menu[aria-expanded='true'] .anticon-menu {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+  }
+  /* Language: a pill like the others, and under it a short list of the site's own (LanguageMenu.tsx).
+     The list is an overlay of the bar: absolutely placed, so nothing in the layout knows it is there.
+     It is always in the page so that it can ease out; closed, it is invisible, inert and lets every pointer through. */
+  .dim-bar .lang {
+    position: relative;
+    display: inline-flex;
+  }
+  /* open: the pill stays filled for as long as the list is there, as the menu button does */
+  .dim-bar .lang .pill[aria-expanded='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+  .lang-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1;
+    display: grid;
+    gap: 2px;
+    min-width: 10.5em;
+    padding: 6px;
+    /* a surface of the bar's family: the page's ground, a hairline, the pill's roundness on a box */
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+    font-size: 14px;
+    line-height: 1.4;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    /* leaving: quicker than arriving, and gone from sight only when the fade is over */
+    transition:
+      opacity var(--t-out) var(--ease-rise),
+      transform var(--t-out) var(--ease-rise),
+      visibility 0s linear var(--t-out),
+      background-color var(--t-theme),
+      border-color var(--t-theme);
+  }
+  /* arriving: it fades in while it comes down from the pill */
+  .lang-list[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      opacity var(--t-state) var(--ease-rise),
+      transform var(--t-in) var(--ease-out),
+      visibility 0s,
+      background-color var(--t-theme),
+      border-color var(--t-theme);
+  }
+  /* the focus is shown on the row the keyboard is on, not around the whole list */
+  .lang-list:focus,
+  .lang-list:focus-visible {
+    outline: none;
+  }
+  .lang-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px 7px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--t-out),
+      color var(--t-state);
+  }
+  /* the mark of the current one: the stop of the home page's rail, small */
+  .lang-list li::before {
+    content: '';
+    flex: none;
+    width: 6px;
+    height: 6px;
+    rotate: 45deg;
+    border: 1px solid var(--line);
+    transition:
+      background-color var(--t-state),
+      border-color var(--t-state);
+  }
+  .lang-list li[aria-selected='true'] {
+    color: var(--accent);
+  }
+  .lang-list li[aria-selected='true']::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  /* where the pointer or the keyboard is */
+  .lang-list li[data-active='true'] {
+    background: var(--line);
+  }
+  .lang-list:focus-visible li[data-active='true'] {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  @media (max-width: 1024px) {
+    .lang-list li {
+      min-height: 44px;
+    }
+  }
+  .dim-bar .menu {
+    display: none;
+  }
+  /* open: the button stays filled for as long as the sheet is there */
+  .dim-bar .menu[aria-expanded='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+
+  /* The menu is an overlay: a fixed layer over the page, under the bar. Opening it changes nothing in the
+     page's layout (no overflow lock, so the scrollbar stays). It is always in the page so that it can ease
+     out; closed, it is invisible, inert (SiteBar.tsx) and lets every pointer through. It reaches 16px past
+     the bottom so that its short way down never uncovers the page there. */
+  .dim-sheet {
+    position: fixed;
+    inset: 0 0 -16px;
+    z-index: 49;
+    /* Under the bar, and no more room taken than the screen has to give: the gaps above and below the links
+       shrink with the height of the screen (the last 16px are the part that reaches past the bottom), and so
+       do the links (below). Six of them fit on any screen 380px tall or more, so the sheet has nothing to
+       scroll there and shows no scrollbar beside the page's. */
+    padding: calc(var(--bar-h) + clamp(6px, 3vh, 24px)) var(--gutter)
+      calc(16px + clamp(6px, 4vh, 40px));
+    background: var(--bg); /* opaque: nothing behind the menu may be legible */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* on a screen too short for six links it does scroll: a thin bar in the line colour, not the system's */
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-16px);
+    pointer-events: none;
+    /* Leaving mirrors arriving, and is quicker: the links go first (80ms), and only then the panel thins,
+       so the page never shows through the words. Gone from sight when the fade is over: 240ms in all
+       (SHEET_OUT_MS in SiteBar.tsx waits a little longer than that). */
+    transition:
+      opacity 0.16s var(--ease-rise) 0.08s,
+      transform 0.16s var(--ease-rise) 0.08s,
+      visibility 0s linear 0.24s,
+      background-color var(--t-theme);
+  }
+  /* Arriving: the panel first. It is whole within 120ms, and no link shows before 100ms, when it is all but
+     opaque: at no point is the page legible through the words of the menu. */
+  .dim-sheet[data-open='true'] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      opacity 0.12s var(--ease-rise),
+      transform 0.32s var(--ease-out),
+      visibility 0s,
+      background-color var(--t-theme);
+  }
+  .dim-sheet nav {
+    display: grid;
+  }
+  .dim-sheet a {
+    font: 900 clamp(20px, 4.6vh, 28px) / 1.2 var(--serif);
+    padding: clamp(4px, 1.8vh, 14px) 0;
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.08s linear,
+      transform 0.08s linear,
+      color var(--t-state),
+      border-color var(--t-theme);
+  }
+  /* once the panel is there the links rise one after another, 26ms apart: 450ms from the tap to the last one in place */
+  .dim-sheet[data-open='true'] a {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.22s var(--ease-rise) calc(0.1s + var(--i, 0) * 26ms),
+      transform 0.22s var(--ease-out) calc(0.1s + var(--i, 0) * 26ms),
+      color var(--t-state),
+      border-color var(--t-theme);
+  }
+  .dim-sheet a[aria-current],
+  .dim-sheet a.on {
+    color: var(--accent);
+  }
+  @media (hover: hover) {
+    .dim-sheet a:hover {
+      color: var(--accent);
+    }
+  }
+  .dim-foot {
+    max-width: 2200px;
+    margin-inline: auto;
+  }
+
+  /* The bar switches to the menu button below 1100px, not at the usual 860px: the six links
+     plus theme, language and Discord pills (longest in English) need about 1050px, and below that
+     the logo gets squeezed. The matching query lives in SiteBar.tsx (BAR_BREAKPOINT). */
+  @media (max-width: 1100px) {
+    .dim-bar {
+      gap: 8px;
+    }
+    .dim-bar nav,
+    .dim-bar .discord {
+      display: none;
+    }
+    .dim-bar .menu {
+      display: inline-flex;
+    }
+  }
+  @media (min-width: 1101px) {
+    .dim-sheet {
+      display: none;
+    }
+  }
+  @media (max-width: 1024px) {
+    /* where fingers are used every link is a box of at least 44px (tokens.css): the rows need no more space */
+    .dim-foot nav {
+      gap: 0;
+    }
+    .dim-foot .icons {
+      margin-top: 8px;
+    }
+  }
+  /* up to 860px the lists first: two side by side, the community under them; the mark and the rights at the foot */
+  @media (max-width: 860px) {
+    .dim-foot {
+      flex-wrap: wrap;
+      padding-block: 40px;
+      gap: 40px;
+    }
+    .dim-foot .map {
+      order: -1;
+      width: 100%;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .dim-foot .site {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+  /* Less motion: the same end states, reached by a brief fade. No travel, no turning, no one-after-another. */
+  @media (prefers-reduced-motion: reduce) {
+    .dim-sheet,
+    .dim-sheet[data-open='true'] {
+      transform: none;
+    }
+    .dim-sheet {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s linear 0.12s;
+    }
+    .dim-sheet[data-open='true'] {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s;
+    }
+    .dim-sheet a,
+    .dim-sheet[data-open='true'] a {
+      opacity: 1;
+      transform: none;
+      transition: color 0.12s linear;
+    }
+    .lang-list,
+    .lang-list[data-open='true'] {
+      transform: none;
+    }
+    .lang-list {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s linear 0.12s;
+    }
+    .lang-list[data-open='true'] {
+      transition:
+        opacity 0.12s linear,
+        visibility 0s;
+    }
+    .swap > .anticon {
+      transform: none !important;
+      transition: opacity 0.12s linear;
+    }
+    .pill:active {
+      transform: none;
+    }
+  }
+}
+
+/* The navigation cover (Cover.tsx, navigation.ts): one layer over the page, the bar and the menu, under the
+   loader only. It stands in the shell, outside any page, hence outside `.dim`. Opacity is all that ever
+   changes: no overflow lock, no size, nothing the layout or the scrollbar could feel. The length of each
+   fade is set by navigation.ts (280ms in, 520ms out; 100 and 120ms with reduced motion). */
+.dim-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgb(var(--v-night));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.28s var(--ease-rise);
+}
+/* by day it is the paper, unless it covers the home page, whose film is dark (a jump within it, or a step to it) */
+[data-theme='light'] .dim-cover:not([data-tone='night']) {
+  background: rgb(var(--v-day));
+}
+/* whole, it also takes the pointer: nothing under it can be clicked while the page changes */
+.dim-cover[data-on='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dim-cover {
+    transition-timing-function: linear;
+  }
+}
+/* The sign of life (Cover.tsx): only on a cover that a slow destination has kept whole for more than a second.
+   A small version of the home loader's map, with the loader's own line under it, in the middle of the cover.
+   The map is a thing of the night whatever the cover's ground: by day it is a dark tile on the paper.
+   It eases in as anything arrives (--t-in), and out (--t-out) before the cover lifts. */
+.dim-cover {
+  display: grid;
+  place-items: center;
+}
+.dim-cover .cover-wait {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  animation: dim-cover-wait-in var(--t-in) var(--ease-out) backwards;
+  transition: opacity var(--t-out) var(--ease-rise);
+}
+.dim-cover .cover-wait[data-out='true'] {
+  opacity: 0;
+}
+/* 21 × 21 pixels, one per chunk, six screen pixels each, with hard edges */
+.dim-cover .cover-wait canvas {
+  display: block;
+  width: min(126px, 30vmin);
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+}
+.dim-cover .cover-wait p {
+  margin: 0;
+  font:
+    12px 'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.14em;
+  color: #a3adb8;
+}
+[data-theme='light'] .dim-cover:not([data-tone='night']) .cover-wait p {
+  color: #414c57;
+}
+@keyframes dim-cover-wait-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dim-cover .cover-wait {
+    animation: dim-fade-0 0.12s linear backwards;
+    transition: opacity 0.1s linear;
+  }
+}
+
+/* ───────── going to another page (pageTransition.ts) ─────────
+   Leave: the content settles out under the cover that is coming in. It goes the way it came, on upwards by a few
+   pixels (as the hero's copy leaves when it is scrolled away), in the time anything leaves (--t-out): gone before
+   the cover is whole. The bar stays; the cover takes it. Given up, the content eases back the same way.
+   The home page's content only fades: it holds the pinned stage, which a moved ancestor would take along.
+   Arrive: under the whole cover the new page's entrance is held, and let go when the cover begins to lift. */
+.dim main {
+  transition:
+    opacity var(--t-out) var(--ease-rise),
+    translate var(--t-out) var(--ease-rise),
+    text-shadow var(--t-theme);
+}
+.dim > .dim-foot {
+  transition:
+    color var(--t-theme),
+    border-color var(--t-theme),
+    opacity var(--t-out) var(--ease-rise),
+    translate var(--t-out) var(--ease-rise);
+}
+html[data-nav='leaving'] .dim main,
+html[data-nav='leaving'] .dim > .dim-foot {
+  opacity: 0;
+  translate: 0 -12px;
+}
+/* The page is held for the whole of a step. Firefox takes the content's rise for a change of layout and scrolls
+   after it (its scroll anchoring follows `translate`); the hold then puts the page back, one frame late, and
+   that frame shows the page seven pixels off. With no anchor to follow, the page stays. */
+html[data-nav] {
+  overflow-anchor: none;
+}
+html[data-nav='leaving'] .dim.dim--home main {
+  translate: none;
+}
+/* whatever else names an animation here: under the whole cover none of them runs */
+html[data-nav='covered'] .dim main,
+html[data-nav='covered'] .dim main * {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dim main,
+  .dim > .dim-foot {
+    transition-duration: 0.1s;
+    transition-timing-function: linear;
+  }
+  html[data-nav='leaving'] .dim main,
+  html[data-nav='leaving'] .dim > .dim-foot {
+    translate: none;
+  }
+}
