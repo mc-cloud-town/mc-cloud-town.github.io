@@ -2649,57 +2649,58 @@
             // The End's stars give way to the flying ones, which gather speed and draw out into streaks while the
             // edges darken; at the middle the jump is at full speed and the world behind is changed. Then out of
             // light speed: the streaks pull back into points and fade, and the day decelerates into place, landing
-            // with a jolt.
+            // with a jolt. The jump takes the whole of its screen of scroll: it begins almost as soon as the wake
+            // does, and the way back to the ground is as unhurried as the way out.
             tl.fromTo(
               E.zoom,
               { scale: 1 },
-              { scale: 1.08, duration: 0.3, ease: 'sine.in' },
+              { scale: 1.1, duration: 0.4, ease: 'sine.in' },
               0,
             )
               .fromTo(
                 hyper,
                 { alpha: 0, bg: 0 },
-                { alpha: 1, bg: 0.45, duration: 0.16, ease: 'none' },
-                0.1,
+                { alpha: 1, bg: 0.45, duration: 0.12, ease: 'none' },
+                0.03,
               )
               .fromTo(
                 hyper,
                 { speed: 0 },
-                { speed: 1, duration: 0.38, ease: 'power3.in' },
-                0.12,
+                { speed: 1, duration: 0.45, ease: 'power2.in' },
+                0.05,
               )
               // the flying stars' own black deepens slowly behind them, until it is whole at the middle
-              .to(hyper, { bg: 1, duration: 0.24, ease: 'power2.in' }, 0.26)
+              .to(hyper, { bg: 1, duration: 0.3, ease: 'power2.in' }, 0.2)
               // the credits' last line becomes points where it stands, before the flying stars come over it, and
               // they fly at the camera with the stars
-              .set(FIN, { autoAlpha: 0 }, 0.1)
-              .set(hyper, { glyphs: 1 }, 0.1)
+              .set(FIN, { autoAlpha: 0 }, 0.03)
+              .set(hyper, { glyphs: 1 }, 0.03)
               .fromTo(
                 hyper,
                 { text: 0 },
-                { text: 1, duration: 0.24, ease: 'power3.in' },
-                0.26,
+                { text: 1, duration: 0.34, ease: 'power2.in' },
+                0.16,
               )
               .set(hyper, { glyphs: 0 }, 0.5)
               .fromTo(
                 '.flash',
                 { '--c': 0 },
-                { '--c': 0.55, duration: 0.25, ease: 'power2.in' },
-                0.25,
+                { '--c': 0.55, duration: 0.32, ease: 'power2.in' },
+                0.18,
               )
               .to(
                 '.flash',
-                { '--c': 0, duration: 0.12, ease: 'power2.out' },
+                { '--c': 0, duration: 0.2, ease: 'power2.out' },
                 0.5,
               );
             swap(tl);
-            tl.to(hyper, { speed: 0, duration: 0.2, ease: 'expo.out' }, 0.5)
-              .to(hyper, { bg: 0, duration: 0.2, ease: 'power2.out' }, 0.5)
-              .to(hyper, { alpha: 0, duration: 0.14, ease: 'power1.in' }, 0.58)
+            tl.to(hyper, { speed: 0, duration: 0.32, ease: 'power3.out' }, 0.5)
+              .to(hyper, { bg: 0, duration: 0.3, ease: 'power2.out' }, 0.5)
+              .to(hyper, { alpha: 0, duration: 0.2, ease: 'power1.in' }, 0.66)
               .fromTo(
                 D.zoom,
                 { scale: 1.8 },
-                { scale: 1, duration: 0.36, ease: 'expo.out', ...im },
+                { scale: 1, duration: 0.46, ease: 'expo.out', ...im },
                 0.5,
               );
             jolt(tl, 0.52, 16);
