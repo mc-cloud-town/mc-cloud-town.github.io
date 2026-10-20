@@ -274,6 +274,54 @@
         pointer-events: none;
         background: #fff;
       }
+      /* Wake lab: softer white-outs (team feedback, 2026-10-20: the white after 還沒結束。 is too bright). Each stays
+         opaque at the middle, so the respawn still comes up out of it; the switch at the top right chooses one.
+           now    pure white, rising sharply at the end (as built)
+           warm   a warm paper white, a step below pure white
+           slow   pure white, but brightening evenly instead of all at the end
+           dawn   light blooming from the middle, warm at the centre and cool grey at the edges, brightening evenly
+           mist   a pale silver-grey, brightening evenly: the dimmest */
+      [data-wake='warm'] .flash {
+        background: #ece6da;
+      }
+      [data-wake='dawn'] .flash {
+        background: radial-gradient(
+          ellipse 75% 70% at 50% 58%,
+          #f3eee3 0%,
+          #e4dfd5 45%,
+          #c3ccd5 100%
+        );
+      }
+      [data-wake='mist'] .flash {
+        background: #d3d9de;
+      }
+      .wake-lab {
+        position: fixed;
+        top: 76px;
+        right: 12px;
+        z-index: 300;
+        display: flex;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 100px;
+        background: rgba(11, 15, 19, 0.82);
+        font:
+          13px/1 system-ui,
+          sans-serif;
+      }
+      .wake-lab button {
+        font: inherit;
+        color: #c9d1d9;
+        background: none;
+        border: 0;
+        border-radius: 100px;
+        padding: 9px 11px;
+        cursor: pointer;
+      }
+      .wake-lab button[aria-pressed='true'] {
+        background: #f2f4f6;
+        color: #0b0f13;
+      }
 
       /* ───────── fixed interface ───────── */
       .loader {
@@ -1621,6 +1669,49 @@
           put('#capB', b);
         };
 
+        // Wake lab (see the .wake-lab styles): ?wake=now|warm|slow|dawn|mist, or the switch at the top right
+        const WAKES = [
+            ['now', '現行'],
+            ['warm', '暖白'],
+            ['slow', '緩升'],
+            ['dawn', '晨光'],
+            ['mist', '銀白'],
+          ],
+          sharp = [gsap.parseEase('power2.in'), gsap.parseEase('power2.out')],
+          even = [gsap.parseEase('sine.inOut'), gsap.parseEase('sine.inOut')],
+          WAKE_EASE = {
+            now: sharp,
+            warm: sharp,
+            slow: even,
+            dawn: even,
+            mist: even,
+          },
+          wakeMode = () => document.documentElement.dataset.wake || 'now';
+        {
+          const nav = document.createElement('div');
+          nav.className = 'wake-lab';
+          nav.setAttribute('role', 'group');
+          nav.setAttribute('aria-label', '白光實驗');
+          nav.innerHTML = WAKES.map(
+            ([k, t]) => `<button type="button" data-k="${k}">${t}</button>`,
+          ).join('');
+          document.body.append(nav);
+          const set = (k) => {
+            document.documentElement.dataset.wake = k;
+            for (const b of nav.querySelectorAll('button'))
+              b.setAttribute('aria-pressed', String(b.dataset.k === k));
+            const u = new URL(location.href);
+            u.searchParams.set('wake', k);
+            history.replaceState(null, '', u);
+          };
+          nav.addEventListener('click', (e) => {
+            const b = e.target.closest('button');
+            if (b) set(b.dataset.k);
+          });
+          const k = new URLSearchParams(location.search).get('wake');
+          set(WAKES.some(([m]) => m === k) ? k : 'now');
+        }
+
         /* Scene changes. All of them move whole layers with transform and opacity, nothing else.
      push     dissolve while pushing in
      curtain  the next scene rises from the bottom edge; the old one is pushed up and away
@@ -1669,6 +1760,9 @@
                   : '.flash';
             // the End's cover waits until its opening is three tenths in, as in the product
             const from = type === 'portal-end' ? 0.3 : 0;
+            // (the wake's curves are the lab's choice, read as it plays, so the switch takes effect at once)
+            const wakeIn = (p) => WAKE_EASE[wakeMode()][0](p),
+              wakeOut = (p) => WAKE_EASE[wakeMode()][1](p);
             tl.fromTo(
               cover,
               { autoAlpha: 0, scale: 1 },
@@ -1676,7 +1770,7 @@
                 autoAlpha: 1,
                 scale: 1.25,
                 duration: 0.5 - from,
-                ease: 'power2.in',
+                ease: type === 'wake' ? wakeIn : 'power2.in',
               },
               from,
             )
@@ -1696,7 +1790,12 @@
               )
               .to(
                 cover,
-                { autoAlpha: 0, scale: 1.5, duration: 0.5, ease: 'power2.out' },
+                {
+                  autoAlpha: 0,
+                  scale: 1.5,
+                  duration: 0.5,
+                  ease: type === 'wake' ? wakeOut : 'power2.out',
+                },
                 0.5,
               );
           } else if (type === 'fall') {
