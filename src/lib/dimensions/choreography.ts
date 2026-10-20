@@ -498,8 +498,8 @@ export const buildChoreography = (
     // the credits simply scroll over the stars
     change(TRANSITIONS[8]);
 
-    // ── respawn ── the white-out, then the first day again
-    // The respawn stands in its own place: its words are under the white while it rises, and come up, rising a
+    // ── respawn ── a fade through black, then the first day again
+    // The respawn stands in its own place: its words are under the black while it falls, and come up, rising a
     // little, one after another, as it clears. The mascot comes with them; its floating is a CSS animation
     // (home.css). They are part of the wake's own timeline, which is normalised to length 1: they end by 1, or the
     // wake itself would be squeezed.
@@ -518,13 +518,13 @@ export const buildChoreography = (
       },
       0.5,
     );
-    // The credits' last line stays where it stands on the screen while the white rises over it (the words of the
-    // section that is leaving may stand over its change), and is gone under the white when that is whole. It is
+    // The credits' last line stays where it stands on the screen while the black falls over it (the words of the
+    // section that is leaving may stand over its change), and is gone under the black when that is whole. It is
     // carried by half a screen over the first half of the wake, which is half a screen of scroll: the window's
     // size, so measured again with every refresh. (On a timeline of its own, over the same range: invalidating the
     // wake's, which holds the scenes, on every refresh left the last build's caption showing.)
     const fin = q('.credits .fin');
-    // (on a touch screen it is not held: it scrolls away with the page, and is gone under the white when that is whole)
+    // (on a touch screen it is not held: it scrolls away with the page, and is gone under the black when that is whole)
     if (wake && fin && opts.touch) wake.set(fin, { opacity: 0 }, 0.5);
     else if (wake && fin) {
       const held: gsap.core.Timeline = gsap

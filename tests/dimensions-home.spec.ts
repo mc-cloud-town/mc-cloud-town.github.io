@@ -2802,7 +2802,7 @@ test.describe('home: on a touch screen', () => {
     }
   });
 
-  test("the credits' last line is not held: it goes up with the page, and is gone under the white", async ({
+  test("the credits' last line is not held: it goes up with the page, and is gone under the black", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });

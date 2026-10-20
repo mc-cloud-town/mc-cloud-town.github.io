@@ -12,7 +12,7 @@ const layer = (root: HTMLElement, id: string) => {
  *   curtain  next scene rises from the bottom edge
  *   slide    next scene comes in from the right
  *   portal   the portal's canvas (the Nether's or the End's surface) covers the screen, the scene swaps behind it
- *   wake     white-out, then the world again
+ *   wake     a fade through black, eased evenly at both ends, then the world again
  */
 export const addTransition = (
   tl: gsap.core.Timeline,
@@ -52,10 +52,17 @@ export const addTransition = (
     );
     // (the cover may be told to wait: it rises in what is left of the first half, and is whole at the middle)
     const from = Math.min(0.45, Math.max(0, def.coverFrom ?? 0));
+    // (the wake darkens and lightens evenly rather than all at once at the middle)
+    const wake = def.fx === 'wake';
     tl.fromTo(
       cover,
       { autoAlpha: 0, scale: 1 },
-      { autoAlpha: 1, scale: 1.25, duration: 0.5 - from, ease: 'power2.in' },
+      {
+        autoAlpha: 1,
+        scale: 1.25,
+        duration: 0.5 - from,
+        ease: wake ? 'sine.inOut' : 'power2.in',
+      },
       from,
     )
       .fromTo(
@@ -74,7 +81,12 @@ export const addTransition = (
       )
       .to(
         cover,
-        { autoAlpha: 0, scale: 1.5, duration: 0.5, ease: 'power2.out' },
+        {
+          autoAlpha: 0,
+          scale: 1.5,
+          duration: 0.5,
+          ease: wake ? 'sine.inOut' : 'power2.out',
+        },
         0.5,
       );
   } else {

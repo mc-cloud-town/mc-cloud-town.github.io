@@ -53,26 +53,30 @@ test.describe('home: respawn', () => {
     await expectNoMissingKeys(page);
   });
 
-  test('the wake: the stars white out, day one comes up under the white, and it all undoes', async ({
+  test('the wake: the stars fade to black, day one comes up out of the black, and it all undoes', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openPage(page, '/');
     await ready(page);
-    // before it starts: the stars, no white
+    // before it starts: the stars, no black
     await scrollToSection(page, '#respawn', -1.3);
     expect(await visibleScenes(page)).toEqual(['end']);
     expect(await flashState(page)).toBe(0);
-    // partway in: the white is rising over the stars
+    // partway in: the black is falling over the stars
     await scrollToSection(page, '#respawn', -0.7);
     expect(await visibleScenes(page)).toEqual(['end']);
     const rising = await flashState(page);
     expect(rising).toBeGreaterThan(0.1);
     expect(rising).toBeLessThan(0.9);
-    // the middle: nothing but white
+    // the middle: nothing but black (not a white-out: that was found too bright)
     await scrollToSection(page, '#respawn', -0.5);
     expect(await flashState(page)).toBeGreaterThan(0.98);
-    // partway out: day one under the clearing white
+    await expect(page.locator('.flash')).toHaveCSS(
+      'background-color',
+      'rgb(5, 6, 8)',
+    );
+    // partway out: day one under the clearing black
     await scrollToSection(page, '#respawn', -0.3);
     expect(await visibleScenes(page)).toEqual(['day1']);
     const clearing = await flashState(page);
@@ -87,7 +91,7 @@ test.describe('home: respawn', () => {
         .locator(`.scene[data-scene="${scene}"] .zoom`)
         .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
     expect(await scale('day1')).toBeCloseTo(1, 2);
-    // and back: the white again, then the stars, with day one switched off
+    // and back: the black again, then the stars, with day one switched off
     await scrollToSection(page, '#respawn', -0.5);
     expect(await flashState(page)).toBeGreaterThan(0.98);
     await scrollToSection(page, '#respawn', -1.3);
@@ -588,7 +592,7 @@ test.describe('home: respawn', () => {
     await expect(page.locator('#respawn .pal')).toHaveCSS('opacity', '1');
     await scrollToSection(page, '#respawn', 0);
     await expectTextFits(page, { within: '#respawn' });
-    // the wake was measured again: its middle is still nothing but white, and it still undoes
+    // the wake was measured again: its middle is still nothing but black, and it still undoes
     await scrollToSection(page, '#respawn', -0.5);
     expect(await flashState(page)).toBeGreaterThan(0.98);
     await scrollToSection(page, '#respawn', -1.3);
@@ -705,8 +709,8 @@ test.describe('home: respawn', () => {
 });
 
 /**
- * The words of the wake (spec 5.3): the credits' last line stays where it stands while the white rises over it and is
- * gone under the white when that is whole; the respawn's own words are under the white, and come up as it clears.
+ * The words of the wake (spec 5.3): the credits' last line stays where it stands while the black falls over it and is
+ * gone under the black when that is whole; the respawn's own words are under the black, and come up as it clears.
  * The wake runs over the screen of scroll in which the respawn comes up from the foot of the screen to the head.
  */
 test.describe('home: the words of the wake', () => {
@@ -776,7 +780,7 @@ test.describe('home: the words of the wake', () => {
       const late = await at(0.7);
       expect(Math.max(...late.words)).toBeGreaterThan(0);
       for (const w of (await at(1)).words) expect(w).toBe(1);
-      // and back: the last line is there again, the words are under the white again
+      // and back: the last line is there again, the words are under the black again
       const back = await at(0.3);
       expect(back.fin).toBe(1);
       for (const w of back.words) expect(w).toBeLessThan(0.05);
@@ -863,7 +867,7 @@ test.describe('home: the words of the wake', () => {
 });
 
 test.describe('home: the respawn is there for assistive technology before the wake', () => {
-  test('its heading and links are not hidden and can take the focus while the white has not come', async ({
+  test('its heading and links are not hidden and can take the focus while the black has not come', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });

@@ -22,7 +22,7 @@ before changing anything a visitor sees.
   abruptly. This holds for everything, including what the demos do not show. A change of dimension (into the
   Overworld, the Nether or the End, and the wake into the respawn) may play over the words of the section that is
   leaving, never over those of the dimension that is coming: they appear only once it has played out. The wake, a
-  cover of solid white, is the one exception: the respawn's words come up out of it as it clears.
+  fade through solid black, is the one exception: the respawn's words come up out of it as it clears.
 - **The demos are the design.** Where a demo covers something, the product matches it. Do not replace an approved
   design because a measurement disagrees with it: an automated contrast number is not a defect.
 - **Veils, not patches.** Text stands on the scene's veil, the way `dimensions-v3-video.html` does it. Every scene

@@ -157,13 +157,14 @@ html.lenis {
     opacity: 0;
     pointer-events: none;
   }
+  /* the wake's cover: a fade through black, by day as by night (a white-out was found too bright, 2026-10-20) */
   .flash {
     position: fixed;
     inset: 0;
     z-index: 21;
     opacity: 0;
     pointer-events: none;
-    background: #fff;
+    background: #050608;
   }
 
   /* ───────── loader ───────── */

@@ -46,7 +46,7 @@ export interface Frame {
   dim: string | undefined;
   /** opacity of a portal, the Nether's or the End's, whichever shows more (0 when both are hidden) */
   portal: number;
-  /** opacity of the white-out of the wake (0 when it is hidden) */
+  /** opacity of the fade through black of the wake (0 when it is hidden) */
   flash: number;
   /** opacity of the menu sheet (0 when it is hidden) */
   sheet: number;
@@ -364,7 +364,7 @@ export const landedOn = async (page: Page, selector: string) => {
   await expect(page.locator('.dim-cover')).toHaveCSS('visibility', 'hidden');
 };
 
-/** Opacity of the white-out, 0 while it is hidden. */
+/** Opacity of the wake's black, 0 while it is hidden. */
 export const flashState = (page: Page) =>
   page.locator('.flash').evaluate((el) => {
     const s = getComputedStyle(el);
@@ -698,7 +698,7 @@ export const arrived = async (page: Page) => {
 /**
  * The sections whose words come in after the change into them, in page order: the changes into a dimension (the
  * Overworld, the Nether, the End) and, on the desktop, the credits. Not the respawn: its words come up out of the
- * white of the wake. (The works' captions come in when their change is seven tenths through: a work is not a
+ * black of the wake. (The works' captions come in when their change is seven tenths through: a work is not a
  * dimension. On a touch screen the credits stand at their top.)
  */
 export const WORDED = ['#overworld', '#nether', '#end', '#credits'] as const;

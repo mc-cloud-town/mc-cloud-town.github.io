@@ -279,7 +279,7 @@ test.describe('home: jumping to a section', () => {
     expect(frames[changed].cover).toBe(1);
     // one cut: the page is only ever at the start or at the target
     expect(new Set(frames.map((f) => f.y)).size).toBe(2);
-    // no transition of the page in between is ever seen: neither the portal nor the white-out
+    // no transition of the page in between is ever seen: neither the portal nor the wake's black
     expect(Math.max(...frames.map((f) => f.portal * (1 - f.cover)))).toBe(0);
     expect(Math.max(...frames.map((f) => f.flash * (1 - f.cover)))).toBe(0);
     // it lifts over about half a second, onto day one
@@ -1690,7 +1690,7 @@ test.describe('home: arriving, leaving and robustness', () => {
         .poll(() => visibleScenes(page), { message: sel })
         .toEqual([scene]);
     }
-    // the respawn: nothing waits for an animation, the white-out never shows, the mascot stands still
+    // the respawn: nothing waits for an animation, the wake's black never shows, the mascot stands still
     for (const sel of ['#respawn h2', '#respawn .depts', '#respawn .pal'])
       await expect(page.locator(sel)).toHaveCSS('opacity', '1');
     expect(await flashState(page)).toBe(0);
