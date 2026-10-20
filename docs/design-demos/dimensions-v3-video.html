@@ -2440,14 +2440,17 @@
               k = w / cv.clientWidth,
               pad = r.height * 0.3,
               oc = document.createElement('canvas');
-            oc.width = Math.ceil(r.width);
-            oc.height = Math.ceil(r.height + pad * 2);
+            // at the screen canvas's resolution, so the line can also be drawn whole, as sharp as the page's
+            oc.width = Math.ceil(r.width * k);
+            oc.height = Math.ceil((r.height + pad * 2) * k);
             const o = oc.getContext('2d');
+            o.scale(k, k);
             o.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
             o.textAlign = 'left';
             o.letterSpacing = cs.letterSpacing;
             o.textBaseline = 'alphabetic';
-            o.fillStyle = '#fff';
+            // in the line's own colour, so that drawn whole it is the page's line
+            o.fillStyle = cs.color;
             // on the line's own baseline, found by a mark set on it
             const mark = document.createElement('span');
             mark.style.cssText =
@@ -2460,12 +2463,18 @@
             range.selectNodeContents(el);
             const left = range.getBoundingClientRect().left - r.left;
             o.fillText(el.textContent.trim(), left, base);
+            // Points every two (CSS) pixels, edges included: on a coarser grid, or with only the solid pixels
+            // kept, the thin strokes fall between the points and the line looks full of holes.
             const px = o.getImageData(0, 0, oc.width, oc.height).data,
-              step = 3,
+              step = 2,
               pts = [];
-            for (let y = 0; y < oc.height; y += step)
-              for (let x = 0; x < oc.width; x += step)
-                if (px[(y * oc.width + x) * 4 + 3] > 120)
+            for (let y = 0; y < oc.height / k; y += step)
+              for (let x = 0; x < oc.width / k; x += step)
+                if (
+                  px[
+                    (Math.round(y * k) * oc.width + Math.round(x * k)) * 4 + 3
+                  ] > 50
+                )
                   // offsets from the line's box: where they stand is read from the line on every frame
                   pts.push({
                     rx: x,
@@ -2476,8 +2485,11 @@
             return {
               el,
               pts,
+              img: oc,
+              pad,
               color: cs.color.match(/\d+/g).slice(0, 3).join(','),
-              dot: step * k * 1.2,
+              // big enough that neighbouring points touch: no gaps between them at rest
+              dot: step * k * 1.45,
               k,
             };
           };
@@ -2557,21 +2569,35 @@
                 // the scroll, and a position read once at the swap could be off by that frame's scroll.
                 const at = glyphs.el.getBoundingClientRect(),
                   gk = glyphs.k;
-                for (const p of glyphs.pts) {
-                  const sx = (at.left + p.rx) * gk,
-                    sy = (at.top + p.ry) * gk;
-                  // most points fall away as the line goes, so what reaches light speed is a few fine streaks
-                  if (p.keep < t * 0.95) continue;
-                  // a point placed in depth so that it stands where the letter is, then carried at the camera
-                  const gx = ((sx - ox) * p.z) / f,
-                    gy = ((sy - oy) * p.z) / f,
-                    z = p.z * (1 - 0.96 * t),
-                    z0 = z + gt;
-                  cx.beginPath();
-                  cx.moveTo(ox + (gx / z0) * f, oy + (gy / z0) * f);
-                  cx.lineTo(ox + (gx / z) * f + 0.01, oy + (gy / z) * f);
-                  cx.stroke();
+                // While it stands the line is drawn whole, exactly as the page drew it; as the flight begins it
+                // hands over to its points within the first stretch, so the points are never seen at rest.
+                const whole = Math.max(0, 1 - t / 0.12);
+                if (whole > 0) {
+                  cx.globalAlpha = hyper.glyphs * whole;
+                  cx.drawImage(
+                    glyphs.img,
+                    at.left * gk,
+                    (at.top - glyphs.pad) * gk,
+                  );
+                  cx.globalAlpha = 1;
                 }
+                cx.strokeStyle = `rgba(${glyphs.color},${hyper.glyphs * (1 - t * 0.8) * (1 - whole)})`;
+                if (whole < 1)
+                  for (const p of glyphs.pts) {
+                    const sx = (at.left + p.rx) * gk,
+                      sy = (at.top + p.ry) * gk;
+                    // most points fall away as the line goes, so what reaches light speed is a few fine streaks
+                    if (p.keep < t * 0.95) continue;
+                    // a point placed in depth so that it stands where the letter is, then carried at the camera
+                    const gx = ((sx - ox) * p.z) / f,
+                      gy = ((sy - oy) * p.z) / f,
+                      z = p.z * (1 - 0.96 * t),
+                      z0 = z + gt;
+                    cx.beginPath();
+                    cx.moveTo(ox + (gx / z0) * f, oy + (gy / z0) * f);
+                    cx.lineTo(ox + (gx / z) * f + 0.01, oy + (gy / z) * f);
+                    cx.stroke();
+                  }
               } else glyphs = null;
             }
             requestAnimationFrame(frame);
