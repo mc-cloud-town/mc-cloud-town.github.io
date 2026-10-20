@@ -266,98 +266,15 @@
         opacity: 0;
         pointer-events: none;
       }
+      /* the wake's cover: a fade through black, by day as by night (a white-out was found too bright, 2026-10-20) */
       .flash {
         position: fixed;
         inset: 0;
         z-index: 21;
         opacity: 0;
         pointer-events: none;
-        background: #fff;
-      }
-      /* Wake lab: other ways into the respawn (team feedback, 2026-10-20: the white after 還沒結束。 is too bright).
-         Each covers the screen whole at the middle, so the respawn still comes up out of it as it clears; the
-         switch at the top right chooses one. The shaped ones are drawn by two numbers the change plays: --k, how
-         far the cover has closed (first half), and --o, how far it has opened again (second half).
-           mist   a pale silver-grey that fades in and out, brightening evenly (2026-10-20: the only soft white kept)
-           dark   a fade through black, as a film does: no light at all
-           lids   eyes closing on the End and opening on the first day: dark lids from top and bottom, soft-edged
-           iris   a silver disc grows from the middle over the End, then opens from the middle onto the day
-           rise   a silver dawn rises from the bottom over the End, then lifts off the top onto the day */
-      .flash {
-        --k: 0;
-        --o: 0;
-      }
-      [data-wake='mist'] .flash {
-        background: #d3d9de;
-      }
-      [data-wake='dark'] .flash {
         background: #050608;
       }
-      [data-wake='lids'] .flash,
-      [data-wake='iris'] .flash,
-      [data-wake='rise'] .flash {
-        opacity: 1 !important;
-        visibility: visible !important;
-      }
-      [data-wake='lids'] .flash {
-        --c: calc(var(--k) - var(--o));
-        background: linear-gradient(
-            to bottom,
-            #050608 calc(var(--c) * 62% - 10%),
-            transparent calc(var(--c) * 62%)
-          ),
-          linear-gradient(
-            to top,
-            #050608 calc(var(--c) * 62% - 10%),
-            transparent calc(var(--c) * 62%)
-          );
-      }
-      [data-wake='iris'] .flash {
-        background: radial-gradient(
-          circle at 50% 55%,
-          transparent calc(var(--o) * 125% - 25%),
-          #d3d9de calc(var(--o) * 125%),
-          #d3d9de calc(var(--k) * 125% - 25%),
-          transparent calc(var(--k) * 125%)
-        );
-      }
-      [data-wake='rise'] .flash {
-        background: linear-gradient(
-          to top,
-          transparent calc(var(--o) * 140% - 40%),
-          #d3d9de calc(var(--o) * 140%),
-          #d3d9de calc(var(--k) * 140% - 40%),
-          transparent calc(var(--k) * 140%)
-        );
-      }
-      .wake-lab {
-        position: fixed;
-        top: 76px;
-        right: 12px;
-        z-index: 300;
-        display: flex;
-        gap: 2px;
-        padding: 4px;
-        border-radius: 100px;
-        background: rgba(11, 15, 19, 0.82);
-        font:
-          13px/1 system-ui,
-          sans-serif;
-      }
-      .wake-lab button {
-        font: inherit;
-        color: #c9d1d9;
-        background: none;
-        border: 0;
-        border-radius: 100px;
-        padding: 9px 11px;
-        cursor: pointer;
-      }
-      .wake-lab button[aria-pressed='true'] {
-        background: #f2f4f6;
-        color: #0b0f13;
-      }
-
       /* ───────── fixed interface ───────── */
       .loader {
         position: fixed;
@@ -1704,55 +1621,13 @@
           put('#capB', b);
         };
 
-        // Wake lab (see the .flash styles): ?wake=mist|dark|lids|iris|rise, or the switch at the top right
-        const WAKES = [
-            ['mist', '銀白'],
-            ['dark', '暗轉'],
-            ['lids', '閉眼'],
-            ['iris', '光圈'],
-            ['rise', '晨曦'],
-          ],
-          even = [gsap.parseEase('sine.inOut'), gsap.parseEase('sine.inOut')],
-          WAKE_EASE = {
-            mist: even,
-            dark: even,
-            lids: even,
-            iris: even,
-            rise: even,
-          },
-          wakeMode = () => document.documentElement.dataset.wake || 'mist';
-        {
-          const nav = document.createElement('div');
-          nav.className = 'wake-lab';
-          nav.setAttribute('role', 'group');
-          nav.setAttribute('aria-label', '白光實驗');
-          nav.innerHTML = WAKES.map(
-            ([k, t]) => `<button type="button" data-k="${k}">${t}</button>`,
-          ).join('');
-          document.body.append(nav);
-          const set = (k) => {
-            document.documentElement.dataset.wake = k;
-            for (const b of nav.querySelectorAll('button'))
-              b.setAttribute('aria-pressed', String(b.dataset.k === k));
-            const u = new URL(location.href);
-            u.searchParams.set('wake', k);
-            history.replaceState(null, '', u);
-          };
-          nav.addEventListener('click', (e) => {
-            const b = e.target.closest('button');
-            if (b) set(b.dataset.k);
-          });
-          const k = new URLSearchParams(location.search).get('wake');
-          set(WAKES.some(([m]) => m === k) ? k : 'now');
-        }
-
         /* Scene changes. All of them move whole layers with transform and opacity, nothing else.
      push     dissolve while pushing in
      curtain  the next scene rises from the bottom edge; the old one is pushed up and away
      slide    the next scene comes in from the right like a sliding door
      portal   the nether portal covers the screen; the dimension swaps behind it
      fall     the old world spins away and shrinks, the next one turns into place
-     wake     white-out, then the world again */
+     wake     a fade through black, then the world again */
         function change(tl, from, to, type) {
           const A = SC[from],
             B = SC[to],
@@ -1794,9 +1669,8 @@
                   : '.flash';
             // the End's cover waits until its opening is three tenths in, as in the product
             const from = type === 'portal-end' ? 0.3 : 0;
-            // (the wake's curves are the lab's choice, read as it plays, so the switch takes effect at once)
-            const wakeIn = (p) => WAKE_EASE[wakeMode()][0](p),
-              wakeOut = (p) => WAKE_EASE[wakeMode()][1](p);
+            // (the wake darkens and lightens evenly rather than all at once at the middle)
+            const even = type === 'wake';
             tl.fromTo(
               cover,
               { autoAlpha: 0, scale: 1 },
@@ -1804,7 +1678,7 @@
                 autoAlpha: 1,
                 scale: 1.25,
                 duration: 0.5 - from,
-                ease: type === 'wake' ? wakeIn : 'power2.in',
+                ease: even ? 'sine.inOut' : 'power2.in',
               },
               from,
             )
@@ -1828,21 +1702,8 @@
                   autoAlpha: 0,
                   scale: 1.5,
                   duration: 0.5,
-                  ease: type === 'wake' ? wakeOut : 'power2.out',
+                  ease: even ? 'sine.inOut' : 'power2.out',
                 },
-                0.5,
-              );
-            // the shaped wakes: how far the cover has closed, then how far it has opened again
-            if (type === 'wake')
-              tl.fromTo(
-                cover,
-                { '--k': 0 },
-                { '--k': 1, duration: 0.5, ease: wakeIn },
-                0,
-              ).fromTo(
-                cover,
-                { '--o': 0 },
-                { '--o': 1, duration: 0.5, ease: wakeOut, ...im },
                 0.5,
               );
           } else if (type === 'fall') {
@@ -2352,10 +2213,10 @@
         );
         changeOn('.credits', 'farm', 'end', 'push');
 
-        // respawn: wake up on day one
-        // The credits' last line stays where it stands on the screen while the white rises over it (the words of
-        // the section that is leaving may stand over its change), and is gone under the white when it is whole.
-        // The respawn stands in its own place: its words are under the white while it rises, and come up, rising
+        // respawn: fade to black, and wake up on day one
+        // The credits' last line stays where it stands on the screen while the black falls over it (the words of
+        // the section that is leaving may stand over its change), and is gone under the black when it is whole.
+        // The respawn stands in its own place: its words are under the black while it falls, and come up, rising
         // a little, one after another, as it clears.
         changeOn('#respawn', 'end', 'day1', 'wake')
           .fromTo(
