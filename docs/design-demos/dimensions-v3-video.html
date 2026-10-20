@@ -275,6 +275,96 @@
         pointer-events: none;
         background: #050608;
       }
+      /* Wake lab 2 (2026-10-20): the white-out had the shock but was too bright, the fade through black is gentle but
+         has no shock. Film gets its shock from speed and impact, not from light: these keep every frame no brighter
+         than the day's own picture. The switch at the top right; ?wake=dark|crash|hyper|ring|eyes.
+           dark   the fade through black (as built)
+           crash  a crash zoom: the stars creep closer, then rush in, a beat of black, and the day slams back into
+                  place with a jolt
+           hyper  light speed: the stars draw out into streaks flying past, the edges darken, and out of light
+                  speed the day decelerates into place with a jolt (drawn on a canvas)
+           ring   a shockwave: the stars draw back a little, then a ring bursts out from the middle with the day
+                  inside it; a thin pale rim and a jolt, no cover at all
+           eyes   coming to: the eyes close slowly on the End, then snap open with a flutter onto a day that comes
+                  into focus */
+      /* the crash zoom's dark: a tunnel closing in from the edges (--c 0 to 1.2), whole at the middle, then
+         opening from the middle outward */
+      [data-wake='crash'] .flash,
+      [data-wake='hyper'] .flash {
+        opacity: 1 !important;
+        visibility: visible !important;
+        background: radial-gradient(
+          circle at 50% 50%,
+          transparent calc((1 - var(--c, 0)) * 110% - 10%),
+          #050608 calc((1 - var(--c, 0)) * 110% + 15%)
+        );
+      }
+      [data-wake='eyes'] .flash {
+        opacity: 1 !important;
+        visibility: visible !important;
+        background: linear-gradient(
+            to bottom,
+            #050608 calc(var(--c, 0) * 62% - 10%),
+            transparent calc(var(--c, 0) * 62%)
+          ),
+          linear-gradient(
+            to top,
+            #050608 calc(var(--c, 0) * 62% - 10%),
+            transparent calc(var(--c, 0) * 62%)
+          );
+      }
+      .hyper {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 20;
+        pointer-events: none;
+        visibility: hidden;
+      }
+      .ring {
+        position: fixed;
+        left: 50%;
+        top: 55%;
+        width: 0;
+        height: 0;
+        translate: -50% -50%;
+        border-radius: 50%;
+        z-index: 20;
+        pointer-events: none;
+        visibility: hidden;
+        box-shadow:
+          0 0 0 2px rgba(220, 240, 255, 0.75),
+          0 0 46px 12px rgba(150, 210, 255, 0.3),
+          inset 0 0 46px 12px rgba(150, 210, 255, 0.22);
+      }
+      .wake-lab {
+        position: fixed;
+        top: 76px;
+        right: 12px;
+        z-index: 300;
+        display: flex;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 100px;
+        background: rgba(11, 15, 19, 0.82);
+        font:
+          13px/1 system-ui,
+          sans-serif;
+      }
+      .wake-lab button {
+        font: inherit;
+        color: #c9d1d9;
+        background: none;
+        border: 0;
+        border-radius: 100px;
+        padding: 9px 11px;
+        cursor: pointer;
+      }
+      .wake-lab button[aria-pressed='true'] {
+        background: #f2f4f6;
+        color: #0b0f13;
+      }
       /* ───────── fixed interface ───────── */
       .loader {
         position: fixed;
@@ -1105,6 +1195,8 @@
       aria-hidden="true"
     ></canvas>
     <div class="flash" aria-hidden="true"></div>
+    <canvas class="hyper" aria-hidden="true"></canvas>
+    <div class="ring" aria-hidden="true"></div>
 
     <div class="loader" aria-hidden="true">
       <div class="loader-in">
@@ -2218,36 +2310,411 @@
         // the section that is leaving may stand over its change), and is gone under the black when it is whole.
         // The respawn stands in its own place: its words are under the black while it falls, and come up, rising
         // a little, one after another, as it clears.
-        changeOn('#respawn', 'end', 'day1', 'wake')
-          .fromTo(
-            '.credits .fin',
-            { y: 0 },
-            // the change runs over one screen of scroll: half of it is half a screen
-            {
-              y: () => innerHeight * 0.5,
-              duration: 0.5,
-              ease: 'none',
-              immediateRender: false,
-            },
-            0,
-          )
-          .set('.credits .fin', { autoAlpha: 0 }, 0.5)
-          .set('.respawn > *', { autoAlpha: 0 }, 0)
-          .fromTo(
-            '.respawn > *',
-            { autoAlpha: 0, y: 40 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              // within the second half of the wake: the timeline must not grow past 1, or the wake itself would
-              // be squeezed
-              duration: 0.36,
-              stagger: 0.02,
-              ease: 'power2.out',
-              immediateRender: false,
-            },
-            0.5,
+        const wakeWords = (tl) =>
+          tl
+            .fromTo(
+              '.credits .fin',
+              { y: 0 },
+              // the change runs over one screen of scroll: half of it is half a screen
+              {
+                y: () => innerHeight * 0.5,
+                duration: 0.5,
+                ease: 'none',
+                immediateRender: false,
+              },
+              0,
+            )
+            .set('.credits .fin', { autoAlpha: 0 }, 0.5)
+            .set('.respawn > *', { autoAlpha: 0 }, 0)
+            .fromTo(
+              '.respawn > *',
+              { autoAlpha: 0, y: 40 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                // within the second half of the wake: the timeline must not grow past 1, or the wake itself would
+                // be squeezed
+                duration: 0.36,
+                stagger: 0.02,
+                ease: 'power2.out',
+                immediateRender: false,
+              },
+              0.5,
+            );
+
+        // Wake lab 2 (see the .hyper styles). Each way into the respawn is written into the wake's 0..1 timeline;
+        // the switch kills the timeline and writes it again, so the comparison is made in place.
+        const WAKES = [
+          ['dark', '暗轉'],
+          ['crash', '急推'],
+          ['hyper', '光速'],
+          ['ring', '震波'],
+          ['eyes', '睜眼'],
+        ];
+        const E = SC.end,
+          D = SC.day1,
+          im = { immediateRender: false };
+        // a jolt: the day's layer knocked aside and settling, over a short stretch of the scroll
+        const jolt = (tl, at, amp) =>
+          [1, -0.8, 0.6, -0.4, 0.25, -0.1, 0].forEach((k, i) =>
+            tl.to(
+              D.el,
+              { x: k * amp, y: -k * amp * 0.5, duration: 0.014, ease: 'none' },
+              at + i * 0.014,
+            ),
           );
+        // the beat of black between the two worlds: in fast, out faster
+        const beat = (tl, from) =>
+          tl
+            .fromTo(
+              '.flash',
+              { autoAlpha: 0 },
+              { autoAlpha: 1, duration: 0.5 - from, ease: 'power2.in' },
+              from,
+            )
+            .to(
+              '.flash',
+              { autoAlpha: 0, duration: 0.07, ease: 'power1.out' },
+              0.5,
+            );
+        const swap = (tl, at = 0.5) =>
+          tl.set(E.el, { autoAlpha: 0 }, 0.5).set(D.el, { autoAlpha: 1 }, at);
+        // Light speed (the 'hyper' candidate): the End's stars as points in depth, flying at the camera. The
+        // timeline plays three numbers: how much of the canvas is seen (alpha), how much of its own black stands
+        // behind it (bg), and the speed. The stars move by the clock, so they keep flowing while the scroll rests;
+        // the speed draws them out from points into streaks.
+        const hyper = { alpha: 0, bg: 0, speed: 0 };
+        {
+          const cv = $('.hyper'),
+            cx = cv.getContext('2d'),
+            cols = [
+              '159,232,216',
+              '201,167,255',
+              '111,183,255',
+              '235,240,245',
+              '88,214,176',
+            ],
+            N = 700,
+            stars = Array.from({ length: N }, () => ({
+              x: Math.random() * 2 - 1,
+              y: Math.random() * 2 - 1,
+              z: Math.random(),
+              c: cols[(Math.random() * cols.length) | 0],
+            }));
+          let w = 0,
+            h = 0,
+            last = performance.now(),
+            shown = false;
+          const size = () => {
+            const r = Math.min(devicePixelRatio || 1, 1.5);
+            w = cv.width = innerWidth * r;
+            h = cv.height = innerHeight * r;
+          };
+          size();
+          addEventListener('resize', size);
+          const frame = (now) => {
+            const dt = Math.min(50, now - last) / 16.7;
+            last = now;
+            const on = hyper.alpha > 0.001;
+            if (on !== shown) {
+              cv.style.visibility = on ? 'visible' : 'hidden';
+              shown = on;
+            }
+            if (on) {
+              const f = Math.max(w, h) * 0.5,
+                ox = w / 2,
+                oy = h / 2,
+                v = hyper.speed;
+              cv.style.opacity = hyper.alpha;
+              cx.clearRect(0, 0, w, h);
+              cx.fillStyle = `rgba(5,6,8,${hyper.bg})`;
+              cx.fillRect(0, 0, w, h);
+              cx.lineCap = 'round';
+              const step = (0.0012 + v * v * 0.045) * dt,
+                tail = 0.0015 + v * v * 0.32;
+              for (const s of stars) {
+                s.z -= step;
+                if (s.z <= 0.02) {
+                  s.z += 0.98;
+                  s.x = Math.random() * 2 - 1;
+                  s.y = Math.random() * 2 - 1;
+                }
+                const z0 = s.z + tail,
+                  x1 = ox + (s.x / s.z) * f,
+                  y1 = oy + (s.y / s.z) * f,
+                  x0 = ox + (s.x / z0) * f,
+                  y0 = oy + (s.y / z0) * f;
+                const near = 1 - s.z;
+                cx.strokeStyle = `rgba(${s.c},${0.25 + near * 0.6})`;
+                cx.lineWidth = 0.6 + near * near * 2.4;
+                cx.beginPath();
+                cx.moveTo(x0, y0);
+                cx.lineTo(x1, y1);
+                cx.stroke();
+              }
+            }
+            requestAnimationFrame(frame);
+          };
+          requestAnimationFrame(frame);
+        }
+        const FX = {
+          dark: (tl) => change(tl, 'end', 'day1', 'wake'),
+          crash: (tl) => {
+            // The stars creep closer, then rush in; the dark closes in from the edges like a tunnel as they do, and
+            // is whole at the middle; it opens again from the middle outward onto the day, which is still zooming
+            // back into place, and lands with a jolt. The crossing is long enough to be seen as one movement.
+            tl.fromTo(
+              E.zoom,
+              { scale: 1 },
+              { scale: 1.1, duration: 0.3, ease: 'sine.in' },
+              0,
+            ).to(E.zoom, { scale: 2.8, duration: 0.2, ease: 'power3.in' }, 0.3);
+            // the credits' last line goes with the stars: it creeps closer, then rushes past the camera and is gone
+            // into the dark, rather than cut out at the middle
+            tl.fromTo(
+              '.credits .fin',
+              { scale: 1, filter: 'blur(0px)', opacity: 1 },
+              { scale: 1.06, duration: 0.3, ease: 'sine.in' },
+              0,
+            ).to(
+              '.credits .fin',
+              {
+                scale: 3,
+                filter: 'blur(8px)',
+                opacity: 0,
+                duration: 0.17,
+                ease: 'power3.in',
+              },
+              0.3,
+            );
+            tl.fromTo(
+              '.flash',
+              { '--c': 0 },
+              { '--c': 1.2, duration: 0.22, ease: 'power2.in' },
+              0.28,
+            ).to(
+              '.flash',
+              { '--c': 0, duration: 0.24, ease: 'power2.out' },
+              0.5,
+            );
+            swap(tl);
+            tl.fromTo(
+              D.zoom,
+              { scale: 1.7 },
+              { scale: 1, duration: 0.36, ease: 'expo.out', ...im },
+              0.5,
+            );
+            jolt(tl, 0.51, 22);
+          },
+          hyper: (tl) => {
+            // The End's stars give way to the flying ones, which gather speed and draw out into streaks while the
+            // edges darken; at the middle the jump is at full speed and the world behind is changed. Then out of
+            // light speed: the streaks pull back into points and fade, and the day decelerates into place, landing
+            // with a jolt.
+            tl.fromTo(
+              E.zoom,
+              { scale: 1 },
+              { scale: 1.08, duration: 0.3, ease: 'sine.in' },
+              0,
+            )
+              .fromTo(
+                hyper,
+                { alpha: 0, bg: 0 },
+                { alpha: 1, bg: 1, duration: 0.16, ease: 'none' },
+                0.1,
+              )
+              .fromTo(
+                hyper,
+                { speed: 0 },
+                { speed: 1, duration: 0.38, ease: 'power3.in' },
+                0.12,
+              )
+              .fromTo(
+                '.credits .fin',
+                { scale: 1, filter: 'blur(0px)', opacity: 1 },
+                { scale: 1.06, duration: 0.28, ease: 'sine.in' },
+                0,
+              )
+              .to(
+                '.credits .fin',
+                {
+                  scale: 3,
+                  filter: 'blur(8px)',
+                  opacity: 0,
+                  duration: 0.18,
+                  ease: 'power3.in',
+                },
+                0.28,
+              )
+              .fromTo(
+                '.flash',
+                { '--c': 0 },
+                { '--c': 0.55, duration: 0.25, ease: 'power2.in' },
+                0.25,
+              )
+              .to(
+                '.flash',
+                { '--c': 0, duration: 0.12, ease: 'power2.out' },
+                0.5,
+              );
+            swap(tl);
+            tl.to(hyper, { speed: 0, duration: 0.2, ease: 'expo.out' }, 0.5)
+              .to(hyper, { bg: 0, duration: 0.2, ease: 'power2.out' }, 0.5)
+              .to(hyper, { alpha: 0, duration: 0.14, ease: 'power1.in' }, 0.58)
+              .fromTo(
+                D.zoom,
+                { scale: 1.8 },
+                { scale: 1, duration: 0.36, ease: 'expo.out', ...im },
+                0.5,
+              );
+            jolt(tl, 0.52, 16);
+          },
+          ring: (tl) => {
+            // the day is inside a circle that bursts out from the middle; the rim rides its edge
+            const reach = () => Math.hypot(innerWidth, innerHeight) * 0.62;
+            const r = { v: 0 };
+            const draw = () => {
+              const px = r.v * reach();
+              D.el.style.clipPath =
+                r.v >= 1 ? '' : `circle(${px}px at 50% 55%)`;
+              const ring = $('.ring');
+              ring.style.width = ring.style.height = `${px * 2}px`;
+            };
+            tl.fromTo(
+              E.zoom,
+              { scale: 1 },
+              { scale: 1.1, duration: 0.4, ease: 'sine.in' },
+              0,
+            )
+              .to(
+                E.zoom,
+                { scale: 1.03, duration: 0.03, ease: 'power2.out' },
+                0.4,
+              )
+              .to(
+                E.zoom,
+                { scale: 1.2, duration: 0.07, ease: 'power2.in' },
+                0.43,
+              )
+              .set(D.el, { autoAlpha: 1 }, 0.43)
+              .fromTo(
+                r,
+                { v: 0 },
+                {
+                  v: 1,
+                  duration: 0.07,
+                  ease: 'power3.out',
+                  onUpdate: draw,
+                  onReverseComplete: draw,
+                  onComplete: draw,
+                },
+                0.43,
+              )
+              .fromTo(
+                '.ring',
+                { autoAlpha: 1 },
+                { autoAlpha: 0, duration: 0.07, ease: 'power2.in' },
+                0.43,
+              )
+              .set('.ring', { autoAlpha: 0 }, 0.5)
+              .set(E.el, { autoAlpha: 0 }, 0.5)
+              .fromTo(
+                D.zoom,
+                { scale: 1.25 },
+                { scale: 1, duration: 0.4, ease: 'expo.out', ...im },
+                0.43,
+              );
+            tl.set('.ring', { autoAlpha: 0 }, 0);
+            jolt(tl, 0.44, 22);
+          },
+          eyes: (tl) => {
+            const lids = $('.flash');
+            tl.fromTo(
+              lids,
+              { '--c': 0 },
+              { '--c': 1, duration: 0.48, ease: 'sine.inOut' },
+              0,
+            );
+            swap(tl);
+            // snap open, a flutter, then open for good
+            tl.to(
+              lids,
+              { '--c': 0.35, duration: 0.03, ease: 'power4.out' },
+              0.5,
+            )
+              .to(
+                lids,
+                { '--c': 0.7, duration: 0.025, ease: 'power2.in' },
+                0.53,
+              )
+              .to(lids, { '--c': 0, duration: 0.06, ease: 'power3.out' }, 0.555)
+              .fromTo(
+                D.zoom,
+                { scale: 1.12, rotate: 3, filter: 'blur(16px)' },
+                {
+                  scale: 1,
+                  rotate: 0,
+                  filter: 'blur(0px)',
+                  duration: 0.3,
+                  ease: 'power2.out',
+                  ...im,
+                },
+                0.5,
+              );
+          },
+        };
+        let wakeTl;
+        const buildWake = (mode) => {
+          if (wakeTl) {
+            wakeTl.scrollTrigger.kill();
+            wakeTl.progress(0).kill();
+            gsap.set(
+              [E.zoom, D.el, D.zoom, '.flash', '.ring', '.credits .fin'],
+              {
+                clearProps: 'transform,filter,clipPath,--c,width,height',
+              },
+            );
+            D.el.style.clipPath = '';
+          }
+          document.documentElement.dataset.wake = mode;
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: '#respawn',
+              start: 'top bottom',
+              end: 'top top',
+              scrub: true,
+              onUpdate: (s) =>
+                setCap(SC[s.progress > 0.5 ? 'day1' : 'end'].cap),
+            },
+          });
+          FX[mode](tl);
+          wakeWords(tl).set({}, {}, 1);
+          wakeTl = tl;
+        };
+        {
+          const nav = document.createElement('div');
+          nav.className = 'wake-lab';
+          nav.setAttribute('role', 'group');
+          nav.setAttribute('aria-label', '換場實驗');
+          nav.innerHTML = WAKES.map(
+            ([k, t]) => `<button type="button" data-k="${k}">${t}</button>`,
+          ).join('');
+          document.body.append(nav);
+          const set = (k) => {
+            for (const b of nav.querySelectorAll('button'))
+              b.setAttribute('aria-pressed', String(b.dataset.k === k));
+            const u = new URL(location.href);
+            u.searchParams.set('wake', k);
+            history.replaceState(null, '', u);
+            buildWake(k);
+          };
+          nav.addEventListener('click', (e) => {
+            const b = e.target.closest('button');
+            if (b) set(b.dataset.k);
+          });
+          const k = new URLSearchParams(location.search).get('wake');
+          set(WAKES.some(([m]) => m === k) ? k : 'dark');
+        }
         gsap.to('.pal', {
           yPercent: -3,
           rotation: -2,
