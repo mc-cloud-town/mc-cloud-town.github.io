@@ -2416,29 +2416,36 @@
             last = performance.now(),
             shown = false;
           const size = () => {
+            // the canvas's own laid-out size, not the window's: innerWidth counts the scrollbar, and a canvas drawn
+            // that wide but shown narrower is squeezed toward the left
             const r = Math.min(devicePixelRatio || 1, 1.5);
-            w = cv.width = innerWidth * r;
-            h = cv.height = innerHeight * r;
+            w = cv.width = cv.clientWidth * r;
+            h = cv.height = cv.clientHeight * r;
           };
           size();
-          let glyphs = null;
-          addEventListener('resize', () => {
+          let glyphs = null,
+            vp = null;
+          // on its own size, not the window's: the scrollbar comes when the loader lets the page go, which narrows
+          // the canvas without any resize of the window, and a canvas left at the old size is drawn squeezed
+          new ResizeObserver(() => {
             size();
             glyphs = null;
-          });
+            vp = null;
+          }).observe(cv);
           // the line as points: drawn off screen in its own type and size, and sampled every few pixels
           const sample = () => {
             const el = $('.credits .fin'),
               r = el.getBoundingClientRect(),
               cs = getComputedStyle(el),
-              k = w / innerWidth,
+              k = w / cv.clientWidth,
               pad = r.height * 0.3,
               oc = document.createElement('canvas');
             oc.width = Math.ceil(r.width);
             oc.height = Math.ceil(r.height + pad * 2);
             const o = oc.getContext('2d');
             o.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-            o.textAlign = 'center';
+            o.textAlign = 'left';
+            o.letterSpacing = cs.letterSpacing;
             o.textBaseline = 'alphabetic';
             o.fillStyle = '#fff';
             // on the line's own baseline, found by a mark set on it
@@ -2448,20 +2455,26 @@
             el.append(mark);
             const base = mark.getBoundingClientRect().top - (r.top - pad);
             mark.remove();
-            o.fillText(el.textContent.trim(), oc.width / 2, base);
+            // from where the text itself begins on the page, not from the middle of its box
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const left = range.getBoundingClientRect().left - r.left;
+            o.fillText(el.textContent.trim(), left, base);
             const px = o.getImageData(0, 0, oc.width, oc.height).data,
               step = 3,
               pts = [];
             for (let y = 0; y < oc.height; y += step)
               for (let x = 0; x < oc.width; x += step)
                 if (px[(y * oc.width + x) * 4 + 3] > 120)
+                  // offsets from the line's box: where they stand is read from the line on every frame
                   pts.push({
-                    sx: (r.left + x) * k,
-                    sy: (r.top - pad + y) * k,
+                    rx: x,
+                    ry: y - pad,
                     z: 0.3 + Math.random() * 0.65,
                     keep: Math.random(),
                   });
             return {
+              el,
               pts,
               color: cs.color.match(/\d+/g).slice(0, 3).join(','),
               dot: step * k * 1.2,
@@ -2478,10 +2491,32 @@
               cv.style.visibility = on ? 'visible' : 'hidden';
               shown = on;
             }
+            // The vanishing point is the middle of the credits' last line's ink, not of the screen or of its box:
+            // the line sits below and to the side of the middle, and points flying from anywhere else would carry
+            // it down and aside as they came closer. Taken once when the jump begins and kept to its end, so
+            // nothing jumps at full speed.
+            if (!on) vp = null;
+            else if (!vp) {
+              glyphs ??= sample();
+              const at = glyphs.el.getBoundingClientRect(),
+                n = glyphs.pts.length || 1;
+              let mx = 0,
+                my = 0;
+              for (const p of glyphs.pts) {
+                mx += p.rx;
+                my += p.ry;
+              }
+              vp = glyphs.pts.length
+                ? {
+                    x: (at.left + mx / n) * glyphs.k,
+                    y: (at.top + my / n) * glyphs.k,
+                  }
+                : { x: w / 2, y: h / 2 };
+            }
             if (on) {
               const f = Math.max(w, h) * 0.5,
-                ox = w / 2,
-                oy = h / 2,
+                ox = vp.x,
+                oy = vp.y,
                 v = hyper.speed;
               const a = hyper.alpha;
               cx.clearRect(0, 0, w, h);
@@ -2517,12 +2552,19 @@
                 // as they go they thin into fine streaks and dim, as the stars are: not a mass of white
                 cx.strokeStyle = `rgba(${glyphs.color},${hyper.glyphs * (1 - t * 0.8)})`;
                 cx.lineWidth = glyphs.dot * (1 - t) + glyphs.k * t;
+                // The line, hidden, is still carried where it stands; the points are placed from where it is now,
+                // not where it was when they were sampled: with smooth scrolling its hold is applied a frame after
+                // the scroll, and a position read once at the swap could be off by that frame's scroll.
+                const at = glyphs.el.getBoundingClientRect(),
+                  gk = glyphs.k;
                 for (const p of glyphs.pts) {
+                  const sx = (at.left + p.rx) * gk,
+                    sy = (at.top + p.ry) * gk;
                   // most points fall away as the line goes, so what reaches light speed is a few fine streaks
                   if (p.keep < t * 0.95) continue;
                   // a point placed in depth so that it stands where the letter is, then carried at the camera
-                  const gx = ((p.sx - ox) * p.z) / f,
-                    gy = ((p.sy - oy) * p.z) / f,
+                  const gx = ((sx - ox) * p.z) / f,
+                    gy = ((sy - oy) * p.z) / f,
                     z = p.z * (1 - 0.96 * t),
                     z0 = z + gt;
                   cx.beginPath();
