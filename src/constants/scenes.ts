@@ -35,10 +35,12 @@ export interface TransitionDef {
   /** for a portal: which one covers the screen */
   surface?: PortalSurface;
   /**
-   * For a portal or a wake: how far into the crossing (0 to 0.45) the cover begins to rise; 0 if not given.
+   * For a portal: how far into the crossing (0 to 0.45) the cover begins to rise; 0 if not given.
    * It is whole at the middle either way.
    */
   coverFrom?: number;
+  /** For the wake: the words of the section that is leaving which the jump carries away with its stars. */
+  line?: string;
 }
 
 const progress = (id: string) =>
@@ -106,7 +108,13 @@ export const TRANSITIONS: TransitionDef[] = [
   { trigger: '[data-work="end-0"]', from: 'hall', to: 'moon', fx: 'slide' },
   { trigger: '[data-work="end-1"]', from: 'moon', to: 'farm', fx: 'curtain' },
   { trigger: '#credits', from: 'farm', to: 'end', fx: 'push' },
-  { trigger: '#respawn', from: 'end', to: 'day1', fx: 'wake' },
+  {
+    trigger: '#respawn',
+    from: 'end',
+    to: 'day1',
+    fx: 'wake',
+    line: '.credits .fin',
+  },
 ];
 
 /**

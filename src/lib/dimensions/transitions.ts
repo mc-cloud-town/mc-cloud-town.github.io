@@ -1,4 +1,5 @@
 import type { TransitionDef } from '@/constants/scenes';
+import { addLightSpeed, lightSpeedOf } from './lightSpeed';
 
 const layer = (root: HTMLElement, id: string) => {
   const el = root.querySelector<HTMLElement>(`.scene[data-scene="${id}"]`);
@@ -12,7 +13,8 @@ const layer = (root: HTMLElement, id: string) => {
  *   curtain  next scene rises from the bottom edge
  *   slide    next scene comes in from the right
  *   portal   the portal's canvas (the Nether's or the End's surface) covers the screen, the scene swaps behind it
- *   wake     a fade through black, eased evenly at both ends, then the world again
+ *   wake     a jump at light speed: the stars draw out into streaks and the world behind changes at full speed,
+ *            then the next one decelerates into place (lightSpeed.ts)
  */
 export const addTransition = (
   tl: gsap.core.Timeline,
@@ -44,16 +46,18 @@ export const addTransition = (
       )
       .fromTo(A.zoom, { [p]: 0 }, { [p]: -14, duration: 1, ease: io }, 0)
       .set(A.el, { autoAlpha: 0 }, 1);
-  } else if (def.fx === 'portal' || def.fx === 'wake') {
+  } else if (def.fx === 'wake') {
+    const ls = lightSpeedOf(root.querySelector<HTMLCanvasElement>('.hyper'));
+    const line = def.line ? root.querySelector<HTMLElement>(def.line) : null;
+    if (ls) addLightSpeed(tl, ls, A, B, root.querySelector('.flash'), line);
+    // (no canvas to draw on: the world simply changes at the middle)
+    else tl.set(A.el, { autoAlpha: 0 }, 0.5).set(B.el, { autoAlpha: 1 }, 0.5);
+  } else if (def.fx === 'portal') {
     const cover = root.querySelector<HTMLElement>(
-      def.fx === 'portal'
-        ? `.portal[data-surface="${def.surface ?? 'nether'}"]`
-        : '.flash',
+      `.portal[data-surface="${def.surface ?? 'nether'}"]`,
     );
     // (the cover may be told to wait: it rises in what is left of the first half, and is whole at the middle)
     const from = Math.min(0.45, Math.max(0, def.coverFrom ?? 0));
-    // (the wake darkens and lightens evenly rather than all at once at the middle)
-    const wake = def.fx === 'wake';
     tl.fromTo(
       cover,
       { autoAlpha: 0, scale: 1 },
@@ -61,7 +65,7 @@ export const addTransition = (
         autoAlpha: 1,
         scale: 1.25,
         duration: 0.5 - from,
-        ease: wake ? 'sine.inOut' : 'power2.in',
+        ease: 'power2.in',
       },
       from,
     )
@@ -85,7 +89,7 @@ export const addTransition = (
           autoAlpha: 0,
           scale: 1.5,
           duration: 0.5,
-          ease: wake ? 'sine.inOut' : 'power2.out',
+          ease: 'power2.out',
         },
         0.5,
       );

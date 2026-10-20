@@ -498,11 +498,10 @@ export const buildChoreography = (
     // the credits simply scroll over the stars
     change(TRANSITIONS[8]);
 
-    // ── respawn ── a fade through black, then the first day again
-    // The respawn stands in its own place: its words are under the black while it falls, and come up, rising a
-    // little, one after another, as it clears. The mascot comes with them; its floating is a CSS animation
-    // (home.css). They are part of the wake's own timeline, which is normalised to length 1: they end by 1, or the
-    // wake itself would be squeezed.
+    // ── respawn ── a jump at light speed, landing on the first day again (lightSpeed.ts)
+    // The respawn stands in its own place: its words come up, rising a little, one after another, as the day lands.
+    // The mascot comes with them; its floating is a CSS animation (home.css). They are part of the wake's own
+    // timeline, which is normalised to length 1: they end by 1, or the wake itself would be squeezed.
     const wake = change(TRANSITIONS[9]);
     const blocks = root.querySelectorAll('.respawn .call > *');
     wake?.set(blocks, { opacity: 0 }, 0).fromTo(
@@ -518,15 +517,16 @@ export const buildChoreography = (
       },
       0.5,
     );
-    // The credits' last line stays where it stands on the screen while the black falls over it (the words of the
-    // section that is leaving may stand over its change), and is gone under the black when that is whole. It is
-    // carried by half a screen over the first half of the wake, which is half a screen of scroll: the window's
+    // The credits' last line stays where it stands on the screen until the jump begins (the words of the section
+    // that is leaving may stand over its change); then the light-speed canvas takes it over where it stands and it
+    // flies away with the stars (the wake hides it then). Hidden, it is still carried, by half a screen over the
+    // first half of the wake, which is half a screen of scroll: the canvas places its points from it. The window's
     // size, so measured again with every refresh. (On a timeline of its own, over the same range: invalidating the
     // wake's, which holds the scenes, on every refresh left the last build's caption showing.)
-    const fin = q('.credits .fin');
-    // (on a touch screen it is not held: it scrolls away with the page, and is gone under the black when that is whole)
-    if (wake && fin && opts.touch) wake.set(fin, { opacity: 0 }, 0.5);
-    else if (wake && fin) {
+    // On a touch screen it is not held: it scrolls on with the page, and its points with it as they fly.
+    const line = TRANSITIONS[9].line,
+      fin = line ? q(line) : null;
+    if (wake && fin && !opts.touch) {
       const held: gsap.core.Timeline = gsap
         .timeline({
           scrollTrigger: {
@@ -549,8 +549,7 @@ export const buildChoreography = (
           },
           0,
         )
-        .set(fin, { opacity: 0 }, 0.5)
-        // as long as the change itself: the set above is half way through it
+        // as long as the change itself
         .set({}, {}, 1);
     }
 

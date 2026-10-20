@@ -157,14 +157,30 @@ html.lenis {
     opacity: 0;
     pointer-events: none;
   }
-  /* the wake's cover: a fade through black, by day as by night (a white-out was found too bright, 2026-10-20) */
+  /* The wake: a jump at light speed, by day as by night (chosen 2026-10-20: a white-out had the shock but was too
+     bright, a fade through black had no shock; speed gives the shock without the light, and no frame is brighter
+     than the day's own picture). The stars and the credits' last line are drawn on the .hyper canvas
+     (lightSpeed.ts), shown only while it draws; .flash is the tunnel that darkens the edges as the jump gathers
+     speed (--c 0 to 0.55) and opens again from the middle outward onto the day. At --c 0 it is wholly clear. */
+  .hyper {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+    visibility: hidden;
+    pointer-events: none;
+  }
   .flash {
     position: fixed;
     inset: 0;
     z-index: 21;
-    opacity: 0;
     pointer-events: none;
-    background: #050608;
+    background: radial-gradient(
+      circle at 50% 50%,
+      transparent calc((1 - var(--c, 0)) * 110% - 10%),
+      #050608 calc((1 - var(--c, 0)) * 110% + 15%)
+    );
   }
 
   /* ───────── loader ───────── */

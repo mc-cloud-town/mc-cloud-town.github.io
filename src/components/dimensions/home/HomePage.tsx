@@ -31,6 +31,7 @@ import { Hero } from './Hero';
 import { DimensionOpening } from './DimensionOpening';
 import { WorkSection } from './WorkSection';
 import { PortalCanvas } from './PortalCanvas';
+import { LightSpeedCanvas } from './LightSpeedCanvas';
 import { NetherLedger } from './NetherLedger';
 import { RankStatement } from './RankStatement';
 import { Starfield } from './Starfield';
@@ -253,6 +254,8 @@ export const HomePage = ({
       {/* one for each dimension that is entered through a portal (TRANSITIONS, scenes.ts) */}
       <PortalCanvas surface='nether' />
       <PortalCanvas surface='end' />
+      {/* the wake into the respawn: a jump at light speed (lightSpeed.ts), and the tunnel of dark around it */}
+      <LightSpeedCanvas reduced={reduced} />
       <div className='flash' aria-hidden='true' />
       {/* On an arrival further down the page (a section named by the address, the place of a return) the names of
           the credits are waited for as well: they are a good part of the page's height, and the place the loader
