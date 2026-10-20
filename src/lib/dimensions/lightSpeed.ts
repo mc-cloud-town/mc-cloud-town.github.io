@@ -401,4 +401,6 @@ export const addLightSpeed = (
       0.52 + i * 0.014,
     ),
   );
+  // the change spans its whole screen of scroll: the timeline is as long as 1, whatever ends before it
+  tl.set({}, {}, 1);
 };
