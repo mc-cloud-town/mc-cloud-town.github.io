@@ -1,47 +1,47 @@
-'use client';
-
-import { useTranslation } from 'react-i18next';
-import { SiteBar } from '#/dimensions/SiteBar';
-import { SiteFooter } from '#/dimensions/SiteFooter';
-import { InnerHeader } from '#/dimensions/InnerHeader';
-import { HardwareSpecs } from '#/dimensions/HardwareSpecs';
+import type { Metadata } from 'next';
+import zhTW from '@/i18n/locales/zh_TW/translation.json';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonLd';
 import { NETHER_IMAGES } from '@/constants/scenes';
+import { HardwarePageView } from './PageView';
 
-import '@/styles/dimensions/pages/hardware.css';
+const CANONICAL = 'https://mc-ctec.org/hardware/';
+const { hardware, nav } = zhTW.dimensions;
+const IMAGE = NETHER_IMAGES[1];
+
+export const metadata: Metadata = {
+  title: '伺服器硬體規格｜CloudTown 雲鎮工藝 Minecraft 技術伺服器',
+  description: `${hardware.lead}：支援大量玩家同時在線、低延遲、專業工程團隊維護的 Minecraft 紅石與建築生存伺服器。`,
+  alternates: { canonical: CANONICAL },
+  openGraph: {
+    title: hardware.title.join(''),
+    description: hardware.lead,
+    url: CANONICAL,
+    images: [{ url: IMAGE }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: hardware.title.join(''),
+    description: hardware.lead,
+    images: [IMAGE],
+  },
+};
+
+const crumbs = [
+  { href: '/', label: nav.homeShort },
+  { href: '/#nether', label: nav.nether },
+  { label: hardware.crumb },
+];
 
 export default function Page() {
-  const { t } = useTranslation();
   return (
-    <div className='dim'>
-      <link rel='canonical' href='https://mc-ctec.org/hardware/' />
-      <SiteBar variant='inner' />
-      <main>
-        <InnerHeader
-          image={NETHER_IMAGES[1]}
-          dim='nether'
-          crumbs={[
-            { href: '/', label: t('dimensions.nav.homeShort') },
-            { href: '/#nether', label: t('dimensions.nav.nether') },
-            { label: t('dimensions.hardware.crumb') },
-          ]}
-          title={
-            t('dimensions.hardware.title', { returnObjects: true }) as string[]
-          }
-          lead={t('hardware.description')}
-          label={t('dimensions.dim.nether')}
-        />
-        <HardwareSpecs />
-        <div className='next'>
-          <span className='mono' data-t='note'>
-            {t('dimensions.nextLabel')}
-          </span>
-          {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}
-          <a className='serif' href='/survivalProgress/' data-t='title'>
-            {t('dimensions.hardware.next')} →
-          </a>
-        </div>
-      </main>
-      <SiteFooter />
-    </div>
+    <>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(crumbs, CANONICAL)),
+        }}
+      />
+      <HardwarePageView />
+    </>
   );
 }

@@ -1,45 +1,45 @@
-'use client';
+import type { Metadata } from 'next';
+import zhTW from '@/i18n/locales/zh_TW/translation.json';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonLd';
+import { MemberPageView } from './PageView';
 
-import { useTranslation } from 'react-i18next';
-import { SiteBar } from '#/dimensions/SiteBar';
-import { SiteFooter } from '#/dimensions/SiteFooter';
-import { InnerHeader } from '#/dimensions/InnerHeader';
-import { MemberRoster } from '#/dimensions/MemberRoster';
+const CANONICAL = 'https://mc-ctec.org/member/';
+const { members, nav } = zhTW.dimensions;
+
+export const metadata: Metadata = {
+  title: '成員名單｜雲鎮工藝紅石・建築・後勤成員 | CloudTown',
+  description: `${members.lead}${members.groups.member.line}`,
+  alternates: { canonical: CANONICAL },
+  openGraph: {
+    title: members.title.join(''),
+    description: members.lead,
+    url: CANONICAL,
+    images: [{ url: '/assets/members/CTEC_Members.webp' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: members.title.join(''),
+    description: members.lead,
+    images: ['/assets/members/CTEC_Members.webp'],
+  },
+};
+
+const crumbs = [
+  { href: '/', label: nav.homeShort },
+  { href: '/#end', label: nav.end },
+  { label: members.crumb },
+];
 
 export default function Page() {
-  const { t } = useTranslation();
   return (
-    <div className='dim'>
-      <link rel='canonical' href='https://mc-ctec.org/member/' />
-      <SiteBar variant='inner' current='members' />
-      <main>
-        <InnerHeader
-          image='/assets/members/CTEC_Members.webp'
-          dim='end'
-          crumbs={[
-            { href: '/', label: t('dimensions.nav.homeShort') },
-            { href: '/#end', label: t('dimensions.nav.end') },
-            { label: t('dimensions.members.crumb') },
-          ]}
-          title={
-            t('dimensions.members.title', { returnObjects: true }) as string[]
-          }
-          lead={t('dimensions.members.lead')}
-          label={t('dimensions.dim.end')}
-        />
-        <MemberRoster />
-        <div className='next'>
-          <span className='mono' data-t='note'>
-            {t('dimensions.nextLabel')}
-          </span>
-          {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a className='serif' href='/#respawn' data-t='title'>
-            {t('dimensions.members.next')} →
-          </a>
-        </div>
-      </main>
-      <SiteFooter />
-    </div>
+    <>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(crumbs, CANONICAL)),
+        }}
+      />
+      <MemberPageView />
+    </>
   );
 }

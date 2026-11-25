@@ -1,48 +1,45 @@
-'use client';
+import type { Metadata } from 'next';
+import zhTW from '@/i18n/locales/zh_TW/translation.json';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonLd';
+import { OpenSourcePageView } from './PageView';
 
-import { useTranslation } from 'react-i18next';
-import { SiteBar } from '#/dimensions/SiteBar';
-import { SiteFooter } from '#/dimensions/SiteFooter';
-import { InnerHeader } from '#/dimensions/InnerHeader';
-import { OpenSourceList } from '#/dimensions/OpenSourceList';
+const CANONICAL = 'https://mc-ctec.org/openSource/';
+const { openSource, nav } = zhTW.dimensions;
 
-import '@/styles/dimensions/pages/openSource.css';
+export const metadata: Metadata = {
+  title: '開源專案｜CloudTown 雲鎮工藝 GitHub 開源插件與工具',
+  description: openSource.lead,
+  alternates: { canonical: CANONICAL },
+  openGraph: {
+    title: openSource.title.join(''),
+    description: openSource.lead,
+    url: CANONICAL,
+    images: [{ url: '/assets/openSource/CTEC_Development.webp' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: openSource.title.join(''),
+    description: openSource.lead,
+    images: ['/assets/openSource/CTEC_Development.webp'],
+  },
+};
 
-export default function OpenSourcePage() {
-  const { t } = useTranslation();
+const crumbs = [
+  { href: '/', label: nav.homeShort },
+  { href: '/#end', label: nav.end },
+  { label: openSource.crumb },
+];
+
+export default function Page() {
   return (
-    <div className='dim'>
-      <link rel='canonical' href='https://mc-ctec.org/openSource/' />
-      <SiteBar variant='inner' />
-      <main>
-        <InnerHeader
-          image='/assets/openSource/CTEC_Development.webp'
-          dim='end'
-          crumbs={[
-            { href: '/', label: t('dimensions.nav.homeShort') },
-            { href: '/#end', label: t('dimensions.nav.end') },
-            { label: t('dimensions.openSource.crumb') },
-          ]}
-          title={
-            t('dimensions.openSource.title', {
-              returnObjects: true,
-            }) as string[]
-          }
-          lead={t('dimensions.openSource.lead')}
-          label={t('dimensions.dim.end')}
-        />
-        <OpenSourceList />
-        <div className='next'>
-          <span className='mono' data-t='note'>
-            {t('dimensions.nextLabel')}
-          </span>
-          {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}
-          <a className='serif' href='/partner/' data-t='title'>
-            {t('dimensions.openSource.next')} →
-          </a>
-        </div>
-      </main>
-      <SiteFooter />
-    </div>
+    <>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(crumbs, CANONICAL)),
+        }}
+      />
+      <OpenSourcePageView />
+    </>
   );
 }

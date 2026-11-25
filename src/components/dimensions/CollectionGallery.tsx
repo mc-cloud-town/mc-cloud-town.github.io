@@ -159,7 +159,7 @@ export const CollectionGallery = ({
               {/* its room is kept by the frame, so nothing moves when the picture comes */}
               <figure>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img loading='lazy' src={w.cover} alt='' />
+                <img loading='lazy' src={w.cover} alt={w.title} />
               </figure>
               <p className='meta mono' data-t='note'>
                 {w.date && <span>{w.date}</span>}

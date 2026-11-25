@@ -1,47 +1,45 @@
-'use client';
+import type { Metadata } from 'next';
+import zhTW from '@/i18n/locales/zh_TW/translation.json';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonLd';
+import { PartnerPageView } from './PageView';
 
-import { useTranslation } from 'react-i18next';
-import { SiteBar } from '#/dimensions/SiteBar';
-import { SiteFooter } from '#/dimensions/SiteFooter';
-import { InnerHeader } from '#/dimensions/InnerHeader';
-import { PartnerList } from '#/dimensions/PartnerList';
+const CANONICAL = 'https://mc-ctec.org/partner/';
+const { partner, nav } = zhTW.dimensions;
 
-import '@/styles/dimensions/pages/partner.css';
+export const metadata: Metadata = {
+  title: '合作夥伴與團隊｜CloudTown 雲鎮工藝',
+  description: `${partner.lead}${partner.contact.body}`,
+  alternates: { canonical: CANONICAL },
+  openGraph: {
+    title: partner.title.join(''),
+    description: partner.lead,
+    url: CANONICAL,
+    images: [{ url: '/assets/partner/partner.webp' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: partner.title.join(''),
+    description: partner.lead,
+    images: ['/assets/partner/partner.webp'],
+  },
+};
 
-/** Also served as `/collaborative/` (the old site had both addresses for this one page). */
-export default function PartnerPage() {
-  const { t } = useTranslation();
+const crumbs = [
+  { href: '/', label: nav.homeShort },
+  { href: '/#end', label: nav.end },
+  { label: partner.crumb },
+];
+
+export default function Page() {
   return (
-    <div className='dim'>
-      <link rel='canonical' href='https://mc-ctec.org/partner/' />
-      <SiteBar variant='inner' />
-      <main>
-        <InnerHeader
-          image='/assets/partner/partner.webp'
-          dim='end'
-          crumbs={[
-            { href: '/', label: t('dimensions.nav.homeShort') },
-            { href: '/#end', label: t('dimensions.nav.end') },
-            { label: t('dimensions.partner.crumb') },
-          ]}
-          title={
-            t('dimensions.partner.title', { returnObjects: true }) as string[]
-          }
-          lead={t('dimensions.partner.lead')}
-          label={t('dimensions.dim.end')}
-        />
-        <PartnerList />
-        <div className='next'>
-          <span className='mono' data-t='note'>
-            {t('dimensions.nextLabel')}
-          </span>
-          {/* a plain link on purpose: the shell takes the step from here, as a transition (PageTransitions) */}
-          <a className='serif' href='/join/' data-t='title'>
-            {t('dimensions.partner.next')} →
-          </a>
-        </div>
-      </main>
-      <SiteFooter />
-    </div>
+    <>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(crumbs, CANONICAL)),
+        }}
+      />
+      <PartnerPageView />
+    </>
   );
 }

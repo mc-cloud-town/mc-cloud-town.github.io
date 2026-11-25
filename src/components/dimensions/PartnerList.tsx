@@ -152,7 +152,7 @@ export const PartnerList = () => {
                     <img
                       loading='lazy'
                       src={`${STATIC_DATA_API}/images/${p.Image}`}
-                      alt=''
+                      alt={p.ModalTitle || p.Partner}
                       width={96}
                       height={96}
                     />

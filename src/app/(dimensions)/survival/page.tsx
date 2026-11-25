@@ -1,1 +1,1 @@
-export { default } from '../survivalProgress/page';
+export { default, metadata } from '../survivalProgress/page';

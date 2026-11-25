@@ -159,6 +159,25 @@ export const setAddress = (url: string, how: 'push' | 'replace') => {
 };
 
 /**
+ * The same public JSON `CollectionPage.tsx` fetches client-side, read once more at build time (in the served
+ * language, `zh_TW`) so the two collections' real, attributed, dated works reach crawlers as structured data
+ * too — see the `redstoneCollection`/`architectureCollection` `page.tsx`. A failure here (the API unreachable
+ * while building) just means no structured data for this build, never a broken one.
+ */
+export const fetchWorksAtBuildTime = async (
+  kind: CollectionKind,
+): Promise<Work[] | null> => {
+  try {
+    const res = await fetch(`${STATIC_DATA_API}/zh_TW/${kind}Collection.json`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as ICollection[];
+    return toWorks(data);
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Close the open work. Opened from the gallery, it is a step back to it (and Forward opens the work again);
  * arrived at by its address, there is no gallery to go back to, and the address becomes the gallery's.
  */

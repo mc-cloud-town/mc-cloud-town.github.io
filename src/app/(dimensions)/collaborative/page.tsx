@@ -1,1 +1,2 @@
-export { default } from '../partner/page';
+export { default, metadata } from '../partner/page';
+

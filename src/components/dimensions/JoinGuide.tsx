@@ -122,7 +122,11 @@ export const JoinGuide = () => {
             <div className='join-body'>
               <figure>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img loading='lazy' src={`/assets/${d.imageUrl}`} alt='' />
+                <img
+                  loading='lazy'
+                  src={`/assets/${d.imageUrl}`}
+                  alt={depts[i]?.name ?? ''}
+                />
               </figure>
               <div>
                 {d.subTitle && (

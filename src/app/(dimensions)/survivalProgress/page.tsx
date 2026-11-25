@@ -1,52 +1,44 @@
-'use client';
+import type { Metadata } from 'next';
+import zhTW from '@/i18n/locales/zh_TW/translation.json';
+import { breadcrumbJsonLd } from '@/lib/seo/jsonLd';
+import { SurvivalProgressPageView } from './PageView';
 
-import { useTranslation } from 'react-i18next';
-import useApi from '@/hooks/useApi';
-import { STATIC_DATA_API } from '@/constants';
-import type { IImageContent } from '@/types/IImageContent';
-import { SiteBar } from '#/dimensions/SiteBar';
-import { SiteFooter } from '#/dimensions/SiteFooter';
-import { InnerHeader } from '#/dimensions/InnerHeader';
-import { ProgressLog } from '#/dimensions/ProgressLog';
+const CANONICAL = 'https://mc-ctec.org/survivalProgress/';
+const { progress, nav } = zhTW.dimensions;
 
-export default function ProgressPage() {
-  const { t, i18n } = useTranslation();
-  const { data, loading, error } = useApi<IImageContent[]>(
-    `${STATIC_DATA_API}/${i18n.language}/survivalProgress.json`,
-  );
+export const metadata: Metadata = {
+  title: '生存進度紀錄｜2022 年開服從未重置的 Minecraft 世界 | CloudTown',
+  description: progress.leadPlain,
+  alternates: { canonical: CANONICAL },
+  openGraph: {
+    title: progress.title.join(''),
+    description: progress.leadPlain,
+    url: CANONICAL,
+    images: [{ url: '/assets/homePage/CTEC_Building.webp' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: progress.title.join(''),
+    description: progress.leadPlain,
+    images: ['/assets/homePage/CTEC_Building.webp'],
+  },
+};
+
+const crumbs = [
+  { href: '/', label: nav.homeShort },
+  { label: progress.crumb },
+];
+
+export default function Page() {
   return (
-    <div className='dim'>
-      <link rel='canonical' href='https://mc-ctec.org/survivalProgress/' />
-      <SiteBar variant='inner' current='progress' />
-      <main>
-        <InnerHeader
-          image='/assets/homePage/CTEC_Building.webp'
-          dim='overworld'
-          crumbs={[
-            { href: '/', label: t('dimensions.nav.homeShort') },
-            { label: t('dimensions.progress.crumb') },
-          ]}
-          title={
-            t('dimensions.progress.title', { returnObjects: true }) as string[]
-          }
-          lead={
-            data
-              ? t('dimensions.progress.lead', { total: data.length })
-              : t('dimensions.progress.leadPlain')
-          }
-          label={t('dimensions.dim.all')}
-        />
-        <ProgressLog data={data} loading={loading} error={error} />
-        <div className='next'>
-          <span className='mono' data-t='note'>
-            {t('dimensions.nextLabel')}
-          </span>
-          <a className='serif' href='/member/' data-t='title'>
-            {t('dimensions.progress.next')} →
-          </a>
-        </div>
-      </main>
-      <SiteFooter />
-    </div>
+    <>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(crumbs, CANONICAL)),
+        }}
+      />
+      <SurvivalProgressPageView />
+    </>
   );
 }

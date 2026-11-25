@@ -2,8 +2,9 @@
 
 > CloudTown (雲鎮工藝, CTEC) is a Minecraft technical server: vanilla rules, admission by application. Its members
 > study redstone and build in one survival world that has been running since 23 July 2022 and has never been
-> reset. The site is in Traditional Chinese, Simplified Chinese and English (add `?lang=zh_TW`, `?lang=zh_CN` or
-> `?lang=en` to any page).
+> reset. It is a technical survival community from Asia, with a majority of its members in Taiwan. The site is
+> in Traditional Chinese, Simplified Chinese and English (add `?lang=zh_TW`, `?lang=zh_CN` or `?lang=en` to any
+> page).
 
 雲鎮工藝是一個以純原版為基礎的審核制技術向 Minecraft 伺服器，在原版規則裡研究紅石、蓋建築，經營一個 2022 年 7 月 23 日開服至今沒有重置過的生存世界。成員分為紅石、建築、後勤三個組別。
 

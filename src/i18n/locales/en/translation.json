@@ -180,14 +180,20 @@
     "collection": {
       "redstone": {
         "crumb": "Redstone works",
-        "title": ["Redstone works,", "taken apart."],
+        "title": [
+          "Redstone works,",
+          "taken apart."
+        ],
         "lead": "Redstone designed by CTEC members: {{total}} works. Open one for its pictures, video and download link.",
         "leadPlain": "Redstone designed by CTEC members. Open one for its pictures, video and download link.",
         "next": "Now the builds"
       },
       "architecture": {
         "crumb": "Builds",
-        "title": ["Builds,", "seen up close."],
+        "title": [
+          "Builds,",
+          "seen up close."
+        ],
         "lead": "What CTEC members have built: {{total}} works. Open one to see every picture of it.",
         "leadPlain": "What CTEC members have built. Open one to see every picture of it.",
         "next": "Now the redstone"
@@ -226,7 +232,10 @@
     },
     "nether": {
       "tag": "Dimension 02 / 03",
-      "say": ["Through the portal", "is our factory."],
+      "say": [
+        "Through the portal",
+        "is our factory."
+      ],
       "body": "The nether hub, perimeters, piglin trading, magma cube farms. These machines are not creative-mode showpieces. They run and produce in the survival world.",
       "ledger": [
         {
@@ -255,17 +264,26 @@
         }
       ],
       "rankLabel": "Farm world records held",
-      "rank": ["1st in Asia"],
+      "rank": [
+        "1st in Asia"
+      ],
       "rankBody": "Several farms we designed hold certified world records."
     },
     "hardware": {
       "crumb": "Server hardware",
-      "title": ["What holds this world up", "is these few machines."],
+      "title": [
+        "What holds this world up",
+        "is these few machines."
+      ],
+      "lead": "State-of-the-art equipment powering our creative community",
       "next": "The world they have run"
     },
     "end": {
       "tag": "Dimension 03 / 03",
-      "say": ["After the End", "come the credits."],
+      "say": [
+        "After the End",
+        "come the credits."
+      ],
       "body": "The end hub, the Moon Palace and the end farms all stand over the void. After these three come the people who built this world.",
       "works": [
         {
@@ -293,7 +311,10 @@
     },
     "openSource": {
       "crumb": "Open source",
-      "title": ["The tools we write", "are all open source."],
+      "title": [
+        "The tools we write",
+        "are all open source."
+      ],
       "lead": "We build tools to make the game better for our players, and publish them. These are all of the organisation's repositories on GitHub, grouped by what they are for. Search by name or description.",
       "search": "Search by name, description or topic",
       "count": "{{n}} / {{total}}",
@@ -320,7 +341,10 @@
     },
     "partner": {
       "crumb": "Partners",
-      "title": ["The partners and teams", "beside us."],
+      "title": [
+        "The partners and teams",
+        "beside us."
+      ],
       "lead": "The teams and creators Cloud Town works with: their own words, their videos, and where to find them.",
       "groups": {
         "team": "Partner teams",
@@ -364,28 +388,41 @@
       "more": "How to join, in full"
     },
     "join": {
-      "title": ["How to join", "Cloud Town."],
+      "title": [
+        "How to join",
+        "Cloud Town."
+      ],
       "lead": "Redstone, building, logistics: each department reviews in its own way. Find yours and apply as described below.",
       "label": "RESPAWN",
       "way": "All three departments live on Discord. To meet everyone first, or to ask anything about applying, find us there.",
       "next": "See what we have built first"
     },
     "footer": {
-      "groups": { "works": "Works", "team": "Team", "community": "Community" },
+      "groups": {
+        "works": "Works",
+        "team": "Team",
+        "community": "Community"
+      },
       "support": "Support us",
       "rights": "© 2022–{{year}} Cloud Town Exquisite Craft"
     },
     "notFound": {
       "code": "404",
       "label": "Void",
-      "title": ["Go any further,", "and it is the void."],
+      "title": [
+        "Go any further,",
+        "and it is the void."
+      ],
       "body": "The page you wanted is not in this world. The address may be mistyped, or the page may have moved.",
       "home": "Back to the home page",
       "more": "Or go here"
     },
     "progress": {
       "crumb": "Survival progress",
-      "title": ["One world,", "from day one until now."],
+      "title": [
+        "One world,",
+        "from day one until now."
+      ],
       "lead": "The server opened on 23 July 2022 and the world has never been reset. All {{total}} milestones are here. Filter by dimension or year.",
       "leadPlain": "The server opened on 23 July 2022 and the world has never been reset. All milestones are here. Filter by dimension or year.",
       "allDims": "All dimensions",
@@ -402,7 +439,10 @@
     "nextLabel": "Next up",
     "members": {
       "crumb": "Members",
-      "title": ["The credits,", "in full."],
+      "title": [
+        "The credits,",
+        "in full."
+      ],
       "lead": "Outstanding members from every field, building the server's record together.",
       "search": "Search members",
       "count": "{{n}} / {{total}}",

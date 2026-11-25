@@ -22,8 +22,8 @@ const LANGUAGE_TAGS: Record<string, string> = {
   zh_CN: 'zh-Hans',
   en: 'en',
 };
-/** What the served page says. */
-const SERVED_LANGUAGE_TAG = 'zh';
+/** What the served page says (matches `<html lang>` in the root layout). */
+const SERVED_LANGUAGE_TAG = 'zh-Hant';
 
 export default function DimensionsLayout({
   children,
