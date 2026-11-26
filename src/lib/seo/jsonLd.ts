@@ -42,12 +42,12 @@ export const collectionItemListJsonLd = (
   })),
 });
 
-/** The home hero's real anniversary video (`home.backgroundVideo.youtubeId`), as a VideoObject. No `uploadDate`
-    — it isn't known, and guessing it would be worse than omitting it. */
+/** The home hero's real anniversary video (`home.backgroundVideo.{youtubeId,uploadDate}`), as a VideoObject. */
 export const heroVideoJsonLd = (
   id: string,
   name: string,
   description: string,
+  uploadDate: string,
 ) => ({
   '@context': 'https://schema.org',
   '@type': 'VideoObject',
@@ -55,4 +55,5 @@ export const heroVideoJsonLd = (
   description,
   thumbnailUrl: [`https://img.youtube.com/vi/${id}/maxresdefault.jpg`],
   embedUrl: `https://www.youtube-nocookie.com/embed/${id}`,
+  uploadDate,
 });

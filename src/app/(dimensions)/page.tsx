@@ -14,6 +14,7 @@ const videoJsonLd = heroVideoJsonLd(
   zhTW.home.backgroundVideo.youtubeId,
   zhTW.dimensions.hero.video,
   zhTW.dimensions.hero.lead,
+  zhTW.home.backgroundVideo.uploadDate,
 );
 
 export default function Page() {
